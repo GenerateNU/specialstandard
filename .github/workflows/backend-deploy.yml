@@ -1,0 +1,14 @@
+name: Deploy (Caller)
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    uses: GenerateNU/shiperate/.github/workflows/backend-deploy.yml@main
+    with:
+      context: .
+      dockerfile: backend.Dockerfile
+      repo: registry.digitalocean.com/gen-sw-fall-2025/test
+      tag: latest
+    secrets: inherit
