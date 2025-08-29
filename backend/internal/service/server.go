@@ -3,6 +3,7 @@ package service
 import (
 	"specialstandard/internal/config"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/postgres"
 
@@ -64,6 +65,12 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusOK)
+	})
+
+	// Setup routes
+	sessionHandler := session.NewHandler(repo.Session)
+	app.Route("/sessions", func(r fiber.Router) {
+		r.Get("/", sessionHandler.GetSessions)
 	})
 
 	return app
