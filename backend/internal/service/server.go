@@ -3,6 +3,7 @@ package service
 import (
 	"skillspark/internal/config"
 	"skillspark/internal/errs"
+	"skillspark/internal/service/handler/session"
 	"skillspark/internal/storage"
 	"skillspark/internal/storage/postgres"
 
@@ -64,6 +65,12 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusOK)
+	})
+
+	// Setup routes
+	sessionHandler := session.NewHandler(repo.Session)
+	app.Route("/sessions", func(r fiber.Router) {
+		r.Get("/", sessionHandler.GetSessions)
 	})
 
 	return app
