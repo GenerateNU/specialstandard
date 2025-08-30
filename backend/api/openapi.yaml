@@ -1,7 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Special Standard Sessions API
-  description: API for therapy session management
+  title: The Special Standard API
   version: 0.1.0
 
 servers:
