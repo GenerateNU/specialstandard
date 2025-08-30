@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: Special Standard Sessions API
+  description: API for therapy session management
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+tags:
+  - name: Health
+    description: Health check operations
+  - name: Sessions
+    description: Therapy session operations
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check if the API is running and healthy
+      tags: [Health]
+      responses:
+        '200':
+          description: API is healthy (status code only)
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sessions:
+    get:
+      summary: Get all sessions
+      description: Retrieve all therapy sessions from the database
+      tags: [Sessions]
+      responses:
+        '200':
+          description: List of therapy sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Session'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 404
+                message: "Resource not found"
+
+components:
+  schemas:
+    Session:
+      type: object
+      required:
+        - id
+        - therapist_id
+        - session_date
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the session
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        therapist_id:
+          type: string
+          format: uuid
+          description: ID of the therapist conducting the session
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        session_date:
+          type: string
+          format: date-time
+          description: Date and time when the session occurred
+          example: "2024-01-15T14:30:00Z"
+        start_time:
+          type: string
+          nullable: true
+          description: Session start time (optional)
+          example: "14:30"
+        end_time:
+          type: string
+          nullable: true
+          description: Session end time (optional)
+          example: "15:30"
+        notes:
+          type: string
+          nullable: true
+          description: Session notes (optional)
+          example: "Patient showed improvement in anxiety management techniques"
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the session record was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the session record was last updated
+          example: "2024-01-15T10:35:00Z"
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          description: HTTP status code
+          example: 500
+        message:
+          anyOf:
+            - type: string
+            - type: object
+          description: Error message or validation errors
+          example: "Internal server error"
+
