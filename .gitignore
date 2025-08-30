@@ -9,3 +9,5 @@ node_modules
 .DS_STORE
 
 .next/
+
+backend/.env
