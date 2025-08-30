@@ -1,27 +1,37 @@
-name: backend-lint
+name: backend
+
 on:
+  pull_request:
+    branches:
+      - "main"
   push:
     branches:
       - "**"
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend.yaml"
-
-permissions:
-  contents: read
-  checks: write
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+
   backend-lint:
     name: backend-lint
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
@@ -30,15 +40,15 @@ jobs:
           args: --timeout=5m
 
   backend-tests:
-    name: Run backend-tests
+    name: backend-tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-
       - name: Test Backend
         run: |
           cd backend
