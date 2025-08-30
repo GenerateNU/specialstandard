@@ -12,7 +12,7 @@ export default function Home() {
           height={38}
           priority
         />
-        
+
         <div className="text-center sm:text-left">
           <h1 className="text-4xl font-bold mb-4 tracking-tight">
             Welcome to The Special Standard!
