@@ -17,6 +17,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/swagger"
 )
 
 type App struct {
@@ -56,20 +57,32 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 
 	// Use CORS middleware to configure CORS and handle preflight/OPTIONS requests.
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:8080",
+		AllowOrigins:     "http://localhost:3000,http://localhost:8080, http://127.0.0.1:8080,http://127.0.0.1:3000",
 		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS", // Using these methods.
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true, // Allow cookies
 		ExposeHeaders:    "Content-Length, X-Request-ID",
 	}))
 
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.SendStatus(http.StatusOK)
+	app.Static("/api", "/app/api")
+
+	app.Get("/swagger/*", swagger.New(swagger.Config{
+		URL:         "/api/openapi.yaml",
+		DeepLinking: false,
+	}))
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusOK).SendString("Welcome to The Special Standard!")
 	})
 
+	apiV1 := app.Group("/api/v1")
+
+	apiV1.Get("/health", func(c *fiber.Ctx) error {
+		return c.SendStatus(http.StatusOK)
+	})
 	// Setup routes
 	sessionHandler := session.NewHandler(repo.Session)
-	app.Route("/sessions", func(r fiber.Router) {
+	apiV1.Route("/sessions", func(r fiber.Router) {
 		r.Get("/", sessionHandler.GetSessions)
 	})
 

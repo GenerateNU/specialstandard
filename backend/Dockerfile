@@ -1,7 +1,7 @@
 FROM golang:1.23-alpine
 
 
-# Set the working directory (this is /backend in Arenius)
+# Set the working directory (this is /backend in The Special Standard)
 WORKDIR /app
 
 # Copy only go.mod and go.sum first (to cache dependencies)
