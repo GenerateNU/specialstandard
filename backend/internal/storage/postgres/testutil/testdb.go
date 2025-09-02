@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"log"
 	"testing"
 	"time"
 
@@ -20,8 +21,8 @@ func SetupTestDB(t testing.TB) *TestDB {
 	ctx := context.Background()
 
 	// Start PostgreSQL container
-	pgContainer, err := postgres.RunContainer(ctx,
-		testcontainers.WithImage("postgres:15-alpine"),
+	pgContainer, err := postgres.Run(ctx,
+		"postgres:15-alpine",
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("test"),
 		postgres.WithPassword("test"),
@@ -58,7 +59,9 @@ func SetupTestDB(t testing.TB) *TestDB {
 
 func (db *TestDB) Cleanup() {
 	db.Pool.Close()
-	db.container.Terminate(context.Background())
+	if err := db.container.Terminate(context.Background()); err != nil {
+		log.Printf("failed to terminate container: %v", err)
+	}
 }
 
 func createTables(t testing.TB, pool *pgxpool.Pool) {
