@@ -9,3 +9,6 @@ node_modules
 .DS_STORE
 
 .next/
+
+backend/coverage.out
+backend/coverage.html
