@@ -2,11 +2,11 @@
 
 This directory contains the OpenAPI spec for The Special Standard API.
 
-- `openapi.yaml`: OpenAPI 3.0 specification.
-- Swagger UI: http://localhost:8080/swagger (should autoroute to http://localhost:8080/swagger/index.html) when running the backend.
+- `openapi.yaml`: OpenAPI 3.0 specification
+- Swagger UI: http://localhost:8080/swagger (should autoroute to http://localhost:8080/swagger/index.html) when running the backend
 
 To update the OpenAPI spec:
-1. Edit `openapi.yaml`.
+1. Edit `openapi.yaml`
 2. Restart the backend to see changes in Swagger UI. Changes made to `openapi.yaml` will not be automatically reflected in Swagger UI, as the spec is served statically at http://localhost:8080/api/openapi.yaml
 
 ## Why we are enforcing this contract
