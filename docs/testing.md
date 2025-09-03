@@ -1,13 +1,13 @@
 ## Testing
 
-The backend includes comprehensive unit, integration, and database tests. Tests are organized by type and can be run separately or together.
+The backend includes comprehensive unit, integration, and database tests. Tests are organized by type and can be run separately or together. ***Please manually test with postman in addition to written tests as they can be created incorrectly***
 
 ### Test Structure
 
 ```
 internal/
 ├── service/
-│   ├── app_test.go              # Integration tests for API endpoints
+│   ├── server_test.go              # Integration tests for API endpoints
 │   └── handler/
 │       └── session/
 │           └── handler_test.go   # Unit tests for handlers
@@ -139,4 +139,4 @@ make test-db
 
 ### Postman
 
-For further development and testing, install Postman, which simplifies making network requests.
+For further development and testing, install Postman, which simplifies making network requests. ***Please still manually test your code, as sometimes unit tests can be wrong***
