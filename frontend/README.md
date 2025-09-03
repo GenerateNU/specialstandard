@@ -29,10 +29,11 @@ Run the linter:
 ```bash
 npm run lint
 ```
+
 To automatically fix linting errors:
 
 ```bash
-npm run lint:fix 
+npm run lint:fix
 ```
 
 ## Learn More
