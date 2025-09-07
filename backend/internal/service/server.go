@@ -86,5 +86,13 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Get("/", sessionHandler.GetSessions)
 	})
 
+	// Handle 404 - Route not found
+	app.Use(func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Route not found",
+			"path":  c.Path(),
+		})
+	})
+
 	return app
 }
