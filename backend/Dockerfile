@@ -12,5 +12,6 @@ RUN go mod download
 COPY . .
 
 WORKDIR /app/cmd 
+RUN go build -o main main.go
 
-CMD ["go", "run", "main.go"]
+CMD ["./main"]
