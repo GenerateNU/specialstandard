@@ -36,6 +36,21 @@ Open <http://localhost:8080/health> with your browser to see the result. Request
 
 For further development and testing, install [Postman](https://www.postman.com/downloads/), which simplifies making network requests.
 
+## Linting
+
+We use [golangci-lint](https://golangci-lint.run/) to ensure consistent code quality and catch common issues. All code must pass linting before it can be merged into the main branch.
+
+To check for linting issues:
+
+```bash
+golangci-lint run
+```
+
+To automatically fix linting issues:
+```bash
+golangci-lint run --fix
+```
+
 ## Learn More
 
 - [Go Modules](https://faun.pub/understanding-go-mod-and-go-sum-5fd7ec9bcc34) - article about go.mod and go.sum.

@@ -1,0 +1,26 @@
+.PHONY: test test-unit test-integration test-db test-coverage
+
+# Run all tests
+test:
+	go test ./... -v
+
+# Run only unit tests (skip database tests)
+test-unit:
+	go test ./... -v -short
+
+# Run only integration tests
+test-integration:
+	go test ./internal/service/... -v
+
+# Run only database tests
+test-db:
+	go test ./internal/storage/postgres/... -v
+
+# Run tests with coverage
+test-coverage:
+	go test ./... -v -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+
+# Clean test cache
+test-clean:
+	go clean -testcache
