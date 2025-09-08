@@ -1,5 +1,4 @@
 name: backend
-
 on:
   pull_request:
     branches:
@@ -46,7 +45,40 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - name: Test Backend
+      
+      - name: Run Tests
         run: |
           cd backend
-          go test ./...
+          make test
+      
+      - name: Generate Coverage Report
+        run: |
+          cd backend
+          go test ./... -v -coverprofile=coverage.out
+          go tool cover -func=coverage.out
+      
+      - name: Check Coverage Threshold
+        run: |
+          cd backend
+          # Extract total coverage percentage
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          echo "Total coverage: $COVERAGE%"
+          
+          # Set your minimum coverage threshold (adjust as needed)
+          THRESHOLD=70
+          
+          # Compare coverage with threshold
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% is below threshold $THRESHOLD%"
+            exit 1
+          else
+            echo "✅ Coverage $COVERAGE% meets threshold $THRESHOLD%"
+          fi
+      
+      # Optional: Upload coverage report as artifact
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: backend/coverage.out
