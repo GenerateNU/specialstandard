@@ -3,6 +3,7 @@ package theme
 import (
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/xvalidator"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,23 +16,9 @@ func (h *Handler) CreateTheme(c *fiber.Ctx) error {
 		return errs.InvalidJSON("Failed to parse theme data")
 	}
 
-	// Validate input
-	validationErrors := make(map[string]string)
-
-	if theme.Name == "" {
-		validationErrors["name"] = "Name is required"
-	}
-
-	if theme.Month < 1 || theme.Month > 12 {
-		validationErrors["month"] = "Month must be between 1 and 12"
-	}
-
-	if theme.Year < 1900 || theme.Year > 2100 {
-		validationErrors["year"] = "Year must be between 1900 and 2100"
-	}
-
-	if len(validationErrors) > 0 {
-		return errs.InvalidRequestData(validationErrors)
+	// Validate using XValidator
+	if validationErrors := h.validator.Validate(theme); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
 	createdTheme, err := h.themeRepository.CreateTheme(c.Context(), &theme)

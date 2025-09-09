@@ -16,7 +16,7 @@ type Theme struct {
 }
 
 type CreateThemeInput struct {
-	Name  string `json:"name"`
-	Month int    `json:"month"`
-	Year  int    `json:"year"`
+	Name  string `json:"name" validate:"required,min=1,max=255"`
+	Month int    `json:"month" validate:"required,gte=1,lte=12"`
+	Year  int    `json:"year" validate:"required,gte=1900,lte=2100"`
 }
