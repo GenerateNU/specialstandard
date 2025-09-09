@@ -58,53 +58,53 @@ paths:
               example:
                 code: 404
                 message: "Resource not found"
-    /themes:
-      post:
-        summary: Create a new theme
-        description: Create a new theme for therapy sessions
-        tags: [Themes]
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - name
-                  - month
-                  - year
-                properties:
-                  name:
-                    type: string
-                    description: Name of the theme
-                    example: "Winter Wonderland"
-                  month:
-                    type: integer
-                    description: Month of the theme (1-12)
-                    example: 12
-                  year:
-                    type: integer
-                    description: Year of the theme (e.g., 2024)
-                    example: 2024
-        responses:
-          '201':
-            description: Theme created successfully
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Theme'
-          '400':
-            description: Bad request (e.g., validation errors)
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-          '500':
-            description: Internal server error
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
+/themes:
+  post:
+    summary: Create a new theme
+    description: Create a new theme for therapy sessions
+    tags: [Themes]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - name
+              - month
+              - year
+            properties:
+              name:
+                type: string
+                description: Name of the theme
+                example: "Winter Wonderland"
+              month:
+                type: integer
+                description: Month of the theme (1-12)
+                example: 12
+              year:
+                type: integer
+                description: Year of the theme (e.g., 2024)
+                example: 2024
+    responses:
+      '201':
+        description: Theme created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Theme'
+      '400':
+        description: Bad request (e.g., validation errors)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+      '500':
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
 
 components:
   schemas:
