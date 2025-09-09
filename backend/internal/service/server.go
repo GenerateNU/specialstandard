@@ -4,6 +4,7 @@ import (
 	"specialstandard/internal/config"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/service/handler/session"
+	"specialstandard/internal/service/handler/theme"
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/postgres"
 
@@ -84,6 +85,15 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	sessionHandler := session.NewHandler(repo.Session)
 	apiV1.Route("/sessions", func(r fiber.Router) {
 		r.Get("/", sessionHandler.GetSessions)
+	})
+
+	themeHandler := theme.NewHandler(repo.Theme)
+	apiV1.Route("/themes", func(r fiber.Router) {
+		r.Post("/", themeHandler.CreateTheme)
+		// r.Get("/", themeHandler.GetThemes)
+		// r.Get("/:id", themeHandler.GetThemeByID)
+		// r.Patch("/:id", themeHandler.UpdateTheme)
+		// r.Delete("/:id", themeHandler.DeleteTheme)
 	})
 
 	// Handle 404 - Route not found
