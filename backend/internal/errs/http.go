@@ -25,22 +25,67 @@ func NewHTTPError(code int, err error) HTTPError {
 	}
 }
 
-func BadRequest(msg string) HTTPError {
-	return NewHTTPError(http.StatusBadRequest, errors.New(msg))
+// BadRequest accepts optional custom message, defaults to "bad request"
+func BadRequest(msg ...string) HTTPError {
+	message := "bad request"
+	if len(msg) > 0 && msg[0] != "" {
+		message = msg[0]
+	}
+	return NewHTTPError(http.StatusBadRequest, errors.New(message))
 }
 
-func Unauthorized() HTTPError {
-	return NewHTTPError(http.StatusUnauthorized, errors.New("unauthorized"))
+// Unauthorized accepts optional custom message, defaults to "unauthorized"
+func Unauthorized(msg ...string) HTTPError {
+	message := "unauthorized"
+	if len(msg) > 0 && msg[0] != "" {
+		message = msg[0]
+	}
+	return NewHTTPError(http.StatusUnauthorized, errors.New(message))
 }
 
-func NotFound(title string, withKey string, withValue any) HTTPError {
-	return NewHTTPError(http.StatusNotFound, fmt.Errorf("%s with %s='%v' not found", title, withKey, withValue))
+// NotFound with flexible parameters
+func NotFound(msg ...string) HTTPError {
+	if len(msg) == 0 {
+		return NewHTTPError(http.StatusNotFound, errors.New("resource not found"))
+	}
+
+	// If only one argument, use it as the message
+	if len(msg) == 1 {
+		return NewHTTPError(http.StatusNotFound, errors.New(msg[0]))
+	}
+
+	// If three arguments, format as: "title with key='value' not found"
+	if len(msg) == 3 {
+		return NewHTTPError(http.StatusNotFound,
+			fmt.Errorf("%s with %s='%s' not found", msg[0], msg[1], msg[2]))
+	}
+
+	// Otherwise join all messages
+	return NewHTTPError(http.StatusNotFound, errors.New(fmt.Sprintf("%v", msg)))
 }
 
-func Conflict(title string, withKey string, withValue any) HTTPError {
-	return NewHTTPError(http.StatusConflict, fmt.Errorf("conflict: %s with %s='%s' already exists", title, withKey, withValue))
+// Conflict with flexible parameters
+func Conflict(msg ...string) HTTPError {
+	if len(msg) == 0 {
+		return NewHTTPError(http.StatusConflict, errors.New("resource conflict"))
+	}
+
+	// If only one argument, use it as the message
+	if len(msg) == 1 {
+		return NewHTTPError(http.StatusConflict, errors.New(msg[0]))
+	}
+
+	// If three arguments, format as: "title with key='value' already exists"
+	if len(msg) == 3 {
+		return NewHTTPError(http.StatusConflict,
+			fmt.Errorf("%s with %s='%s' already exists", msg[0], msg[1], msg[2]))
+	}
+
+	// Otherwise join all messages
+	return NewHTTPError(http.StatusConflict, errors.New(fmt.Sprintf("%v", msg)))
 }
 
+// InvalidRequestData for validation errors
 func InvalidRequestData(errors map[string]string) HTTPError {
 	return HTTPError{
 		Code:    http.StatusUnprocessableEntity,
@@ -48,14 +93,43 @@ func InvalidRequestData(errors map[string]string) HTTPError {
 	}
 }
 
-func InvalidJSON() HTTPError {
-	return NewHTTPError(http.StatusBadRequest, errors.New("invalid json"))
+// InvalidJSON accepts optional custom message
+func InvalidJSON(msg ...string) HTTPError {
+	message := "invalid json"
+	if len(msg) > 0 && msg[0] != "" {
+		message = msg[0]
+	}
+	return NewHTTPError(http.StatusBadRequest, errors.New(message))
 }
 
-func InternalServerError() HTTPError {
-	return NewHTTPError(http.StatusInternalServerError, errors.New("internal server error"))
+// InternalServerError accepts optional custom message
+func InternalServerError(msg ...string) HTTPError {
+	message := "internal server error"
+	if len(msg) > 0 && msg[0] != "" {
+		message = msg[0]
+	}
+	return NewHTTPError(http.StatusInternalServerError, errors.New(message))
 }
 
+// Forbidden accepts optional custom message
+func Forbidden(msg ...string) HTTPError {
+	message := "forbidden"
+	if len(msg) > 0 && msg[0] != "" {
+		message = msg[0]
+	}
+	return NewHTTPError(http.StatusForbidden, errors.New(message))
+}
+
+// UnprocessableEntity for single message (not validation errors)
+func UnprocessableEntity(msg ...string) HTTPError {
+	message := "unprocessable entity"
+	if len(msg) > 0 && msg[0] != "" {
+		message = msg[0]
+	}
+	return NewHTTPError(http.StatusUnprocessableEntity, errors.New(message))
+}
+
+// ErrorHandler remains the same
 func ErrorHandler(c *fiber.Ctx, err error) error {
 	var httpErr HTTPError
 	if castedErr, ok := err.(HTTPError); ok {
@@ -65,6 +139,5 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 	}
 
 	slog.Error("HTTP API error", "err", err.Error(), "method", c.Method(), "path", c.Path())
-
 	return c.Status(httpErr.Code).JSON(httpErr)
 }
