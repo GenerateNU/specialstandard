@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.3
 info:
   title: The Special Standard API
   version: 0.1.0
@@ -60,9 +60,113 @@ paths:
               example:
                 code: 404
                 message: "Resource not found"
+/themes:
+  post:
+    summary: Create a new theme
+    description: Create a new theme for therapy sessions
+    tags: [Themes]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - name
+              - month
+              - year
+            properties:
+              name:
+                type: string
+                description: Name of the theme
+                example: "Winter Wonderland"
+              month:
+                type: integer
+                description: Month of the theme (1-12)
+                example: 12
+              year:
+                type: integer
+                description: Year of the theme (e.g., 2024)
+                example: 2024
+    responses:
+      '201':
+        description: Theme created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Theme'
+      '400':
+        description: Bad request (e.g., validation errors)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+      '500':
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
 
 components:
   schemas:
+    CreateThemeInput:
+      type: object
+      required:
+        - name
+        - month
+        - year
+      properties:
+        name:
+          type: string
+          description: Name of the theme
+          example: "Winter Wonderland"
+        month:
+          type: integer
+          description: Month of the theme
+          example: 12
+        year:
+          type: integer
+          description: Year of the theme
+          example: 2024
+    Theme:
+      type: object
+      required:
+        - id
+        - name
+        - month
+        - year
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the theme
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          description: Name of the theme
+          example: "Winter Wonderland"
+        month:
+          type: integer
+          description: Month of the theme (1-12)
+          example: 12
+        year:
+          type: integer
+          description: Year of the theme (e.g., 2024)
+          example: 2024
+        created_at:
+          type: string
+          format: date-time
+          description: When the theme was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the theme was last updated
+          example: "2024-01-15T10:35:00Z"
+
     Session:
       type: object
       required:
