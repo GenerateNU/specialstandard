@@ -31,7 +31,7 @@ func BadRequest(msg ...string) HTTPError {
 	if len(msg) > 0 && msg[0] != "" {
 		message = msg[0]
 	}
-	return NewHTTPError(http.StatusBadRequest, errors.New(message))
+	return NewHTTPError(http.StatusBadRequest, fmt.Errorf("%s", message))
 }
 
 // Unauthorized accepts optional custom message, defaults to "unauthorized"
@@ -61,18 +61,18 @@ func NotFound(msg ...string) HTTPError {
 	}
 
 	// Otherwise join all messages
-	return NewHTTPError(http.StatusNotFound, errors.New(fmt.Sprintf("%v", msg)))
+	return NewHTTPError(http.StatusNotFound, fmt.Errorf("%v", msg))
 }
 
 // Conflict with flexible parameters
 func Conflict(msg ...string) HTTPError {
 	if len(msg) == 0 {
-		return NewHTTPError(http.StatusConflict, errors.New("resource conflict"))
+		return NewHTTPError(http.StatusConflict, fmt.Errorf("resource conflict"))
 	}
 
 	// If only one argument, use it as the message
 	if len(msg) == 1 {
-		return NewHTTPError(http.StatusConflict, errors.New(msg[0]))
+		return NewHTTPError(http.StatusConflict, fmt.Errorf(msg[0]))
 	}
 
 	// If three arguments, format as: "title with key='value' already exists"
@@ -82,7 +82,7 @@ func Conflict(msg ...string) HTTPError {
 	}
 
 	// Otherwise join all messages
-	return NewHTTPError(http.StatusConflict, errors.New(fmt.Sprintf("%v", msg)))
+	return NewHTTPError(http.StatusConflict, fmt.Errorf("%v", msg))
 }
 
 // InvalidRequestData for validation errors
