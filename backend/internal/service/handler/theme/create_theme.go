@@ -26,8 +26,8 @@ func (h *Handler) CreateTheme(c *fiber.Ctx) error {
 		validationErrors["month"] = "Month must be between 1 and 12"
 	}
 
-	if theme.Year < 1900 || theme.Year > 2100 {
-		validationErrors["year"] = "Year must be between 1900 and 2100"
+	if theme.Year < 2000 || theme.Year > 2500 {
+		validationErrors["year"] = "Year must be between 2000 and 2500"
 	}
 
 	if len(validationErrors) > 0 {
