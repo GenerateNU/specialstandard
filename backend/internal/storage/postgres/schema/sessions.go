@@ -30,6 +30,27 @@ func (r *SessionRepository) GetSessions(ctx context.Context) ([]models.Session, 
 	return sessions, nil
 }
 
+func (r *SessionRepository) DeleteSessions(ctx context.Context, id int) (string, error) {
+	session := &models.Session{}
+
+	query := `DELETE FROM sessions WHERE id = $1`
+	row := r.db.QueryRow(ctx, query, id)
+
+	if err := row.Scan(
+		&session.ID,
+		&session.StartTime,
+		&session.EndTime,
+		&session.TherapistID,
+		&session.Notes,
+		&session.CreatedAt,
+		&session.UpdatedAt,
+	); err != nil {
+		return "", err
+	}
+
+	return "Deleted the Session Successfully!", nil
+}
+
 func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 	return &SessionRepository{
 		db,

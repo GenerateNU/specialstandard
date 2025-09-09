@@ -59,6 +59,29 @@ paths:
                 code: 404
                 message: "Resource not found"
 
+  /sessions/{id}:
+    delete:
+      summary: Deletes the specific Session
+      description: Deletes the specific Session from the database with the given id.
+      tags: [Sessions]
+      responses:
+        '200':
+          description: The Deleted Session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Deleted the Session Successfully!"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   schemas:
     Session:

@@ -10,6 +10,7 @@ import (
 
 type SessionRepository interface {
 	GetSessions(ctx context.Context) ([]models.Session, error)
+	DeleteSessions(ctx context.Context, id int) (string, error)
 }
 
 type Repository struct {

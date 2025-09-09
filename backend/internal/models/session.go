@@ -8,11 +8,24 @@ import (
 
 type Session struct {
 	ID          uuid.UUID  `json:"id"`
+	StartTime   string     `json:"start_time"`
+	EndTime     string     `json:"end_time"`
 	TherapistID uuid.UUID  `json:"therapist_id"`
-	SessionDate time.Time  `json:"session_date"`
-	StartTime   *string    `json:"start_time"`
-	EndTime     *string    `json:"end_time"`
 	Notes       *string    `json:"notes"`
 	CreatedAt   *time.Time `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
+}
+
+type PostSessionInput struct {
+	StartTime   string    `json:"start_time"`
+	EndTime     string    `json:"end_time"`
+	TherapistID uuid.UUID `json:"therapist_id"`
+	Notes       *string   `json:"notes"`
+}
+
+type PatchSessionInput struct {
+	StartTime   *string    `json:"start_time"`
+	EndTime     *string    `json:"end_time"`
+	TherapistID *uuid.UUID `json:"therapist_id"`
+	Notes       *string    `json:"notes"`
 }

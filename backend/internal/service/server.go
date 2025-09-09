@@ -84,6 +84,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	sessionHandler := session.NewHandler(repo.Session)
 	apiV1.Route("/sessions", func(r fiber.Router) {
 		r.Get("/", sessionHandler.GetSessions)
+		r.Delete("/{id}", sessionHandler.DeleteSessions)
 	})
 
 	// Handle 404 - Route not found
