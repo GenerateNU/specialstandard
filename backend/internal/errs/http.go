@@ -88,7 +88,7 @@ func Conflict(msg ...string) HTTPError {
 // InvalidRequestData for validation errors
 func InvalidRequestData(errors map[string]string) HTTPError {
 	return HTTPError{
-		Code:    http.StatusUnprocessableEntity,
+		Code:    http.StatusBadRequest,
 		Message: errors,
 	}
 }

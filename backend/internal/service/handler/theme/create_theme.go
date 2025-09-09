@@ -26,8 +26,6 @@ func (h *Handler) CreateTheme(c *fiber.Ctx) error {
 		// Specific error handling with custom messages
 		errStr := err.Error()
 		switch {
-		case strings.Contains(errStr, "duplicate key"):
-			return errs.Conflict("Theme with this name already exists for the specified month and year")
 		case strings.Contains(errStr, "foreign key"):
 			return errs.BadRequest("Invalid reference to related data")
 		case strings.Contains(errStr, "connection refused"):
