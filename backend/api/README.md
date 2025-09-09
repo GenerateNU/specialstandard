@@ -7,7 +7,7 @@ This directory contains the OpenAPI spec for The Special Standard API.
 
 To update the OpenAPI spec:
 1. Edit `openapi.yaml`
-2. Restart the backend to see changes in Swagger UI. Changes made to `openapi.yaml` will not be automatically reflected in Swagger UI, as the spec is served statically at http://localhost:8080/api/openapi.yaml
+2. Restart the backend using `docker compose up backend --build` to see changes in Swagger UI. Changes made to `openapi.yaml` will not be automatically reflected in Swagger UI, as the spec is served statically at http://localhost:8080/api/openapi.yaml
 
 ## Why we are enforcing this contract
 The OpenAPI spec acts as a single source of truth for our API. It is a formal way to describe API endpoints, request/response schemas, and error details, allowing anyone to understand and use our API without looking at the actual code. It also helps verify that we are meeting project requirements.
