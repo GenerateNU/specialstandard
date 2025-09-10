@@ -6,6 +6,8 @@ info:
 servers:
   - url: http://localhost:8080/api/v1
     description: Development server
+  - url: https://king-prawn-app-n5vk6.ondigitalocean.app/specialstandard-backend/api/v1
+    description: Production server
 
 tags:
   - name: Health
