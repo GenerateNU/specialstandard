@@ -69,9 +69,8 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	app.Static("/api", "/app/api")
 
 	swaggerBaseUrl := os.Getenv("SWAGGER_BASE_URL")
-	swaggerEndpoint := swaggerBaseUrl + "/swagger/*"
 
-	app.Get(swaggerEndpoint, swagger.New(swagger.Config{
+	app.Get("/swagger/*", swagger.New(swagger.Config{
 		URL:         swaggerBaseUrl + "/api/openapi.yaml",
 		DeepLinking: false,
 	}))
