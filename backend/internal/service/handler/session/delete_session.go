@@ -1,6 +1,7 @@
 package session
 
 import (
+	"specialstandard/internal/errs"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -9,7 +10,7 @@ import (
 func (h *Handler) DeleteSessions(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return err
+		return errs.BadRequest("Invalid ID: Parsing Error")
 	}
 
 	message, err := h.sessionRepository.DeleteSessions(c.Context(), id)
