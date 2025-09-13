@@ -13,9 +13,14 @@ type SessionRepository interface {
 	DeleteSessions(ctx context.Context, id int) (string, error)
 }
 
+type ThemeRepository interface {
+	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)
+}
+
 type Repository struct {
 	db      *pgxpool.Pool
 	Session SessionRepository
+	Theme   ThemeRepository
 }
 
 func (r *Repository) Close() error {
@@ -31,5 +36,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{
 		db:      db,
 		Session: schema.NewSessionRepository(db),
+		Theme:   schema.NewThemeRepository(db),
 	}
 }
