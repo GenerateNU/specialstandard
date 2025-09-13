@@ -33,7 +33,7 @@ func (r *SessionRepository) GetSessions(ctx context.Context) ([]models.Session, 
 func (r *SessionRepository) DeleteSessions(ctx context.Context, id int) (string, error) {
 	session := &models.Session{}
 
-	query := `DELETE FROM sessions WHERE id = $1`
+	query := `DELETE FROM session WHERE id = $1`
 	row := r.db.QueryRow(ctx, query, id)
 
 	if err := row.Scan(
@@ -49,6 +49,30 @@ func (r *SessionRepository) DeleteSessions(ctx context.Context, id int) (string,
 	}
 
 	return "Deleted the Session Successfully!", nil
+}
+
+func (r *SessionRepository) PostSessions(ctx context.Context, input *models.PostSessionInput) (*models.Session, error) {
+	session := &models.Session{}
+
+	query := `INSERT INTO session (start_datetime, end_datetime, therapist_id, notes)
+				VALUES ($1, $2, $3, $4)
+				RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
+
+	row := r.db.QueryRow(ctx, query, input.StartTime, input.EndTime, input.TherapistID, input.Notes)
+	// Scan into Session model to return the one we just inserted.
+	if err := row.Scan(
+		&session.ID,
+		&session.StartTime,
+		&session.EndTime,
+		&session.TherapistID,
+		&session.Notes,
+		&session.CreatedAt,
+		&session.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+
+	return session, nil
 }
 
 func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {

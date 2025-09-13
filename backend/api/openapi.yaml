@@ -60,59 +60,69 @@ paths:
               example:
                 code: 404
                 message: "Resource not found"
-/themes:
-  post:
-    summary: Create a new theme
-    description: Create a new theme for therapy sessions
-    tags: [Themes]
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - name
-              - month
-              - year
-            properties:
-              name:
-                type: string
-                description: Name of the theme
-                example: "Winter Wonderland"
-              month:
-                type: integer
-                description: Month of the theme (1-12)
-                example: 12
-              year:
-                type: integer
-                description: Year of the theme (e.g., 2024)
-                example: 2024
-    responses:
-      '201':
-        description: Theme created successfully
+
+    post:
+      summary: Creates a new session
+      description: Creates a new session for the therapist
+      tags: [Sessions]
+      requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Theme'
-      '400':
-        description: Bad request (e.g., validation errors)
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Error'
-      '500':
-        description: Internal server error
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Error'
+              type: object
+              required:
+                - start_time
+                - end_time
+                - therapist_id
+              properties:
+                start_time:
+                  type: string
+                  format: date-time
+                  description: Start Time of the Session
+                  example: "2025-09-13T17:19:00Z"
+                end_time:
+                  type: string
+                  format: date-time
+                  description: End Time of the Session
+                  example: "2025-09-13T18:00:00Z"
+                therapist_id:
+                  type: string
+                  format: uuid
+                  description: UUID of the Therapist
+                  example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes:
+                  type: string
+                  description: Optional notes about the session
+                  example: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: invalid json
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /sessions/{id}:
     delete:
       summary: Deletes the specific Session
       description: Deletes the specific Session from the database with the given id.
-      tags: [Sessions]
+      tags: [ Sessions ]
       responses:
         '200':
           description: The Deleted Session
@@ -124,6 +134,54 @@ paths:
                   message:
                     type: string
                     example: "Deleted the Session Successfully!"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /themes:
+    post:
+      summary: Create a new theme
+      description: Create a new theme for therapy sessions
+      tags: [Themes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - month
+                - year
+              properties:
+                name:
+                  type: string
+                  description: Name of the theme
+                  example: "Winter Wonderland"
+                month:
+                  type: integer
+                  description: Month of the theme (1-12)
+                  example: 12
+                year:
+                  type: integer
+                  description: Year of the theme (e.g., 2024)
+                  example: 2024
+      responses:
+        '201':
+          description: Theme created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Theme'
+        '400':
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal server error
           content:

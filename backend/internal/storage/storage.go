@@ -11,6 +11,7 @@ import (
 type SessionRepository interface {
 	GetSessions(ctx context.Context) ([]models.Session, error)
 	DeleteSessions(ctx context.Context, id int) (string, error)
+	PostSessions(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
 }
 
 type ThemeRepository interface {
