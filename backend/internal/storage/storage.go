@@ -16,10 +16,15 @@ type ThemeRepository interface {
 	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)
 }
 
+type TherapistRepository interface {
+	GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error)
+}
+
 type Repository struct {
 	db      *pgxpool.Pool
 	Session SessionRepository
 	Theme   ThemeRepository
+	Therapist TherapistRepository
 }
 
 func (r *Repository) Close() error {
@@ -36,5 +41,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		db:      db,
 		Session: schema.NewSessionRepository(db),
 		Theme:   schema.NewThemeRepository(db),
+		Therapist: schema.NewTherapistRepository(db),
 	}
 }

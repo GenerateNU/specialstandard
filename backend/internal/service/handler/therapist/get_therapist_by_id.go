@@ -8,6 +8,7 @@ func (h *Handler) GetTherapistByID(c *fiber.Ctx) error {
 	therapistID := c.Params("id")
 
 	therapist, err := h.therapistRepository.GetTherapistByID(c.Context(), therapistID)
+	
 	if err != nil {
 		return err
 	}

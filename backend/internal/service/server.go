@@ -82,7 +82,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	apiV1.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusOK)
 	})
-	// Setup routes
+	// Setup 
 	sessionHandler := session.NewHandler(repo.Session)
 	apiV1.Route("/sessions", func(r fiber.Router) {
 		r.Get("/", sessionHandler.GetSessions)
@@ -99,7 +99,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 
 	therapistHandler := therapist.NewHandler(repo.Therapist)
 	apiV1.Route("/therapists", func(r fiber.Router) {
-		r.Post("/:id", therapistHandler.GetTherapistByID)
+		r.Get("/:id", therapistHandler.GetTherapistByID)
 		// r.Get("/", therapistHandler.GetTherapist)
 		// r.Patch("/:id", therapistHandler.UpdateTherapist)
 		// r.Delete("/:id", therapistHandler.DeleteTherapist)
