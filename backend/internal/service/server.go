@@ -1,7 +1,6 @@
 package service
 
 import (
-	"os"
 	"specialstandard/internal/config"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/service/handler/session"
@@ -69,11 +68,8 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 
 	app.Static("/api", "/app/api")
 
-	swaggerBaseUrl := os.Getenv("SWAGGER_BASE_URL")
-	swaggerEndpoint := swaggerBaseUrl + "/swagger/*"
-
-	app.Get(swaggerEndpoint, swagger.New(swagger.Config{
-		URL:         swaggerBaseUrl + "/api/openapi.yaml",
+	app.Get("/swagger/*", swagger.New(swagger.Config{
+		URL:         "/api/openapi.yaml",
 		DeepLinking: false,
 	}))
 
