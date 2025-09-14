@@ -4,6 +4,7 @@ import (
 	"context"
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/postgres/schema"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,7 +25,7 @@ type StudentRepository interface {
 	UpdateStudent(ctx context.Context, student models.Student) (models.Student, error)
 	DeleteStudent(ctx context.Context, id uuid.UUID) error
 }
-  
+
 type ThemeRepository interface {
 	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)
 }
@@ -37,12 +38,21 @@ type TherapistRepository interface {
 	PatchTherapist(ctx context.Context, therapistID string, updatedValue *models.UpdateTherapist) (*models.Therapist, error)
 }
 
+type ResourceRepository interface {
+	GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time) ([]models.Resource, error)
+	GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error)
+	UpdateResource(ctx context.Context, id uuid.UUID, resourceBody models.UpdateResourceBody) (*models.Resource, error)
+	CreateResource(ctx context.Context, resourceBody models.ResourceBody) (*models.Resource, error)
+	DeleteResource(ctx context.Context, id uuid.UUID) error
+}
+
 type Repository struct {
-	db      *pgxpool.Pool
-	Session SessionRepository
-	Student StudentRepository
-	Theme   ThemeRepository
+	db        *pgxpool.Pool
+	Session   SessionRepository
+	Student   StudentRepository
 	Therapist TherapistRepository
+	Resource  ResourceRepository
+	Theme     ThemeRepository
 }
 
 func (r *Repository) Close() error {
@@ -56,10 +66,11 @@ func (r *Repository) GetDB() *pgxpool.Pool {
 
 func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{
-		db:      db,
-		Session: schema.NewSessionRepository(db),
-		Student: schema.NewStudentRepository(db),
+		db:        db,
+		Session:   schema.NewSessionRepository(db),
+		Student:   schema.NewStudentRepository(db),
 		Theme:     schema.NewThemeRepository(db),
 		Therapist: schema.NewTherapistRepository(db),
+		Resource:  schema.NewResourceRepository(db),
 	}
 }
