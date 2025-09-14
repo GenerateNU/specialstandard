@@ -16,14 +16,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func ptrString(s string) *string {
-	return &s
-}
-
-func ptrTime(t time.Time) *time.Time {
-	return &t
-}
-
 func TestHandler_GetTherapistByID(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -35,14 +27,14 @@ func TestHandler_GetTherapistByID(t *testing.T) {
 			name: "successful get therapist by id",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
 				therapist := &models.Therapist{
-						ID:          uuid.New(),
-						First_name:  "Kevin",
-						Last_name:   "Matula",
-						Email:       "matulakevin91@gmail.com",
-						Active:      true,
-						Created_at:   time.Now(),
-						Updated_at:   time.Now(),
-					}
+					ID:         uuid.New(),
+					First_name: "Kevin",
+					Last_name:  "Matula",
+					Email:      "matulakevin91@gmail.com",
+					Active:     true,
+					Created_at: time.Now(),
+					Updated_at: time.Now(),
+				}
 				m.On("GetTherapistByID", mock.Anything).Return(therapist, nil)
 			},
 			expectedStatus: fiber.StatusOK,
