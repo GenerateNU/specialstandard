@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"net/mail"
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 
 	"github.com/jackc/pgx/v5"
@@ -92,6 +93,21 @@ func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models
 	}
 
 	return therapist, nil
+}
+
+func (r *TherapistRepository) DeleteTherapist(ctx context.Context, therapistID string) (string, error) {
+	query := `
+	DELETE 
+	FROM therapist
+	WHERE id=$1`
+
+	_, err := r.db.Exec(ctx, query, therapistID)
+
+	if err != nil {
+		return "", errs.BadRequest("Error querying database for given ID")
+	}
+
+	return "User Deleted Successfully", nil
 }
 
 func NewTherapistRepository(db *pgxpool.Pool) *TherapistRepository {

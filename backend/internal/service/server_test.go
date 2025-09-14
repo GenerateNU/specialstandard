@@ -156,3 +156,31 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 201, resp.StatusCode)
 }
+
+func TestDeleteTherapist(t *testing.T) {
+	// Setup
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+
+	mockTherapistRepo.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(&models.Therapist{
+		ID:         uuid.New(),
+		First_name: "Kevin",
+		Last_name:  "Matula",
+		Email:      "matulakevin91@gmail.com",
+		Active:     true,
+		Created_at: time.Now(),
+		Updated_at: time.Now(),
+	}, nil)
+
+	repo := &storage.Repository{
+		Therapist: mockTherapistRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Test
+	req := httptest.NewRequest("DELETE", "/api/v1/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+}

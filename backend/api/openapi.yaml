@@ -120,6 +120,35 @@ paths:
               example:
                 code: 404
                 message: "Resource not found"
+  /therapists/:id:
+    delete (by ID):
+      summary: Get the specific therapist corresponding to the given ID and delete it
+      description: Retrieve a specific therapist from the database and delete it
+      tags: [Therapists]
+      responses:
+        '200':
+          description: Message
+          content:
+            application/json:
+              schema:
+                type: string
+                items:
+                  $ref: '#/components/schemas/Therapist'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: "Error querying database for given ID"
   /therapists:
   post:
     summary: Create a new therapist

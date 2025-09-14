@@ -20,6 +20,7 @@ type TherapistRepository interface {
 	GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error)
 	GetTherapists(ctx context.Context) ([]models.Therapist, error)
 	CreateTherapist(ctx context.Context, therapist *models.CreateTherapistInput) (*models.Therapist, error)
+	DeleteTherapist(ctx context.Context, therapistID string) (string, error)
 }
 
 type Repository struct {

@@ -36,3 +36,11 @@ func (m *MockTherapistRepository) CreateTherapist(ctx context.Context, therapist
 	}
 	return args.Get(0).(*models.Therapist), args.Error(1)
 }
+
+func (m *MockTherapistRepository) DeleteTherapist(ctx context.Context, therapistID string) (string, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return "", args.Error(1)
+	}
+	return "User Deleted Successfully", args.Error(1)
+}
