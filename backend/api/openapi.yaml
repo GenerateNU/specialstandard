@@ -62,9 +62,9 @@ paths:
               example:
                 code: 404
                 message: "Resource not found"
-  /therapists:
+  /therapists/:id:
     get (by ID):
-      summary: Get the specific corresponding to the given ID
+      summary: Get the specific therapist corresponding to the given ID
       description: Retrieve a specific therapist from the database
       tags: [Therapists]
       responses:
@@ -91,6 +91,35 @@ paths:
               example:
                 code: 400
                 message: "There was an error parsing the given id! ERROR: invalid input syntax for type uuid: \"10\" (SQLSTATE 22P02)"
+  /therapists:
+    get:
+      summary: Get all therapists
+      description: Retrieve all therapists from the database
+      tags: [Therapists]
+      responses:
+        '200':
+          description: A list of Therapists
+          content:
+            application/json:
+              schema:
+                type: Therapists
+                items:
+                  $ref: '#/components/schemas/Therapists'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 404
+                message: "Resource not found"
 /themes:
   post:
     summary: Create a new theme
