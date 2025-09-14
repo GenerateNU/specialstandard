@@ -171,7 +171,7 @@ paths:
                 example: "Kevin"
               last name:
                 type: string
-                description: first name of the therapist
+                description: last name of the therapist
                 example: "Matilda"
               email:
                 type: string
@@ -196,6 +196,58 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Error'
+  /therapists:
+  patch:
+    summary: Update a characteristic of a given therapist
+    description: Update a specific field within a therapist object in the database
+    tags: [Therapists]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required (atleast one of the following):
+              - first name
+              - last name
+              - email
+            properties:
+              first name:
+                type: string
+                description: first name of the therapist
+                example: "Kevin"
+              last name:
+                type: string
+                description: last name of the therapist
+                example: "Matilda"
+              email:
+                type: string
+                description: email of the therapist
+                example: email123@example.com
+    responses:
+        '200':
+          description: Message
+          content:
+            application/json:
+              schema:
+                type: string
+                items:
+                  $ref: '#/components/schemas/Therapist'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: "There was an error parsing the given id!"
 /themes:
   post:
     summary: Create a new theme

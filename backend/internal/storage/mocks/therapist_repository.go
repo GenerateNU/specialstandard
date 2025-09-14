@@ -44,3 +44,13 @@ func (m *MockTherapistRepository) DeleteTherapist(ctx context.Context, therapist
 	}
 	return "User Deleted Successfully", args.Error(1)
 }
+
+func (m *MockTherapistRepository) PatchTherapist(ctx context.Context, therapistID string, updatedValue *models.UpdateTherapist) (*models.Therapist, error) {
+	args := m.Called(ctx, therapistID, updatedValue)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).(*models.Therapist), args.Error(1)
+}

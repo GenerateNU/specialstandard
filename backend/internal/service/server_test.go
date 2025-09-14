@@ -184,3 +184,38 @@ func TestDeleteTherapist(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 }
+
+func TestPatchTherapist(t *testing.T) {
+	// Setup
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+
+	mockTherapistRepo.On("PatchTherapist", mock.Anything, mock.AnythingOfType("string"), mock.Anything).Return(&models.Therapist{
+		ID:         uuid.New(),
+		First_name: "Kevin",
+		Last_name:  "Matula",
+		Email:      "matulakevin91@gmail.com",
+		Active:     true,
+		Created_at: time.Now(),
+		Updated_at: time.Now(),
+	}, nil)
+
+	repo := &storage.Repository{
+		Therapist: mockTherapistRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	body := `{
+    "first_name": "Kevin",
+    "last_name": "Matula",
+    "email": "matulakevin91@gmail.com"
+	}`
+
+	// Test
+	req := httptest.NewRequest("PATCH", "/api/v1/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+}

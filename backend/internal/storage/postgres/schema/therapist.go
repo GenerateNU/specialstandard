@@ -151,7 +151,7 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 	query += fmt.Sprintf(" WHERE id = $%d", argCount)
 	args = append(args, therapistID)
 
-	query += " RETURNING id, first_name, last_name, company_id, refresh_token, tenant_id, city, state, photo_url, (SELECT email FROM auth.users WHERE id = uc.id) AS email;"
+	query += " RETURNING id, first_name, last_name, email, active, created_at, updated_At"
 
 	rows, err := r.db.Query(ctx, query, args...)
 

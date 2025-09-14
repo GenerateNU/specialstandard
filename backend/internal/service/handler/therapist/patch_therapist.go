@@ -13,7 +13,7 @@ import (
 // We check for pretty errors in this function
 func (h *Handler) PatchTherapist(c *fiber.Ctx) error {
 	therapistID := c.Params("id")
-	var updatedValue *models.UpdateTherapist
+	var updatedValue models.UpdateTherapist
 
 	// Checking for no ID given
 	if therapistID == "" {
@@ -29,7 +29,7 @@ func (h *Handler) PatchTherapist(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	therapist, err := h.therapistRepository.PatchTherapist(c.Context(), therapistID, updatedValue)
+	therapist, err := h.therapistRepository.PatchTherapist(c.Context(), therapistID, &updatedValue)
 
 	// Here we parse the bad request which is recieved
 	if err != nil {
