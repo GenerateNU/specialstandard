@@ -36,6 +36,29 @@ func (r *TherapistRepository) GetTherapistByID(ctx context.Context, therapistID 
 	return &therapist, nil
 }
 
+func (r *TherapistRepository) GetTherapists(ctx context.Context) ([]models.Therapist, error) {
+	query := `
+	SELECT id, first_name, last_name, email, active, created_at, updated_at
+	FROM therapist`
+
+	rows, err := r.db.Query(ctx, query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	// Here i am using CollectExactlyOneRow because the DB should not have duplicate therapists!
+	therapists, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Therapist])
+
+	if err != nil {
+		return nil, err
+	}
+
+	return therapists, nil
+}
+
 func NewTherapistRepository(db *pgxpool.Pool) *TherapistRepository {
 	return &TherapistRepository{
 		db,

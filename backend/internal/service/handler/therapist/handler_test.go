@@ -70,3 +70,60 @@ func TestHandler_GetTherapistByID(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_GetTherapists(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockSetup      func(*mocks.MockTherapistRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful get therapists",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				therapists := []models.Therapist{
+					{
+						ID:         uuid.New(),
+						First_name: "Kevin",
+						Last_name:  "Matula",
+						Email:      "matulakevin91@gmail.com",
+						Active:     true,
+						Created_at: time.Now(),
+						Updated_at: time.Now(),
+					},
+				}
+				m.On("GetTherapists", mock.Anything).Return(therapists, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				m.On("GetTherapists", mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			app := fiber.New()
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := therapist.NewHandler(mockRepo)
+			app.Get("/therapists", handler.GetTherapists)
+
+			// Make request
+			req := httptest.NewRequest("GET", "/therapists", nil)
+			resp, _ := app.Test(req, -1)
+
+			// Assert
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}

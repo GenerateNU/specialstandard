@@ -90,3 +90,33 @@ func TestGetTherapistByIDEndpoint(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 }
+
+func TestGetTherapistsEndpoint(t *testing.T) {
+	// Setup
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+
+	mockTherapistRepo.On("GetTherapists", mock.Anything).Return([]models.Therapist{
+		{
+			ID:         uuid.New(),
+			First_name: "Kevin",
+			Last_name:  "Matula",
+			Email:      "matulakevin91@gmail.com",
+			Active:     true,
+			Created_at: time.Now(),
+			Updated_at: time.Now(),
+		},
+	}, nil)
+
+	repo := &storage.Repository{
+		Therapist: mockTherapistRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Test
+	req := httptest.NewRequest("GET", "/api/v1/therapists", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+}
