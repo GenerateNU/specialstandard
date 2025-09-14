@@ -24,14 +24,21 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	repo := schema.NewSessionRepository(testDB.Pool)
 	ctx := context.Background()
 
-	// Generate a UUID for therapist_id
+	// Create a test therapist first (required for foreign key)
 	therapistID := uuid.New()
-
-	// Insert test data with UUID
 	_, err := testDB.Pool.Exec(ctx, `
-        INSERT INTO sessions (therapist_id, session_date, start_time, end_time, notes)
-        VALUES ($1, $2, $3, $4, $5)
-    `, therapistID, time.Now(), "10:00", "11:00", "Test session")
+        INSERT INTO therapist (id, first_name, last_name, email)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, "John", "Doe", "john.doe@example.com")
+	assert.NoError(t, err)
+
+	// Insert test session data using new schema
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx, `
+        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, startTime, endTime, "Test session")
 	assert.NoError(t, err)
 
 	// Test
@@ -41,5 +48,53 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 1)
 	assert.Equal(t, "Test session", *sessions[0].Notes)
-	assert.Equal(t, therapistID, sessions[0].TherapistID) // Optional: verify the therapist ID matches
+	assert.Equal(t, therapistID, sessions[0].TherapistID)
+	assert.True(t, sessions[0].EndDatetime.After(sessions[0].StartDatetime))
+}
+
+func TestSessionRepository_GetSessionByID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+
+	// Setup
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionRepository(testDB.Pool)
+	ctx := context.Background()
+
+	// Create a test therapist first
+	therapistID := uuid.New()
+	_, err := testDB.Pool.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, "Jane", "Smith", "jane.smith@example.com")
+	assert.NoError(t, err)
+
+	// Insert test session and capture the generated ID
+	sessionID := uuid.New()
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx, `
+        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
+        VALUES ($1, $2, $3, $4, $5)
+    `, sessionID, therapistID, startTime, endTime, "Get by ID test session")
+	assert.NoError(t, err)
+
+	// Test
+	session, err := repo.GetSessionByID(ctx, sessionID.String())
+
+	// Assert
+	assert.NoError(t, err)
+	assert.NotNil(t, session)
+	assert.Equal(t, sessionID, session.ID)
+	assert.Equal(t, therapistID, session.TherapistID)
+	assert.Equal(t, "Get by ID test session", *session.Notes)
+
+	// Test not found
+	nonExistentID := uuid.New()
+	session, err = repo.GetSessionByID(ctx, nonExistentID.String())
+	assert.Error(t, err)
+	assert.Nil(t, session)
 }

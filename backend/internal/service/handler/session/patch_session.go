@@ -3,7 +3,6 @@ package session
 import (
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
-	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,10 +11,7 @@ import (
 func (h *Handler) PatchSessions(c *fiber.Ctx) error {
 	var session models.PatchSessionInput
 
-	id, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return errs.BadRequest("ID: Parsing Error")
-	}
+	id := c.Params("id")
 
 	if err := c.BodyParser(&session); err != nil {
 		return errs.InvalidJSON("Failed to parse PatchSessionInput data")

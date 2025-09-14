@@ -10,9 +10,10 @@ import (
 
 type SessionRepository interface {
 	GetSessions(ctx context.Context) ([]models.Session, error)
-	DeleteSessions(ctx context.Context, id int) (string, error)
+	GetSessionByID(ctx context.Context, id string) (*models.Session, error)
+	DeleteSessions(ctx context.Context, id string) (string, error)
 	PostSessions(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
-	PatchSessions(ctx context.Context, id int, session *models.PatchSessionInput) (*models.Session, error)
+	PatchSessions(ctx context.Context, id string, session *models.PatchSessionInput) (*models.Session, error)
 }
 
 type ThemeRepository interface {

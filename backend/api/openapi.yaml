@@ -72,19 +72,19 @@ paths:
             schema:
               type: object
               required:
-                - start_time
-                - end_time
+                - start_datetime
+                - end_datetime
                 - therapist_id
               properties:
-                start_time:
+                start_datetime:
                   type: string
                   format: date-time
-                  description: Start Time of the Session
+                  description: Start date and time of the session
                   example: "2025-09-13T17:19:00Z"
-                end_time:
+                end_datetime:
                   type: string
                   format: date-time
-                  description: End Time of the Session
+                  description: End date and time of the session
                   example: "2025-09-13T18:00:00Z"
                 therapist_id:
                   type: string
@@ -104,8 +104,8 @@ paths:
                 $ref: '#/components/schemas/Session'
               example:
                 id: "123e4567-e89b-12d3-a456-426614174000"
-                start_time: "2025-09-13T17:19:00Z"
-                end_time: "2025-09-13T18:00:00Z"
+                start_datetime: "2025-09-13T17:19:00Z"
+                end_datetime: "2025-09-13T18:00:00Z"
                 therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
                 notes: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
                 created_at: "2025-09-13T10:30:00Z"
@@ -127,6 +127,59 @@ paths:
                 $ref: '#/components/schemas/Error'
 
   /sessions/{id}:
+    get:
+      summary: Get session by ID
+      description: Retrieve a specific therapy session by its UUID
+      tags: [Sessions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the Session to retrieve
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Session found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                start_datetime: "2025-09-13T17:19:00Z"
+                end_datetime: "2025-09-13T18:00:00Z"
+                therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
+                created_at: "2025-09-13T10:30:00Z"
+                updated_at: "2025-09-13T10:30:00Z"
+        '400':
+          description: Bad Request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 404
+                message: "Session not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
     delete:
       summary: Deletes the specific Session
       description: Deletes the specific Session from the database with the given id.
@@ -174,15 +227,15 @@ paths:
             schema:
               type: object
               properties:
-                start_time:
+                start_datetime:
                   type: string
                   format: date-time
-                  description: Start Time of the Session
+                  description: Start date and time of the session
                   example: "2025-09-13T17:19:00Z"
-                end_time:
+                end_datetime:
                   type: string
                   format: date-time
-                  description: End Time of the Session
+                  description: End date and time of the session
                   example: "2025-09-13T18:00:00Z"
                 therapist_id:
                   type: string
@@ -202,8 +255,8 @@ paths:
                 $ref: '#/components/schemas/Session'
               example:
                 id: "123e4567-e89b-12d3-a456-426614174000"
-                start_time: "2025-09-13T17:19:00Z"
-                end_time: "2025-09-13T18:00:00Z"
+                start_datetime: "2025-09-13T17:19:00Z"
+                end_datetime: "2025-09-13T18:00:00Z"
                 therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
                 notes: "Morale of the Story: Don't get attached"
                 created_at: "2025-09-13T10:30:00Z"
@@ -320,34 +373,30 @@ components:
       type: object
       required:
         - id
+        - start_datetime
+        - end_datetime
         - therapist_id
-        - session_date
       properties:
         id:
           type: string
           format: uuid
           description: Unique identifier for the session
           example: "123e4567-e89b-12d3-a456-426614174000"
+        start_datetime:
+          type: string
+          format: date-time
+          description: Start date and time of the session
+          example: "2024-01-15T14:30:00Z"
+        end_datetime:
+          type: string
+          format: date-time
+          description: End date and time of the session
+          example: "2024-01-15T15:30:00Z"
         therapist_id:
           type: string
           format: uuid
           description: ID of the therapist conducting the session
           example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        session_date:
-          type: string
-          format: date-time
-          description: Date and time when the session occurred
-          example: "2024-01-15T14:30:00Z"
-        start_time:
-          type: string
-          nullable: true
-          description: Session start time (optional)
-          example: "14:30"
-        end_time:
-          type: string
-          nullable: true
-          description: Session end time (optional)
-          example: "15:30"
         notes:
           type: string
           nullable: true

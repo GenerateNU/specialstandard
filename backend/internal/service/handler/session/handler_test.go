@@ -36,14 +36,13 @@ func TestHandler_GetSessions(t *testing.T) {
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				sessions := []models.Session{
 					{
-						ID:          uuid.New(),
-						TherapistID: uuid.New(),
-						SessionDate: time.Now(),
-						StartTime:   ptrString("10:00"),
-						EndTime:     ptrString("11:00"),
-						Notes:       ptrString("Test session"),
-						CreatedAt:   ptrTime(time.Now()),
-						UpdatedAt:   ptrTime(time.Now()),
+						ID:            uuid.New(),
+						TherapistID:   uuid.New(),
+						StartDatetime: time.Now(),
+						EndDatetime:   time.Now().Add(time.Hour),
+						Notes:         ptrString("Test session"),
+						CreatedAt:     ptrTime(time.Now()),
+						UpdatedAt:     ptrTime(time.Now()),
 					},
 				}
 				m.On("GetSessions", mock.Anything).Return(sessions, nil)
