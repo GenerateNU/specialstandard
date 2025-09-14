@@ -109,7 +109,7 @@ paths:
                 therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
                 notes: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
                 created_at: "2025-09-13T10:30:00Z"
-                updated_at: "2025-09-13T10:35:00Z"
+                updated_at: "2025-09-13T10:30:00Z"
         '400':
           description: Bad Request (e.g., validation errors)
           content:
@@ -135,7 +135,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: UUID of the Session to delete.
+          description: UUID of the Session to delete
           schema:
             type: string
             format: uuid
@@ -156,6 +156,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Updates the specific Session
+      description: Updates the Session with the given ID.
+      tags: [ Sessions ]
+      parameters:
+        - name: id
+          description: UUID of the Session to patch
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                start_time:
+                  type: string
+                  format: date-time
+                  description: Start Time of the Session
+                  example: "2025-09-13T17:19:00Z"
+                end_time:
+                  type: string
+                  format: date-time
+                  description: End Time of the Session
+                  example: "2025-09-13T18:00:00Z"
+                therapist_id:
+                  type: string
+                  format: uuid
+                  description: UUID of the Therapist
+                  example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes:
+                  type: string
+                  description: Optional notes about the session
+                  example: "Morale of the Story: Don't get attached"
+      responses:
+        '200':
+          description: Session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                start_time: "2025-09-13T17:19:00Z"
+                end_time: "2025-09-13T18:00:00Z"
+                therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes: "Morale of the Story: Don't get attached"
+                created_at: "2025-09-13T10:30:00Z"
+                updated_at: "2025-09-13T10:35:00Z"
 
   /themes:
     post:

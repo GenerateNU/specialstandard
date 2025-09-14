@@ -87,6 +87,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Get("/", sessionHandler.GetSessions)
 		r.Delete("/{id}", sessionHandler.DeleteSessions)
 		r.Post("/", sessionHandler.PostSessions)
+		r.Patch("/{id}", sessionHandler.PatchSessions)
 	})
 
 	themeHandler := theme.NewHandler(repo.Theme)

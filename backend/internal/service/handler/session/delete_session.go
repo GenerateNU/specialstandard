@@ -10,7 +10,7 @@ import (
 func (h *Handler) DeleteSessions(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return errs.BadRequest("Invalid ID: Parsing Error")
+		return errs.BadRequest("ID: Parsing Error")
 	}
 
 	message, err := h.sessionRepository.DeleteSessions(c.Context(), id)

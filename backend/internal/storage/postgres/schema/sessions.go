@@ -75,6 +75,35 @@ func (r *SessionRepository) PostSessions(ctx context.Context, input *models.Post
 	return session, nil
 }
 
+func (r *SessionRepository) PatchSessions(ctx context.Context, id int, input *models.PatchSessionInput) (*models.Session, error) {
+	session := &models.Session{}
+
+	query := `UPDATE session
+				SET
+					start_datetime = COALESCE($1, start_datetime),
+					end_datetime = COALESCE($2, end_datetime),
+					therapist_id = COALESCE($3, therapist_id),
+					notes = COALESCE($4, notes)
+				WHERE notes = $5
+				RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
+
+	row := r.db.QueryRow(ctx, query, input.StartTime, input.EndTime, input.TherapistID, input.Notes, id)
+
+	if err := row.Scan(
+		&session.ID,
+		&session.StartTime,
+		&session.EndTime,
+		&session.TherapistID,
+		&session.Notes,
+		&session.CreatedAt,
+		&session.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
+
 func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 	return &SessionRepository{
 		db,
