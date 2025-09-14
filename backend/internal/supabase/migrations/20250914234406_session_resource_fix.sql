@@ -1,4 +1,4 @@
-DROP TABLE session_resource
+DROP TABLE session_resource;
 
 CREATE TABLE session_resource (
     session_id UUID,
