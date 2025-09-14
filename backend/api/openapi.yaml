@@ -32,36 +32,36 @@ paths:
                 $ref: '#/components/schemas/Error'
 
   /themes:
-  post:
-    summary: Create a new theme
-    description: Create a new theme for therapy sessions
-    tags: [Themes]
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - name
-              - month
-              - year
-            properties:
-              name:
-                type: string
-                description: Name of the theme
-                example: "Winter Wonderland"
-              month:
-                type: integer
-                description: Month of the theme (1-12)
-                example: 12
-              year:
-                type: integer
-                description: Year of the theme (e.g., 2024)
-                example: 2024
-    responses:
-      '201':
-        description: Theme created successfully
+    post:
+      summary: Create a new theme
+      description: Create a new theme for therapy sessions
+      tags: [Themes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - month
+                - year
+              properties:
+                name:
+                  type: string
+                  description: Name of the theme
+                  example: "Winter Wonderland"
+                month:
+                  type: integer
+                  description: Month of the theme (1-12)
+                  example: 12
+                year:
+                  type: integer
+                  description: Year of the theme (e.g., 2024)
+                  example: 2024
+      responses:
+        '201':
+          description: Theme created successfully
 
   /sessions:
     get:
