@@ -6,12 +6,16 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func (h *Handler) PatchSessions(c *fiber.Ctx) error {
 	var session models.PatchSessionInput
 
-	id := c.Params("id")
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return errs.BadRequest("ID: Parsing Error")
+	}
 
 	if err := c.BodyParser(&session); err != nil {
 		return errs.InvalidJSON("Failed to parse PatchSessionInput data")

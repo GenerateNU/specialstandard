@@ -4,6 +4,7 @@ import (
 	"context"
 	"specialstandard/internal/models"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -51,7 +52,9 @@ func (r *SessionRepository) GetSessionByID(ctx context.Context, id string) (*mod
 	return &session, nil
 }
 
-func (r *SessionRepository) DeleteSessions(ctx context.Context, id string) (string, error) {
+func (r *SessionRepository) DeleteSessions(ctx context.Context, id uuid.UUID) (string, error) {
+	session := &models.Session{}
+
 	query := `DELETE FROM session WHERE id = $1`
 	_, err := r.db.Exec(ctx, query, id)
 	if err != nil {
@@ -85,7 +88,7 @@ func (r *SessionRepository) PostSessions(ctx context.Context, input *models.Post
 	return session, nil
 }
 
-func (r *SessionRepository) PatchSessions(ctx context.Context, id string, input *models.PatchSessionInput) (*models.Session, error) {
+func (r *SessionRepository) PatchSessions(ctx context.Context, id uuid.UUID, input *models.PatchSessionInput) (*models.Session, error) {
 	session := &models.Session{}
 
 	query := `UPDATE session
