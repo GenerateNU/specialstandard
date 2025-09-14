@@ -7,6 +7,7 @@ import (
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -146,6 +147,10 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 	if len(updates) == 0 {
 		return nil, errs.NotFound("No fields given to update.")
 	}
+
+	updates = append(updates, fmt.Sprintf("updated_at = $%d", argCount))
+	args = append(args, time.Now())
+	argCount++
 
 	query += " " + strings.Join(updates, ", ")
 	query += fmt.Sprintf(" WHERE id = $%d", argCount)
