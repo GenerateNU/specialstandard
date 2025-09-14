@@ -103,7 +103,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Post("/", therapistHandler.CreateTherapist)
 		r.Get("/", therapistHandler.GetTherapists)
 		r.Delete("/:id", therapistHandler.DeleteTherapist)
-		// r.Patch("/:id", therapistHandler.UpdateTherapist)
+		r.Patch("/:id", therapistHandler.PatchTherapist)
 	})
 
 	// Handle 404 - Route not found

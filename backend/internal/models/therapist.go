@@ -21,3 +21,10 @@ type CreateTherapistInput struct {
 	Last_name  string `json:"last_name"`
 	Email      string `json:"email"`
 }
+
+type UpdateTherapist struct {
+	First_name *string `json:"first_name"`
+	Last_name  *string `json:"last_name"`
+	Email      *string `json:"email"`
+	Active     *bool   `json:"active"`
+}

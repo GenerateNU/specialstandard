@@ -21,6 +21,7 @@ type TherapistRepository interface {
 	GetTherapists(ctx context.Context) ([]models.Therapist, error)
 	CreateTherapist(ctx context.Context, therapist *models.CreateTherapistInput) (*models.Therapist, error)
 	DeleteTherapist(ctx context.Context, therapistID string) (string, error)
+	PatchTherapist(ctx context.Context, therapistID string, updatedValue *models.UpdateTherapist) (*models.Therapist, error)
 }
 
 type Repository struct {
