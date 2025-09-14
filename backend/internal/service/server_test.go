@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -119,4 +120,39 @@ func TestGetTherapistsEndpoint(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
+}
+
+func TestCreateTherapistEndpoint(t *testing.T) {
+	// Setup
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+
+	mockTherapistRepo.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&models.Therapist{
+		ID:         uuid.New(),
+		First_name: "Kevin",
+		Last_name:  "Matula",
+		Email:      "matulakevin91@gmail.com",
+		Active:     true,
+		Created_at: time.Now(),
+		Updated_at: time.Now(),
+	}, nil)
+
+	repo := &storage.Repository{
+		Therapist: mockTherapistRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	body := `{
+    "first_name": "Kevin",
+    "last_name": "Matula",
+    "email": "matulakevin91@gmail.com"
+	}`
+
+	req := httptest.NewRequest("POST", "/api/v1/therapists", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 201, resp.StatusCode)
 }

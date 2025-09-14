@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"net/mail"
 	"specialstandard/internal/models"
 
 	"github.com/jackc/pgx/v5"
@@ -57,6 +58,40 @@ func (r *TherapistRepository) GetTherapists(ctx context.Context) ([]models.Thera
 	}
 
 	return therapists, nil
+}
+
+func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models.CreateTherapistInput) (*models.Therapist, error) {
+	// Create a Therapist object to return
+	therapist := &models.Therapist{}
+
+	// AYEEE EMAIL VALIDATION !!!
+	_, err := mail.ParseAddress(input.Email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	query := `
+        INSERT INTO therapist (first_name, last_name, email)
+        VALUES ($1, $2, $3)
+        RETURNING id, first_name, last_name, email, active, created_at, updated_At`
+
+	row := r.db.QueryRow(ctx, query, input.First_name, input.Last_name, input.Email)
+
+	// Scan into the therapist object
+	if err := row.Scan(
+		&therapist.ID,
+		&therapist.First_name,
+		&therapist.Last_name,
+		&therapist.Email,
+		&therapist.Active,
+		&therapist.Created_at,
+		&therapist.Updated_at,
+	); err != nil {
+		return nil, err
+	}
+
+	return therapist, nil
 }
 
 func NewTherapistRepository(db *pgxpool.Pool) *TherapistRepository {

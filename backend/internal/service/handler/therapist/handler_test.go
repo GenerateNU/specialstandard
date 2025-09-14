@@ -3,6 +3,7 @@ package therapist_test
 import (
 	"errors"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -119,6 +120,67 @@ func TestHandler_GetTherapists(t *testing.T) {
 
 			// Make request
 			req := httptest.NewRequest("GET", "/therapists", nil)
+			resp, _ := app.Test(req, -1)
+
+			// Assert
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandler_CreateTherapist(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockSetup      func(*mocks.MockTherapistRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful create therapist",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				therapist := &models.Therapist{
+					ID:         uuid.New(),
+					First_name: "Kevin",
+					Last_name:  "Matula",
+					Email:      "poop123@gmail.com",
+					Active:     true,
+					Created_at: time.Now(),
+					Updated_at: time.Now(),
+				}
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+			},
+			expectedStatus: fiber.StatusCreated,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			app := fiber.New()
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := therapist.NewHandler(mockRepo)
+			app.Post("/therapists", handler.CreateTherapist)
+
+			body := `{
+    		"first_name": "Kevin",
+    		"last_name": "Matula",
+    		"email": "poop123@gmail.com"
+			}`
+
+			req := httptest.NewRequest("POST", "/therapists", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
 			resp, _ := app.Test(req, -1)
 
 			// Assert

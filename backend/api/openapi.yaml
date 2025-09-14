@@ -120,6 +120,53 @@ paths:
               example:
                 code: 404
                 message: "Resource not found"
+  /therapists:
+  post:
+    summary: Create a new therapist
+    description: Create a new therapist for school districts
+    tags: [Therapists]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - first name
+              - last name
+              - email
+            properties:
+              first name:
+                type: string
+                description: first name of the therapist
+                example: "Kevin"
+              last name:
+                type: string
+                description: first name of the therapist
+                example: "Matilda"
+              email:
+                type: string
+                description: email of the therapist
+                example: email123@example.com
+    responses:
+      '201':
+        description: Therapist created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Therapist'
+      '400':
+        description: Bad request (e.g., validation errors)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+      '500':
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
 /themes:
   post:
     summary: Create a new theme

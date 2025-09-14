@@ -100,6 +100,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	therapistHandler := therapist.NewHandler(repo.Therapist)
 	apiV1.Route("/therapists", func(r fiber.Router) {
 		r.Get("/:id", therapistHandler.GetTherapistByID)
+		r.Post("/", therapistHandler.CreateTherapist)
 		r.Get("/", therapistHandler.GetTherapists)
 		// r.Patch("/:id", therapistHandler.UpdateTherapist)
 		// r.Delete("/:id", therapistHandler.DeleteTherapist)

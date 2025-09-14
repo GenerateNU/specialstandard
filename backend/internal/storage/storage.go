@@ -19,6 +19,7 @@ type ThemeRepository interface {
 type TherapistRepository interface {
 	GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error)
 	GetTherapists(ctx context.Context) ([]models.Therapist, error)
+	CreateTherapist(ctx context.Context, therapist *models.CreateTherapistInput) (*models.Therapist, error)
 }
 
 type Repository struct {
