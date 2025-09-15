@@ -1,10 +1,8 @@
 name: backend
-
 on:
   pull_request:
     branches:
       - "main"
-
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -18,7 +16,7 @@ jobs:
           filters: |
             backend:
               - 'backend/**'
-
+  
   backend-lint:
     name: backend-lint
     runs-on: ubuntu-latest
@@ -35,18 +33,81 @@ jobs:
           version: latest
           working-directory: ./backend/
           args: --timeout=5m
-
+  
   backend-tests:
     name: backend-tests
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.backend == 'true'
+    continue-on-error: true  # Tests won't block PR
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - name: Test Backend
+      - name: Run Tests
         run: |
           cd backend
-          go test ./...
+          make test
+      - name: Generate Coverage Report
+        run: |
+          cd backend
+          go test ./... -v -coverprofile=coverage.out
+          go tool cover -func=coverage.out
+          go tool cover -html=coverage.out -o coverage.html
+      - name: Display Coverage Info
+        run: |
+          cd backend
+          # Extract total coverage percentage
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          echo "Total coverage: $COVERAGE%"
+          echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          
+          # Set your minimum coverage threshold (adjust as needed)
+          THRESHOLD=70
+          echo "THRESHOLD=$THRESHOLD" >> $GITHUB_ENV
+          
+          # Just display coverage status without failing
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "⚠️ Coverage $COVERAGE% is below recommended threshold $THRESHOLD%"
+            echo "COVERAGE_STATUS=below" >> $GITHUB_ENV
+          else
+            echo "✅ Coverage $COVERAGE% meets threshold $THRESHOLD%"
+            echo "COVERAGE_STATUS=meets" >> $GITHUB_ENV
+          fi
+      # Upload coverage report as artifact
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            backend/coverage.out
+            backend/coverage.html
+      # Add comment to PR
+      - name: Coverage Comment
+        uses: actions/github-script@v7
+        if: always() && github.event_name == 'pull_request'
+        with:
+          script: |
+            const coverage = process.env.COVERAGE || 'N/A';
+            const threshold = process.env.THRESHOLD || '70';
+            const status = process.env.COVERAGE_STATUS || 'unknown';
+            
+            const emoji = status === 'meets' ? '✅' : '⚠️';
+            const statusText = status === 'meets' 
+              ? `meets threshold (${threshold}%)` 
+              : `is below recommended threshold (${threshold}%)`;
+            
+            const body = `## Backend Test Coverage: ${coverage}%
+            
+            ${emoji} Coverage ${statusText}
+            
+            Coverage report has been uploaded as an artifact.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

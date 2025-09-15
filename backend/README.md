@@ -47,6 +47,7 @@ golangci-lint run
 ```
 
 To automatically fix linting issues:
+
 ```bash
 golangci-lint run --fix
 ```

@@ -19,12 +19,16 @@ type StudentRepository interface {
 	AddStudent(ctx context.Context, student models.Student) error
 	UpdateStudent(ctx context.Context, student models.Student) error
 	DeleteStudent(ctx context.Context, id uuid.UUID) error
+  
+type ThemeRepository interface {
+	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)
 }
 
 type Repository struct {
 	db      *pgxpool.Pool
 	Session SessionRepository
 	Student StudentRepository
+	Theme   ThemeRepository
 }
 
 func (r *Repository) Close() error {
@@ -41,5 +45,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		db:      db,
 		Session: schema.NewSessionRepository(db),
 		Student: schema.NewStudentRepository(db),
+		Theme:   schema.NewThemeRepository(db),
 	}
 }

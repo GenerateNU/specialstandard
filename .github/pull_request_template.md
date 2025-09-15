@@ -12,9 +12,7 @@ Please describe the tests that you manually ran to verify your changes (beyond a
 # Checklist
 
 - [ ] I have performed a self-review of my code
-- [ ] I have reached out to another developer to review my code
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have written unit tests for my code and tested it manually
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] I have updated the OpenAPI spec, if needed
-
