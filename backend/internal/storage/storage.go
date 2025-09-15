@@ -11,6 +11,7 @@ import (
 
 type SessionRepository interface {
 	GetSessions(ctx context.Context) ([]models.Session, error)
+	GetSessionByID(ctx context.Context, id string) (*models.Session, error)
 	DeleteSessions(ctx context.Context, id uuid.UUID) (string, error)
 	PostSessions(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
 	PatchSessions(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)

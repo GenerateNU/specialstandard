@@ -2,6 +2,8 @@ package service_test
 
 import (
 	"net/http/httptest"
+	"specialstandard/internal/errs"
+	"specialstandard/internal/service/handler/session"
 	"testing"
 
 	"specialstandard/internal/config"
@@ -10,7 +12,9 @@ import (
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/mocks"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

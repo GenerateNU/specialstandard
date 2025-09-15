@@ -50,7 +50,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.Len(t, sessions, 1)
 	assert.Equal(t, "Test session", *sessions[0].Notes)
 	assert.Equal(t, therapistID, sessions[0].TherapistID)
-	assert.True(t, sessions[0].EndDatetime.After(sessions[0].StartDatetime))
+	assert.True(t, sessions[0].EndDateTime.After(sessions[0].StartDateTime))
 }
 
 func TestSessionRepository_GetSessionByID(t *testing.T) {
