@@ -764,9 +764,9 @@ func TestHandler_DeleteStudent(t *testing.T) {
 			name:      "delete non-existent student",
 			studentID: studentID.String(),
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("DeleteStudent", mock.Anything, studentID).Return(errors.New("student not found"))
+				m.On("DeleteStudent", mock.Anything, studentID).Return(errors.New("no rows in result set"))
 			},
-			expectedStatus: fiber.StatusInternalServerError,
+			expectedStatus: fiber.StatusNotFound, 
 			wantErr:        true,
 		},
 	}
@@ -808,7 +808,9 @@ func TestHandler_DeleteStudent(t *testing.T) {
 				switch tt.name {
 				case "invalid UUID format":
 					assert.Contains(t, errorResp["error"], "Invalid UUID format")
-				case "repository error", "delete non-existent student":
+				case "delete non-existent student":
+					assert.Contains(t, errorResp["error"], "Student not found")  // Change this line
+				case "repository error":
 					assert.Contains(t, errorResp["error"], "Database error")
 				}
 			}
