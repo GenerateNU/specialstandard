@@ -1,7 +1,9 @@
 package student
+
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"strings"
 	"time"
 )
 
@@ -34,18 +36,26 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 	}
 	
 	if err := c.BodyParser(&req); err != nil {
-    return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-        "error": "Invalid JSON format",
-    })
-}
-
-	existingStudent, err := h.studentRepository.GetStudent(c.Context(), id)
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Student not found",
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid JSON format",
 		})
 	}
 
+	existingStudent, err := h.studentRepository.GetStudent(c.Context(), id)
+	if err != nil {
+		// Student not found
+		if strings.Contains(err.Error(), "no rows") || err.Error() == "sql: no rows in result set" {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Student not found",
+			})
+		}
+		// Some other database error
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database error",
+		})
+	}
+
+	// Update fields if provided
 	if req.FirstName != nil {
 		existingStudent.FirstName = *req.FirstName
 	}
@@ -77,12 +87,11 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 		existingStudent.IEP = *req.IEP
 	}
 
-if err := h.studentRepository.UpdateStudent(c.Context(), existingStudent); err != nil {
-    return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-        "error": "Database error",
-    })
-}
-	
+	if err := h.studentRepository.UpdateStudent(c.Context(), existingStudent); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database error",
+		})
+	}
 
 	return c.Status(fiber.StatusOK).JSON(existingStudent)
 }
