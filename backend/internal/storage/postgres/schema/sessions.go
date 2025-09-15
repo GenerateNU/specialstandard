@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 
@@ -61,7 +60,6 @@ func (r *SessionRepository) DeleteSessions(ctx context.Context, id uuid.UUID) (s
 
 	cmdTag, err := r.db.Exec(ctx, query, id)
 	if err != nil {
-		fmt.Println(err.Error())
 		return "", err
 	}
 

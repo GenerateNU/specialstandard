@@ -2,6 +2,7 @@ package schema_test
 
 import (
 	"context"
+	"specialstandard/internal/models"
 	"testing"
 	"time"
 
@@ -12,6 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func ptrString(s string) *string {
+	return &s
+}
 
 func TestSessionRepository_GetSessions(t *testing.T) {
 	if testing.Short() {
@@ -138,4 +143,68 @@ func TestSessionRepository_DeleteSessions(t *testing.T) {
 	msg, err := repo.DeleteSessions(ctx, sessionID)
 	require.NoError(t, err)
 	assert.Equal(t, "Deleted the Session Successfully!", msg)
+}
+
+func TestSessionRepository_PostSessions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping DB tests in short mode")
+	}
+
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionRepository(testDB.Pool)
+	ctx := context.Background()
+
+	therapistID := uuid.New()
+	startTime := time.Now()
+	endTime := time.Now().Add(time.Hour)
+	notes := ptrString("foreign key violation")
+	postSession := &models.PostSessionInput{
+		StartTime:   startTime,
+		EndTime:     endTime,
+		TherapistID: therapistID,
+		Notes:       notes,
+	}
+	postedSession, err := repo.PostSessions(ctx, postSession)
+	assert.Error(t, err)
+	assert.Nil(t, postedSession)
+
+	// INSERTING VALID THERAPIST
+	therapistID = uuid.New()
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO therapist (id, first_name, last_name, email)
+        	 VALUES ($1, $2, $3, $4)`,
+		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
+	assert.NoError(t, err)
+
+	startTime = time.Now()
+	endTime = time.Now().Add(-time.Hour)
+	notes = ptrString("check constraint violation")
+	postSession = &models.PostSessionInput{
+		StartTime:   startTime,
+		EndTime:     endTime,
+		TherapistID: therapistID,
+		Notes:       notes,
+	}
+	postedSession, err = repo.PostSessions(ctx, postSession)
+	assert.Error(t, err)
+	assert.Nil(t, postedSession)
+	assert.False(t, endTime.After(startTime))
+
+	startTime = time.Now()
+	endTime = time.Now().Add(time.Hour)
+	notes = ptrString("success")
+	postSession = &models.PostSessionInput{
+		StartTime:   startTime,
+		EndTime:     endTime,
+		TherapistID: therapistID,
+		Notes:       notes,
+	}
+	postedSession, err = repo.PostSessions(ctx, postSession)
+	assert.NoError(t, err)
+	assert.NotNil(t, postedSession)
+	assert.Equal(t, postedSession.TherapistID, therapistID)
+	assert.Equal(t, postedSession.Notes, notes)
+	assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
 }
