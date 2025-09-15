@@ -29,12 +29,3 @@ type PatchSessionInput struct {
 	TherapistID *uuid.UUID `json:"therapist_id"`
 	Notes       *string    `json:"notes"`
 }
-
-// SessionQueryParams for filtering sessions (for future use)
-type SessionQueryParams struct {
-	TherapistID *uuid.UUID `query:"therapist_id"`
-	FromDate    *time.Time `query:"from_date"`
-	ToDate      *time.Time `query:"to_date"`
-	Limit       *int       `query:"limit"`
-	Offset      *int       `query:"offset"`
-}
