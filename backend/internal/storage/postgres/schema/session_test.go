@@ -208,3 +208,113 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	assert.Equal(t, postedSession.Notes, notes)
 	assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
 }
+
+func TestSessionRepository_PatchSessions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping DB Tests in short mode")
+	}
+
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionRepository(testDB.Pool)
+	ctx := context.Background()
+
+	// Given ID Not Found 404 Error
+	badID := uuid.New()
+	patch := &models.PatchSessionInput{
+		Notes: ptrString("404 NOT FOUND ERROR"),
+	}
+	patchedSession, err := repo.PatchSessions(ctx, badID, patch)
+	assert.Error(t, err)
+	assert.Nil(t, patchedSession)
+
+	// Foreign Key Violation
+	id := uuid.New()
+	therapistID := uuid.New()
+	patch = &models.PatchSessionInput{
+		TherapistID: &therapistID,
+	}
+	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	assert.Error(t, err)
+	assert.Nil(t, patchedSession)
+
+	// INSERTING THERAPIST NOW
+	therapistID = uuid.New()
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO therapist (id, first_name, last_name, email)
+             VALUES ($1, $2, $3, $4)`,
+		therapistID, "Doc", "The Dwarf", "doc@sevendwarves.com")
+	assert.NoError(t, err)
+
+	startTime := time.Now()
+	endTime := time.Now().Add(-time.Hour)
+	notes := ptrString("check constraint violation")
+	patch = &models.PatchSessionInput{
+		StartTime: &startTime,
+		EndTime:   &endTime,
+		Notes:     notes,
+	}
+	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	assert.Error(t, err)
+	assert.Nil(t, patchedSession)
+	assert.False(t, endTime.After(startTime))
+
+	// INSERT ACTUAL SESSION TO EDIT
+	id = uuid.New()
+	startTime = time.Now()
+	endTime = time.Now().Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
+             VALUES ($1, $2, $3, $4, $5)`,
+		id, therapistID, startTime, endTime, "Inserted")
+	assert.NoError(t, err)
+
+	notes = ptrString("success with one change")
+	patch = &models.PatchSessionInput{
+		Notes: notes,
+	}
+	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	assert.NoError(t, err)
+	assert.NotNil(t, patchedSession)
+	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
+	assert.Equal(t, patchedSession.TherapistID, therapistID)
+	assert.Equal(t, patchedSession.Notes, notes)
+
+	startTime = time.Now()
+	endTime = time.Now().Add(time.Hour)
+	patch = &models.PatchSessionInput{
+		StartTime: &startTime,
+		EndTime:   &endTime,
+	}
+	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	assert.NoError(t, err)
+	assert.NotNil(t, patchedSession)
+	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
+	assert.Equal(t, patchedSession.TherapistID, therapistID)
+	assert.Equal(t, patchedSession.Notes, notes)
+
+	// ADDING A SECOND THERAPIST TO UPDATE TO
+	therapistID = uuid.New()
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO therapist (id, first_name, last_name, email)
+             VALUES ($1, $2, $3, $4)`,
+		therapistID, "Courage", "The Cowardly Dog", "havecourage@cowardice.com")
+	assert.NoError(t, err)
+
+	startTime = time.Now()
+	endTime = time.Now().Add(time.Hour)
+	notes = ptrString("New Note")
+	patch = &models.PatchSessionInput{
+		StartTime:   &startTime,
+		EndTime:     &endTime,
+		TherapistID: &therapistID,
+		Notes:       notes,
+	}
+	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	assert.NoError(t, err)
+	assert.NotNil(t, patchedSession)
+	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
+	assert.Equal(t, patchedSession.TherapistID, therapistID)
+	assert.Equal(t, patchedSession.Notes, notes)
+}
