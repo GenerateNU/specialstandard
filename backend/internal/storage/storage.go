@@ -6,15 +6,25 @@ import (
 	"specialstandard/internal/storage/postgres/schema"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/google/uuid"
 )
 
 type SessionRepository interface {
 	GetSessions(ctx context.Context) ([]models.Session, error)
 }
 
+type StudentRepository interface {
+	GetStudents(ctx context.Context) ([]models.Student, error)
+	GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error)
+	AddStudent(ctx context.Context, student models.Student) error
+	UpdateStudent(ctx context.Context, student models.Student) error
+	DeleteStudent(ctx context.Context, id uuid.UUID) error
+}
+
 type Repository struct {
 	db      *pgxpool.Pool
 	Session SessionRepository
+	Student StudentRepository
 }
 
 func (r *Repository) Close() error {
@@ -30,5 +40,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{
 		db:      db,
 		Session: schema.NewSessionRepository(db),
+		Student: schema.NewStudentRepository(db),
 	}
 }
