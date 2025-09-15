@@ -19,14 +19,6 @@ import (
 	"strings"
 )
 
-func ptrString(s string) *string {
-	return &s
-}
-
-func ptrTime(t time.Time) *time.Time {
-	return &t
-}
-
 func TestHandler_GetStudents(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -97,9 +89,10 @@ func TestHandler_GetStudents(t *testing.T) {
 				err = json.Unmarshal(body, &students)
 				assert.NoError(t, err)
 
-				if tt.name == "empty students list" {
+				switch tt.name {
+				case "empty students list":
 					assert.Len(t, students, 0)
-				} else if tt.name == "successful get students" {
+				case "successful get students":
 					assert.Len(t, students, 1)
 					assert.Equal(t, "Test", students[0].FirstName)
 					assert.Equal(t, "Student", students[0].LastName)
@@ -402,7 +395,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        true,
 		},
 
-		// Error Cases - Field Validation  
+		// Error Cases - Field Validation
 		{
 			name:      "invalid date format",
 			studentID: studentID.String(),
@@ -546,7 +539,7 @@ func TestHandler_AddStudent(t *testing.T) {
 
 		// Error Cases - Request Body Validation
 		{
-			name:        "invalid JSON body",
+			name: "invalid JSON body",
 			requestBody: `{
 				"first_name": "John",
 				"last_name": "Doe"
@@ -633,7 +626,7 @@ func TestHandler_AddStudent(t *testing.T) {
 
 		// Edge Cases
 		{
-			name: "valid date edge cases", 
+			name: "valid date edge cases",
 			requestBody: `{
 				"first_name": "Test",
 				"last_name": "Student",
@@ -768,7 +761,7 @@ func TestHandler_DeleteStudent(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name:      "delete non-existent student", 
+			name:      "delete non-existent student",
 			studentID: studentID.String(),
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("DeleteStudent", mock.Anything, studentID).Return(errors.New("student not found"))
