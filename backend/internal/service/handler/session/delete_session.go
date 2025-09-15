@@ -15,7 +15,9 @@ func (h *Handler) DeleteSessions(c *fiber.Ctx) error {
 
 	message, err := h.sessionRepository.DeleteSessions(c.Context(), id)
 	if err != nil {
-		return err
+		return errs.InternalServerError("Internal Server Error")
+	} else if message == "" {
+		return errs.NotFound("Session Not Found")
 	}
 
 	return c.Status(fiber.StatusOK).JSON(message)

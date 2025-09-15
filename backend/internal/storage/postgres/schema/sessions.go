@@ -2,6 +2,10 @@ package schema
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 
 	"github.com/google/uuid"
@@ -53,12 +57,17 @@ func (r *SessionRepository) GetSessionByID(ctx context.Context, id string) (*mod
 }
 
 func (r *SessionRepository) DeleteSessions(ctx context.Context, id uuid.UUID) (string, error) {
-	session := &models.Session{}
-
 	query := `DELETE FROM session WHERE id = $1`
-	_, err := r.db.Exec(ctx, query, id)
+
+	cmdTag, err := r.db.Exec(ctx, query, id)
 	if err != nil {
+		fmt.Println(err.Error())
 		return "", err
+	}
+
+	// If No Rows are deleted/affected.
+	if cmdTag.RowsAffected() == 0 {
+		return "", nil
 	}
 
 	return "Deleted the Session Successfully!", nil
@@ -71,12 +80,12 @@ func (r *SessionRepository) PostSessions(ctx context.Context, input *models.Post
 				VALUES ($1, $2, $3, $4)
 				RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
 
-	row := r.db.QueryRow(ctx, query, input.StartDatetime, input.EndDatetime, input.TherapistID, input.Notes)
+	row := r.db.QueryRow(ctx, query, input.StartTime, input.EndTime, input.TherapistID, input.Notes)
 	// Scan into Session model to return the one we just inserted.
 	if err := row.Scan(
 		&session.ID,
-		&session.StartDatetime,
-		&session.EndDatetime,
+		&session.StartDateTime,
+		&session.EndDateTime,
 		&session.TherapistID,
 		&session.Notes,
 		&session.CreatedAt,
@@ -100,17 +109,20 @@ func (r *SessionRepository) PatchSessions(ctx context.Context, id uuid.UUID, inp
 				WHERE id = $5
 				RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
 
-	row := r.db.QueryRow(ctx, query, input.StartDatetime, input.EndDatetime, input.TherapistID, input.Notes, id)
+	row := r.db.QueryRow(ctx, query, input.StartTime, input.EndTime, input.TherapistID, input.Notes, id)
 
 	if err := row.Scan(
 		&session.ID,
-		&session.StartDatetime,
-		&session.EndDatetime,
+		&session.StartDateTime,
+		&session.EndDateTime,
 		&session.TherapistID,
 		&session.Notes,
 		&session.CreatedAt,
 		&session.UpdatedAt,
 	); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.NotFound("Session Not Found")
+		}
 		return nil, err
 	}
 

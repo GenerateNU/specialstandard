@@ -8,8 +8,8 @@ import (
 
 type Session struct {
 	ID            uuid.UUID  `json:"id" db:"id"`
-	StartDatetime time.Time  `json:"start_datetime" db:"start_datetime"`
-	EndDatetime   time.Time  `json:"end_datetime" db:"end_datetime"`
+	StartDateTime time.Time  `json:"start_datetime" db:"start_datetime"`
+	EndDateTime   time.Time  `json:"end_datetime" db:"end_datetime"`
 	TherapistID   uuid.UUID  `json:"therapist_id" db:"therapist_id"`
 	Notes         *string    `json:"notes" db:"notes"`
 	CreatedAt     *time.Time `json:"created_at" db:"created_at"`
@@ -17,17 +17,17 @@ type Session struct {
 }
 
 type PostSessionInput struct {
-	StartDatetime time.Time `json:"start_datetime" validate:"required"`
-	EndDatetime   time.Time `json:"end_datetime" validate:"required"`
-	TherapistID   uuid.UUID `json:"therapist_id" validate:"required"`
-	Notes         *string   `json:"notes"`
+	StartTime   time.Time `json:"start_datetime" validate:"required"`
+	EndTime     time.Time `json:"end_datetime" validate:"required"`
+	TherapistID uuid.UUID `json:"therapist_id" validate:"required"`
+	Notes       *string   `json:"notes"`
 }
 
 type PatchSessionInput struct {
-	StartDatetime *time.Time `json:"start_datetime"`
-	EndDatetime   *time.Time `json:"end_datetime"`
-	TherapistID   *uuid.UUID `json:"therapist_id"`
-	Notes         *string    `json:"notes"`
+	StartTime   *time.Time `json:"start_datetime"`
+	EndTime     *time.Time `json:"end_datetime"`
+	TherapistID *uuid.UUID `json:"therapist_id"`
+	Notes       *string    `json:"notes"`
 }
 
 // SessionQueryParams for filtering sessions (for future use)

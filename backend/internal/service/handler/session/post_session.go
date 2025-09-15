@@ -27,6 +27,8 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		switch {
 		case strings.Contains(errStr, "foreign key"):
 			return errs.BadRequest("Invalid Reference")
+		case strings.Contains(errStr, "check constraint"):
+			return errs.BadRequest("Violated a check constraint")
 		case strings.Contains(errStr, "connection refused"):
 			return errs.InternalServerError("Database Connection Error")
 		default:

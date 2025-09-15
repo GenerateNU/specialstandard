@@ -29,6 +29,8 @@ func (h *Handler) PatchSessions(c *fiber.Ctx) error {
 			return errs.BadRequest("Invalid Reference")
 		case strings.Contains(errStr, "check constraint"):
 			return errs.BadRequest("Violated a check constraint")
+		case strings.Contains(errStr, "Not Found"):
+			return errs.NotFound("Session Not Found")
 		case strings.Contains(errStr, "connection refused"):
 			return errs.InternalServerError("Database Connection Error")
 		default:

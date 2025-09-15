@@ -89,7 +89,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 
-	
+
 	_, err = pool.Exec(ctx, `
         CREATE TABLE IF NOT EXISTS session (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

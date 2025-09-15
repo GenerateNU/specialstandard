@@ -4,6 +4,7 @@ import (
 	"context"
 	"specialstandard/internal/models"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -27,8 +28,11 @@ func (m *MockSessionRepository) GetSessionByID(ctx context.Context, id string) (
 	return args.Get(0).(*models.Session), args.Error(1)
 }
 
-func (m *MockSessionRepository) DeleteSessions(ctx context.Context, id string) (string, error) {
+func (m *MockSessionRepository) DeleteSessions(ctx context.Context, id uuid.UUID) (string, error) {
 	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return "", args.Error(1)
+	}
 	return args.String(0), args.Error(1)
 }
 
@@ -40,7 +44,7 @@ func (m *MockSessionRepository) PostSessions(ctx context.Context, session *model
 	return args.Get(0).(*models.Session), args.Error(1)
 }
 
-func (m *MockSessionRepository) PatchSessions(ctx context.Context, id string, session *models.PatchSessionInput) (*models.Session, error) {
+func (m *MockSessionRepository) PatchSessions(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error) {
 	args := m.Called(ctx, id, session)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
