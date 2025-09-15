@@ -65,7 +65,7 @@ func (r *SessionRepository) DeleteSessions(ctx context.Context, id uuid.UUID) (s
 
 	// If No Rows are deleted/affected.
 	if cmdTag.RowsAffected() == 0 {
-		return "", nil
+		return "not found", nil
 	}
 
 	return "Deleted the Session Successfully!", nil
