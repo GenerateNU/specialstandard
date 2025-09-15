@@ -10,6 +10,7 @@ import (
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/mocks"
 	"strings"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -133,23 +134,26 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 func TestCreateStudentEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
-
 	mockStudentRepo.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
+		// TODO: Add Therapist mock when Kevin's therapist repository is merged
+		// Currently therapist validation is commented out in AddStudent handler
 	}
 
 	app := service.SetupApp(config.Config{}, repo)
 
-	body := `{
+	testTherapistID := uuid.New()
+	
+	body := fmt.Sprintf(`{
 		"first_name": "John",
 		"last_name": "Doe",
 		"dob": "2010-05-15",
-		"therapist_id": "9dad94d8-6534-4510-90d7-e4e97c175a65",
+		"therapist_id": "%s",
 		"grade": "5th",
 		"iep": "Active IEP with speech therapy goals"
-	}`
+	}`, testTherapistID.String())
 
 	req := httptest.NewRequest("POST", "/api/v1/students", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -158,6 +162,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 201, resp.StatusCode)
+	mockStudentRepo.AssertExpectations(t)
 }
 
 func TestUpdateStudentEndpoint(t *testing.T) {
