@@ -19,6 +19,7 @@ type StudentRepository interface {
 	AddStudent(ctx context.Context, student models.Student) error
 	UpdateStudent(ctx context.Context, student models.Student) error
 	DeleteStudent(ctx context.Context, id uuid.UUID) error
+}
   
 type ThemeRepository interface {
 	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)

@@ -96,6 +96,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Delete("/:id", studentHandler.DeleteStudent)
 		r.Post("/", studentHandler.AddStudent)
 		r.Patch("/:id", studentHandler.UpdateStudent)
+	})
 
 	themeHandler := theme.NewHandler(repo.Theme)
 	apiV1.Route("/themes", func(r fiber.Router) {
