@@ -120,7 +120,7 @@ func TestSessionRepository_DeleteSessions(t *testing.T) {
 	badID := uuid.New()
 	message, err := repo.DeleteSessions(ctx, badID)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, message, "")
+	assert.Equal(t, message, "not found")
 
 	// SUCCESS TEST - Creation of valid Therapist first.
 	therapistID := uuid.New()
