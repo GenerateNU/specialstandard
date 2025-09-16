@@ -69,13 +69,13 @@ func TestGetTherapistByIDEndpoint(t *testing.T) {
 	mockTherapistRepo := new(mocks.MockTherapistRepository)
 
 	mockTherapistRepo.On("GetTherapistByID", mock.Anything, mock.AnythingOfType("string")).Return(&models.Therapist{
-		ID:         uuid.New(),
-		First_name: "Kevin",
-		Last_name:  "Matula",
-		Email:      "matulakevin91@gmail.com",
-		Active:     true,
-		Created_at: time.Now(),
-		Updated_at: time.Now(),
+		ID:        uuid.New(),
+		FirstName: "Kevin",
+		LastName:  "Matula",
+		Email:     "matulakevin91@gmail.com",
+		Active:    true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -98,13 +98,13 @@ func TestGetTherapistsEndpoint(t *testing.T) {
 
 	mockTherapistRepo.On("GetTherapists", mock.Anything).Return([]models.Therapist{
 		{
-			ID:         uuid.New(),
-			First_name: "Kevin",
-			Last_name:  "Matula",
-			Email:      "matulakevin91@gmail.com",
-			Active:     true,
-			Created_at: time.Now(),
-			Updated_at: time.Now(),
+			ID:        uuid.New(),
+			FirstName: "Kevin",
+			LastName:  "Matula",
+			Email:     "matulakevin91@gmail.com",
+			Active:    true,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 	}, nil)
 
@@ -127,13 +127,13 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 	mockTherapistRepo := new(mocks.MockTherapistRepository)
 
 	mockTherapistRepo.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&models.Therapist{
-		ID:         uuid.New(),
-		First_name: "Kevin",
-		Last_name:  "Matula",
-		Email:      "matulakevin91@gmail.com",
-		Active:     true,
-		Created_at: time.Now(),
-		Updated_at: time.Now(),
+		ID:        uuid.New(),
+		FirstName: "Kevin",
+		LastName:  "Matula",
+		Email:     "matulakevin91@gmail.com",
+		Active:    true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -162,13 +162,13 @@ func TestDeleteTherapist(t *testing.T) {
 	mockTherapistRepo := new(mocks.MockTherapistRepository)
 
 	mockTherapistRepo.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(&models.Therapist{
-		ID:         uuid.New(),
-		First_name: "Kevin",
-		Last_name:  "Matula",
-		Email:      "matulakevin91@gmail.com",
-		Active:     true,
-		Created_at: time.Now(),
-		Updated_at: time.Now(),
+		ID:        uuid.New(),
+		FirstName: "Kevin",
+		LastName:  "Matula",
+		Email:     "matulakevin91@gmail.com",
+		Active:    true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -190,13 +190,13 @@ func TestPatchTherapist(t *testing.T) {
 	mockTherapistRepo := new(mocks.MockTherapistRepository)
 
 	mockTherapistRepo.On("PatchTherapist", mock.Anything, mock.AnythingOfType("string"), mock.Anything).Return(&models.Therapist{
-		ID:         uuid.New(),
-		First_name: "Kevin",
-		Last_name:  "Matula",
-		Email:      "matulakevin91@gmail.com",
-		Active:     true,
-		Created_at: time.Now(),
-		Updated_at: time.Now(),
+		ID:        uuid.New(),
+		FirstName: "Kevin",
+		LastName:  "Matula",
+		Email:     "matulakevin91@gmail.com",
+		Active:    true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}, nil)
 
 	repo := &storage.Repository{

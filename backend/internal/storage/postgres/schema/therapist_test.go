@@ -40,7 +40,7 @@ func TestSessionRepository_GetTherapistByID(t *testing.T) {
 
 	// Assert
 	assert.NoError(t, err)
-	assert.Equal(t, "Matula", therapist.Last_name)
+	assert.Equal(t, "Matula", therapist.LastName)
 	assert.Equal(t, therapistID, therapist.ID) // Optional: verify the therapist ID matches
 }
 
@@ -71,7 +71,7 @@ func TestSessionRepository_GetTherapists(t *testing.T) {
 
 	// Assert
 	assert.NoError(t, err)
-	assert.Equal(t, "Matula", therapists[0].Last_name)
+	assert.Equal(t, "Matula", therapists[0].LastName)
 	assert.Equal(t, therapistID, therapists[0].ID) // Optional: verify the therapist ID matches
 }
 
@@ -99,13 +99,13 @@ func TestSessionRepository_PatchTherapist(t *testing.T) {
 
 	newLastName := "Matula"
 	updated := &models.UpdateTherapist{
-		Last_name: &newLastName,
+		LastName: &newLastName,
 	}
 	therapist, err := repo.PatchTherapist(ctx, therapistID.String(), updated)
 
 	// Assert
 	assert.NoError(t, err)
-	assert.Equal(t, "Matula", therapist.Last_name)
+	assert.Equal(t, "Matula", therapist.LastName)
 	assert.Equal(t, therapistID, therapist.ID) // Optional: verify the therapist ID matches
 }
 
@@ -151,15 +151,15 @@ func TestSessionRepository_CreateTherapist(t *testing.T) {
 	ctx := context.Background()
 
 	updated := &models.CreateTherapistInput{
-		First_name: "Kevin",
-		Last_name:  "Matula",
-		Email:      "matulakevin91@gmai.com",
+		FirstName: "Kevin",
+		LastName:  "Matula",
+		Email:     "matulakevin91@gmai.com",
 	}
 
 	therapist, err := repo.CreateTherapist(ctx, updated)
 
 	// Assert
 	assert.NoError(t, err)
-	assert.Equal(t, "Matula", therapist.Last_name)
+	assert.Equal(t, "Matula", therapist.LastName)
 	assert.Equal(t, "matulakevin91@gmai.com", therapist.Email)
 }

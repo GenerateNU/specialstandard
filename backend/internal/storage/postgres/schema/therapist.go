@@ -35,7 +35,7 @@ func (r *TherapistRepository) GetTherapistByID(ctx context.Context, therapistID 
 	therapist, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[models.Therapist])
 
 	if err != nil {
-		return nil, err
+		return nil, errs.NotFound("Error querying database for given ID")
 	}
 
 	return &therapist, nil
@@ -80,17 +80,17 @@ func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models
         VALUES ($1, $2, $3)
         RETURNING id, first_name, last_name, email, active, created_at, updated_At`
 
-	row := r.db.QueryRow(ctx, query, input.First_name, input.Last_name, input.Email)
+	row := r.db.QueryRow(ctx, query, input.FirstName, input.LastName, input.Email)
 
 	// Scan into the therapist object
 	if err := row.Scan(
 		&therapist.ID,
-		&therapist.First_name,
-		&therapist.Last_name,
+		&therapist.FirstName,
+		&therapist.LastName,
 		&therapist.Email,
 		&therapist.Active,
-		&therapist.Created_at,
-		&therapist.Updated_at,
+		&therapist.CreatedAt,
+		&therapist.UpdatedAt,
 	); err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (r *TherapistRepository) DeleteTherapist(ctx context.Context, therapistID s
 	_, err := r.db.Exec(ctx, query, therapistID)
 
 	if err != nil {
-		return "", errs.BadRequest("Error querying database for given ID")
+		return "", errs.NotFound("Error querying database for given ID")
 	}
 
 	return "User Deleted Successfully", nil
@@ -120,15 +120,15 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 	args := []interface{}{}
 	argCount := 1
 
-	if updatedValue.First_name != nil {
+	if updatedValue.FirstName != nil {
 		updates = append(updates, fmt.Sprintf("first_name = $%d", argCount))
-		args = append(args, *updatedValue.First_name)
+		args = append(args, *updatedValue.FirstName)
 		argCount++
 	}
 
-	if updatedValue.Last_name != nil {
+	if updatedValue.LastName != nil {
 		updates = append(updates, fmt.Sprintf("last_name = $%d", argCount))
-		args = append(args, *updatedValue.Last_name)
+		args = append(args, *updatedValue.LastName)
 		argCount++
 	}
 
@@ -145,7 +145,7 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 	}
 
 	if len(updates) == 0 {
-		return nil, errs.NotFound("No fields given to update.")
+		return nil, errs.BadRequest("No fields given to update.")
 	}
 
 	updates = append(updates, fmt.Sprintf("updated_at = $%d", argCount))
@@ -169,7 +169,7 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 	therapist, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Therapist])
 
 	if err != nil {
-		return nil, errs.BadRequest("error querying database for given user ID")
+		return nil, errs.NotFound("error querying database for given user ID")
 	}
 
 	return &therapist, nil

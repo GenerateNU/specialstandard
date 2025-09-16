@@ -28,13 +28,13 @@ func TestHandler_GetTherapistByID(t *testing.T) {
 			name: "successful get therapist by id",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
 				therapist := &models.Therapist{
-					ID:         uuid.New(),
-					First_name: "Kevin",
-					Last_name:  "Matula",
-					Email:      "matulakevin91@gmail.com",
-					Active:     true,
-					Created_at: time.Now(),
-					Updated_at: time.Now(),
+					ID:        uuid.New(),
+					FirstName: "Kevin",
+					LastName:  "Matula",
+					Email:     "matulakevin91@gmail.com",
+					Active:    true,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
 				}
 				m.On("GetTherapistByID", mock.Anything).Return(therapist, nil)
 			},
@@ -84,13 +84,13 @@ func TestHandler_GetTherapists(t *testing.T) {
 			mockSetup: func(m *mocks.MockTherapistRepository) {
 				therapists := []models.Therapist{
 					{
-						ID:         uuid.New(),
-						First_name: "Kevin",
-						Last_name:  "Matula",
-						Email:      "matulakevin91@gmail.com",
-						Active:     true,
-						Created_at: time.Now(),
-						Updated_at: time.Now(),
+						ID:        uuid.New(),
+						FirstName: "Kevin",
+						LastName:  "Matula",
+						Email:     "matulakevin91@gmail.com",
+						Active:    true,
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
 					},
 				}
 				m.On("GetTherapists", mock.Anything).Return(therapists, nil)
@@ -140,13 +140,13 @@ func TestHandler_CreateTherapist(t *testing.T) {
 			name: "successful create therapist",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
 				therapist := &models.Therapist{
-					ID:         uuid.New(),
-					First_name: "Kevin",
-					Last_name:  "Matula",
-					Email:      "poop123@gmail.com",
-					Active:     true,
-					Created_at: time.Now(),
-					Updated_at: time.Now(),
+					ID:        uuid.New(),
+					FirstName: "Kevin",
+					LastName:  "Matula",
+					Email:     "poop123@gmail.com",
+					Active:    true,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
 				}
 				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
 			},
@@ -201,13 +201,13 @@ func TestHandler_DeleteTherapist(t *testing.T) {
 			name: "successful delete therapist by id",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
 				therapist := &models.Therapist{
-					ID:         uuid.New(),
-					First_name: "Kevin",
-					Last_name:  "Matula",
-					Email:      "matulakevin91@gmail.com",
-					Active:     true,
-					Created_at: time.Now(),
-					Updated_at: time.Now(),
+					ID:        uuid.New(),
+					FirstName: "Kevin",
+					LastName:  "Matula",
+					Email:     "matulakevin91@gmail.com",
+					Active:    true,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
 				}
 				m.On("DeleteTherapist", mock.Anything).Return(therapist, nil)
 			},
@@ -256,13 +256,13 @@ func TestHandler_PatchTherapist(t *testing.T) {
 			name: "successful patch therapist by id",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
 				therapist := &models.Therapist{
-					ID:         uuid.New(),
-					First_name: "Kevin",
-					Last_name:  "Matula",
-					Email:      "matulakevin91@gmail.com",
-					Active:     true,
-					Created_at: time.Now(),
-					Updated_at: time.Now(),
+					ID:        uuid.New(),
+					FirstName: "Kevin",
+					LastName:  "Matula",
+					Email:     "matulakevin91@gmail.com",
+					Active:    true,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
 				}
 				m.On("PatchTherapist", mock.Anything, mock.AnythingOfType("string"), mock.Anything).Return(therapist, nil)
 			},
