@@ -1,6 +1,7 @@
 package session
 
 import (
+	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"specialstandard/internal/xvalidator"
@@ -23,6 +24,7 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 
 	newSession, err := h.sessionRepository.PostSessions(c.Context(), &session)
 	if err != nil {
+		slog.Error("Failed to delete session", "err", err)
 		errStr := err.Error()
 		switch {
 		case strings.Contains(errStr, "foreign key"):
