@@ -1,7 +1,7 @@
 package therapist
 
 import (
-	"fmt"
+	"log/slog"
 	"specialstandard/internal/errs"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,9 +21,9 @@ func (h *Handler) GetTherapistByID(c *fiber.Ctx) error {
 
 	// Here we parse the bad request which is recieved
 	if err != nil {
-		return errs.BadRequest(fmt.Sprintf("There was an error parsing the given id! %v", err))
+		slog.Error("Error updating document", "error", errUpdate)
+		return errs.BadRequest("There was an error parsing the given id!")
 	}
 
 	return c.Status(fiber.StatusOK).JSON(therapist)
 }
-

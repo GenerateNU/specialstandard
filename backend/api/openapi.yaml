@@ -196,7 +196,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Error'
-  /therapists:
+  /therapists/:id:
   patch:
     summary: Update a characteristic of a given therapist
     description: Update a specific field within a therapist object in the database
@@ -211,6 +211,7 @@ paths:
               - first name
               - last name
               - email
+              - active
             properties:
               first name:
                 type: string
