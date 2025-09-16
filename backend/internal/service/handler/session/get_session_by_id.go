@@ -26,7 +26,7 @@ func (h *Handler) GetSessionByID(c *fiber.Ctx) error {
 
 	session, err := h.sessionRepository.GetSessionByID(c.Context(), sessionID)
 	if err != nil {
-		slog.Error("Failed to delete session", "id", sessionID, "err", err)
+		slog.Error("Failed to get session", "id", sessionID, "err", err)
 
 		// Check if it's a "no rows found" error using pgx's error constant
 		if errors.Is(err, pgx.ErrNoRows) {

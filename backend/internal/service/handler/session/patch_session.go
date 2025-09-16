@@ -24,7 +24,7 @@ func (h *Handler) PatchSessions(c *fiber.Ctx) error {
 
 	updatedSession, err := h.sessionRepository.PatchSessions(c.Context(), id, &session)
 	if err != nil {
-		slog.Error("Failed to delete session", "id", id, "err", err)
+		slog.Error("Failed to patch session", "id", id, "err", err)
 		errStr := err.Error()
 		switch {
 		case strings.Contains(errStr, "foreign key"):

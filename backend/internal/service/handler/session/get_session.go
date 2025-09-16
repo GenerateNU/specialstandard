@@ -11,7 +11,7 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 	sessions, err := h.sessionRepository.GetSessions(c.Context())
 	if err != nil {
 		// For all database errors, return internal server error without exposing details
-		slog.Error("Failed to delete session", "err", err)
+		slog.Error("Failed to get session", "err", err)
 		return errs.InternalServerError("Failed to retrieve sessions")
 	}
 
