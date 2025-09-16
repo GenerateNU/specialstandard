@@ -139,7 +139,7 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 			name:      "Invalid ID - Not Found / Doesn't Exist",
 			sessionID: uuid.New(),
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSessions", mock.Anything, id).Return("", nil)
+				m.On("DeleteSessions", mock.Anything, id).Return("not found", nil)
 			},
 			expectedStatusCode: 404,
 		},
