@@ -20,11 +20,6 @@ func (h *Handler) GetTherapistByID(c *fiber.Ctx) error {
 		return errs.NotFound("The givenID was not found: ", therapistID)
 	}
 
-	// Checking for no ID given
-	if therapistID == "" {
-		return errs.NotFound("Given Empty ID")
-	}
-
 	therapist, err := h.therapistRepository.GetTherapistByID(c.Context(), therapistID)
 
 	// Here we parse the bad request which is recieved

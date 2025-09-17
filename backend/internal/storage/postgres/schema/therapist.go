@@ -3,11 +3,9 @@ package schema
 import (
 	"context"
 	"fmt"
-	"net/mail"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"strings"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -68,13 +66,6 @@ func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models
 	// Create a Therapist object to return
 	therapist := &models.Therapist{}
 
-	// AYEEE EMAIL VALIDATION !!!
-	_, err := mail.ParseAddress(input.Email)
-
-	if err != nil {
-		return nil, err
-	}
-
 	query := `
         INSERT INTO therapist (first_name, last_name, email)
         VALUES ($1, $2, $3)
@@ -104,13 +95,16 @@ func (r *TherapistRepository) DeleteTherapist(ctx context.Context, therapistID s
 	FROM therapist
 	WHERE id=$1`
 
+	// db.Exec does not return an error if id isnt found, but 
+	// thats fine because our app will return 200 regardless if the ID exists or not!
 	_, err := r.db.Exec(ctx, query, therapistID)
 
+	// We will handle in the handler!
 	if err != nil {
-		return "", errs.NotFound("Error querying database for given ID")
+		return "", err
 	}
 
-	return "User Deleted Successfully", nil
+	return "User " + therapistID + " was deleted successfully!", err
 }
 
 // Here, we are just iterating through all of the potential changes, and updating the DB accordingly!
@@ -147,10 +141,6 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 	if len(updates) == 0 {
 		return nil, errs.BadRequest("No fields given to update.")
 	}
-
-	updates = append(updates, fmt.Sprintf("updated_at = $%d", argCount))
-	args = append(args, time.Now())
-	argCount++
 
 	query += " " + strings.Join(updates, ", ")
 	query += fmt.Sprintf(" WHERE id = $%d", argCount)

@@ -1,7 +1,7 @@
 package therapist
 
 import (
-	"specialstandard/internal/errs"
+	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -21,15 +21,11 @@ func (h *Handler) DeleteTherapist(c *fiber.Ctx) error {
 		})
 	}
 
-	// Checking for no ID given
-	if therapistID == "" {
-		return errs.BadRequest("Given Empty ID")
-	}
-
 	therapist, err := h.therapistRepository.DeleteTherapist(c.Context(), therapistID)
 
 	// Here we parse the bad request which is recieved
 	if err != nil {
+		slog.Error("Error deleting document", "error", err)
 		return err
 	}
 

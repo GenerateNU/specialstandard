@@ -135,7 +135,7 @@ func TestSessionRepository_DeleteTherapist(t *testing.T) {
 
 	// Assert
 	assert.NoError(t, err)
-	assert.Equal(t, "User Deleted Successfully", mes)
+	assert.Equal(t, "User " + therapistID.String() + " was deleted successfully!", mes)
 }
 
 func TestSessionRepository_CreateTherapist(t *testing.T) {

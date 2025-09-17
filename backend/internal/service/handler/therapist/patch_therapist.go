@@ -1,6 +1,7 @@
 package therapist
 
 import (
+	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"specialstandard/internal/xvalidator"
@@ -24,11 +25,6 @@ func (h *Handler) PatchTherapist(c *fiber.Ctx) error {
 	}
 	var updatedValue models.UpdateTherapist
 
-	// Checking for no ID given
-	if therapistID == "" {
-		return errs.BadRequest("Given Empty ID")
-	}
-
 	if err := c.BodyParser(&updatedValue); err != nil {
 		return errs.InvalidJSON("Failed to parse therapist data")
 	}
@@ -42,6 +38,7 @@ func (h *Handler) PatchTherapist(c *fiber.Ctx) error {
 
 	// Here we parse the bad request which is recieved
 	if err != nil {
+		slog.Error("Error updating document", "error", err)
 		return errs.BadRequest("There was an error parsing the given id!")
 	}
 
