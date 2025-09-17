@@ -200,16 +200,7 @@ func TestHandler_DeleteTherapist(t *testing.T) {
 		{
 			name: "successful delete therapist by id",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
-				therapist := &models.Therapist{
-					ID:        uuid.New(),
-					FirstName: "Kevin",
-					LastName:  "Matula",
-					Email:     "matulakevin91@gmail.com",
-					Active:    true,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				}
-				m.On("DeleteTherapist", mock.Anything).Return(therapist, nil)
+				m.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -217,7 +208,7 @@ func TestHandler_DeleteTherapist(t *testing.T) {
 		{
 			name: "repository error",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
-				m.On("DeleteTherapist", mock.Anything).Return(nil, errors.New("database error"))
+				m.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,

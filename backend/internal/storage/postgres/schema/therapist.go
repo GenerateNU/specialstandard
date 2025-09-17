@@ -89,22 +89,22 @@ func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models
 	return therapist, nil
 }
 
-func (r *TherapistRepository) DeleteTherapist(ctx context.Context, therapistID string) (string, error) {
+func (r *TherapistRepository) DeleteTherapist(ctx context.Context, therapistID string) error {
 	query := `
 	DELETE 
 	FROM therapist
 	WHERE id=$1`
 
-	// db.Exec does not return an error if id isnt found, but 
+	// db.Exec does not return an error if id isnt found, but
 	// thats fine because our app will return 200 regardless if the ID exists or not!
 	_, err := r.db.Exec(ctx, query, therapistID)
 
 	// We will handle in the handler!
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return "User " + therapistID + " was deleted successfully!", err
+	return nil
 }
 
 // Here, we are just iterating through all of the potential changes, and updating the DB accordingly!

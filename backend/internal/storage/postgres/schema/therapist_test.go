@@ -131,11 +131,11 @@ func TestSessionRepository_DeleteTherapist(t *testing.T) {
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	mes, err := repo.DeleteTherapist(ctx, therapistID.String())
+	err = repo.DeleteTherapist(ctx, therapistID.String())
 
 	// Assert
 	assert.NoError(t, err)
-	assert.Equal(t, "User " + therapistID.String() + " was deleted successfully!", mes)
+	//assert.Equal(t, "User " + therapistID.String() + " was deleted successfully!", mes)
 }
 
 func TestSessionRepository_CreateTherapist(t *testing.T) {

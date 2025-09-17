@@ -21,7 +21,7 @@ func (h *Handler) DeleteTherapist(c *fiber.Ctx) error {
 		})
 	}
 
-	therapist, err := h.therapistRepository.DeleteTherapist(c.Context(), therapistID)
+	err = h.therapistRepository.DeleteTherapist(c.Context(), therapistID)
 
 	// Here we parse the bad request which is recieved
 	if err != nil {
@@ -29,5 +29,7 @@ func (h *Handler) DeleteTherapist(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(therapist)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Therapist deleted successfully",
+	})
 }

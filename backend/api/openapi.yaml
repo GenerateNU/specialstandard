@@ -94,7 +94,7 @@ paths:
     post:
       summary: Create a new therapist
       description: Create a new therapist for school districts
-      tags: [UpdateTherapistInput]
+      tags: [Therapists]
       requestBody:
         required: true
         content:
@@ -141,7 +141,16 @@ paths:
     patch:
       summary: Update a characteristic of a given therapist
       description: Update a specific field within a therapist object in the database
-      tags: [UpdateTherapistInput]
+      tags: [Therapists]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Therapist ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
       requestBody:
         required: true
         content:
@@ -194,6 +203,15 @@ paths:
       summary: Get the specific therapist corresponding to the given ID and delete it
       description: Retrieve a specific therapist from the database and delete it
       tags: [Therapists]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Therapist ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
       responses:
         "200":
           description: Message
@@ -222,6 +240,15 @@ paths:
       summary: Get the specific therapist corresponding to the given ID
       description: Retrieve a specific therapist from the database
       tags: [Therapists]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Therapist ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
       responses:
         "200":
           description: Therapist
@@ -295,63 +322,63 @@ paths:
 components:
   schemas:
     Therapist:
-    type: object
-    required:
-      - id
-      - first_name
-      - last_name
-      - email
-      - active
-      - created_at
-      - updated_at
-    properties:
-      id:
-        type: string
-        format: uuid
-        description: Unique identifier for the therapist
-        example: "123e4567-e89b-12d3-a456-426614174000"
-      first_name:
-        type: string
-        example: "Kevin"
-      last_name:
-        type: string
-        example: "Matilda"
-      email:
-        type: string
-        format: email
-        example: "email123@example.com"
-      active:
-        type: boolean
-        description: Whether the therapist is currently active
-        example: true
-      created_at:
-        type: string
-        format: date-time
-        example: "2024-01-15T10:30:00Z"
-      updated_at:
-        type: string
-        format: date-time
-        example: "2024-01-15T10:35:00Z"
+      type: object
+      required:
+        - id
+        - first_name
+        - last_name
+        - email
+        - active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the therapist
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        first_name:
+          type: string
+          example: "Kevin"
+        last_name:
+          type: string
+          example: "Matilda"
+        email:
+          type: string
+          format: email
+          example: "email123@example.com"
+        active:
+          type: boolean
+          description: Whether the therapist is currently active
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:35:00Z"
     UpdateTherapistInput:
-    type: object
-    properties:
-      first_name:
-        type: string
-        description: First name of the therapist
-        example: "Kevin"
-      last_name:
-        type: string
-        description: Last name of the therapist
-        example: "Matilda"
-      email:
-        type: string
-        format: email
-        description: Email of the therapist
-        example: "email123@example.com"
-      active:
-        type: boolean
-        description: Whether the therapist is active
-        example: true
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: First name of the therapist
+          example: "Kevin"
+        last_name:
+          type: string
+          description: Last name of the therapist
+          example: "Matilda"
+        email:
+          type: string
+          format: email
+          description: Email of the therapist
+          example: "email123@example.com"
+        active:
+          type: boolean
+          description: Whether the therapist is active
+          example: true
     CreateThemeInput:
       type: object
       required:
