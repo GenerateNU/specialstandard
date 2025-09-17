@@ -1,0 +1,298 @@
+package therapist_test
+
+import (
+	"errors"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"specialstandard/internal/models"
+	"specialstandard/internal/service/handler/therapist"
+	"specialstandard/internal/storage/mocks"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+func TestHandler_GetTherapistByID(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockSetup      func(*mocks.MockTherapistRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful get therapist by id",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				therapist := &models.Therapist{
+					ID:        uuid.New(),
+					FirstName: "Kevin",
+					LastName:  "Matula",
+					Email:     "matulakevin91@gmail.com",
+					Active:    true,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
+				m.On("GetTherapistByID", mock.Anything).Return(therapist, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				m.On("GetTherapistByID", mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			app := fiber.New()
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := therapist.NewHandler(mockRepo)
+			app.Get("/therapists/:id", handler.GetTherapistByID)
+
+			// Make request
+			req := httptest.NewRequest("GET", "/therapists/9dad94d8-6534-4510-90d7-e4e97c175a65", nil)
+			resp, _ := app.Test(req, -1)
+
+			// Assert
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandler_GetTherapists(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockSetup      func(*mocks.MockTherapistRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful get therapists",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				therapists := []models.Therapist{
+					{
+						ID:        uuid.New(),
+						FirstName: "Kevin",
+						LastName:  "Matula",
+						Email:     "matulakevin91@gmail.com",
+						Active:    true,
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
+				}
+				m.On("GetTherapists", mock.Anything).Return(therapists, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				m.On("GetTherapists", mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			app := fiber.New()
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := therapist.NewHandler(mockRepo)
+			app.Get("/therapists", handler.GetTherapists)
+
+			// Make request
+			req := httptest.NewRequest("GET", "/therapists", nil)
+			resp, _ := app.Test(req, -1)
+
+			// Assert
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandler_CreateTherapist(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockSetup      func(*mocks.MockTherapistRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful create therapist",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				therapist := &models.Therapist{
+					ID:        uuid.New(),
+					FirstName: "Kevin",
+					LastName:  "Matula",
+					Email:     "poop123@gmail.com",
+					Active:    true,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+			},
+			expectedStatus: fiber.StatusCreated,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			app := fiber.New()
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := therapist.NewHandler(mockRepo)
+			app.Post("/therapists", handler.CreateTherapist)
+
+			body := `{
+    		"first_name": "Kevin",
+    		"last_name": "Matula",
+    		"email": "poop123@gmail.com"
+			}`
+
+			req := httptest.NewRequest("POST", "/therapists", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			resp, _ := app.Test(req, -1)
+
+			// Assert
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandler_DeleteTherapist(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockSetup      func(*mocks.MockTherapistRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful delete therapist by id",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				m.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				m.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			app := fiber.New()
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := therapist.NewHandler(mockRepo)
+			app.Delete("/therapists/:id", handler.DeleteTherapist)
+
+			// Make request
+			req := httptest.NewRequest("DELETE", "/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112", nil)
+			resp, _ := app.Test(req, -1)
+
+			// Assert
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandler_PatchTherapist(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockSetup      func(*mocks.MockTherapistRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful patch therapist by id",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				therapist := &models.Therapist{
+					ID:        uuid.New(),
+					FirstName: "Kevin",
+					LastName:  "Matula",
+					Email:     "matulakevin91@gmail.com",
+					Active:    true,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
+				m.On("PatchTherapist", mock.Anything, mock.AnythingOfType("string"), mock.Anything).Return(therapist, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				m.On("PatchTherapist", mock.Anything, mock.AnythingOfType("string"), mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			app := fiber.New()
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := therapist.NewHandler(mockRepo)
+			app.Patch("/therapists/:id", handler.PatchTherapist)
+
+			body := `{
+    		"first_name": "Kevin",
+    		"last_name": "Matula",
+    		"email": "poop123@gmail.com"
+			}`
+
+			req := httptest.NewRequest("PATCH", "/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			resp, _ := app.Test(req, -1)
+
+			// Assert
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}

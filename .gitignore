@@ -5,6 +5,11 @@
 .env
 node_modules
 .vscode/
+backend/.vscode/
+
+backend/internal/supabase/.branches
+backend/internal/supabase/.temp
+
 
 .DS_STORE
 
