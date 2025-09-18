@@ -37,7 +37,7 @@ paths:
     get:
       summary: Get all sessions
       description: Retrieve all therapy sessions from the database
-      tags: [Sessions]
+      tags: [ Sessions ]
       responses:
         '200':
           description: List of therapy sessions
@@ -66,7 +66,7 @@ paths:
     post:
       summary: Creates a new session
       description: Creates a new session for the therapist
-      tags: [Sessions]
+      tags: [ Sessions ]
       requestBody:
         required: true
         content:
@@ -132,7 +132,7 @@ paths:
     get:
       summary: Get session by ID
       description: Retrieve a specific therapy session by its UUID
-      tags: [Sessions]
+      tags: [ Sessions ]
       parameters:
         - name: id
           in: path
@@ -304,7 +304,7 @@ paths:
     get:
       summary: Get all therapists
       description: Retrieve all therapists from the database
-      tags: [Therapists]
+      tags: [ Therapists ]
       responses:
         "200":
           description: A list of Therapists
