@@ -7,8 +7,8 @@ node_modules
 .vscode/
 backend/.vscode/
 
-backend/internal/supabase/.branches
-backend/internal/supabase/.temp
+supabase/.branches/
+supabase/.temp/
 
 
 .DS_STORE
