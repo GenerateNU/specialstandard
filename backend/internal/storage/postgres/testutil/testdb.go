@@ -12,7 +12,6 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-
 type TestDB struct {
 	Pool      *pgxpool.Pool
 	container testcontainers.Container
@@ -74,23 +73,22 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 
-	// Create tables here
+	// Create therapist table first (parent table for foreign key)
 	_, err = pool.Exec(ctx, `
-        CREATE TABLE IF NOT EXISTS sessions (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-						therapist_id UUID NOT NULL ,
-						session_date DATE NOT NULL,
-						start_time TIME,
-						end_time TIME,
-						notes TEXT,
-						created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-						updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-    `)
+		CREATE TABLE IF NOT EXISTS therapist (
+			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+			first_name VARCHAR(100) NOT NULL,
+			last_name VARCHAR(100) NOT NULL,
+			email VARCHAR(255) UNIQUE NOT NULL,
+			active BOOLEAN DEFAULT TRUE,
+			created_at TIMESTAMPTZ DEFAULT now(),
+			updated_at TIMESTAMPTZ DEFAULT now()
+		)`)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	// Create student table (with foreign key to therapist)
 	_, err = pool.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS student (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -103,16 +101,22 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`)
-		CREATE TABLE IF NOT EXISTS therapist (
-			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-						first_name VARCHAR(100) NOT NULL,
-						last_name VARCHAR(100) NOT NULL,
-						email VARCHAR(255) UNIQUE NOT NULL,
-						active BOOLEAN DEFAULT TRUE,
-						created_at TIMESTAMPTZ DEFAULT now(),
-						updated_at TIMESTAMPTZ DEFAULT now()
-		)
-`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create sessions table
+	_, err = pool.Exec(ctx, `
+        CREATE TABLE IF NOT EXISTS sessions (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+			therapist_id UUID NOT NULL,
+			session_date DATE NOT NULL,
+			start_time TIME,
+			end_time TIME,
+			notes TEXT,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`)
 	if err != nil {
 		t.Fatal(err)
 	}
