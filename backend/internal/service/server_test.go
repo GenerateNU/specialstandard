@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -11,24 +12,21 @@ import (
 	"specialstandard/internal/service"
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/mocks"
-	"strings"
-	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-
 func ptrTime(t time.Time) *time.Time {
-    return &t
+	return &t
 }
 
 func ptrString(s string) *string {
 	return &s
 }
 
+// Health and Session Tests
 func TestHealthEndpoint(t *testing.T) {
 	// Setup
 	mockSessionRepo := new(mocks.MockSessionRepository)
@@ -72,9 +70,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 }
 
-
 // Student Integration Tests
-
 func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
@@ -95,39 +91,17 @@ func TestGetStudentsEndpoint(t *testing.T) {
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
-
-func TestGetTherapistByIDEndpoint(t *testing.T) {
-	// Setup
-	mockTherapistRepo := new(mocks.MockTherapistRepository)
-
-	mockTherapistRepo.On("GetTherapistByID", mock.Anything, mock.AnythingOfType("string")).Return(&models.Therapist{
-		ID:        uuid.New(),
-		FirstName: "Kevin",
-		LastName:  "Matula",
-		Email:     "matulakevin91@gmail.com",
-		Active:    true,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}, nil)
-
-	repo := &storage.Repository{
-		Therapist: mockTherapistRepo,
 	}
 
 	app := service.SetupApp(config.Config{}, repo)
 
 	// Test
-
 	req := httptest.NewRequest("GET", "/api/v1/students", nil)
-
-	req := httptest.NewRequest("GET", "/api/v1/therapists/9dad94d8-6534-4510-90d7-e4e97c175a65", nil)
-
 	resp, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 }
-
 
 func TestGetStudentByIDEndpoint(t *testing.T) {
 	// Setup
@@ -148,84 +122,38 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
-
-func TestGetTherapistsEndpoint(t *testing.T) {
-	// Setup
-	mockTherapistRepo := new(mocks.MockTherapistRepository)
-
-	mockTherapistRepo.On("GetTherapists", mock.Anything).Return([]models.Therapist{
-		{
-			ID:        uuid.New(),
-			FirstName: "Kevin",
-			LastName:  "Matula",
-			Email:     "matulakevin91@gmail.com",
-			Active:    true,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-	}, nil)
-
-	repo := &storage.Repository{
-		Therapist: mockTherapistRepo,
-
 	}
 
 	app := service.SetupApp(config.Config{}, repo)
 
 	// Test
-
 	req := httptest.NewRequest("GET", "/api/v1/students/"+studentID.String(), nil)
-
-	req := httptest.NewRequest("GET", "/api/v1/therapists", nil)
-
 	resp, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 }
 
-
 func TestCreateStudentEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
 	mockStudentRepo.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
-    ID: uuid.New(),
-    FirstName: "John",
-    LastName: "Doe", 
-    Grade:       ptrString("5th"),
-    TherapistID: uuid.New(),
-    DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
-    IEP: ptrString("Active IEP with speech therapy goals"),
-    CreatedAt: time.Now(),
-    UpdatedAt: time.Now(),
-}, nil)
-
-	repo := &storage.Repository{
-		Student: mockStudentRepo,
-		// TODO: Add Therapist mock when Kevin's therapist repository is merged
-		// Currently therapist validation is commented out in AddStudent handler
-
-func TestCreateTherapistEndpoint(t *testing.T) {
-	// Setup
-	mockTherapistRepo := new(mocks.MockTherapistRepository)
-
-	mockTherapistRepo.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&models.Therapist{
-		ID:        uuid.New(),
-		FirstName: "Kevin",
-		LastName:  "Matula",
-		Email:     "matulakevin91@gmail.com",
-		Active:    true,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:          uuid.New(),
+		FirstName:   "John",
+		LastName:    "Doe",
+		Grade:       ptrString("5th"),
+		TherapistID: uuid.New(),
+		DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
+		IEP:         ptrString("Active IEP with speech therapy goals"),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}, nil)
 
 	repo := &storage.Repository{
-		Therapist: mockTherapistRepo,
-
+		Student: mockStudentRepo,
 	}
 
 	app := service.SetupApp(config.Config{}, repo)
-
 
 	testTherapistID := uuid.New()
 	
@@ -239,22 +167,12 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 	}`, testTherapistID.String())
 
 	req := httptest.NewRequest("POST", "/api/v1/students", strings.NewReader(body))
-
-	body := `{
-    "first_name": "Kevin",
-    "last_name": "Matula",
-    "email": "matulakevin91@gmail.com"
-	}`
-
-	req := httptest.NewRequest("POST", "/api/v1/therapists", strings.NewReader(body))
-
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 201, resp.StatusCode)
-
 	mockStudentRepo.AssertExpectations(t)
 }
 
@@ -278,35 +196,22 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 
 	// Mock UpdateStudent call
 	mockStudentRepo.On("UpdateStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
-    ID: studentID,
-    FirstName: "Emma", 
-    LastName: "Johnson",
-    Grade:       ptrString("5th"), // updated grade
-    TherapistID: uuid.New(),
-    DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
-    IEP: ptrString("Updated IEP with math accommodations"),
-    CreatedAt: time.Now(),
-    UpdatedAt: time.Now(),
-}, nil)
+		ID:          studentID,
+		FirstName:   "Emma",
+		LastName:    "Johnson",
+		Grade:       ptrString("5th"), // updated grade
+		TherapistID: uuid.New(),
+		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
+		IEP:         ptrString("Updated IEP with math accommodations"),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
-
-}
-
-func TestDeleteTherapist(t *testing.T) {
-	// Setup
-	mockTherapistRepo := new(mocks.MockTherapistRepository)
-
-	mockTherapistRepo.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(nil)
-
-	repo := &storage.Repository{
-		Therapist: mockTherapistRepo,
-
 	}
 
 	app := service.SetupApp(config.Config{}, repo)
-
 
 	body := `{
 		"grade": "5th",
@@ -316,16 +221,11 @@ func TestDeleteTherapist(t *testing.T) {
 	req := httptest.NewRequest("PATCH", "/api/v1/students/"+studentID.String(), strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
-
-	// Test
-	req := httptest.NewRequest("DELETE", "/api/v1/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112", nil)
-
 	resp, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 }
-
 
 func TestDeleteStudentEndpoint(t *testing.T) {
 	// Setup
@@ -336,8 +236,132 @@ func TestDeleteStudentEndpoint(t *testing.T) {
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
+	}
 
-func TestPatchTherapist(t *testing.T) {
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Test
+	req := httptest.NewRequest("DELETE", "/api/v1/students/"+studentID.String(), nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+}
+
+func TestGetTherapistByIDEndpoint(t *testing.T) {
+	// Setup
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+
+	mockTherapistRepo.On("GetTherapistByID", mock.Anything, mock.AnythingOfType("string")).Return(&models.Therapist{
+		ID:        uuid.New(),
+		FirstName: "Kevin",
+		LastName:  "Matula",
+		Email:     "matulakevin91@gmail.com",
+		Active:    true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}, nil)
+
+	repo := &storage.Repository{
+		Therapist: mockTherapistRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Test
+	req := httptest.NewRequest("GET", "/api/v1/therapists/9dad94d8-6534-4510-90d7-e4e97c175a65", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+}
+
+func TestGetTherapistsEndpoint(t *testing.T) {
+	// Setup
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+
+	mockTherapistRepo.On("GetTherapists", mock.Anything).Return([]models.Therapist{
+		{
+			ID:        uuid.New(),
+			FirstName: "Kevin",
+			LastName:  "Matula",
+			Email:     "matulakevin91@gmail.com",
+			Active:    true,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+	}, nil)
+
+	repo := &storage.Repository{
+		Therapist: mockTherapistRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Test
+	req := httptest.NewRequest("GET", "/api/v1/therapists", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+}
+
+func TestCreateTherapistEndpoint(t *testing.T) {
+	// Setup
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+
+	mockTherapistRepo.On("CreateTherapist", mock.Anything).Return(&models.Therapist{
+		ID:        uuid.New(),
+		FirstName: "Kevin",
+		LastName:  "Matula",
+		Email:     "matulakevin91@gmail.com",
+		Active:    true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}, nil)
+
+	repo := &storage.Repository{
+		Therapist: mockTherapistRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	body := `{
+		"first_name": "Kevin",
+		"last_name": "Matula",
+		"email": "matulakevin91@gmail.com"
+	}`
+
+	req := httptest.NewRequest("POST", "/api/v1/therapists", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 201, resp.StatusCode)
+}
+
+func TestDeleteTherapistEndpoint(t *testing.T) {
+	// Setup
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+
+	mockTherapistRepo.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(nil)
+
+	repo := &storage.Repository{
+		Therapist: mockTherapistRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Test
+	req := httptest.NewRequest("DELETE", "/api/v1/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+}
+
+func TestPatchTherapistEndpoint(t *testing.T) {
 	// Setup
 	mockTherapistRepo := new(mocks.MockTherapistRepository)
 
@@ -353,24 +377,14 @@ func TestPatchTherapist(t *testing.T) {
 
 	repo := &storage.Repository{
 		Therapist: mockTherapistRepo,
-
 	}
 
 	app := service.SetupApp(config.Config{}, repo)
 
-
-	// Test
-	req := httptest.NewRequest("DELETE", "/api/v1/students/"+studentID.String(), nil)
-	resp, err := app.Test(req, -1)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 204, resp.StatusCode)
-}
-
 	body := `{
-    "first_name": "Kevin",
-    "last_name": "Matula",
-    "email": "matulakevin91@gmail.com"
+		"first_name": "Kevin",
+		"last_name": "Matula",
+		"email": "matulakevin91@gmail.com"
 	}`
 
 	// Test
@@ -381,4 +395,3 @@ func TestPatchTherapist(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 }
-
