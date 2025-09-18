@@ -17,10 +17,6 @@ func ptrTime(t time.Time) *time.Time {
     return &t
 }
 
-func ptrString(s string) *string {
-    return &s
-}
-
 func TestStudentRepository_GetStudents(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")

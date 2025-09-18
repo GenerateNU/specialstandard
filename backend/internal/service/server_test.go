@@ -251,6 +251,7 @@ func TestDeleteStudentEndpoint(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 204, resp.StatusCode)
+}
 
 func TestGetSessionByIDEndpoint(t *testing.T) {
 	tests := []struct {
