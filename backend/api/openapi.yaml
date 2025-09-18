@@ -14,8 +14,12 @@ tags:
     description: Health check operations
   - name: Sessions
     description: Therapy session operations
+  - name: Students
+    description: Student management operations
   - name: Therapists
     description: Physical Therapists Registered
+  - name: Themes
+    description: Theme management operations
 
 paths:
   /health:
@@ -37,7 +41,7 @@ paths:
     get:
       summary: Get all sessions
       description: Retrieve all therapy sessions from the database
-      tags: [ Sessions ]
+      tags: [Sessions]
       responses:
         '200':
           description: List of therapy sessions
@@ -64,9 +68,9 @@ paths:
                 message: "Resource not found"
 
     post:
-      summary: Creates a new session
-      description: Creates a new session for the therapist
-      tags: [ Sessions ]
+      summary: Create a new session
+      description: Create a new therapy session
+      tags: [Sessions]
       requestBody:
         required: true
         content:
@@ -104,23 +108,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
-              example:
-                id: "123e4567-e89b-12d3-a456-426614174000"
-                start_datetime: "2025-09-13T17:19:00Z"
-                end_datetime: "2025-09-13T18:00:00Z"
-                therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                notes: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
-                created_at: "2025-09-13T10:30:00Z"
-                updated_at: "2025-09-13T10:30:00Z"
         '400':
           description: Bad Request (e.g., validation errors)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: 400
-                message: invalid json
         '500':
           description: Internal Server Error
           content:
@@ -132,7 +125,7 @@ paths:
     get:
       summary: Get session by ID
       description: Retrieve a specific therapy session by its UUID
-      tags: [ Sessions ]
+      tags: [Sessions]
       parameters:
         - name: id
           in: path
@@ -149,14 +142,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
-              example:
-                id: "123e4567-e89b-12d3-a456-426614174000"
-                start_datetime: "2025-09-13T17:19:00Z"
-                end_datetime: "2025-09-13T18:00:00Z"
-                therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                notes: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
-                created_at: "2025-09-13T10:30:00Z"
-                updated_at: "2025-09-13T10:30:00Z"
         '400':
           description: Bad Request (invalid UUID format)
           content:
@@ -182,49 +167,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-    delete:
-      summary: Deletes the specific Session
-      description: Deletes the specific Session from the database with the given id.
-      tags: [ Sessions ]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: UUID of the Session to delete
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Success String for Deleted Session Successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Deleted the Session Successfully!"
-        '400':
-          description: Bad Request Error (parsing invalid uuid, etc.)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: 400
-                message: bad request
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
     patch:
-      summary: Updates the specific Session
-      description: Updates the Session with the given ID.
-      tags: [ Sessions ]
+      summary: Update session
+      description: Update an existing session (partial update)
+      tags: [Sessions]
       parameters:
         - name: id
           in: path
@@ -238,27 +184,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                start_datetime:
-                  type: string
-                  format: date-time
-                  description: Start date and time of the session
-                  example: "2025-09-13T17:19:00Z"
-                end_datetime:
-                  type: string
-                  format: date-time
-                  description: End date and time of the session
-                  example: "2025-09-13T18:00:00Z"
-                therapist_id:
-                  type: string
-                  format: uuid
-                  description: UUID of the Therapist
-                  example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                notes:
-                  type: string
-                  description: Optional notes about the session
-                  example: "Morale of the Story: Don't get attached"
+              $ref: '#/components/schemas/UpdateSessionInput'
       responses:
         '200':
           description: Session updated successfully
@@ -266,32 +192,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
-              example:
-                id: "123e4567-e89b-12d3-a456-426614174000"
-                start_datetime: "2025-09-13T17:19:00Z"
-                end_datetime: "2025-09-13T18:00:00Z"
-                therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                notes: "Morale of the Story: Don't get attached"
-                created_at: "2025-09-13T10:30:00Z"
-                updated_at: "2025-09-13T10:35:00Z"
         '400':
           description: Bad request (e.g., validation errors)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: 400
-                message: bad request
         '404':
           description: Session Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: 404
-                message: Session Not Found
         '500':
           description: Internal server error
           content:
@@ -299,12 +211,280 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+    delete:
+      summary: Delete session
+      description: Delete a session from the database
+      tags: [Sessions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the Session to delete
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Session deleted successfully"
+        '400':
+          description: Bad Request Error (parsing invalid uuid, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /students:
+    get:
+      summary: Get all students
+      description: Retrieve all students from the database
+      tags: [Students]
+      responses:
+        "200":
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Student"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      summary: Create a new student
+      description: Create a new student record
+      tags: [Students]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStudentInput"
+      responses:
+        "201":
+          description: Student created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "400":
+          description: Bad request (validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_json:
+                  summary: Invalid JSON format
+                  value:
+                    code: 400
+                    message: "Invalid JSON format"
+                invalid_date:
+                  summary: Invalid date format
+                  value:
+                    code: 400
+                    message: "Invalid date format. Use YYYY-MM-DD"
+                invalid_therapist_id:
+                  summary: Invalid therapist ID
+                  value:
+                    code: 400
+                    message: "Invalid therapist ID format"
+        "422":
+          description: Therapist not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 422
+                message: "Therapist not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /students/{id}:
+    get:
+      summary: Get student by ID
+      description: Retrieve a specific student by their ID
+      tags: [Students]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Student ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: Student found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "400":
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Student not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    patch:
+      summary: Update student
+      description: Update an existing student's information (partial update)
+      tags: [Students]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Student ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStudentInput"
+      responses:
+        "200":
+          description: Student updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "400":
+          description: Bad request (validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_uuid:
+                  summary: Invalid UUID format
+                  value:
+                    code: 400
+                    message: "Invalid UUID format"
+                invalid_json:
+                  summary: Invalid JSON format
+                  value:
+                    code: 400
+                    message: "Invalid JSON format"
+                invalid_date:
+                  summary: Invalid date format
+                  value:
+                    code: 400
+                    message: "Invalid date format. Use YYYY-MM-DD"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Student not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete student
+      description: Delete a student record
+      tags: [Students]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Student ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "204":
+          description: Student deleted successfully (no content)
+        "400":
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Student not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /therapists:
     get:
       summary: Get all therapists
       description: Retrieve all therapists from the database
-      tags: [ Therapists ]
+      tags: [Therapists]
       responses:
         "200":
           description: A list of Therapists
@@ -329,6 +509,7 @@ paths:
               example:
                 code: 404
                 message: "Resource not found"
+
     post:
       summary: Create a new therapist
       description: Create a new therapist for school districts
@@ -338,24 +519,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - first_name
-                - last_name
-                - email
-              properties:
-                first_name:
-                  type: string
-                  description: First name of the therapist
-                  example: "Kevin"
-                last_name:
-                  type: string
-                  description: Last name of the therapist
-                  example: "Matilda"
-                email:
-                  type: string
-                  description: Email of the therapist
-                  example: email123@example.com
+              $ref: "#/components/schemas/CreateTherapistInput"
       responses:
         "201":
           description: Therapist created successfully
@@ -375,9 +539,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
   /therapists/{id}:
+    get:
+      summary: Get therapist by ID
+      description: Retrieve a specific therapist from the database
+      tags: [Therapists]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Therapist ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: Therapist found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Therapist"
+        "400":
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "There was an error parsing the given id!"
+        "404":
+          description: Therapist not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Therapist not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
     patch:
-      summary: Update a characteristic of a given therapist
+      summary: Update therapist
       description: Update a specific field within a therapist object in the database
       tags: [Therapists]
       parameters:
@@ -394,42 +604,16 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required (atleast one of the following):
-                - first name
-                - last name
-                - email
-                - active
-              properties:
-                first name:
-                  type: string
-                  description: first name of the therapist
-                  example: "Kevin"
-                last name:
-                  type: string
-                  description: last name of the therapist
-                  example: "Matilda"
-                email:
-                  type: string
-                  description: email of the therapist
-                  example: email123@example.com
+              $ref: "#/components/schemas/UpdateTherapistInput"
       responses:
         "200":
-          description: Message
+          description: Therapist updated successfully
           content:
             application/json:
               schema:
-                type: string
-                items:
-                  $ref: "#/components/schemas/Therapist"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/Therapist"
         "400":
-          description: Not found
+          description: Bad request (validation errors)
           content:
             application/json:
               schema:
@@ -437,9 +621,25 @@ paths:
               example:
                 code: 400
                 message: "There was an error parsing the given id!"
+        "404":
+          description: Therapist not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Therapist not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
     delete:
-      summary: Get the specific therapist corresponding to the given ID and delete it
-      description: Retrieve a specific therapist from the database and delete it
+      summary: Delete therapist
+      description: Get the specific therapist corresponding to the given ID and delete it
       tags: [Therapists]
       parameters:
         - name: id
@@ -452,21 +652,17 @@ paths:
           example: "123e4567-e89b-12d3-a456-426614174000"
       responses:
         "200":
-          description: Message
+          description: Therapist deleted successfully
           content:
             application/json:
               schema:
-                type: string
-                items:
-                  $ref: "#/components/schemas/Therapist"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Therapist deleted successfully"
         "400":
-          description: Not found
+          description: Invalid UUID format
           content:
             application/json:
               schema:
@@ -474,41 +670,22 @@ paths:
               example:
                 code: 400
                 message: "Error querying database for given ID"
-    get:
-      summary: Get the specific therapist corresponding to the given ID
-      description: Retrieve a specific therapist from the database
-      tags: [Therapists]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: Therapist ID
-          example: "123e4567-e89b-12d3-a456-426614174000"
-      responses:
-        "200":
-          description: Therapist
+        "404":
+          description: Therapist not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Therapist"
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Therapist not found"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        "400":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 400
-                message: "There was an error parsing the given id!"
+
   /themes:
     post:
       summary: Create a new theme
@@ -519,24 +696,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - name
-                - month
-                - year
-              properties:
-                name:
-                  type: string
-                  description: Name of the theme
-                  example: "Winter Wonderland"
-                month:
-                  type: integer
-                  description: Month of the theme (1-12)
-                  example: 12
-                year:
-                  type: integer
-                  description: Year of the theme (e.g., 2024)
-                  example: 2024
+              $ref: "#/components/schemas/CreateThemeInput"
       responses:
         "201":
           description: Theme created successfully
@@ -559,6 +719,23 @@ paths:
 
 components:
   schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          description: HTTP status code
+          example: 500
+        message:
+          anyOf:
+            - type: string
+            - type: object
+          description: Error message or validation errors
+          example: "Internal server error"
+
     Therapist:
       type: object
       required:
@@ -597,6 +774,28 @@ components:
           type: string
           format: date-time
           example: "2024-01-15T10:35:00Z"
+
+    CreateTherapistInput:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+      properties:
+        first_name:
+          type: string
+          description: First name of the therapist
+          example: "Kevin"
+        last_name:
+          type: string
+          description: Last name of the therapist
+          example: "Matilda"
+        email:
+          type: string
+          format: email
+          description: Email of the therapist
+          example: "email123@example.com"
+
     UpdateTherapistInput:
       type: object
       properties:
@@ -617,62 +816,6 @@ components:
           type: boolean
           description: Whether the therapist is active
           example: true
-    CreateThemeInput:
-      type: object
-      required:
-        - name
-        - month
-        - year
-      properties:
-        name:
-          type: string
-          description: Name of the theme
-          example: "Winter Wonderland"
-        month:
-          type: integer
-          description: Month of the theme
-          example: 12
-        year:
-          type: integer
-          description: Year of the theme
-          example: 2024
-    Theme:
-      type: object
-      required:
-        - id
-        - name
-        - month
-        - year
-        - created_at
-        - updated_at
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Unique identifier for the theme
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        name:
-          type: string
-          description: Name of the theme
-          example: "Winter Wonderland"
-        month:
-          type: integer
-          description: Month of the theme (1-12)
-          example: 12
-        year:
-          type: integer
-          description: Year of the theme (e.g., 2024)
-          example: 2024
-        created_at:
-          type: string
-          format: date-time
-          description: When the theme was created
-          example: "2024-01-15T10:30:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          description: When the theme was last updated
-          example: "2024-01-15T10:35:00Z"
 
     Session:
       type: object
@@ -720,20 +863,209 @@ components:
           description: When the session record was last updated
           example: "2024-01-15T10:35:00Z"
 
-    Error:
+    UpdateSessionInput:
+      type: object
+      properties:
+        start_datetime:
+          type: string
+          format: date-time
+          description: Start date and time of the session
+          example: "2025-09-13T17:19:00Z"
+        end_datetime:
+          type: string
+          format: date-time
+          description: End date and time of the session
+          example: "2025-09-13T18:00:00Z"
+        therapist_id:
+          type: string
+          format: uuid
+          description: UUID of the Therapist
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        notes:
+          type: string
+          description: Optional notes about the session
+          example: "Updated session notes"
+
+    Student:
       type: object
       required:
-        - code
-        - message
+        - id
+        - first_name
+        - last_name
+        - therapist_id
+        - created_at
+        - updated_at
       properties:
-        code:
-          type: integer
-          description: HTTP status code
-          example: 500
-        message:
-          anyOf:
-            - type: string
-            - type: object
-          description: Error message or validation errors
-          example: "Internal server error"
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the student
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        first_name:
+          type: string
+          description: Student's first name
+          example: "John"
+        last_name:
+          type: string
+          description: Student's last name
+          example: "Doe"
+        dob:
+          type: string
+          format: date
+          nullable: true
+          description: Student's date of birth (optional)
+          example: "2010-05-15"
+        therapist_id:
+          type: string
+          format: uuid
+          description: ID of the assigned therapist
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        grade:
+          type: string
+          nullable: true
+          description: Student's current grade level (optional)
+          example: "5th Grade"
+        iep:
+          type: string
+          nullable: true
+          description: Individualized Education Program details (optional)
+          example: "Active IEP with speech therapy goals"
+        created_at:
+          type: string
+          format: date-time
+          description: When the student record was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the student record was last updated
+          example: "2024-01-15T10:35:00Z"
 
+    CreateStudentInput:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - therapist_id
+      properties:
+        first_name:
+          type: string
+          description: Student's first name
+          example: "John"
+        last_name:
+          type: string
+          description: Student's last name
+          example: "Doe"
+        dob:
+          type: string
+          format: date
+          nullable: true
+          description: Student's date of birth (YYYY-MM-DD format, optional)
+          example: "2010-05-15"
+        therapist_id:
+          type: string
+          format: uuid
+          description: ID of the assigned therapist
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        grade:
+          type: string
+          nullable: true
+          description: Student's current grade level (optional)
+          example: "5th Grade"
+        iep:
+          type: string
+          nullable: true
+          description: Individualized Education Program details (optional)
+          example: "Active IEP with speech therapy goals"
+
+    UpdateStudentInput:
+      type: object
+      description: Fields that can be updated (all optional for partial updates)
+      properties:
+        first_name:
+          type: string
+          description: Student's first name
+          example: "John"
+        last_name:
+          type: string
+          description: Student's last name
+          example: "Doe"
+        dob:
+          type: string
+          format: date
+          nullable: true
+          description: Student's date of birth (YYYY-MM-DD format, can be set to null)
+          example: "2010-05-15"
+        therapist_id:
+          type: string
+          format: uuid
+          description: ID of the assigned therapist
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        grade:
+          type: string
+          nullable: true
+          description: Student's current grade level (can be set to null)
+          example: "6th Grade"
+        iep:
+          type: string
+          nullable: true
+          description: Updated IEP details (can be set to null)
+          example: "Updated IEP with advanced speech therapy goals"
+
+    Theme:
+      type: object
+      required:
+        - id
+        - name
+        - month
+        - year
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the theme
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          description: Name of the theme
+          example: "Winter Wonderland"
+        month:
+          type: integer
+          description: Month of the theme (1-12)
+          example: 12
+        year:
+          type: integer
+          description: Year of the theme (e.g., 2024)
+          example: 2024
+        created_at:
+          type: string
+          format: date-time
+          description: When the theme was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the theme was last updated
+          example: "2024-01-15T10:35:00Z"
+
+    CreateThemeInput:
+      type: object
+      required:
+        - name
+        - month
+        - year
+      properties:
+        name:
+          type: string
+          description: Name of the theme
+          example: "Winter Wonderland"
+        month:
+          type: integer
+          description: Month of the theme
+          example: 12
+        year:
+          type: integer
+          description: Year of the theme
+          example: 2024

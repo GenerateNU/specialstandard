@@ -4,6 +4,7 @@ import (
 	"specialstandard/internal/config"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/service/handler/session"
+	"specialstandard/internal/service/handler/student"
 	"specialstandard/internal/service/handler/theme"
 	"specialstandard/internal/service/handler/therapist"
 	"specialstandard/internal/storage"
@@ -90,6 +91,16 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Delete("/:id", sessionHandler.DeleteSessions)
 		r.Post("/", sessionHandler.PostSessions)
 		r.Patch("/:id", sessionHandler.PatchSessions)
+	})
+
+	studentHandler := student.NewHandler(repo.Student)
+	// Student route
+	apiV1.Route("/students", func (r fiber.Router) {
+		r.Get("/", studentHandler.GetStudents)
+		r.Get("/:id", studentHandler.GetStudent)
+		r.Delete("/:id", studentHandler.DeleteStudent)
+		r.Post("/", studentHandler.AddStudent)
+		r.Patch("/:id", studentHandler.UpdateStudent)
 	})
 
 	themeHandler := theme.NewHandler(repo.Theme)
