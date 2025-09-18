@@ -12,6 +12,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
+
 type TestDB struct {
 	Pool      *pgxpool.Pool
 	container testcontainers.Container
@@ -91,20 +92,6 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 	}
 
 	_, err = pool.Exec(ctx, `
-    CREATE TABLE IF NOT EXISTS therapist (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        first_name VARCHAR(100) NOT NULL,
-        last_name VARCHAR(100) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        active BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMPTZ DEFAULT now(),
-        updated_at TIMESTAMPTZ DEFAULT now()
-    )`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = pool.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS student (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 			first_name VARCHAR(100) NOT NULL,
@@ -116,6 +103,16 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`)
+		CREATE TABLE IF NOT EXISTS therapist (
+			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+						first_name VARCHAR(100) NOT NULL,
+						last_name VARCHAR(100) NOT NULL,
+						email VARCHAR(255) UNIQUE NOT NULL,
+						active BOOLEAN DEFAULT TRUE,
+						created_at TIMESTAMPTZ DEFAULT now(),
+						updated_at TIMESTAMPTZ DEFAULT now()
+		)
+`)
 	if err != nil {
 		t.Fatal(err)
 	}

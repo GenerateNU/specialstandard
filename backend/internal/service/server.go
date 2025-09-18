@@ -6,6 +6,7 @@ import (
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/service/handler/student"
 	"specialstandard/internal/service/handler/theme"
+	"specialstandard/internal/service/handler/therapist"
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/postgres"
 
@@ -82,7 +83,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	apiV1.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusOK)
 	})
-	// Setup routes
+	// Setup
 	sessionHandler := session.NewHandler(repo.Session)
 	apiV1.Route("/sessions", func(r fiber.Router) {
 		r.Get("/", sessionHandler.GetSessions)
@@ -105,6 +106,15 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		// r.Get("/:id", themeHandler.GetThemeByID)
 		// r.Patch("/:id", themeHandler.UpdateTheme)
 		// r.Delete("/:id", themeHandler.DeleteTheme)
+	})
+
+	therapistHandler := therapist.NewHandler(repo.Therapist)
+	apiV1.Route("/therapists", func(r fiber.Router) {
+		r.Get("/:id", therapistHandler.GetTherapistByID)
+		r.Post("/", therapistHandler.CreateTherapist)
+		r.Get("/", therapistHandler.GetTherapists)
+		r.Delete("/:id", therapistHandler.DeleteTherapist)
+		r.Patch("/:id", therapistHandler.PatchTherapist)
 	})
 
 	// Handle 404 - Route not found

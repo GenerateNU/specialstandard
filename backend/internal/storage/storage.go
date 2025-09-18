@@ -25,11 +25,20 @@ type ThemeRepository interface {
 	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)
 }
 
+type TherapistRepository interface {
+	GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error)
+	GetTherapists(ctx context.Context) ([]models.Therapist, error)
+	CreateTherapist(ctx context.Context, therapist *models.CreateTherapistInput) (*models.Therapist, error)
+	DeleteTherapist(ctx context.Context, therapistID string) error
+	PatchTherapist(ctx context.Context, therapistID string, updatedValue *models.UpdateTherapist) (*models.Therapist, error)
+}
+
 type Repository struct {
 	db      *pgxpool.Pool
 	Session SessionRepository
 	Student StudentRepository
 	Theme   ThemeRepository
+	Therapist TherapistRepository
 }
 
 func (r *Repository) Close() error {
@@ -46,6 +55,7 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		db:      db,
 		Session: schema.NewSessionRepository(db),
 		Student: schema.NewStudentRepository(db),
-		Theme:   schema.NewThemeRepository(db),
+		Theme:     schema.NewThemeRepository(db),
+		Therapist: schema.NewTherapistRepository(db),
 	}
 }
