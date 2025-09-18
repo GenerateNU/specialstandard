@@ -19,12 +19,12 @@ type Student struct {
 
 // Input struct for creating students
 type CreateStudentInput struct {
-	FirstName   string  `json:"first_name" validate:"required"`
-	LastName    string  `json:"last_name" validate:"required"`
-	DOB         *string `json:"dob,omitempty"`                         
-	TherapistID string  `json:"therapist_id" validate:"required"`      
-	Grade       *string `json:"grade,omitempty"`                       
-	IEP         *string `json:"iep,omitempty"`                         
+	FirstName   string  `json:"first_name" validate:"required,min=1,max=100"`
+	LastName    string  `json:"last_name" validate:"required,min=1,max=100"`
+	DOB         *string `json:"dob,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	TherapistID string  `json:"therapist_id" validate:"required,uuid"`
+	Grade       *string `json:"grade,omitempty" validate:"omitempty,numeric,min=1,max=12"`
+	IEP         *string `json:"iep,omitempty"`
 }
 
 // Input struct for updating students (all fields optional for PATCH)

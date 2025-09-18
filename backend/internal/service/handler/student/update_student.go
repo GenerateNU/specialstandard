@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"specialstandard/internal/models"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,6 +27,39 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid JSON format",
 		})
+	}
+
+	// Validate grade if provided (same validation as AddStudent)
+	if req.Grade != nil && *req.Grade != "" {
+		grade := strings.ToLower(strings.TrimSpace(*req.Grade))
+		var gradeNum int
+		var err error
+		
+		// Handle kindergarten as special case
+		if grade == "k" || grade == "kindergarten" {
+			gradeNum = 0
+		} else {
+			// Remove ordinal suffixes (st, nd, rd, th)
+			if len(grade) >= 2 {
+				suffix := grade[len(grade)-2:]
+				if suffix == "st" || suffix == "nd" || suffix == "rd" || suffix == "th" {
+					grade = grade[:len(grade)-2]
+				}
+			}
+			
+			gradeNum, err = strconv.Atoi(grade)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Grade must be a valid grade (K, 1-12, or 1st-12th)",
+				})
+			}
+		}
+		
+		if gradeNum < 0 || gradeNum > 12 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Grade must be between K and 12",
+			})
+		}
 	}
 
 	// Get existing student for merging (don't check for "not found" errors here)
