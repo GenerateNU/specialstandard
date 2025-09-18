@@ -2,6 +2,7 @@ package session
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"specialstandard/internal/errs"
 
@@ -21,18 +22,18 @@ func (h *Handler) GetSessionByID(c *fiber.Ctx) error {
 	// Validate that ID is a valid UUID - fail fast
 	_, err := uuid.Parse(sessionID)
 	if err != nil {
-		return errs.BadRequest("Invalid UUID format")
+		return errs.BadRequest(fmt.Sprintf("Invalid UUID format for ID '%s'", sessionID))
 	}
 
 	session, err := h.sessionRepository.GetSessionByID(c.Context(), sessionID)
 	if err != nil {
-		slog.Error("Failed to get session", "id", sessionID, "err", err)
-
 		// Check if it's a "no rows found" error using pgx's error constant
 		if errors.Is(err, pgx.ErrNoRows) {
 			return errs.NotFound("Session not found")
 		}
+
 		// For all other database errors, return internal server error without exposing details
+		slog.Error("Failed to get session", "id", sessionID, "err", err)
 		return errs.InternalServerError("Failed to retrieve session")
 	}
 

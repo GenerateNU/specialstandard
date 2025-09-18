@@ -28,15 +28,15 @@ func (m *MockSessionRepository) GetSessionByID(ctx context.Context, id string) (
 	return args.Get(0).(*models.Session), args.Error(1)
 }
 
-func (m *MockSessionRepository) DeleteSessions(ctx context.Context, id uuid.UUID) (string, error) {
+func (m *MockSessionRepository) DeleteSession(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
-		return "", args.Error(1)
+		return args.Error(1)
 	}
-	return args.String(0), args.Error(1)
+	return args.Error(1)
 }
 
-func (m *MockSessionRepository) PostSessions(ctx context.Context, session *models.PostSessionInput) (*models.Session, error) {
+func (m *MockSessionRepository) PostSession(ctx context.Context, session *models.PostSessionInput) (*models.Session, error) {
 	args := m.Called(ctx, session)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -44,7 +44,7 @@ func (m *MockSessionRepository) PostSessions(ctx context.Context, session *model
 	return args.Get(0).(*models.Session), args.Error(1)
 }
 
-func (m *MockSessionRepository) PatchSessions(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error) {
+func (m *MockSessionRepository) PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error) {
 	args := m.Called(ctx, id, session)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

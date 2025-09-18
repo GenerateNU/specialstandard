@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func ptrString(s string) *string {
@@ -116,15 +115,9 @@ func TestSessionRepository_DeleteSessions(t *testing.T) {
 	repo := schema.NewSessionRepository(testDB.Pool)
 	ctx := context.Background()
 
-	// 404 NOT FOUND TEST
-	badID := uuid.New()
-	message, err := repo.DeleteSessions(ctx, badID)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, message, "not found")
-
 	// SUCCESS TEST - Creation of valid Therapist first.
 	therapistID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx,
+	_, err := testDB.Pool.Exec(ctx,
 		`INSERT INTO therapist (id, first_name, last_name, email)
              VALUES ($1, $2, $3, $4)`,
 		therapistID, "Doctor", "Suess", "dr.guesswho.suess@drdr.com")
@@ -140,9 +133,8 @@ func TestSessionRepository_DeleteSessions(t *testing.T) {
 		sessionID, therapistID, startTime, endTime, "Inserting into session for test")
 	assert.NoError(t, err)
 
-	msg, err := repo.DeleteSessions(ctx, sessionID)
-	require.NoError(t, err)
-	assert.Equal(t, "Deleted the Session Successfully!", msg)
+	err = repo.DeleteSession(ctx, sessionID)
+	assert.NoError(t, err)
 }
 
 func TestSessionRepository_PostSessions(t *testing.T) {
@@ -166,7 +158,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		TherapistID: therapistID,
 		Notes:       notes,
 	}
-	postedSession, err := repo.PostSessions(ctx, postSession)
+	postedSession, err := repo.PostSession(ctx, postSession)
 	assert.Error(t, err)
 	assert.Nil(t, postedSession)
 
@@ -187,7 +179,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		TherapistID: therapistID,
 		Notes:       notes,
 	}
-	postedSession, err = repo.PostSessions(ctx, postSession)
+	postedSession, err = repo.PostSession(ctx, postSession)
 	assert.Error(t, err)
 	assert.Nil(t, postedSession)
 	assert.False(t, endTime.After(startTime))
@@ -201,7 +193,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		TherapistID: therapistID,
 		Notes:       notes,
 	}
-	postedSession, err = repo.PostSessions(ctx, postSession)
+	postedSession, err = repo.PostSession(ctx, postSession)
 	assert.NoError(t, err)
 	assert.NotNil(t, postedSession)
 	assert.Equal(t, postedSession.TherapistID, therapistID)
@@ -225,7 +217,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	patch := &models.PatchSessionInput{
 		Notes: ptrString("404 NOT FOUND ERROR"),
 	}
-	patchedSession, err := repo.PatchSessions(ctx, badID, patch)
+	patchedSession, err := repo.PatchSession(ctx, badID, patch)
 	assert.Error(t, err)
 	assert.Nil(t, patchedSession)
 
@@ -235,7 +227,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	patch = &models.PatchSessionInput{
 		TherapistID: &therapistID,
 	}
-	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
 	assert.Error(t, err)
 	assert.Nil(t, patchedSession)
 
@@ -255,7 +247,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 		EndTime:   &endTime,
 		Notes:     notes,
 	}
-	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
 	assert.Error(t, err)
 	assert.Nil(t, patchedSession)
 	assert.False(t, endTime.After(startTime))
@@ -274,7 +266,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	patch = &models.PatchSessionInput{
 		Notes: notes,
 	}
-	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
 	assert.NoError(t, err)
 	assert.NotNil(t, patchedSession)
 	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
@@ -287,7 +279,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 		StartTime: &startTime,
 		EndTime:   &endTime,
 	}
-	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
 	assert.NoError(t, err)
 	assert.NotNil(t, patchedSession)
 	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
@@ -311,7 +303,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 		TherapistID: &therapistID,
 		Notes:       notes,
 	}
-	patchedSession, err = repo.PatchSessions(ctx, id, patch)
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
 	assert.NoError(t, err)
 	assert.NotNil(t, patchedSession)
 	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))

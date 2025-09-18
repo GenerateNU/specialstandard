@@ -2,9 +2,6 @@ package schema
 
 import (
 	"context"
-	"database/sql"
-	"errors"
-	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 
 	"github.com/google/uuid"
@@ -55,23 +52,14 @@ func (r *SessionRepository) GetSessionByID(ctx context.Context, id string) (*mod
 	return &session, nil
 }
 
-func (r *SessionRepository) DeleteSessions(ctx context.Context, id uuid.UUID) (string, error) {
+func (r *SessionRepository) DeleteSession(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM session WHERE id = $1`
 
-	cmdTag, err := r.db.Exec(ctx, query, id)
-	if err != nil {
-		return "", err
-	}
-
-	// If No Rows are deleted/affected.
-	if cmdTag.RowsAffected() == 0 {
-		return "not found", nil
-	}
-
-	return "Deleted the Session Successfully!", nil
+	_, err := r.db.Exec(ctx, query, id)
+	return err
 }
 
-func (r *SessionRepository) PostSessions(ctx context.Context, input *models.PostSessionInput) (*models.Session, error) {
+func (r *SessionRepository) PostSession(ctx context.Context, input *models.PostSessionInput) (*models.Session, error) {
 	session := &models.Session{}
 
 	query := `INSERT INTO session (start_datetime, end_datetime, therapist_id, notes)
@@ -95,7 +83,7 @@ func (r *SessionRepository) PostSessions(ctx context.Context, input *models.Post
 	return session, nil
 }
 
-func (r *SessionRepository) PatchSessions(ctx context.Context, id uuid.UUID, input *models.PatchSessionInput) (*models.Session, error) {
+func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, input *models.PatchSessionInput) (*models.Session, error) {
 	session := &models.Session{}
 
 	query := `UPDATE session
@@ -118,9 +106,6 @@ func (r *SessionRepository) PatchSessions(ctx context.Context, id uuid.UUID, inp
 		&session.CreatedAt,
 		&session.UpdatedAt,
 	); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errs.NotFound("Session Not Found")
-		}
 		return nil, err
 	}
 

@@ -15,6 +15,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -96,7 +97,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "Successful Delete Session",
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSessions", mock.Anything, id).Return("deleted", nil)
+				m.On("DeleteSession", mock.Anything, id).Return("deleted", nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -105,7 +106,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "internal server error",
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSessions", mock.Anything, id).Return(nil, errors.New("database error"))
+				m.On("DeleteSession", mock.Anything, id).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -193,7 +194,7 @@ func TestHandler_PostSessions(t *testing.T) {
 					TherapistID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 					Notes:       ptrString("Test FK"),
 				}
-				m.On("PostSessions", mock.Anything, session).Return(nil, errors.New("foreign key violation"))
+				m.On("PostSession", mock.Anything, session).Return(nil, errors.New("foreign key violation"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -215,7 +216,7 @@ func TestHandler_PostSessions(t *testing.T) {
 					TherapistID: uuid.MustParse("28eedfdc-81e1-44e5-a42c-022dc4c3b64d"),
 					Notes:       ptrString("Check violation"),
 				}
-				m.On("PostSessions", mock.Anything, session).Return(nil, errors.New("check constraint"))
+				m.On("PostSession", mock.Anything, session).Return(nil, errors.New("check constraint"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -250,7 +251,7 @@ func TestHandler_PostSessions(t *testing.T) {
 					CreatedAt:     &now,
 					UpdatedAt:     &now,
 				}
-				m.On("PostSessions", mock.Anything, postSession).Return(session, nil)
+				m.On("PostSession", mock.Anything, postSession).Return(session, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 		},
@@ -300,7 +301,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 				patch := &models.PatchSessionInput{
 					Notes: ptrString("Trying to update non-existent"),
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(nil, errors.New("Not Found"))
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, pgx.ErrNoRows)
 			},
 			expectedStatusCode: fiber.StatusNotFound,
 		},
@@ -313,7 +314,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 				patch := &models.PatchSessionInput{
 					TherapistID: &therapistID,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(nil, errors.New("foreign key"))
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, errors.New("foreign key"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -328,7 +329,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					StartTime: &startTime,
 					EndTime:   &endTime,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(nil, errors.New("check constraint"))
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, errors.New("check constraint"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -354,7 +355,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(patchedSession, nil)
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
 		},
@@ -382,7 +383,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(patchedSession, nil)
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
 		},
@@ -419,7 +420,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(patchedSession, nil)
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
 		},

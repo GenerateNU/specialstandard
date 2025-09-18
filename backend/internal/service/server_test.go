@@ -136,18 +136,10 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name:      "Invalid ID - Not Found / Doesn't Exist",
-			sessionID: uuid.New(),
-			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSessions", mock.Anything, id).Return("not found", nil)
-			},
-			expectedStatusCode: 404,
-		},
-		{
 			name:      "Success",
 			sessionID: uuid.New(),
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSessions", mock.Anything, id).Return("deleted", nil)
+				m.On("DeleteSession", mock.Anything, id).Return("deleted", nil)
 			},
 			expectedStatusCode: 200,
 		},
@@ -225,7 +217,7 @@ func TestHandler_PostSessions(t *testing.T) {
 				"notes": "Test FK"
 			}`,
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				m.On("PostSessions", mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).Return(nil, errors.New("foreign key violation"))
+				m.On("PostSession", mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).Return(nil, errors.New("foreign key violation"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -238,7 +230,7 @@ func TestHandler_PostSessions(t *testing.T) {
 				"notes": "Check violation"
 			}`,
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				m.On("PostSessions", mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).Return(nil, errors.New("check constraint"))
+				m.On("PostSession", mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).Return(nil, errors.New("check constraint"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -273,7 +265,7 @@ func TestHandler_PostSessions(t *testing.T) {
 					CreatedAt:     &now,
 					UpdatedAt:     &now,
 				}
-				m.On("PostSessions", mock.Anything, postSession).Return(session, nil)
+				m.On("PostSession", mock.Anything, postSession).Return(session, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 		},
@@ -323,7 +315,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 				patch := &models.PatchSessionInput{
 					Notes: ptrString("Trying to update non-existent"),
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(nil, errors.New("Not Found"))
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, pgx.ErrNoRows)
 			},
 			expectedStatusCode: fiber.StatusNotFound,
 		},
@@ -336,7 +328,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 				patch := &models.PatchSessionInput{
 					TherapistID: &therapistID,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(nil, errors.New("foreign key"))
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, errors.New("foreign key"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -351,7 +343,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					StartTime: &startTime,
 					EndTime:   &endTime,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(nil, errors.New("check constraint"))
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, errors.New("check constraint"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -377,7 +369,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(patchedSession, nil)
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
 		},
@@ -405,7 +397,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(patchedSession, nil)
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
 		},
@@ -442,7 +434,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
-				m.On("PatchSessions", mock.Anything, id, patch).Return(patchedSession, nil)
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
 		},

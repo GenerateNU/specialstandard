@@ -11,16 +11,14 @@ import (
 func (h *Handler) DeleteSessions(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return errs.BadRequest("ID: Parsing Error")
+		return errs.BadRequest("Parsing Error: Invalid ID Format. ID: " + id.String())
 	}
 
-	message, err := h.sessionRepository.DeleteSessions(c.Context(), id)
+	err = h.sessionRepository.DeleteSession(c.Context(), id)
 	if err != nil {
 		slog.Error("Failed to delete session", "id", id, "err", err)
 		return errs.InternalServerError("Internal Server Error")
-	} else if message == "not found" {
-		return errs.NotFound("Session Not Found")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(message)
+	return c.SendStatus(fiber.StatusOK)
 }

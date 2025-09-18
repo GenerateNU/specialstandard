@@ -244,15 +244,6 @@ paths:
               example:
                 code: 400
                 message: bad request
-        '404':
-          description: ID provided was Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: 404
-                message: Session not found
         '500':
           description: Internal server error
           content:
