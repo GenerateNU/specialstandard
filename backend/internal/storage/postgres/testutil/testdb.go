@@ -84,6 +84,31 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			created_at TIMESTAMPTZ DEFAULT now(),
 			updated_at TIMESTAMPTZ DEFAULT now()
 		)`)
+						first_name VARCHAR(100) NOT NULL,
+						last_name VARCHAR(100) NOT NULL,
+						email VARCHAR(255) UNIQUE NOT NULL,
+						active BOOLEAN DEFAULT TRUE,
+						created_at TIMESTAMPTZ DEFAULT now(),
+						updated_at TIMESTAMPTZ DEFAULT now()
+		)
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = pool.Exec(ctx, `
+        CREATE TABLE IF NOT EXISTS session (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            start_datetime TIMESTAMPTZ NOT NULL,
+            end_datetime TIMESTAMPTZ NOT NULL,
+            therapist_id UUID NOT NULL,
+            notes TEXT,
+            created_at TIMESTAMPTZ DEFAULT now(),
+            updated_at TIMESTAMPTZ DEFAULT now(),
+            FOREIGN KEY (therapist_id) REFERENCES therapist(id) ON DELETE RESTRICT,
+            CHECK (end_datetime > start_datetime)
+        )
+    `)
 	if err != nil {
 		t.Fatal(err)
 	}

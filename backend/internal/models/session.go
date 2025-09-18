@@ -7,12 +7,25 @@ import (
 )
 
 type Session struct {
-	ID          uuid.UUID  `json:"id"`
-	TherapistID uuid.UUID  `json:"therapist_id"`
-	SessionDate time.Time  `json:"session_date"`
-	StartTime   *string    `json:"start_time"`
-	EndTime     *string    `json:"end_time"`
+	ID            uuid.UUID  `json:"id" db:"id"`
+	StartDateTime time.Time  `json:"start_datetime" db:"start_datetime"`
+	EndDateTime   time.Time  `json:"end_datetime" db:"end_datetime"`
+	TherapistID   uuid.UUID  `json:"therapist_id" db:"therapist_id"`
+	Notes         *string    `json:"notes" db:"notes"`
+	CreatedAt     *time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at" db:"updated_at"`
+}
+
+type PostSessionInput struct {
+	StartTime   time.Time `json:"start_datetime" validate:"required"`
+	EndTime     time.Time `json:"end_datetime" validate:"required"`
+	TherapistID uuid.UUID `json:"therapist_id" validate:"required"`
+	Notes       *string   `json:"notes"`
+}
+
+type PatchSessionInput struct {
+	StartTime   *time.Time `json:"start_datetime"`
+	EndTime     *time.Time `json:"end_datetime"`
+	TherapistID *uuid.UUID `json:"therapist_id"`
 	Notes       *string    `json:"notes"`
-	CreatedAt   *time.Time `json:"created_at"`
-	UpdatedAt   *time.Time `json:"updated_at"`
 }

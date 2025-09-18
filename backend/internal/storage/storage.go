@@ -5,12 +5,17 @@ import (
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/postgres/schema"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/google/uuid"
 )
 
 type SessionRepository interface {
 	GetSessions(ctx context.Context) ([]models.Session, error)
+	GetSessionByID(ctx context.Context, id string) (*models.Session, error)
+	DeleteSession(ctx context.Context, id uuid.UUID) error
+	PostSession(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
+	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
 }
 
 type StudentRepository interface {
