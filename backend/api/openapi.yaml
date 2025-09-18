@@ -449,127 +449,130 @@ components:
           example: "2024-01-15T10:35:00Z"
 
     Student:
-      type: object
-      required:
-        - id
-        - first_name
-        - last_name
-        - dob
-        - therapist_id
-        - grade
-        - iep
-        - created_at
-        - updated_at
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Unique identifier for the student
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        first_name:
-          type: string
-          description: Student's first name
-          example: "John"
-        last_name:
-          type: string
-          description: Student's last name
-          example: "Doe"
-        dob:
-          type: string
-          format: date
-          description: Student's date of birth
-          example: "2010-05-15"
-        therapist_id:
-          type: string
-          format: uuid
-          description: ID of the assigned therapist
-          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        grade:
-          type: string
-          description: Student's current grade level
-          example: "5th Grade"
-        iep:
-          type: string
-          description: Individualized Education Program details
-          example: "Active IEP with speech therapy goals"
-        created_at:
-          type: string
-          format: date-time
-          description: When the student record was created
-          example: "2024-01-15T10:30:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          description: When the student record was last updated
-          example: "2024-01-15T10:35:00Z"
+  type: object
+  required:
+    - id
+    - first_name
+    - last_name
+    - therapist_id
+    - created_at
+    - updated_at
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the student
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    first_name:
+      type: string
+      description: Student's first name
+      example: "John"
+    last_name:
+      type: string
+      description: Student's last name
+      example: "Doe"
+    dob:
+      type: string
+      format: date
+      nullable: true
+      description: Student's date of birth (optional)
+      example: "2010-05-15"
+    therapist_id:
+      type: string
+      format: uuid
+      description: ID of the assigned therapist
+      example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+    grade:
+      type: string
+      nullable: true
+      description: Student's current grade level (optional)
+      example: "5th Grade"
+    iep:
+      type: string
+      nullable: true
+      description: Individualized Education Program details (optional)
+      example: "Active IEP with speech therapy goals"
+    created_at:
+      type: string
+      format: date-time
+      description: When the student record was created
+      example: "2024-01-15T10:30:00Z"
+    updated_at:
+      type: string
+      format: date-time
+      description: When the student record was last updated
+      example: "2024-01-15T10:35:00Z"
 
-    CreateStudentInput:
-      type: object
-      required:
-        - first_name
-        - last_name
-        - dob
-        - therapist_id
-        - grade
-        - iep
-      properties:
-        first_name:
-          type: string
-          description: Student's first name
-          example: "John"
-        last_name:
-          type: string
-          description: Student's last name
-          example: "Doe"
-        dob:
-          type: string
-          format: date
-          description: Student's date of birth (YYYY-MM-DD format)
-          example: "2010-05-15"
-        therapist_id:
-          type: string
-          format: uuid
-          description: ID of the assigned therapist
-          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        grade:
-          type: string
-          description: Student's current grade level
-          example: "5th Grade"
-        iep:
-          type: string
-          description: Individualized Education Program details
-          example: "Active IEP with speech therapy goals"
+CreateStudentInput:
+  type: object
+  required:
+    - first_name
+    - last_name
+    - therapist_id
+  properties:
+    first_name:
+      type: string
+      description: Student's first name
+      example: "John"
+    last_name:
+      type: string
+      description: Student's last name
+      example: "Doe"
+    dob:
+      type: string
+      format: date
+      nullable: true
+      description: Student's date of birth (YYYY-MM-DD format, optional)
+      example: "2010-05-15"
+    therapist_id:
+      type: string
+      format: uuid
+      description: ID of the assigned therapist
+      example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+    grade:
+      type: string
+      nullable: true
+      description: Student's current grade level (optional)
+      example: "5th Grade"
+    iep:
+      type: string
+      nullable: true
+      description: Individualized Education Program details (optional)
+      example: "Active IEP with speech therapy goals"
 
-    UpdateStudentInput:
-      type: object
-      description: Fields that can be updated (all optional for partial updates)
-      properties:
-        first_name:
-          type: string
-          description: Student's first name
-          example: "John"
-        last_name:
-          type: string
-          description: Student's last name
-          example: "Doe"
-        dob:
-          type: string
-          format: date
-          description: Student's date of birth (YYYY-MM-DD format)
-          example: "2010-05-15"
-        therapist_id:
-          type: string
-          format: uuid
-          description: ID of the assigned therapist
-          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        grade:
-          type: string
-          description: Student's current grade level
-          example: "6th Grade"
-        iep:
-          type: string
-          description: Updated IEP details
-          example: "Updated IEP with advanced speech therapy goals"
+UpdateStudentInput:
+  type: object
+  description: Fields that can be updated (all optional for partial updates)
+  properties:
+    first_name:
+      type: string
+      description: Student's first name
+      example: "John"
+    last_name:
+      type: string
+      description: Student's last name
+      example: "Doe"
+    dob:
+      type: string
+      format: date
+      nullable: true
+      description: Student's date of birth (YYYY-MM-DD format, can be set to null)
+      example: "2010-05-15"
+    therapist_id:
+      type: string
+      format: uuid
+      description: ID of the assigned therapist
+      example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+    grade:
+      type: string
+      nullable: true
+      description: Student's current grade level (can be set to null)
+      example: "6th Grade"
+    iep:
+      type: string
+      nullable: true
+      description: Updated IEP details (can be set to null)
+      example: "Updated IEP with advanced speech therapy goals"
 
     Error:
       type: object

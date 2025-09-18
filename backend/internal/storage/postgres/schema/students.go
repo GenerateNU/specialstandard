@@ -47,7 +47,7 @@ func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.St
 	WHERE id = $7
 	RETURNING id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at`
 
-var updatedStudent models.Student
+	var updatedStudent models.Student
 	err := r.db.QueryRow(ctx, query,
 		student.FirstName,
 		student.LastName,
@@ -67,37 +67,36 @@ var updatedStudent models.Student
 		&updatedStudent.CreatedAt,
 		&updatedStudent.UpdatedAt,
 	)
-	
 	return updatedStudent, err
 }
 
 func (r *StudentRepository) AddStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	query := `
-	INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-	RETURNING id, first_name, last_name, dob, therapist_id, grade, iep, created_at , updated_at`
-
-	var insertedStudent models.Student
+	INSERT INTO student (first_name, last_name, dob, therapist_id, grade, iep, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, NOW())
+	RETURNING id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at`
+	
+	var createdStudent models.Student
 	err := r.db.QueryRow(ctx, query,
-		student.ID,
 		student.FirstName,
 		student.LastName,
-		student.DOB,
+		student.DOB,         
 		student.TherapistID,
 		student.Grade,
 		student.IEP,
 	).Scan(
-		&insertedStudent.ID,
-		&insertedStudent.FirstName,
-		&insertedStudent.LastName,
-		&insertedStudent.DOB,
-		&insertedStudent.TherapistID,
-		&insertedStudent.Grade,
-		&insertedStudent.IEP,
-		&insertedStudent.CreatedAt,
-		&insertedStudent.UpdatedAt,
+		&createdStudent.ID,
+		&createdStudent.FirstName,
+		&createdStudent.LastName,
+		&createdStudent.DOB,
+		&createdStudent.TherapistID,
+		&createdStudent.Grade,
+		&createdStudent.IEP,
+		&createdStudent.CreatedAt,
+		&createdStudent.UpdatedAt,
 	)
-	return insertedStudent, err
+	
+	return createdStudent, err
 }
 
 
@@ -112,12 +111,12 @@ func (r *StudentRepository) GetStudent(ctx context.Context, id uuid.UUID) (model
 		&student.ID,
 		&student.FirstName,
 		&student.LastName,
-		&student.DOB,           // Changed from DateOfBirth
+		&student.DOB,
 		&student.TherapistID,
 		&student.Grade,
 		&student.IEP,
-		&student.CreatedAt,     // Added
-		&student.UpdatedAt,     // Added
+		&student.CreatedAt,
+		&student.UpdatedAt,
 	)
 	if err != nil {
 		return models.Student{}, err

@@ -109,7 +109,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 			first_name VARCHAR(100) NOT NULL,
 			last_name VARCHAR(100) NOT NULL,
-			dob DATE NOT NULL,
+			dob DATE,
 			therapist_id UUID NOT NULL REFERENCES therapist(id),
 			grade VARCHAR(50),
 			iep TEXT,

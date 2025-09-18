@@ -18,6 +18,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+
+func ptrTime(t time.Time) *time.Time {
+    return &t
+}
+
 func ptrString(s string) *string {
 	return &s
 }
@@ -77,10 +82,10 @@ func TestGetStudentsEndpoint(t *testing.T) {
 			ID:          uuid.New(),
 			FirstName:   "Emma",
 			LastName:    "Johnson",
-			DOB:         time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC),
+			DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
-			Grade:       "4th",
-			IEP:         "Reading comprehension support",
+			Grade:       ptrString("4th"),
+			IEP:         ptrString("Reading comprehension support"),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -109,10 +114,10 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 		ID:          studentID,
 		FirstName:   "Emma",
 		LastName:    "Johnson",
-		DOB:         time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC),
+		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
-		Grade:       "4th",
-		IEP:         "Reading comprehension support",
+		Grade:       ptrString("4th"),
+		IEP:         ptrString("Reading comprehension support"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -138,10 +143,10 @@ func TestCreateStudentEndpoint(t *testing.T) {
     ID: uuid.New(),
     FirstName: "John",
     LastName: "Doe", 
-    Grade: "5th",
+    Grade:       ptrString("5th"),
     TherapistID: uuid.New(),
-    DOB: time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC),
-    IEP: "Active IEP with speech therapy goals",
+    DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
+    IEP: ptrString("Active IEP with speech therapy goals"),
     CreatedAt: time.Now(),
     UpdatedAt: time.Now(),
 }, nil)
@@ -185,10 +190,10 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		ID:          studentID,
 		FirstName:   "Emma",
 		LastName:    "Johnson",
-		DOB:         time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC),
+		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
-		Grade:       "4th",
-		IEP:         "Original IEP",
+		Grade:       ptrString("4th"),
+		IEP:         ptrString("Original IEP"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -198,10 +203,10 @@ func TestUpdateStudentEndpoint(t *testing.T) {
     ID: studentID,
     FirstName: "Emma", 
     LastName: "Johnson",
-    Grade: "5th", // updated grade
+    Grade:       ptrString("5th"), // updated grade
     TherapistID: uuid.New(),
-    DOB: time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC),
-    IEP: "Updated IEP with math accommodations",
+    DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
+    IEP: ptrString("Updated IEP with math accommodations"),
     CreatedAt: time.Now(),
     UpdatedAt: time.Now(),
 }, nil)
