@@ -14,6 +14,8 @@ tags:
     description: Health check operations
   - name: Sessions
     description: Therapy session operations
+  - name: Therapists
+    description: Physical Therapists Registered
 
 paths:
   /health:
@@ -22,46 +24,14 @@ paths:
       description: Check if the API is running and healthy
       tags: [Health]
       responses:
-        '200':
+        "200":
           description: API is healthy (status code only)
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-
-  /themes:
-    post:
-      summary: Create a new theme
-      description: Create a new theme for therapy sessions
-      tags: [Themes]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - name
-                - month
-                - year
-              properties:
-                name:
-                  type: string
-                  description: Name of the theme
-                  example: "Winter Wonderland"
-                month:
-                  type: integer
-                  description: Month of the theme (1-12)
-                  example: 12
-                year:
-                  type: integer
-                  description: Year of the theme (e.g., 2024)
-                  example: 2024
-      responses:
-        '201':
-          description: Theme created successfully
+                $ref: "#/components/schemas/Error"
 
   /sessions:
     get:
@@ -329,8 +299,324 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+
+  /therapists:
+    get:
+      summary: Get all therapists
+      description: Retrieve all therapists from the database
+      tags: [Therapists]
+      responses:
+        "200":
+          description: A list of Therapists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Therapist"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Resource not found"
+    post:
+      summary: Create a new therapist
+      description: Create a new therapist for school districts
+      tags: [Therapists]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - first_name
+                - last_name
+                - email
+              properties:
+                first_name:
+                  type: string
+                  description: First name of the therapist
+                  example: "Kevin"
+                last_name:
+                  type: string
+                  description: Last name of the therapist
+                  example: "Matilda"
+                email:
+                  type: string
+                  description: Email of the therapist
+                  example: email123@example.com
+      responses:
+        "201":
+          description: Therapist created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Therapist"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /therapists/{id}:
+    patch:
+      summary: Update a characteristic of a given therapist
+      description: Update a specific field within a therapist object in the database
+      tags: [Therapists]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Therapist ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required (atleast one of the following):
+                - first name
+                - last name
+                - email
+                - active
+              properties:
+                first name:
+                  type: string
+                  description: first name of the therapist
+                  example: "Kevin"
+                last name:
+                  type: string
+                  description: last name of the therapist
+                  example: "Matilda"
+                email:
+                  type: string
+                  description: email of the therapist
+                  example: email123@example.com
+      responses:
+        "200":
+          description: Message
+          content:
+            application/json:
+              schema:
+                type: string
+                items:
+                  $ref: "#/components/schemas/Therapist"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "There was an error parsing the given id!"
+    delete:
+      summary: Get the specific therapist corresponding to the given ID and delete it
+      description: Retrieve a specific therapist from the database and delete it
+      tags: [Therapists]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Therapist ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: Message
+          content:
+            application/json:
+              schema:
+                type: string
+                items:
+                  $ref: "#/components/schemas/Therapist"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Error querying database for given ID"
+    get:
+      summary: Get the specific therapist corresponding to the given ID
+      description: Retrieve a specific therapist from the database
+      tags: [Therapists]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Therapist ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: Therapist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Therapist"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "There was an error parsing the given id!"
+  /themes:
+    post:
+      summary: Create a new theme
+      description: Create a new theme for therapy sessions
+      tags: [Themes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - month
+                - year
+              properties:
+                name:
+                  type: string
+                  description: Name of the theme
+                  example: "Winter Wonderland"
+                month:
+                  type: integer
+                  description: Month of the theme (1-12)
+                  example: 12
+                year:
+                  type: integer
+                  description: Year of the theme (e.g., 2024)
+                  example: 2024
+      responses:
+        "201":
+          description: Theme created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Theme"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   schemas:
+    Therapist:
+      type: object
+      required:
+        - id
+        - first_name
+        - last_name
+        - email
+        - active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the therapist
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        first_name:
+          type: string
+          example: "Kevin"
+        last_name:
+          type: string
+          example: "Matilda"
+        email:
+          type: string
+          format: email
+          example: "email123@example.com"
+        active:
+          type: boolean
+          description: Whether the therapist is currently active
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:35:00Z"
+    UpdateTherapistInput:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: First name of the therapist
+          example: "Kevin"
+        last_name:
+          type: string
+          description: Last name of the therapist
+          example: "Matilda"
+        email:
+          type: string
+          format: email
+          description: Email of the therapist
+          example: "email123@example.com"
+        active:
+          type: boolean
+          description: Whether the therapist is active
+          example: true
     CreateThemeInput:
       type: object
       required:
