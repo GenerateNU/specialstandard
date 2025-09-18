@@ -128,7 +128,7 @@ func TestStudentRepository_AddStudent(t *testing.T) {
 	}
 
 	// Test
-	err = repo.AddStudent(ctx, testStudent)
+	_, err = repo.AddStudent(ctx, testStudent)
 
 	// Assert
 	assert.NoError(t, err)
@@ -193,7 +193,7 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 	}
 
 	// Test
-	err = repo.UpdateStudent(ctx, updatedStudent)
+	_, err = repo.UpdateStudent(ctx, updatedStudent)
 
 	// Assert
 	assert.NoError(t, err)

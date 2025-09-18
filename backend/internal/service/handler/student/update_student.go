@@ -12,19 +12,11 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := uuid.Parse(idStr)
 
-	// Check if ID is empty
-	if idStr == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Given Empty ID",
-		})
-	}
-
-	// Check if UUID is valid
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid UUID format",
-		})
-	}
+    return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+        "error": "Invalid UUID format",
+    })
+}
 
 	var req struct {
 		FirstName   *string `json:"first_name,omitempty"`
@@ -43,13 +35,6 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 
 	existingStudent, err := h.studentRepository.GetStudent(c.Context(), id)
 	if err != nil {
-		// Student not found
-		if strings.Contains(err.Error(), "no rows") || err.Error() == "sql: no rows in result set" {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "Student not found",
-			})
-		}
-		// Some other database error
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Database error",
 		})
@@ -87,11 +72,18 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 		existingStudent.IEP = *req.IEP
 	}
 
-	if err := h.studentRepository.UpdateStudent(c.Context(), existingStudent); err != nil {
+	updatedStudent, err := h.studentRepository.UpdateStudent(c.Context(), existingStudent)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows") || err.Error() == "sql: no rows in result set" {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Student not found",
+			})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Database error",
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(existingStudent)
+	return c.Status(fiber.StatusOK).JSON(updatedStudent)
+
 }

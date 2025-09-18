@@ -40,30 +40,45 @@ func (r *StudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) err
 	return err
 }
 
-func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.Student) error {
+func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	query := `
 	UPDATE student
-	SET first_name = $1, last_name = $2, dob = $3, therapist_id = $4, grade = $5, iep = $6, updated_at = NOW()
-	WHERE id = $7`
+	SET first_name = $1, last_name = $2, dob = $3, therapist_id = $4, grade = $5, iep = $6
+	WHERE id = $7
+	RETURNING id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at`
 
-	_, err := r.db.Exec(ctx, query,
+var updatedStudent models.Student
+	err := r.db.QueryRow(ctx, query,
 		student.FirstName,
 		student.LastName,
-		student.DOB,            // Changed from DateOfBirth
+		student.DOB,
 		student.TherapistID,
 		student.Grade,
 		student.IEP,
 		student.ID,
+	).Scan(
+		&updatedStudent.ID,
+		&updatedStudent.FirstName,
+		&updatedStudent.LastName,
+		&updatedStudent.DOB,
+		&updatedStudent.TherapistID,
+		&updatedStudent.Grade,
+		&updatedStudent.IEP,
+		&updatedStudent.CreatedAt,
+		&updatedStudent.UpdatedAt,
 	)
-	return err
+	
+	return updatedStudent, err
 }
 
-func (r *StudentRepository) AddStudent(ctx context.Context, student models.Student) error {
+func (r *StudentRepository) AddStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	query := `
-	INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`
-	
-	_, err := r.db.Exec(ctx, query,
+	INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+	RETURNING id, first_name, last_name, dob, therapist_id, grade, iep, created_at , updated_at`
+
+	var insertedStudent models.Student
+	err := r.db.QueryRow(ctx, query,
 		student.ID,
 		student.FirstName,
 		student.LastName,
@@ -71,8 +86,18 @@ func (r *StudentRepository) AddStudent(ctx context.Context, student models.Stude
 		student.TherapistID,
 		student.Grade,
 		student.IEP,
+	).Scan(
+		&insertedStudent.ID,
+		&insertedStudent.FirstName,
+		&insertedStudent.LastName,
+		&insertedStudent.DOB,
+		&insertedStudent.TherapistID,
+		&insertedStudent.Grade,
+		&insertedStudent.IEP,
+		&insertedStudent.CreatedAt,
+		&insertedStudent.UpdatedAt,
 	)
-	return err
+	return insertedStudent, err
 }
 
 

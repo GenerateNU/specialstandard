@@ -64,10 +64,11 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 		IEP:         req.IEP,
 	}
 	
-	if err := h.studentRepository.AddStudent(c.Context(), student); err != nil {
+	student,  err = h.studentRepository.AddStudent(c.Context(), student)
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-        "error": "Database error",
-    })
+			"error": "Database error",
+		})
 	}
 	
 	return c.Status(fiber.StatusCreated).JSON(student)

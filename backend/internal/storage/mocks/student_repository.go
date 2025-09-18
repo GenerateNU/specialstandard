@@ -27,14 +27,14 @@ func (m *MockStudentRepository) GetStudent(ctx context.Context, id uuid.UUID) (m
 	return args.Get(0).(models.Student), args.Error(1)
 }
 
-func (m *MockStudentRepository) AddStudent(ctx context.Context, student models.Student) error {
+func (m *MockStudentRepository) AddStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	args := m.Called(ctx, student)
-	return args.Error(0)
+	return args.Get(0).(models.Student), args.Error(1)
 }
 
-func (m *MockStudentRepository) UpdateStudent(ctx context.Context, student models.Student) error {
-	args := m.Called(ctx, student)
-	return args.Error(0)
+func (m *MockStudentRepository) UpdateStudent(ctx context.Context, student models.Student) (models.Student, error) {
+    args := m.Called(ctx, student)
+    return args.Get(0).(models.Student), args.Error(1)
 }
 
 func (m *MockStudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) error {

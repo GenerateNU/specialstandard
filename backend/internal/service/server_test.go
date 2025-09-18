@@ -134,7 +134,17 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 func TestCreateStudentEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
-	mockStudentRepo.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(nil)
+	mockStudentRepo.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
+    ID: uuid.New(),
+    FirstName: "John",
+    LastName: "Doe", 
+    Grade: "5th",
+    TherapistID: uuid.New(),
+    DOB: time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC),
+    IEP: "Active IEP with speech therapy goals",
+    CreatedAt: time.Now(),
+    UpdatedAt: time.Now(),
+}, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -184,7 +194,17 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 	}, nil)
 
 	// Mock UpdateStudent call
-	mockStudentRepo.On("UpdateStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(nil)
+	mockStudentRepo.On("UpdateStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
+    ID: studentID,
+    FirstName: "Emma", 
+    LastName: "Johnson",
+    Grade: "5th", // updated grade
+    TherapistID: uuid.New(),
+    DOB: time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC),
+    IEP: "Updated IEP with math accommodations",
+    CreatedAt: time.Now(),
+    UpdatedAt: time.Now(),
+}, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
