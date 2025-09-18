@@ -37,36 +37,274 @@ paths:
     get:
       summary: Get all sessions
       description: Retrieve all therapy sessions from the database
-      tags: [Sessions]
+      tags: [ Sessions ]
       responses:
-        "200":
+        '200':
           description: List of therapy sessions
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Session"
-        "500":
+                  $ref: '#/components/schemas/Session'
+        '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "404":
+                $ref: '#/components/schemas/Error'
+        '404':
           description: Not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
               example:
                 code: 404
                 message: "Resource not found"
+
+    post:
+      summary: Creates a new session
+      description: Creates a new session for the therapist
+      tags: [ Sessions ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - start_datetime
+                - end_datetime
+                - therapist_id
+              properties:
+                start_datetime:
+                  type: string
+                  format: date-time
+                  description: Start date and time of the session
+                  example: "2025-09-13T17:19:00Z"
+                end_datetime:
+                  type: string
+                  format: date-time
+                  description: End date and time of the session
+                  example: "2025-09-13T18:00:00Z"
+                therapist_id:
+                  type: string
+                  format: uuid
+                  description: UUID of the Therapist
+                  example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes:
+                  type: string
+                  description: Optional notes about the session
+                  example: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                start_datetime: "2025-09-13T17:19:00Z"
+                end_datetime: "2025-09-13T18:00:00Z"
+                therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
+                created_at: "2025-09-13T10:30:00Z"
+                updated_at: "2025-09-13T10:30:00Z"
+        '400':
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: invalid json
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sessions/{id}:
+    get:
+      summary: Get session by ID
+      description: Retrieve a specific therapy session by its UUID
+      tags: [ Sessions ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the Session to retrieve
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Session found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                start_datetime: "2025-09-13T17:19:00Z"
+                end_datetime: "2025-09-13T18:00:00Z"
+                therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
+                created_at: "2025-09-13T10:30:00Z"
+                updated_at: "2025-09-13T10:30:00Z"
+        '400':
+          description: Bad Request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 404
+                message: "Session not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Deletes the specific Session
+      description: Deletes the specific Session from the database with the given id.
+      tags: [ Sessions ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the Session to delete
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success String for Deleted Session Successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Deleted the Session Successfully!"
+        '400':
+          description: Bad Request Error (parsing invalid uuid, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: bad request
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Updates the specific Session
+      description: Updates the Session with the given ID.
+      tags: [ Sessions ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the Session to patch
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                start_datetime:
+                  type: string
+                  format: date-time
+                  description: Start date and time of the session
+                  example: "2025-09-13T17:19:00Z"
+                end_datetime:
+                  type: string
+                  format: date-time
+                  description: End date and time of the session
+                  example: "2025-09-13T18:00:00Z"
+                therapist_id:
+                  type: string
+                  format: uuid
+                  description: UUID of the Therapist
+                  example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes:
+                  type: string
+                  description: Optional notes about the session
+                  example: "Morale of the Story: Don't get attached"
+      responses:
+        '200':
+          description: Session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                start_datetime: "2025-09-13T17:19:00Z"
+                end_datetime: "2025-09-13T18:00:00Z"
+                therapist_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                notes: "Morale of the Story: Don't get attached"
+                created_at: "2025-09-13T10:30:00Z"
+                updated_at: "2025-09-13T10:35:00Z"
+        '400':
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: bad request
+        '404':
+          description: Session Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 404
+                message: Session Not Found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
   /therapists:
     get:
       summary: Get all therapists
       description: Retrieve all therapists from the database
-      tags: [Therapists]
+      tags: [ Therapists ]
       responses:
         "200":
           description: A list of Therapists
@@ -271,53 +509,53 @@ paths:
               example:
                 code: 400
                 message: "There was an error parsing the given id!"
-/themes:
-  post:
-    summary: Create a new theme
-    description: Create a new theme for therapy sessions
-    tags: [Themes]
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - name
-              - month
-              - year
-            properties:
-              name:
-                type: string
-                description: Name of the theme
-                example: "Winter Wonderland"
-              month:
-                type: integer
-                description: Month of the theme (1-12)
-                example: 12
-              year:
-                type: integer
-                description: Year of the theme (e.g., 2024)
-                example: 2024
-    responses:
-      "201":
-        description: Theme created successfully
+  /themes:
+    post:
+      summary: Create a new theme
+      description: Create a new theme for therapy sessions
+      tags: [Themes]
+      requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Theme"
-      "400":
-        description: Bad request (e.g., validation errors)
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Error"
-      "500":
-        description: Internal server error
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Error"
+              type: object
+              required:
+                - name
+                - month
+                - year
+              properties:
+                name:
+                  type: string
+                  description: Name of the theme
+                  example: "Winter Wonderland"
+                month:
+                  type: integer
+                  description: Month of the theme (1-12)
+                  example: 12
+                year:
+                  type: integer
+                  description: Year of the theme (e.g., 2024)
+                  example: 2024
+      responses:
+        "201":
+          description: Theme created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Theme"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -440,34 +678,30 @@ components:
       type: object
       required:
         - id
+        - start_datetime
+        - end_datetime
         - therapist_id
-        - session_date
       properties:
         id:
           type: string
           format: uuid
           description: Unique identifier for the session
           example: "123e4567-e89b-12d3-a456-426614174000"
+        start_datetime:
+          type: string
+          format: date-time
+          description: Start date and time of the session
+          example: "2024-01-15T14:30:00Z"
+        end_datetime:
+          type: string
+          format: date-time
+          description: End date and time of the session
+          example: "2024-01-15T15:30:00Z"
         therapist_id:
           type: string
           format: uuid
           description: ID of the therapist conducting the session
           example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        session_date:
-          type: string
-          format: date-time
-          description: Date and time when the session occurred
-          example: "2024-01-15T14:30:00Z"
-        start_time:
-          type: string
-          nullable: true
-          description: Session start time (optional)
-          example: "14:30"
-        end_time:
-          type: string
-          nullable: true
-          description: Session end time (optional)
-          example: "15:30"
         notes:
           type: string
           nullable: true
@@ -502,3 +736,4 @@ components:
             - type: object
           description: Error message or validation errors
           example: "Internal server error"
+

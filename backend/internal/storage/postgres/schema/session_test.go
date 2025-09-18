@@ -2,6 +2,7 @@ package schema_test
 
 import (
 	"context"
+	"specialstandard/internal/models"
 	"testing"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
+
+func ptrString(s string) *string {
+	return &s
+}
 
 func TestSessionRepository_GetSessions(t *testing.T) {
 	if testing.Short() {
@@ -24,14 +29,21 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	repo := schema.NewSessionRepository(testDB.Pool)
 	ctx := context.Background()
 
-	// Generate a UUID for therapist_id
+	// Create a test therapist first (required for foreign key)
 	therapistID := uuid.New()
-
-	// Insert test data with UUID
 	_, err := testDB.Pool.Exec(ctx, `
-        INSERT INTO sessions (therapist_id, session_date, start_time, end_time, notes)
-        VALUES ($1, $2, $3, $4, $5)
-    `, therapistID, time.Now(), "10:00", "11:00", "Test session")
+        INSERT INTO therapist (id, first_name, last_name, email)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, "John", "Doe", "john.doe@example.com")
+	assert.NoError(t, err)
+
+	// Insert test session data using new schema
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx, `
+        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, startTime, endTime, "Test session")
 	assert.NoError(t, err)
 
 	// Test
@@ -41,5 +53,260 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 1)
 	assert.Equal(t, "Test session", *sessions[0].Notes)
-	assert.Equal(t, therapistID, sessions[0].TherapistID) // Optional: verify the therapist ID matches
+	assert.Equal(t, therapistID, sessions[0].TherapistID)
+	assert.True(t, sessions[0].EndDateTime.After(sessions[0].StartDateTime))
+}
+
+func TestSessionRepository_GetSessionByID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+
+	// Setup
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionRepository(testDB.Pool)
+	ctx := context.Background()
+
+	// Create a test therapist first
+	therapistID := uuid.New()
+	_, err := testDB.Pool.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, "Jane", "Smith", "jane.smith@example.com")
+	assert.NoError(t, err)
+
+	// Insert test session and capture the generated ID
+	sessionID := uuid.New()
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx, `
+        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
+        VALUES ($1, $2, $3, $4, $5)
+    `, sessionID, therapistID, startTime, endTime, "Get by ID test session")
+	assert.NoError(t, err)
+
+	// Test
+	session, err := repo.GetSessionByID(ctx, sessionID.String())
+
+	// Assert
+	assert.NoError(t, err)
+	assert.NotNil(t, session)
+	assert.Equal(t, sessionID, session.ID)
+	assert.Equal(t, therapistID, session.TherapistID)
+	assert.Equal(t, "Get by ID test session", *session.Notes)
+
+	// Test not found
+	nonExistentID := uuid.New()
+	session, err = repo.GetSessionByID(ctx, nonExistentID.String())
+	assert.Error(t, err)
+	assert.Nil(t, session)
+}
+
+func TestSessionRepository_DeleteSessions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping DB tests in short mode")
+	}
+
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionRepository(testDB.Pool)
+	ctx := context.Background()
+
+	// SUCCESS TEST - Creation of valid Therapist first.
+	therapistID := uuid.New()
+	_, err := testDB.Pool.Exec(ctx,
+		`INSERT INTO therapist (id, first_name, last_name, email)
+             VALUES ($1, $2, $3, $4)`,
+		therapistID, "Doctor", "Suess", "dr.guesswho.suess@drdr.com")
+	assert.NoError(t, err)
+
+	// Inserting test session into the DB.
+	sessionID := uuid.New()
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
+             VALUES ($1, $2, $3, $4, $5)`,
+		sessionID, therapistID, startTime, endTime, "Inserting into session for test")
+	assert.NoError(t, err)
+
+	err = repo.DeleteSession(ctx, sessionID)
+	assert.NoError(t, err)
+}
+
+func TestSessionRepository_PostSessions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping DB tests in short mode")
+	}
+
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionRepository(testDB.Pool)
+	ctx := context.Background()
+
+	therapistID := uuid.New()
+	startTime := time.Now()
+	endTime := time.Now().Add(time.Hour)
+	notes := ptrString("foreign key violation")
+	postSession := &models.PostSessionInput{
+		StartTime:   startTime,
+		EndTime:     endTime,
+		TherapistID: therapistID,
+		Notes:       notes,
+	}
+	postedSession, err := repo.PostSession(ctx, postSession)
+	assert.Error(t, err)
+	assert.Nil(t, postedSession)
+
+	// INSERTING VALID THERAPIST
+	therapistID = uuid.New()
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO therapist (id, first_name, last_name, email)
+        	 VALUES ($1, $2, $3, $4)`,
+		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
+	assert.NoError(t, err)
+
+	startTime = time.Now()
+	endTime = time.Now().Add(-time.Hour)
+	notes = ptrString("check constraint violation")
+	postSession = &models.PostSessionInput{
+		StartTime:   startTime,
+		EndTime:     endTime,
+		TherapistID: therapistID,
+		Notes:       notes,
+	}
+	postedSession, err = repo.PostSession(ctx, postSession)
+	assert.Error(t, err)
+	assert.Nil(t, postedSession)
+	assert.False(t, endTime.After(startTime))
+
+	startTime = time.Now()
+	endTime = time.Now().Add(time.Hour)
+	notes = ptrString("success")
+	postSession = &models.PostSessionInput{
+		StartTime:   startTime,
+		EndTime:     endTime,
+		TherapistID: therapistID,
+		Notes:       notes,
+	}
+	postedSession, err = repo.PostSession(ctx, postSession)
+	assert.NoError(t, err)
+	assert.NotNil(t, postedSession)
+	assert.Equal(t, postedSession.TherapistID, therapistID)
+	assert.Equal(t, postedSession.Notes, notes)
+	assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
+}
+
+func TestSessionRepository_PatchSessions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping DB Tests in short mode")
+	}
+
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionRepository(testDB.Pool)
+	ctx := context.Background()
+
+	// Given ID Not Found 404 Error
+	badID := uuid.New()
+	patch := &models.PatchSessionInput{
+		Notes: ptrString("404 NOT FOUND ERROR"),
+	}
+	patchedSession, err := repo.PatchSession(ctx, badID, patch)
+	assert.Error(t, err)
+	assert.Nil(t, patchedSession)
+
+	// Foreign Key Violation
+	id := uuid.New()
+	therapistID := uuid.New()
+	patch = &models.PatchSessionInput{
+		TherapistID: &therapistID,
+	}
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
+	assert.Error(t, err)
+	assert.Nil(t, patchedSession)
+
+	// INSERTING THERAPIST NOW
+	therapistID = uuid.New()
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO therapist (id, first_name, last_name, email)
+             VALUES ($1, $2, $3, $4)`,
+		therapistID, "Doc", "The Dwarf", "doc@sevendwarves.com")
+	assert.NoError(t, err)
+
+	startTime := time.Now()
+	endTime := time.Now().Add(-time.Hour)
+	notes := ptrString("check constraint violation")
+	patch = &models.PatchSessionInput{
+		StartTime: &startTime,
+		EndTime:   &endTime,
+		Notes:     notes,
+	}
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
+	assert.Error(t, err)
+	assert.Nil(t, patchedSession)
+	assert.False(t, endTime.After(startTime))
+
+	// INSERT ACTUAL SESSION TO EDIT
+	id = uuid.New()
+	startTime = time.Now()
+	endTime = time.Now().Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
+             VALUES ($1, $2, $3, $4, $5)`,
+		id, therapistID, startTime, endTime, "Inserted")
+	assert.NoError(t, err)
+
+	notes = ptrString("success with one change")
+	patch = &models.PatchSessionInput{
+		Notes: notes,
+	}
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
+	assert.NoError(t, err)
+	assert.NotNil(t, patchedSession)
+	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
+	assert.Equal(t, patchedSession.TherapistID, therapistID)
+	assert.Equal(t, patchedSession.Notes, notes)
+
+	startTime = time.Now()
+	endTime = time.Now().Add(time.Hour)
+	patch = &models.PatchSessionInput{
+		StartTime: &startTime,
+		EndTime:   &endTime,
+	}
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
+	assert.NoError(t, err)
+	assert.NotNil(t, patchedSession)
+	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
+	assert.Equal(t, patchedSession.TherapistID, therapistID)
+	assert.Equal(t, patchedSession.Notes, notes)
+
+	// ADDING A SECOND THERAPIST TO UPDATE TO
+	therapistID = uuid.New()
+	_, err = testDB.Pool.Exec(ctx,
+		`INSERT INTO therapist (id, first_name, last_name, email)
+             VALUES ($1, $2, $3, $4)`,
+		therapistID, "Courage", "The Cowardly Dog", "havecourage@cowardice.com")
+	assert.NoError(t, err)
+
+	startTime = time.Now()
+	endTime = time.Now().Add(time.Hour)
+	notes = ptrString("New Note")
+	patch = &models.PatchSessionInput{
+		StartTime:   &startTime,
+		EndTime:     &endTime,
+		TherapistID: &therapistID,
+		Notes:       notes,
+	}
+	patchedSession, err = repo.PatchSession(ctx, id, patch)
+	assert.NoError(t, err)
+	assert.NotNil(t, patchedSession)
+	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
+	assert.Equal(t, patchedSession.TherapistID, therapistID)
+	assert.Equal(t, patchedSession.Notes, notes)
 }
