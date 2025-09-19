@@ -117,3 +117,23 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 		db,
 	}
 }
+
+func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID string) ([]models.Student, error) {
+	query := `
+	SELECT s.id, s.first_name, s.last_name, s.dob, s.therapist_id, s.grade, s.iep, s.created_at, s.updated_at
+	FROM student s
+	INNER JOIN session_student ss ON ss.student_id = s.id
+	WHERE ss.session_id = $1`
+
+	rows, err := r.db.Query(ctx, query, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	students, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Student])
+	if err != nil {
+		return nil, err
+	}
+	return students, nil
+}

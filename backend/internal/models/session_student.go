@@ -15,6 +15,24 @@ type SessionStudent struct {
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
+type SessionStudentsOutput struct {
+	Student   Student   `json:"student"`
+	SessionID uuid.UUID `json:"session_id"`
+	Present   bool      `json:"present"`
+	Notes     *string   `json:"notes,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type StudentSessionsOutput struct {
+	Session   Session   `json:"session"`
+	StudentID uuid.UUID `json:"student_id"`
+	Present   bool      `json:"present"`
+	Notes     *string   `json:"notes,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type CreateSessionStudentInput struct {
 	SessionID uuid.UUID `json:"session_id" validate:"required,uuid"`
 	StudentID uuid.UUID `json:"student_id" validate:"required,uuid"`

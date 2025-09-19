@@ -16,6 +16,7 @@ type SessionRepository interface {
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	PostSession(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
+	GetSessionStudents(ctx context.Context, sessionID string) ([]models.SessionStudent, error)
 }
 
 type SessionStudentRepository interface {
