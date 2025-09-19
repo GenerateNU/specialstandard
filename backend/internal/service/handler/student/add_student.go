@@ -1,23 +1,24 @@
 package student
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"specialstandard/internal/models"
 	"strconv"
-	"time"
 	"strings"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
 func (h *Handler) AddStudent(c *fiber.Ctx) error {
 	var req models.CreateStudentInput
-	
+
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid JSON format",
 		})
 	}
-	
+
 	// Validate required fields
 	if req.FirstName == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -34,13 +35,13 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 			"error": "Therapist ID is required",
 		})
 	}
-	
+
 	// Validate grade if provided (as suggested by reviewer)
 	if req.Grade != nil && *req.Grade != "" {
 		grade := strings.ToLower(strings.TrimSpace(*req.Grade))
 		var gradeNum int
 		var err error
-		
+
 		// Handle kindergarten as special case
 		if grade == "k" || grade == "kindergarten" {
 			gradeNum = 0
@@ -52,7 +53,7 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 					grade = grade[:len(grade)-2]
 				}
 			}
-			
+
 			gradeNum, err = strconv.Atoi(grade)
 			if err != nil {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -60,14 +61,14 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 				})
 			}
 		}
-		
+
 		if gradeNum < 0 || gradeNum > 12 {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Grade must be between K and 12",
 			})
 		}
 	}
-	
+
 	// Parse therapist UUID
 	therapistID, err := uuid.Parse(req.TherapistID)
 	if err != nil {
@@ -94,10 +95,10 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 		LastName:    req.LastName,
 		DOB:         dob,
 		TherapistID: therapistID,
-		Grade:       req.Grade,  // Keep as *string since that's what Student expects
-		IEP:         req.IEP,    // Keep as *string since that's what Student expects
+		Grade:       req.Grade, // Keep as *string since that's what Student expects
+		IEP:         req.IEP,   // Keep as *string since that's what Student expects
 	}
-	
+
 	createdStudent, err := h.studentRepository.AddStudent(c.Context(), student)
 	if err != nil {
 		// Database will catch invalid therapist_id foreign key violations
@@ -105,6 +106,6 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 			"error": "Database error",
 		})
 	}
-	
+
 	return c.Status(fiber.StatusCreated).JSON(createdStudent)
 }

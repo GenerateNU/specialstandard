@@ -18,6 +18,10 @@ type SessionRepository interface {
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
 }
 
+type SessionStudentRepository interface {
+	CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*models.SessionStudent, error)
+}
+
 type StudentRepository interface {
 	GetStudents(ctx context.Context) ([]models.Student, error)
 	GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error)
@@ -47,12 +51,13 @@ type ResourceRepository interface {
 }
 
 type Repository struct {
-	db        *pgxpool.Pool
-	Session   SessionRepository
-	Student   StudentRepository
-	Therapist TherapistRepository
-	Resource  ResourceRepository
-	Theme     ThemeRepository
+	Resource       ResourceRepository
+	db             *pgxpool.Pool
+	Session        SessionRepository
+	Student        StudentRepository
+	Theme          ThemeRepository
+	Therapist      TherapistRepository
+	SessionStudent SessionStudentRepository
 }
 
 func (r *Repository) Close() error {
@@ -66,11 +71,12 @@ func (r *Repository) GetDB() *pgxpool.Pool {
 
 func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{
-		db:        db,
-		Session:   schema.NewSessionRepository(db),
-		Student:   schema.NewStudentRepository(db),
-		Theme:     schema.NewThemeRepository(db),
-		Therapist: schema.NewTherapistRepository(db),
-		Resource:  schema.NewResourceRepository(db),
+		db:             db,
+		Resource:       schema.NewResourceRepository(db),
+		Session:        schema.NewSessionRepository(db),
+		Student:        schema.NewStudentRepository(db),
+		Theme:          schema.NewThemeRepository(db),
+		Therapist:      schema.NewTherapistRepository(db),
+		SessionStudent: schema.NewSessionStudentRepository(db),
 	}
 }
