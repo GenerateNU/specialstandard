@@ -2,6 +2,7 @@ package models
 
 import (
 	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -9,10 +10,10 @@ type Student struct {
 	ID          uuid.UUID  `json:"id" db:"id"`
 	FirstName   string     `json:"first_name" db:"first_name"`
 	LastName    string     `json:"last_name" db:"last_name"`
-	DOB         *time.Time `json:"dob,omitempty" db:"dob"`               
+	DOB         *time.Time `json:"dob,omitempty" db:"dob"`
 	TherapistID uuid.UUID  `json:"therapist_id" db:"therapist_id"`
-	Grade       *string    `json:"grade,omitempty" db:"grade"`          
-	IEP         *string    `json:"iep,omitempty" db:"iep"`              
+	Grade       *string    `json:"grade,omitempty" db:"grade"`
+	IEP         *string    `json:"iep,omitempty" db:"iep"`
 	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
@@ -33,6 +34,6 @@ type UpdateStudentInput struct {
 	LastName    *string `json:"last_name,omitempty"`
 	DOB         *string `json:"dob,omitempty"`
 	TherapistID *string `json:"therapist_id,omitempty"`
-	Grade       *string `json:"grade,omitempty"`                
-	IEP         *string `json:"iep,omitempty"`                       
+	Grade       *string `json:"grade,omitempty"`
+	IEP         *string `json:"iep,omitempty"`
 }
