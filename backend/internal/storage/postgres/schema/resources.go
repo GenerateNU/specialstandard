@@ -63,7 +63,6 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 	if date != nil {
 		queryString += fmt.Sprintf(" AND date = $%d", argNum)
 		args = append(args, date)
-		argNum++
 	}
 
 	rows, err := r.db.Query(ctx, queryString, args...)

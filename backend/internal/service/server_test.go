@@ -812,7 +812,6 @@ func TestPatchTherapistEndpoint(t *testing.T) {
 
 func TestCreateResourceEndpoint(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
-	// Fix: Use mock.Anything for parameters and return pointer
 	mockResourceRepo.On("CreateResource", mock.Anything, mock.Anything).Return(&models.Resource{
 		ID:    uuid.New(),
 		Title: ptrString("Resource1"),
@@ -824,7 +823,6 @@ func TestCreateResourceEndpoint(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{}, repo)
 
-	// Fix: Use "title" instead of "name"
 	body := `{"title": "Resource1", "type": "doc"}`
 	req := httptest.NewRequest("POST", "/api/v1/resources", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -837,7 +835,6 @@ func TestCreateResourceEndpoint(t *testing.T) {
 
 func TestGetResourcesEndpoint(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
-	// Fix: Add all parameters for GetResources method
 	mockResourceRepo.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]models.Resource{
 		{
 			ID:    uuid.New(),
@@ -862,7 +859,6 @@ func TestGetResourcesEndpoint(t *testing.T) {
 func TestGetResourceByIDEndpoint(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
 	resourceID := uuid.New()
-	// Fix: Use GetResourceByID and return pointer
 	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return(&models.Resource{
 		ID:    resourceID,
 		Title: ptrString("Resource1"),
@@ -885,8 +881,7 @@ func TestGetResourceByIDEndpoint(t *testing.T) {
 func TestUpdateResourceEndpoint(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
 	resourceID := uuid.New()
-	// Fix: Use UpdateResource method name and mock.Anything
-	mockResourceRepo.On("UpdateResource", mock.Anything, mock.Anything, mock.Anything).Return(&models.Resource{
+	mockResourceRepo.On("UpdateResource", mock.Anything, resourceID, mock.Anything).Return(&models.Resource{
 		ID:    resourceID,
 		Title: ptrString("Updated Resource"),
 		Type:  ptrString("doc"),
@@ -897,7 +892,6 @@ func TestUpdateResourceEndpoint(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{}, repo)
 
-	// Fix: Use "title" instead of "name"
 	body := `{"title": "Updated Resource"}`
 	req := httptest.NewRequest("PATCH", "/api/v1/resources/"+resourceID.String(), strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -911,8 +905,7 @@ func TestUpdateResourceEndpoint(t *testing.T) {
 func TestDeleteResourceEndpoint(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
 	resourceID := uuid.New()
-	// Fix: Use mock.Anything for UUID parameter
-	mockResourceRepo.On("DeleteResource", mock.Anything, mock.Anything).Return(nil)
+	mockResourceRepo.On("DeleteResource", mock.Anything, resourceID).Return(nil)
 
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
@@ -930,7 +923,6 @@ func TestDeleteResourceEndpoint(t *testing.T) {
 func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
 	resourceID := uuid.New()
-	// Fix: Use GetResourceByID and return nil pointer
 	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return((*models.Resource)(nil), errors.New("no rows in result set"))
 
 	repo := &storage.Repository{
@@ -949,7 +941,6 @@ func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
 func TestUpdateResourceEndpoint_NotFound(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
 	resourceID := uuid.New()
-	// Fix: Use UpdateResource and return nil pointer
 	mockResourceRepo.On("UpdateResource", mock.Anything, mock.Anything, mock.Anything).Return((*models.Resource)(nil), errors.New("no rows in result set"))
 
 	repo := &storage.Repository{
@@ -957,7 +948,6 @@ func TestUpdateResourceEndpoint_NotFound(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{}, repo)
 
-	// Fix: Use "title" instead of "name"
 	body := `{"title": "Updated Resource"}`
 	req := httptest.NewRequest("PATCH", "/api/v1/resources/"+resourceID.String(), strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -971,8 +961,7 @@ func TestUpdateResourceEndpoint_NotFound(t *testing.T) {
 func TestDeleteResourceEndpoint_NotFound(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
 	resourceID := uuid.New()
-	// Fix: Use mock.Anything for UUID parameter
-	mockResourceRepo.On("DeleteResource", mock.Anything, mock.Anything).Return(errors.New("no rows in result set"))
+	mockResourceRepo.On("DeleteResource", mock.Anything, resourceID).Return(errors.New("resource not found"))
 
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
