@@ -83,7 +83,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			active BOOLEAN DEFAULT TRUE,
 			created_at TIMESTAMPTZ DEFAULT now(),
 			updated_at TIMESTAMPTZ DEFAULT now()
-		)`);
+		)`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,6 +134,39 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create theme table (parent table for foreign key)
+	_, err = pool.Exec(ctx, `
+		CREATE TABLE theme (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			theme_name VARCHAR(255) NOT NULL,
+			month INTEGER CHECK (month >= 1 AND month <= 12),
+			year INTEGER CHECK (year >= 2000 AND year <= 2500),
+			created_at TIMESTAMPTZ DEFAULT now(),
+			updated_at TIMESTAMPTZ DEFAULT now()
+		);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create resource table (with foreign key to theme)
+	_, err = pool.Exec(ctx, `
+		CREATE TABLE resource (
+   			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+   			theme_id UUID NOT NULL,
+   			grade_level VARCHAR(20),
+   			date DATE,
+   			type VARCHAR(50),
+   			title VARCHAR(100),
+   			category VARCHAR(100),
+   			content TEXT,
+   			created_at TIMESTAMPTZ DEFAULT now(),
+   			updated_at TIMESTAMPTZ DEFAULT now(),
+   			FOREIGN KEY (theme_id) REFERENCES theme(id) ON DELETE RESTRICT
+		);`)
 	if err != nil {
 		t.Fatal(err)
 	}
