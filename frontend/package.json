@@ -10,9 +10,14 @@
     "lint:fix": "eslint .  --fix"
   },
   "dependencies": {
+    "axios": "^1.12.2",
+    "lucide-react": "^0.544.0",
     "next": "15.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0"
+  },
+  "optionalDependencies": {
+    "@next/swc-linux-x64-gnu": "latest"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.1",
