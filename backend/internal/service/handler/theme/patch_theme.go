@@ -52,9 +52,6 @@ func (h *Handler) PatchTheme(c *fiber.Ctx) error {
 		case errStr == "no fields provided to update":
 			slog.Error("No fields provided for theme update", "id", id, "error", err)
 			return errs.BadRequest("No fields provided to update")
-		case strings.Contains(errStr, "foreign key"):
-			slog.Error("Foreign key constraint error updating theme", "id", id, "error", err)
-			return errs.BadRequest("Invalid reference to related data")
 		case strings.Contains(errStr, "connection refused"):
 			slog.Error("Database connection error updating theme", "id", id, "error", err)
 			return errs.InternalServerError("Database connection error")
