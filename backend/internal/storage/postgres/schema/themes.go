@@ -36,7 +36,7 @@ func (r *ThemeRepository) CreateTheme(ctx context.Context, input *models.CreateT
 		&theme.CreatedAt,
 		&theme.UpdatedAt,
 	); err != nil {
-		return nil, err
+		return nil, errs.InternalServerError("Failed to create theme")
 	}
 
 	return theme, nil
@@ -51,7 +51,7 @@ func (r *ThemeRepository) GetThemes(ctx context.Context) ([]models.Theme, error)
 	rows, err := r.db.Query(ctx, query)
 
 	if err != nil {
-		return nil, err
+		return nil, errs.InternalServerError("Database connection error")
 	}
 
 	defer rows.Close()
@@ -60,7 +60,7 @@ func (r *ThemeRepository) GetThemes(ctx context.Context) ([]models.Theme, error)
 	themes, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Theme])
 
 	if err != nil {
-		return nil, err
+		return nil, errs.InternalServerError("Failed to retrieve themes")
 	}
 
 	return themes, nil
@@ -75,7 +75,7 @@ func (r *ThemeRepository) GetThemeByID(ctx context.Context, id uuid.UUID) (*mode
 	row, err := r.db.Query(ctx, query, id)
 
 	if err != nil {
-		return nil, err
+		return nil, errs.InternalServerError("Database connection error")
 	}
 
 	defer row.Close()
@@ -127,7 +127,7 @@ func (r *ThemeRepository) PatchTheme(ctx context.Context, id uuid.UUID, input *m
 	rows, err := r.db.Query(ctx, query, args...)
 
 	if err != nil {
-		return nil, err
+		return nil, errs.InternalServerError("Database connection error")
 	}
 
 	defer rows.Close()
@@ -149,7 +149,7 @@ func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
-		return err
+		return errs.InternalServerError("Database connection error")
 	}
 	
 	// Check if any rows were actually deleted
