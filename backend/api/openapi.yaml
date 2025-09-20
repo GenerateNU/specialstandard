@@ -788,6 +788,37 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
   /resources/:id:
+    get:
+      summary: Get resource by ID
+      description: Retrieve a specific resource by its ID
+      tags: [Resources]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the resource to retrieve
+      responses:
+        "200":
+          description: Resource found successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+        "400":
+          description: Bad request (e.g., invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     patch:
       summary: Update a resource
       description: Update an existing resource in the database
