@@ -17,7 +17,7 @@ func (h *Handler) GetTherapistByID(c *fiber.Ctx) error {
 
 	// Check if UUID is valid
 	if err != nil {
-		return errs.NotFound("The givenID was not found: ", therapistID)
+		return errs.BadRequest("Invalid UUID format for ID : ", therapistID)
 	}
 
 	therapist, err := h.therapistRepository.GetTherapistByID(c.Context(), therapistID)
