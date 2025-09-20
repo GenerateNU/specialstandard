@@ -14,7 +14,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -164,7 +163,7 @@ func TestHandler_GetThemeByID(t *testing.T) {
 		{
 			name: "theme not found",
 			mockSetup: func(m *mocks.MockThemeRepository) {
-				m.On("GetThemeByID", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(nil, pgx.ErrNoRows)
+				m.On("GetThemeByID", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(nil, errs.NotFound("Error querying database for given ID"))
 			},
 			expectedStatus: fiber.StatusNotFound,
 			wantErr:        true,
@@ -217,7 +216,7 @@ func TestHandler_PatchTheme(t *testing.T) {
 					CreatedAt: ptrTime(time.Now()),
 					UpdatedAt: ptrTime(time.Now()),
 				}
-				m.On("UpdateTheme", mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("*models.UpdateThemeInput")).Return(theme, nil)
+				m.On("PatchTheme", mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("*models.UpdateThemeInput")).Return(theme, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -225,7 +224,7 @@ func TestHandler_PatchTheme(t *testing.T) {
 		{
 			name: "theme not found",
 			mockSetup: func(m *mocks.MockThemeRepository) {
-				m.On("UpdateTheme", mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("*models.UpdateThemeInput")).Return(nil, pgx.ErrNoRows)
+				m.On("PatchTheme", mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("*models.UpdateThemeInput")).Return(nil, errs.NotFound("error querying database for given theme ID"))
 			},
 			expectedStatus: fiber.StatusNotFound,
 			wantErr:        true,
@@ -233,7 +232,7 @@ func TestHandler_PatchTheme(t *testing.T) {
 		{
 			name: "repository error",
 			mockSetup: func(m *mocks.MockThemeRepository) {
-				m.On("UpdateTheme", mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("*models.UpdateThemeInput")).Return(nil, errors.New("database error"))
+				m.On("PatchTheme", mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("*models.UpdateThemeInput")).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -284,7 +283,7 @@ func TestHandler_DeleteTheme(t *testing.T) {
 		{
 			name: "theme not found",
 			mockSetup: func(m *mocks.MockThemeRepository) {
-				m.On("DeleteTheme", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(errors.New("theme not found"))
+				m.On("DeleteTheme", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(errs.NotFound("theme not found"))
 			},
 			expectedStatus: fiber.StatusNotFound,
 			wantErr:        true,

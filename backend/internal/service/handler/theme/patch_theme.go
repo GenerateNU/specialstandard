@@ -1,7 +1,6 @@
 package theme
 
 import (
-	"errors"
 	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) PatchTheme(c *fiber.Ctx) error {
@@ -38,26 +36,22 @@ func (h *Handler) PatchTheme(c *fiber.Ctx) error {
 	}
 
 	// Update the theme
-	updatedTheme, err := h.themeRepository.UpdateTheme(c.Context(), id, &req)
+	updatedTheme, err := h.themeRepository.PatchTheme(c.Context(), id, &req)
 	if err != nil {
-		// Check specific error types - use robust checking where possible
-		if errors.Is(err, pgx.ErrNoRows) {
-			slog.Error("Theme not found for update", "id", id, "error", err)
-			return errs.NotFound("Theme not found")
-		}
+		// Repository now returns structured errors, so we can directly return them
+		// or add additional context/logging as needed
+		slog.Error("Failed to update theme", "id", id, "error", err)
 		
-		// Handle other errors with string matching (legacy repository errors)
+		// Check for other database errors that might not be structured
 		errStr := err.Error()
 		switch {
-		case errStr == "no fields provided to update":
-			slog.Error("No fields provided for theme update", "id", id, "error", err)
-			return errs.BadRequest("No fields provided to update")
+		case strings.Contains(errStr, "foreign key"):
+			return errs.BadRequest("Invalid reference to related data")
 		case strings.Contains(errStr, "connection refused"):
-			slog.Error("Database connection error updating theme", "id", id, "error", err)
 			return errs.InternalServerError("Database connection error")
 		default:
-			slog.Error("Failed to update theme", "id", id, "error", err)
-			return errs.InternalServerError("Failed to update theme")
+			// Return the error as-is if it's already a structured error from repository
+			return err
 		}
 	}
 

@@ -35,7 +35,7 @@ func (m *MockThemeRepository) GetThemeByID(ctx context.Context, id uuid.UUID) (*
 	return args.Get(0).(*models.Theme), args.Error(1)
 }
 
-func (m *MockThemeRepository) UpdateTheme(ctx context.Context, id uuid.UUID, theme *models.UpdateThemeInput) (*models.Theme, error) {
+func (m *MockThemeRepository) PatchTheme(ctx context.Context, id uuid.UUID, theme *models.UpdateThemeInput) (*models.Theme, error) {
 	args := m.Called(ctx, id, theme)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

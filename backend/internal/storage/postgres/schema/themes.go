@@ -2,12 +2,13 @@ package schema
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -43,33 +44,22 @@ func (r *ThemeRepository) CreateTheme(ctx context.Context, input *models.CreateT
 
 func (r *ThemeRepository) GetThemes(ctx context.Context) ([]models.Theme, error) {
 	query := `
-        SELECT id, theme_name, month, year, created_at, updated_at
-        FROM theme
-        ORDER BY year DESC, month DESC`
+	SELECT id, theme_name, month, year, created_at, updated_at
+	FROM theme
+	ORDER BY year DESC, month DESC`
 
 	rows, err := r.db.Query(ctx, query)
+
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
-	var themes []models.Theme
-	for rows.Next() {
-		var theme models.Theme
-		if err := rows.Scan(
-			&theme.ID,
-			&theme.Name,
-			&theme.Month,
-			&theme.Year,
-			&theme.CreatedAt,
-			&theme.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		themes = append(themes, theme)
-	}
+	// Using CollectRows for simplicity
+	themes, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Theme])
 
-	if err := rows.Err(); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -77,37 +67,35 @@ func (r *ThemeRepository) GetThemes(ctx context.Context) ([]models.Theme, error)
 }
 
 func (r *ThemeRepository) GetThemeByID(ctx context.Context, id uuid.UUID) (*models.Theme, error) {
-	theme := &models.Theme{}
-
 	query := `
-        SELECT id, theme_name, month, year, created_at, updated_at
-        FROM theme
-        WHERE id = $1`
+	SELECT id, theme_name, month, year, created_at, updated_at
+	FROM theme
+	WHERE id = $1`
 
-	row := r.db.QueryRow(ctx, query, id)
+	row, err := r.db.Query(ctx, query, id)
 
-	if err := row.Scan(
-		&theme.ID,
-		&theme.Name,
-		&theme.Month,
-		&theme.Year,
-		&theme.CreatedAt,
-		&theme.UpdatedAt,
-	); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	return theme, nil
+	defer row.Close()
+
+	// Using CollectExactlyOneRow
+	theme, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[models.Theme])
+
+	if err != nil {
+		return nil, errs.NotFound("Error querying database for given ID")
+	}
+
+	return &theme, nil
 }
 
-func (r *ThemeRepository) UpdateTheme(ctx context.Context, id uuid.UUID, input *models.UpdateThemeInput) (*models.Theme, error) {
-	// Build dynamic SQL query - only update provided fields
+func (r *ThemeRepository) PatchTheme(ctx context.Context, id uuid.UUID, input *models.UpdateThemeInput) (*models.Theme, error) {
 	query := `UPDATE theme SET`
 	updates := []string{}
 	args := []interface{}{}
 	argCount := 1
 
-	// Only add fields that are provided
 	if input.Name != nil {
 		updates = append(updates, fmt.Sprintf("theme_name = $%d", argCount))
 		args = append(args, *input.Name)
@@ -126,38 +114,39 @@ func (r *ThemeRepository) UpdateTheme(ctx context.Context, id uuid.UUID, input *
 		argCount++
 	}
 
-	// Validate that at least one field was provided
 	if len(updates) == 0 {
-		return nil, errors.New("no fields provided to update")
+		return nil, errs.BadRequest("No fields given to update.")
 	}
 
-	// Complete the query
 	query += " " + strings.Join(updates, ", ")
 	query += fmt.Sprintf(" WHERE id = $%d", argCount)
 	args = append(args, id)
+
 	query += " RETURNING id, theme_name, month, year, created_at, updated_at"
 
-	// Execute single atomic query
-	row := r.db.QueryRow(ctx, query, args...)
+	rows, err := r.db.Query(ctx, query, args...)
 
-	theme := &models.Theme{}
-	if err := row.Scan(
-		&theme.ID,
-		&theme.Name,
-		&theme.Month,
-		&theme.Year,
-		&theme.CreatedAt,
-		&theme.UpdatedAt,
-	); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	return theme, nil
+	defer rows.Close()
+
+	theme, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Theme])
+
+	if err != nil {
+		return nil, errs.NotFound("error querying database for given theme ID")
+	}
+
+	return &theme, nil
 }
 
 func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
-	query := `DELETE FROM theme WHERE id = $1`
-	
+	query := `
+	DELETE 
+	FROM theme
+	WHERE id = $1`
+
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return err
@@ -165,7 +154,7 @@ func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 	
 	// Check if any rows were actually deleted
 	if result.RowsAffected() == 0 {
-		return errors.New("theme not found")
+		return errs.NotFound("theme not found")
 	}
 	
 	return nil
@@ -173,6 +162,6 @@ func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 
 func NewThemeRepository(db *pgxpool.Pool) *ThemeRepository {
 	return &ThemeRepository{
-		db: db,
+		db,
 	}
 }
