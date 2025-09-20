@@ -2,6 +2,7 @@ package resource
 
 import (
 	"specialstandard/internal/errs"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -48,11 +49,12 @@ func (h *Handler) GetResourceByID(c *fiber.Ctx) error {
 	}
 
 	resource, err := h.resourceRepository.GetResourceByID(c.Context(), id)
-	if resource == nil {
-		return errs.NotFound("resource", "resource not found")
-	}
 	if err != nil {
+		if strings.Contains(err.Error(), "no rows") {
+			return errs.NotFound("resource", "resource not found")
+		}
 		return errs.InternalServerError()
 	}
+
 	return c.Status(fiber.StatusOK).JSON(resource)
 }

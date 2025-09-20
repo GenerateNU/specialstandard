@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -100,8 +101,22 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 
 func (r *ResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error) {
 	var resource models.Resource
-	err := r.db.QueryRow(ctx, "SELECT * FROM resource WHERE id = $1", id.String()).Scan(&resource.ID, &resource.ThemeID, &resource.GradeLevel, &resource.Date, &resource.Type, &resource.Title, &resource.Category, &resource.Content, &resource.CreatedAt, &resource.UpdatedAt)
+	err := r.db.QueryRow(ctx, "SELECT * FROM resource WHERE id = $1", id.String()).Scan(
+		&resource.ID,
+		&resource.ThemeID,
+		&resource.GradeLevel,
+		&resource.Date,
+		&resource.Type,
+		&resource.Title,
+		&resource.Category,
+		&resource.Content,
+		&resource.CreatedAt,
+		&resource.UpdatedAt,
+	)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, err
+		}
 		return nil, err
 	}
 	return &resource, nil

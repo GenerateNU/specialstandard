@@ -1,8 +1,8 @@
 package resource
 
 import (
-	"log/slog"
 	"specialstandard/internal/errs"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -16,10 +16,12 @@ func (h *Handler) DeleteResource(c *fiber.Ctx) error {
 	}
 
 	err = h.resourceRepository.DeleteResource(c.Context(), resourceId)
-	slog.Info("deleting resource", "id", resourceId)
 	if err != nil {
-		slog.Error("failed to delete resource", "error", err)
-		return err
+		if strings.Contains(err.Error(), "not found") {
+			return errs.NotFound("resource", "not found")
+		}
+		return errs.InternalServerError(err.Error())
 	}
+
 	return c.Status(fiber.StatusNoContent).Send(nil)
 }

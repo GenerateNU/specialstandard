@@ -1,8 +1,8 @@
 package service_test
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/service/handler/session"
@@ -161,7 +161,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 	app := service.SetupApp(config.Config{}, repo)
 
 	testTherapistID := uuid.New()
-	
+
 	body := fmt.Sprintf(`{
 		"first_name": "John",
 		"last_name": "Doe",
@@ -808,4 +808,181 @@ func TestPatchTherapistEndpoint(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
+}
+
+func TestCreateResourceEndpoint(t *testing.T) {
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	// Fix: Use mock.Anything for parameters and return pointer
+	mockResourceRepo.On("CreateResource", mock.Anything, mock.Anything).Return(&models.Resource{
+		ID:    uuid.New(),
+		Title: ptrString("Resource1"),
+		Type:  ptrString("doc"),
+	}, nil)
+
+	repo := &storage.Repository{
+		Resource: mockResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Fix: Use "title" instead of "name"
+	body := `{"title": "Resource1", "type": "doc"}`
+	req := httptest.NewRequest("POST", "/api/v1/resources", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 201, resp.StatusCode)
+	mockResourceRepo.AssertExpectations(t)
+}
+
+func TestGetResourcesEndpoint(t *testing.T) {
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	// Fix: Add all parameters for GetResources method
+	mockResourceRepo.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]models.Resource{
+		{
+			ID:    uuid.New(),
+			Title: ptrString("Resource1"),
+			Type:  ptrString("doc"),
+		},
+	}, nil)
+
+	repo := &storage.Repository{
+		Resource: mockResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/resources", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	mockResourceRepo.AssertExpectations(t)
+}
+
+func TestGetResourceByIDEndpoint(t *testing.T) {
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	resourceID := uuid.New()
+	// Fix: Use GetResourceByID and return pointer
+	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return(&models.Resource{
+		ID:    resourceID,
+		Title: ptrString("Resource1"),
+		Type:  ptrString("doc"),
+	}, nil)
+
+	repo := &storage.Repository{
+		Resource: mockResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/resources/"+resourceID.String(), nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	mockResourceRepo.AssertExpectations(t)
+}
+
+func TestUpdateResourceEndpoint(t *testing.T) {
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	resourceID := uuid.New()
+	// Fix: Use UpdateResource method name and mock.Anything
+	mockResourceRepo.On("UpdateResource", mock.Anything, mock.Anything, mock.Anything).Return(&models.Resource{
+		ID:    resourceID,
+		Title: ptrString("Updated Resource"),
+		Type:  ptrString("doc"),
+	}, nil)
+
+	repo := &storage.Repository{
+		Resource: mockResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Fix: Use "title" instead of "name"
+	body := `{"title": "Updated Resource"}`
+	req := httptest.NewRequest("PATCH", "/api/v1/resources/"+resourceID.String(), strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	mockResourceRepo.AssertExpectations(t)
+}
+
+func TestDeleteResourceEndpoint(t *testing.T) {
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	resourceID := uuid.New()
+	// Fix: Use mock.Anything for UUID parameter
+	mockResourceRepo.On("DeleteResource", mock.Anything, mock.Anything).Return(nil)
+
+	repo := &storage.Repository{
+		Resource: mockResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("DELETE", "/api/v1/resources/"+resourceID.String(), nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+	mockResourceRepo.AssertExpectations(t)
+}
+
+func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	resourceID := uuid.New()
+	// Fix: Use GetResourceByID and return nil pointer
+	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return((*models.Resource)(nil), errors.New("no rows in result set"))
+
+	repo := &storage.Repository{
+		Resource: mockResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/resources/"+resourceID.String(), nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+	mockResourceRepo.AssertExpectations(t)
+}
+
+func TestUpdateResourceEndpoint_NotFound(t *testing.T) {
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	resourceID := uuid.New()
+	// Fix: Use UpdateResource and return nil pointer
+	mockResourceRepo.On("UpdateResource", mock.Anything, mock.Anything, mock.Anything).Return((*models.Resource)(nil), errors.New("no rows in result set"))
+
+	repo := &storage.Repository{
+		Resource: mockResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	// Fix: Use "title" instead of "name"
+	body := `{"title": "Updated Resource"}`
+	req := httptest.NewRequest("PATCH", "/api/v1/resources/"+resourceID.String(), strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+	mockResourceRepo.AssertExpectations(t)
+}
+
+func TestDeleteResourceEndpoint_NotFound(t *testing.T) {
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	resourceID := uuid.New()
+	// Fix: Use mock.Anything for UUID parameter
+	mockResourceRepo.On("DeleteResource", mock.Anything, mock.Anything).Return(errors.New("no rows in result set"))
+
+	repo := &storage.Repository{
+		Resource: mockResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("DELETE", "/api/v1/resources/"+resourceID.String(), nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+	mockResourceRepo.AssertExpectations(t)
 }
