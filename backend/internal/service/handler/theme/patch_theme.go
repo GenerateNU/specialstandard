@@ -38,14 +38,15 @@ func (h *Handler) PatchTheme(c *fiber.Ctx) error {
 	// Update the theme
 	updatedTheme, err := h.themeRepository.UpdateTheme(c.Context(), id, &req)
 	if err != nil {
-		// Check if theme was not found during update
-		if strings.Contains(err.Error(), "no rows") || err.Error() == "sql: no rows in result set" {
-			slog.Error("Theme not found for update", "id", id, "error", err)
-			return errs.NotFound("Theme not found")
-		}
-		// Specific error handling with custom messages
+		// Check specific error types
 		errStr := err.Error()
 		switch {
+		case errStr == "no fields provided to update":
+			slog.Error("No fields provided for theme update", "id", id, "error", err)
+			return errs.BadRequest("No fields provided to update")
+		case strings.Contains(errStr, "no rows") || errStr == "sql: no rows in result set":
+			slog.Error("Theme not found for update", "id", id, "error", err)
+			return errs.NotFound("Theme not found")
 		case strings.Contains(errStr, "foreign key"):
 			slog.Error("Foreign key constraint error updating theme", "id", id, "error", err)
 			return errs.BadRequest("Invalid reference to related data")

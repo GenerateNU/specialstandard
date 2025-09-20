@@ -3,7 +3,9 @@ package schema
 import (
 	"context"
 	"errors"
+	"fmt"
 	"specialstandard/internal/models"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -99,30 +101,44 @@ func (r *ThemeRepository) GetThemeByID(ctx context.Context, id uuid.UUID) (*mode
 }
 
 func (r *ThemeRepository) UpdateTheme(ctx context.Context, id uuid.UUID, input *models.UpdateThemeInput) (*models.Theme, error) {
-	// First get the existing theme
-	existingTheme, err := r.GetThemeByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
+	// Build dynamic SQL query - only update provided fields
+	query := `UPDATE theme SET`
+	updates := []string{}
+	args := []interface{}{}
+	argCount := 1
 
-	// Apply updates
+	// Only add fields that are provided
 	if input.Name != nil {
-		existingTheme.Name = *input.Name
+		updates = append(updates, fmt.Sprintf("theme_name = $%d", argCount))
+		args = append(args, *input.Name)
+		argCount++
 	}
+
 	if input.Month != nil {
-		existingTheme.Month = *input.Month
+		updates = append(updates, fmt.Sprintf("month = $%d", argCount))
+		args = append(args, *input.Month)
+		argCount++
 	}
+
 	if input.Year != nil {
-		existingTheme.Year = *input.Year
+		updates = append(updates, fmt.Sprintf("year = $%d", argCount))
+		args = append(args, *input.Year)
+		argCount++
 	}
 
-	query := `
-        UPDATE theme
-        SET theme_name = $1, month = $2, year = $3, updated_at = now()
-        WHERE id = $4
-        RETURNING id, theme_name, month, year, created_at, updated_at`
+	// Validate that at least one field was provided
+	if len(updates) == 0 {
+		return nil, errors.New("no fields provided to update")
+	}
 
-	row := r.db.QueryRow(ctx, query, existingTheme.Name, existingTheme.Month, existingTheme.Year, id)
+	// Complete the query
+	query += " " + strings.Join(updates, ", ")
+	query += fmt.Sprintf(" WHERE id = $%d", argCount)
+	args = append(args, id)
+	query += " RETURNING id, theme_name, month, year, created_at, updated_at"
+
+	// Execute single atomic query
+	row := r.db.QueryRow(ctx, query, args...)
 
 	theme := &models.Theme{}
 	if err := row.Scan(

@@ -495,6 +495,16 @@ func TestHandler_PatchTheme(t *testing.T) {
 			wantErr:        true,
 		},
 		{
+			name:        "no fields provided to update",
+			themeID:     themeID.String(),
+			requestBody: `{}`,
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				m.On("UpdateTheme", mock.Anything, themeID, mock.AnythingOfType("*models.UpdateThemeInput")).Return(nil, errors.New("no fields provided to update"))
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
 			name:        "repository error",
 			themeID:     themeID.String(),
 			requestBody: `{"name": "Test"}`,
