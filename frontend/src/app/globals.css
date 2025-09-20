@@ -20,17 +20,17 @@
   --card-hover: #f0faff;
   --border: #e0f4fe;
   --border-hover: #bae8fd;
-  
+
   /* Text Colors */
   --text-primary: #0c4a6e;
   --text-secondary: #0369a1;
   --text-muted: #0284c7;
-  
+
   /* Accent Colors */
   --accent: #0ea5e9;
   --accent-hover: #0284c7;
   --accent-light: #e0f4fe;
-  
+
   /* Status Colors */
   --error: #ef4444;
   --success: #10b981;
@@ -46,12 +46,12 @@
     --card-hover: #0369a1;
     --border: #0284c7;
     --border-hover: #0ea5e9;
-    
+
     /* Text Colors */
     --text-primary: #f0faff;
     --text-secondary: #e0f4fe;
     --text-muted: #bae8fd;
-    
+
     /* Accent Colors */
     --accent: #38bdf8;
     --accent-hover: #7dd3fc;
@@ -73,21 +73,51 @@ body {
 }
 
 /* Utility Classes for Custom Colors */
-.bg-background { background-color: var(--background); }
-.bg-card { background-color: var(--card-bg); }
-.bg-card-hover { background-color: var(--card-hover); }
-.bg-accent { background-color: var(--accent); }
-.bg-accent-light { background-color: var(--accent-light); }
+.bg-background {
+  background-color: var(--background);
+}
+.bg-card {
+  background-color: var(--card-bg);
+}
+.bg-card-hover {
+  background-color: var(--card-hover);
+}
+.bg-accent {
+  background-color: var(--accent);
+}
+.bg-accent-light {
+  background-color: var(--accent-light);
+}
 
-.text-primary { color: var(--text-primary); }
-.text-secondary { color: var(--text-secondary); }
-.text-muted { color: var(--text-muted); }
-.text-accent { color: var(--accent); }
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-muted {
+  color: var(--text-muted);
+}
+.text-accent {
+  color: var(--accent);
+}
 
-.border-default { border-color: var(--border); }
-.border-hover { border-color: var(--border-hover); }
+.border-default {
+  border-color: var(--border);
+}
+.border-hover {
+  border-color: var(--border-hover);
+}
 
-.hover\:bg-card-hover:hover { background-color: var(--card-hover); }
-.hover\:bg-accent-hover:hover { background-color: var(--accent-hover); }
-.hover\:text-accent:hover { color: var(--accent); }
-.hover\:border-hover:hover { border-color: var(--border-hover); }
+.hover\:bg-card-hover:hover {
+  background-color: var(--card-hover);
+}
+.hover\:bg-accent-hover:hover {
+  background-color: var(--accent-hover);
+}
+.hover\:text-accent:hover {
+  color: var(--accent);
+}
+.hover\:border-hover:hover {
+  border-color: var(--border-hover);
+}
