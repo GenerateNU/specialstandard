@@ -19,7 +19,7 @@ func (h *Handler) DeleteTheme(c *fiber.Ctx) error {
 	}
 	
 	if err := h.themeRepository.DeleteTheme(c.Context(), id); err != nil {
-		// Check if theme was not found
+		// Check if theme was not found (repository returns custom error string)
 		if err.Error() == "theme not found" {
 			slog.Error("Theme not found for deletion", "id", id, "error", err)
 			return errs.NotFound("Theme not found")

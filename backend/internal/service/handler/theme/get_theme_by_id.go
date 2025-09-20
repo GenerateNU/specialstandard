@@ -1,12 +1,13 @@
 package theme
 
 import (
+	"errors"
 	"log/slog"
 	"specialstandard/internal/errs"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) GetThemeByID(c *fiber.Ctx) error {
@@ -20,12 +21,12 @@ func (h *Handler) GetThemeByID(c *fiber.Ctx) error {
 
 	theme, err := h.themeRepository.GetThemeByID(c.Context(), id)
 	if err != nil {
-		// Theme not found
-		if strings.Contains(err.Error(), "no rows") || err.Error() == "sql: no rows in result set" {
+		// Check if it's a "no rows found" error using pgx's error constant
+		if errors.Is(err, pgx.ErrNoRows) {
 			slog.Error("Theme not found", "id", id, "error", err)
 			return errs.NotFound("Theme not found")
 		}
-		// Some other error
+		// For all other database errors, return internal server error without exposing details
 		slog.Error("Database error getting theme", "id", id, "error", err)
 		return errs.InternalServerError("Database error")
 	}

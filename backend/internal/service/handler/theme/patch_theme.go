@@ -1,6 +1,7 @@
 package theme
 
 import (
+	"errors"
 	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) PatchTheme(c *fiber.Ctx) error {
@@ -38,15 +40,18 @@ func (h *Handler) PatchTheme(c *fiber.Ctx) error {
 	// Update the theme
 	updatedTheme, err := h.themeRepository.UpdateTheme(c.Context(), id, &req)
 	if err != nil {
-		// Check specific error types
+		// Check specific error types - use robust checking where possible
+		if errors.Is(err, pgx.ErrNoRows) {
+			slog.Error("Theme not found for update", "id", id, "error", err)
+			return errs.NotFound("Theme not found")
+		}
+		
+		// Handle other errors with string matching (legacy repository errors)
 		errStr := err.Error()
 		switch {
 		case errStr == "no fields provided to update":
 			slog.Error("No fields provided for theme update", "id", id, "error", err)
 			return errs.BadRequest("No fields provided to update")
-		case strings.Contains(errStr, "no rows") || errStr == "sql: no rows in result set":
-			slog.Error("Theme not found for update", "id", id, "error", err)
-			return errs.NotFound("Theme not found")
 		case strings.Contains(errStr, "foreign key"):
 			slog.Error("Foreign key constraint error updating theme", "id", id, "error", err)
 			return errs.BadRequest("Invalid reference to related data")
