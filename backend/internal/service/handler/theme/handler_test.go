@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"specialstandard/internal/service/handler/theme"
 	"specialstandard/internal/storage/mocks"
@@ -21,14 +22,6 @@ import (
 
 func ptrTime(t time.Time) *time.Time {
 	return &t
-}
-
-func ptrString(s string) *string {
-	return &s
-}
-
-func ptrInt(i int) *int {
-	return &i
 }
 
 func TestHandler_CreateTheme(t *testing.T) {
@@ -167,7 +160,9 @@ func TestHandler_CreateTheme(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockThemeRepository)
 			tt.mockSetup(mockRepo)
 
@@ -265,7 +260,9 @@ func TestHandler_GetThemes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockThemeRepository)
 			tt.mockSetup(mockRepo)
 
@@ -359,7 +356,9 @@ func TestHandler_GetThemeByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockThemeRepository)
 			tt.mockSetup(mockRepo)
 
@@ -510,7 +509,9 @@ func TestHandler_PatchTheme(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockThemeRepository)
 			tt.mockSetup(mockRepo)
 
@@ -586,6 +587,15 @@ func TestHandler_DeleteTheme(t *testing.T) {
 			wantErr:        true,
 		},
 		{
+			name:    "theme not found",
+			themeID: themeID.String(),
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				m.On("DeleteTheme", mock.Anything, themeID).Return(errors.New("theme not found"))
+			},
+			expectedStatus: fiber.StatusNotFound,
+			wantErr:        true,
+		},
+		{
 			name:    "repository error",
 			themeID: themeID.String(),
 			mockSetup: func(m *mocks.MockThemeRepository) {
@@ -598,7 +608,9 @@ func TestHandler_DeleteTheme(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockThemeRepository)
 			tt.mockSetup(mockRepo)
 

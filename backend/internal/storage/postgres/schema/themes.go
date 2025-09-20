@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"errors"
 	"specialstandard/internal/models"
 
 	"github.com/google/uuid"
@@ -141,8 +142,17 @@ func (r *ThemeRepository) UpdateTheme(ctx context.Context, id uuid.UUID, input *
 func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM theme WHERE id = $1`
 	
-	_, err := r.db.Exec(ctx, query, id)
-	return err
+	result, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	
+	// Check if any rows were actually deleted
+	if result.RowsAffected() == 0 {
+		return errors.New("theme not found")
+	}
+	
+	return nil
 }
 
 func NewThemeRepository(db *pgxpool.Pool) *ThemeRepository {

@@ -1,6 +1,8 @@
 package theme
 
 import (
+	"log/slog"
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"specialstandard/internal/xvalidator"
 	"strings"
@@ -12,16 +14,14 @@ func (h *Handler) CreateTheme(c *fiber.Ctx) error {
 	var theme models.CreateThemeInput
 
 	if err := c.BodyParser(&theme); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to parse theme data",
-		})
+		slog.Error("Failed to parse theme JSON", "error", err)
+		return errs.InvalidJSON("Failed to parse theme data")
 	}
 
 	// Validate using XValidator
 	if validationErrors := h.validator.Validate(theme); len(validationErrors) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": xvalidator.ConvertToMessages(validationErrors),
-		})
+		slog.Error("Theme validation failed", "errors", validationErrors)
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
 	createdTheme, err := h.themeRepository.CreateTheme(c.Context(), &theme)
@@ -30,17 +30,14 @@ func (h *Handler) CreateTheme(c *fiber.Ctx) error {
 		errStr := err.Error()
 		switch {
 		case strings.Contains(errStr, "foreign key"):
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid reference to related data",
-			})
+			slog.Error("Foreign key constraint error creating theme", "error", err)
+			return errs.BadRequest("Invalid reference to related data")
 		case strings.Contains(errStr, "connection refused"):
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Database connection error",
-			})
+			slog.Error("Database connection error creating theme", "error", err)
+			return errs.InternalServerError("Database connection error")
 		default:
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Failed to create theme",
-			})
+			slog.Error("Failed to create theme", "error", err)
+			return errs.InternalServerError("Failed to create theme")
 		}
 	}
 

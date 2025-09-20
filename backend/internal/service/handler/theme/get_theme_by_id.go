@@ -1,6 +1,8 @@
 package theme
 
 import (
+	"log/slog"
+	"specialstandard/internal/errs"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,30 +13,21 @@ func (h *Handler) GetThemeByID(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := uuid.Parse(idStr)
 
-	if idStr == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Given Empty ID",
-		})
-	}
-
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid UUID format",
-		})
+		slog.Error("Invalid UUID format for theme ID", "id", idStr, "error", err)
+		return errs.BadRequest("Invalid UUID format")
 	}
 
 	theme, err := h.themeRepository.GetThemeByID(c.Context(), id)
 	if err != nil {
 		// Theme not found
 		if strings.Contains(err.Error(), "no rows") || err.Error() == "sql: no rows in result set" {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "Theme not found",
-			})
+			slog.Error("Theme not found", "id", id, "error", err)
+			return errs.NotFound("Theme not found")
 		}
 		// Some other error
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Database error",
-		})
+		slog.Error("Database error getting theme", "id", id, "error", err)
+		return errs.InternalServerError("Database error")
 	}
 
 	return c.Status(fiber.StatusOK).JSON(theme)
