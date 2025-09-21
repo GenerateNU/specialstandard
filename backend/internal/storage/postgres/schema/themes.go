@@ -147,14 +147,9 @@ func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 	FROM theme
 	WHERE id = $1`
 
-	result, err := r.db.Exec(ctx, query, id)
+	_, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return errs.InternalServerError("Database connection error")
-	}
-	
-	// Check if any rows were actually deleted
-	if result.RowsAffected() == 0 {
-		return errs.NotFound("theme not found")
 	}
 	
 	return nil

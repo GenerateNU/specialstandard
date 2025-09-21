@@ -137,4 +137,33 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// Create theme table
+	_, err = pool.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS theme (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			theme_name VARCHAR(255) NOT NULL,
+			month INTEGER CHECK (month >= 1 AND month <= 12),
+			year INTEGER CHECK (year >= 1900 AND year <= 2100),
+			created_at TIMESTAMPTZ DEFAULT now(),
+			updated_at TIMESTAMPTZ DEFAULT now()
+		)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create resource table (references theme)
+	_, err = pool.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS resource (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			resource_type VARCHAR(50) NOT NULL,
+			theme_id UUID REFERENCES theme(id) ON DELETE RESTRICT,
+			therapist_id UUID REFERENCES therapist(id) ON DELETE RESTRICT,
+			created_at TIMESTAMPTZ DEFAULT now(),
+			updated_at TIMESTAMPTZ DEFAULT now()
+		)`)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
