@@ -100,7 +100,7 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 
 func (r *ResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error) {
 	var resource models.Resource
-	err := r.db.QueryRow(ctx, "SELECT id, theme_id, grade_level, date, type, title, category, content, created_at, updated_atus FROM resource WHERE id = $1", id.String()).Scan(
+	err := r.db.QueryRow(ctx, "SELECT id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at FROM resource WHERE id = $1", id.String()).Scan(
 		&resource.ID,
 		&resource.ThemeID,
 		&resource.GradeLevel,
