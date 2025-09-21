@@ -43,26 +43,26 @@ paths:
       description: Retrieve all therapy sessions from the database
       tags: [Sessions]
       responses:
-        '200':
+        "200":
           description: List of therapy sessions
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Session'
-        '500':
+                  $ref: "#/components/schemas/Session"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
               example:
                 code: 404
                 message: "Resource not found"
@@ -102,24 +102,24 @@ paths:
                   description: Optional notes about the session
                   example: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
       responses:
-        '201':
+        "201":
           description: Session created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
-        '400':
+                $ref: "#/components/schemas/Session"
+        "400":
           description: Bad Request (e.g., validation errors)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /sessions/{id}:
     get:
@@ -136,36 +136,36 @@ paths:
             format: uuid
             example: "123e4567-e89b-12d3-a456-426614174000"
       responses:
-        '200':
+        "200":
           description: Session found successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
-        '400':
+                $ref: "#/components/schemas/Session"
+        "400":
           description: Bad Request (invalid UUID format)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
               example:
                 code: 400
                 message: "Invalid UUID format"
-        '404':
+        "404":
           description: Session not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
               example:
                 code: 404
                 message: "Session not found"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     patch:
       summary: Update session
@@ -184,32 +184,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateSessionInput'
+              $ref: "#/components/schemas/UpdateSessionInput"
       responses:
-        '200':
+        "200":
           description: Session updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
-        '400':
+                $ref: "#/components/schemas/Session"
+        "400":
           description: Bad request (e.g., validation errors)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Session Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     delete:
       summary: Delete session
@@ -224,7 +224,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Session deleted successfully
           content:
             application/json:
@@ -234,24 +234,24 @@ paths:
                   message:
                     type: string
                     example: "Session deleted successfully"
-        '400':
+        "400":
           description: Bad Request Error (parsing invalid uuid, etc.)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Session not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /students:
     get:
@@ -273,7 +273,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
     post:
       summary: Create a new student
       description: Create a new student record
@@ -685,7 +684,199 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
+  /resources:
+    get:
+      summary: Get all resources
+      description: Retrieve all resources from the database
+      tags: [Resources]
+      parameters:
+        - in: query
+          name: theme_id
+          schema:
+            type: string
+            format: uuid
+          required: false
+          description: Filter resources by theme ID
+        - in: query
+          name: grade_level
+          schema:
+            type: string
+          required: false
+          description: Filter resources by grade level
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          required: false
+          description: Filter resources by date
+        - in: query
+          name: type
+          schema:
+            type: string
+          required: false
+          description: Filter resources by type
+        - in: query
+          name: title
+          schema:
+            type: string
+          required: false
+          description: Filter resources by title
+        - in: query
+          name: category
+          schema:
+            type: string
+          required: false
+          description: Filter resources by category
+        - in: query
+          name: content
+          schema:
+            type: string
+          required: false
+          description: Filter resources by content/URL
+      responses:
+        "200":
+          description: List of resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Resource"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Resource not found"
+    post:
+      summary: Create a new resource
+      description: Create a new resource in the database
+      tags: [Resources]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateResourceBody"
+      responses:
+        "201":
+          description: Resource created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found (e.g. theme_id does not exist)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /resources/:id:
+    get:
+      summary: Get resource by ID
+      description: Retrieve a specific resource by its ID
+      tags: [Resources]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the resource to retrieve
+      responses:
+        "200":
+          description: Resource found successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+        "400":
+          description: Bad request (e.g., invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      summary: Update a resource
+      description: Update an existing resource in the database
+      tags: [Resources]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the resource to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateResourceBody"
+      responses:
+        "200":
+          description: Resource updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a resource
+      description: Delete an existing resource from the database
+      tags: [Resources]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the resource to delete
+      responses:
+        "204":
+          description: Resource deleted successfully (no content)
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /themes:
     get:
       summary: Get all themes
@@ -887,7 +1078,6 @@ components:
             - type: object
           description: Error message or validation errors
           example: "Internal server error"
-
     Therapist:
       type: object
       required:
@@ -1238,3 +1428,124 @@ components:
           type: integer
           description: Year of the theme
           example: 2024
+
+    CreateResourceBody:
+      type: object
+      required:
+        - theme_id
+      properties:
+        theme_id:
+          type: string
+          format: uuid
+          description: ID of the theme associated with the resource
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        grade_level:
+          type: string
+          nullable: true
+          description: Grade level for the resource (optional)
+        date:
+          type: string
+          format: date
+          nullable: true
+          description: Date associated with the resource (optional)
+        type:
+          type: string
+          nullable: true
+          description: Type of resource (optional)
+        title:
+          type: string
+          nullable: true
+          description: Title of the resource (optional)
+        category:
+          type: string
+          nullable: true
+          description: Category of the resource (optional)
+        content:
+          type: string
+          nullable: true
+          description: Content/URL of the resource (optional)
+
+    Resource:
+      type: object
+      required:
+        - id
+        - theme_id
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the resource
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        theme_id:
+          type: string
+          format: uuid
+          description: ID of the theme associated with the resource
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        grade_level:
+          type: string
+          nullable: true
+          description: Grade level for the resource (optional)
+          example: "5th Grade"
+        date:
+          type: string
+          format: date
+          nullable: true
+          description: Date associated with the resource (optional)
+          example: "2024-01-15"
+        type:
+          type: string
+          nullable: true
+          description: Type of resource (optional)
+        title:
+          type: string
+          nullable: true
+          description: Title of the resource (optional)
+          example: "Coping with Anxiety"
+        category:
+          type: string
+          nullable: true
+          description: Category of the resource (optional)
+        content:
+          type: string
+          nullable: true
+          description: Content/URL of the resource (optional)
+          example: "https://example.com/resource"
+
+      UpdateResourceBody:
+        type: object
+        properties:
+          theme_id:
+            type: string
+            format: uuid
+            nullable: true
+            description: ID of the theme associated with the resource (optional)
+            example: "123e4567-e89b-12d3-a456-426614174000"
+          grade_level:
+            type: string
+            nullable: true
+            description: Grade level for the resource (optional)
+            example: "5th Grade"
+          date:
+            type: string
+            format: date
+            nullable: true
+            description: Date associated with the resource (optional)
+            example: "2024-01-15"
+          type:
+            type: string
+            nullable: true
+            description: Type of resource (optional)
+          title:
+            type: string
+            nullable: true
+            description: Title of the resource (optional)
+            example: "Coping with Anxiety"
+          category:
+            type: string
+            nullable: true
+            description: Category of the resource (optional)
+          content:
+            type: string
+            nullable: true
+            description: Content/URL of the resource (optional)
+            example: "https://example.com/resource"

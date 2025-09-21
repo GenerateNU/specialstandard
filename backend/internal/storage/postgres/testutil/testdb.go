@@ -83,7 +83,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			active BOOLEAN DEFAULT TRUE,
 			created_at TIMESTAMPTZ DEFAULT now(),
 			updated_at TIMESTAMPTZ DEFAULT now()
-		)`);
+		)`)
 	if err != nil {
 		t.Fatal(err)
 	}
