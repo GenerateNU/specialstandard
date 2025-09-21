@@ -8,6 +8,8 @@ const basePath = process.env.NODE_ENV === 'production'
 const nextConfig: NextConfig = {
   /* config options here */
   basePath,
+  assetPrefix: basePath,
+  trailingSlash: true,
 }
 
 export default nextConfig
