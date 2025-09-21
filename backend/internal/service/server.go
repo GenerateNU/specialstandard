@@ -93,6 +93,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Delete("/:id", sessionHandler.DeleteSessions)
 		r.Post("/", sessionHandler.PostSessions)
 		r.Patch("/:id", sessionHandler.PatchSessions)
+		r.Get("/:id/students", sessionHandler.GetSessionStudents)
 	})
 
 	studentHandler := student.NewHandler(repo.Student)

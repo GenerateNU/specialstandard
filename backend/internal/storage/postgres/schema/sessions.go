@@ -120,11 +120,9 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 
 func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID) ([]models.SessionStudentsOutput, error) {
 	query := `
-	SELECT ss.session_id, ss.student_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
-	       s.id AS "student.id", s.first_name AS "student.first_name", s.last_name AS "student.last_name",
-	       s.dob AS "student.dob", s.guardian_name AS "student.guardian_name",
-	       s.guardian_contact AS "student.guardian_contact", s.notes AS "student.notes",
-	       s.created_at AS "student.created_at", s.updated_at AS "student.updated_at"
+	SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
+	       s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 
+	       s.grade, s.iep, s.created_at, s.updated_at
 	FROM session_student ss
 	JOIN student s ON ss.student_id = s.id
 	WHERE ss.session_id = $1`
@@ -135,9 +133,23 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
 	}
 	defer rows.Close()
 
-	sessionStudents, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.SessionStudentsOutput])
-	if err != nil {
-		return nil, err
+	var sessionStudents []models.SessionStudentsOutput
+	for rows.Next() {
+		var result models.SessionStudentsOutput
+		var student models.Student
+
+		err := rows.Scan(
+			&result.SessionID, &result.Present, &result.Notes, &result.CreatedAt, &result.UpdatedAt,
+			&student.ID, &student.FirstName, &student.LastName, &student.DOB, &student.TherapistID,
+			&student.Grade, &student.IEP, &student.CreatedAt, &student.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Student = student
+		sessionStudents = append(sessionStudents, result)
 	}
+
 	return sessionStudents, nil
 }
