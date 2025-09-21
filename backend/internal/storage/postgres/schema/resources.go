@@ -3,10 +3,12 @@ package schema
 import (
 	"context"
 	"fmt"
-	"specialstandard/internal/errs"
-	"specialstandard/internal/models"
+	"log/slog"
 	"strings"
 	"time"
+
+	"specialstandard/internal/errs"
+	"specialstandard/internal/models"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -30,7 +32,6 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 	argNum := 1
 
 	if theme_id != uuid.Nil {
-		fmt.Print("theme id: ", theme_id, "\n")
 		queryString += fmt.Sprintf(" AND theme_id = $%d::uuid", argNum)
 		args = append(args, theme_id)
 		argNum++
@@ -67,8 +68,7 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 
 	rows, err := r.db.Query(ctx, queryString, args...)
 	if err != nil {
-		fmt.Printf("Final query: %s with args: %v\n", queryString, args)
-		fmt.Print("err here: ", err, "\n", args, queryString)
+		slog.Error("Error occurred", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -100,7 +100,7 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 
 func (r *ResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error) {
 	var resource models.Resource
-	err := r.db.QueryRow(ctx, "SELECT * FROM resource WHERE id = $1", id.String()).Scan(
+	err := r.db.QueryRow(ctx, "SELECT id, theme_id, grade_level, date, type, title, category, content, created_at, updated_atus FROM resource WHERE id = $1", id.String()).Scan(
 		&resource.ID,
 		&resource.ThemeID,
 		&resource.GradeLevel,
@@ -213,15 +213,9 @@ func (r *ResourceRepository) CreateResource(ctx context.Context, resourceBody mo
 }
 
 func (r *ResourceRepository) DeleteResource(ctx context.Context, id uuid.UUID) error {
-	result, err := r.db.Exec(ctx, "DELETE FROM resource WHERE id = $1", id)
+	_, err := r.db.Exec(ctx, "DELETE FROM resource WHERE id = $1", id)
 	if err != nil {
 		return errs.InternalServerError(err.Error())
-	}
-
-	fmt.Printf("Rows affected: %d\n", result.RowsAffected())
-
-	if result.RowsAffected() == 0 {
-		return errs.NotFound("resource", "not found")
 	}
 
 	return nil
