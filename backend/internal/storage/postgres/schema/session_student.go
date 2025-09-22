@@ -29,3 +29,9 @@ func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, inp
 	}
 	return sessionStudent, nil
 }
+
+func (r *SessionStudentRepository) DeleteSessionStudent(ctx context.Context, sessionID, studentID string) error {
+	query := `DELETE FROM session_student WHERE session_id = $1 AND student_id = $2`
+	_, err := r.db.Exec(ctx, query, sessionID, studentID)
+	return err
+}
