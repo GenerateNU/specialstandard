@@ -156,12 +156,16 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 	_, err = pool.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS resource (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			name VARCHAR(255) NOT NULL,
-			resource_type VARCHAR(50) NOT NULL,
-			theme_id UUID REFERENCES theme(id) ON DELETE RESTRICT,
-			therapist_id UUID REFERENCES therapist(id) ON DELETE RESTRICT,
+			theme_id UUID NOT NULL,
+			grade_level VARCHAR(255),
+			date DATE,
+			type VARCHAR(50),
+			title VARCHAR(100),
+			category VARCHAR(100),
+			content TEXT,
 			created_at TIMESTAMPTZ DEFAULT now(),
-			updated_at TIMESTAMPTZ DEFAULT now()
+			updated_at TIMESTAMPTZ DEFAULT now(),
+			FOREIGN KEY (theme_id) REFERENCES theme(id) ON DELETE RESTRICT
 		)`)
 	if err != nil {
 		t.Fatal(err)

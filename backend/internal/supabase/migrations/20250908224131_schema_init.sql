@@ -68,7 +68,7 @@ CREATE TABLE session_student (
 CREATE TABLE resource (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     theme_id UUID NOT NULL,
-    grade_level VARCHAR(20),
+    grade_level VARCHAR(255),
     date DATE,
     type VARCHAR(50),
     title VARCHAR(100),
