@@ -107,10 +107,10 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	themeHandler := theme.NewHandler(repo.Theme)
 	apiV1.Route("/themes", func(r fiber.Router) {
 		r.Post("/", themeHandler.CreateTheme)
-		// r.Get("/", themeHandler.GetThemes)
-		// r.Get("/:id", themeHandler.GetThemeByID)
-		// r.Patch("/:id", themeHandler.UpdateTheme)
-		// r.Delete("/:id", themeHandler.DeleteTheme)
+		r.Get("/", themeHandler.GetThemes)
+		r.Get("/:id", themeHandler.GetThemeByID)
+		r.Patch("/:id", themeHandler.PatchTheme)
+		r.Delete("/:id", themeHandler.DeleteTheme)
 	})
 
 	therapistHandler := therapist.NewHandler(repo.Therapist)
