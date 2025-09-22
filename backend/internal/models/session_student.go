@@ -44,3 +44,8 @@ type PatchSessionStudentInput struct {
 	Present *bool   `json:"present,omitempty"`
 	Notes   *string `json:"notes,omitempty"`
 }
+
+type DeleteSessionStudentInput struct {
+	SessionID string `json:"session_id" validate:"required,uuid"`
+	StudentID string `json:"student_id" validate:"required,uuid"`
+}

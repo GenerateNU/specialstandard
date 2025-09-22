@@ -1,29 +1,41 @@
 package sessionstudent
 
 import (
+	"specialstandard/internal/models"
+
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 )
 
 func (h *Handler) DeleteSessionStudent(c *fiber.Ctx) error {
-	var req struct {
-		SessionID string `json:"session_id"`
-		StudentID string `json:"student_id"`
-	}
+	var req models.DeleteSessionStudentInput
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
+			"error": "Invalid JSON format",
 		})
 	}
 
-	if req.SessionID == "" || req.StudentID == "" {
+	// Validate required fields
+	if req.SessionID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Session ID and Student ID are required",
+			"error": "Session ID is required",
+		})
+	}
+	if req.StudentID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Student ID is required",
 		})
 	}
 
 	err := h.sessionStudentRepository.DeleteSessionStudent(c.Context(), req.SessionID, req.StudentID)
 	if err != nil {
+		if strings.Contains(err.Error(), "no rows affected") || strings.Contains(err.Error(), "not found") {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Session student relationship not found",
+			})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete session student",
 		})
