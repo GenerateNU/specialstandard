@@ -42,6 +42,19 @@ paths:
       summary: Get all sessions
       description: Retrieve all therapy sessions from the database
       tags: [Sessions]
+      parameters:
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         '200':
           description: List of therapy sessions

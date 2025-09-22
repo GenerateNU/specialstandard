@@ -1,11 +1,12 @@
 package service_test
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/service/handler/session"
+	"specialstandard/internal/utils"
 	"strings"
 	"testing"
 	"time"
@@ -50,29 +51,89 @@ func TestHealthEndpoint(t *testing.T) {
 }
 
 func TestGetSessionsEndpoint(t *testing.T) {
-	// Setup
-	mockSessionRepo := new(mocks.MockSessionRepository)
-
-	mockSessionRepo.On("GetSessions", mock.Anything).Return([]models.Session{
+	tests := []struct {
+		name           string
+		url            string
+		mockSetup      func(*mocks.MockSessionRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
 		{
-			ID:          uuid.New(),
-			TherapistID: uuid.New(),
-			Notes:       ptrString("Test session"),
+			name: "successful get sessions and default pagination",
+			url:  "",
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				sessions := []models.Session{
+					{
+						ID:            uuid.New(),
+						TherapistID:   uuid.New(),
+						StartDateTime: time.Now(),
+						EndDateTime:   time.Now().Add(time.Hour),
+						Notes:         ptrString("Test session"),
+						CreatedAt:     ptrTime(time.Now()),
+						UpdatedAt:     ptrTime(time.Now()),
+					},
+				}
+				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
 		},
-	}, nil)
-
-	repo := &storage.Repository{
-		Session: mockSessionRepo,
+		{
+			name: "repository error",
+			url:  "/",
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			wantErr:        true,
+		},
+		{
+			name: "Default Pagination",
+			url:  "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetSessions", mock.Anything, pagination).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSessionRepo := new(mocks.MockSessionRepository)
+			tt.mockSetup(mockSessionRepo)
 
-	// Test
-	req := httptest.NewRequest("GET", "/api/v1/sessions", nil)
-	resp, err := app.Test(req, -1)
+			repo := &storage.Repository{
+				Session: mockSessionRepo,
+			}
+			app := service.SetupApp(config.Config{}, repo)
 
-	assert.NoError(t, err)
-	assert.Equal(t, 200, resp.StatusCode)
+			req := httptest.NewRequest("GET", "/api/v1/sessions"+tt.url, nil)
+			res, _ := app.Test(req, -1)
+
+			assert.Equal(t, tt.expectedStatus, res.StatusCode)
+			mockSessionRepo.AssertExpectations(t)
+		})
+	}
 }
 
 // Student Integration Tests
@@ -161,7 +222,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 	app := service.SetupApp(config.Config{}, repo)
 
 	testTherapistID := uuid.New()
-	
+
 	body := fmt.Sprintf(`{
 		"first_name": "John",
 		"last_name": "Doe",

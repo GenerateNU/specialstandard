@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/xvalidator"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,6 +23,11 @@ func (h *Handler) PatchSessions(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&session); err != nil {
 		return errs.InvalidJSON("Failed to parse PatchSessionInput data")
+	}
+
+	// Validate using XValidator
+	if validationErrors := h.validator.Validate(session); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
 	updatedSession, err := h.sessionRepository.PatchSession(c.Context(), id, &session)

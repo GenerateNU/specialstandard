@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -13,12 +14,13 @@ type SessionRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *SessionRepository) GetSessions(ctx context.Context) ([]models.Session, error) {
+func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination) ([]models.Session, error) {
 	query := `
 	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
-	FROM session`
+	FROM session
+	LIMIT $1 OFFSET $2`
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GettOffset())
 	if err != nil {
 		return nil, err
 	}

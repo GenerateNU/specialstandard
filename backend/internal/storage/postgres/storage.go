@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	
 )
 
 // Establishes a sustained connection to the PostgreSQL database using pooling.
