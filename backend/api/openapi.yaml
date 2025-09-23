@@ -20,6 +20,10 @@ tags:
     description: Physical Therapists Registered
   - name: Themes
     description: Theme management operations
+  - name: Resources
+    description: Resource management operations
+  - name: SessionResource
+    description: Session-Resource association operations
 
 paths:
   /health:
@@ -246,6 +250,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /sessions/{id}/resource:
+    get:
+      summary: Get resources for a session
+      description: Retrieve all resources associated with a specific session
+      tags: [Sessions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the Session to retrieve resources for
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: List of resources associated with the session
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Resource"
+        "400":
+          description: Bad Request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Session not found"
         "500":
           description: Internal server error
           content:
@@ -877,6 +928,97 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /session-resources:
+    post:
+      summary: Create a session-resource link
+      description: Create a new association between each session and a utilized resource
+      tags: [SessionResource]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifySessionResource"
+      responses:
+        "200":
+          description: Session-resource link created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResource"
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                session_id: "123e4567-e89b-12d3-a456-426614174001"
+                resource_id: "123e4567-e89b-12d3-a456-426614174002"
+                created_at: "2025-09-13T17:19:00Z"
+                updated_at: "2025-09-13T17:19:00Z"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  code: 400
+                  message: "Reference not found"
+        "404":
+          description: Session or Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  code: 404
+                  message: "Session or Resource not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  session_id: "123e4567-e89b-12d3-a456-426614174001"
+                  resource_id: "123e4567-e89b-12d3-a456-426614174002"
+    delete:
+      summary: Delete a session-resource link
+      description: Delete an existing association between a session and a resource
+      tags: [SessionResource]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifySessionResource"
+              example:
+                session_id: "123e4567-e89b-12d3-a456-426614174001"
+                resource_id: "123e4567-e89b-12d3-a456-426614174002"
+        responses:
+          "204":
+            description: Session-resource link deleted successfully (no content)
+          "404":
+            description: Session-resource link not found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+                  example:
+                    code: 404
+                    message: "Session or Resource not found"
+          "400":
+            description: Bad request (e.g., validation errors)
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+                  example:
+                    code: 400
+                    message: "Reference not found"
+          "500":
+            description: Internal server error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
   /themes:
     get:
       summary: Get all themes
@@ -1511,41 +1653,55 @@ components:
           description: Content/URL of the resource (optional)
           example: "https://example.com/resource"
 
-      UpdateResourceBody:
-        type: object
-        properties:
-          theme_id:
-            type: string
-            format: uuid
-            nullable: true
-            description: ID of the theme associated with the resource (optional)
-            example: "123e4567-e89b-12d3-a456-426614174000"
-          grade_level:
-            type: string
-            nullable: true
-            description: Grade level for the resource (optional)
-            example: "5th Grade"
-          date:
-            type: string
-            format: date
-            nullable: true
-            description: Date associated with the resource (optional)
-            example: "2024-01-15"
-          type:
-            type: string
-            nullable: true
-            description: Type of resource (optional)
-          title:
-            type: string
-            nullable: true
-            description: Title of the resource (optional)
-            example: "Coping with Anxiety"
-          category:
-            type: string
-            nullable: true
-            description: Category of the resource (optional)
-          content:
-            type: string
-            nullable: true
-            description: Content/URL of the resource (optional)
-            example: "https://example.com/resource"
+    UpdateResourceBody:
+      type: object
+      properties:
+        theme_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID of the theme associated with the resource (optional)
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        grade_level:
+          type: string
+          nullable: true
+          description: Grade level for the resource (optional)
+          example: "5th Grade"
+        date:
+          type: string
+          format: date
+          nullable: true
+          description: Date associated with the resource (optional)
+          example: "2024-01-15"
+        type:
+          type: string
+          nullable: true
+          description: Type of resource (optional)
+        title:
+          type: string
+          nullable: true
+          description: Title of the resource (optional)
+          example: "Coping with Anxiety"
+        category:
+          type: string
+          nullable: true
+          description: Category of the resource (optional)
+        content:
+          type: string
+          nullable: true
+          description: Content/URL of the resource (optional)
+          example: "https://example.com/resource"
+    SessionResource:
+      type: object
+      required:
+        - sessionId
+        - resourceId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: ID of completed session
+        resourceId:
+          type: string
+          format: uuid
+          description: ID of referenced resource
