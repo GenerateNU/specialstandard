@@ -152,6 +152,23 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 
+	// Create SessionStudent junction table
+	_, err = pool.Exec(ctx, `
+    CREATE TABLE IF NOT EXISTS session_student (
+        session_id UUID,
+        student_id UUID,
+        present BOOLEAN DEFAULT TRUE,
+        notes TEXT,
+        created_at TIMESTAMPTZ DEFAULT now(),
+        updated_at TIMESTAMPTZ DEFAULT now(),
+        PRIMARY KEY (session_id, student_id),
+        FOREIGN KEY (session_id) REFERENCES session(id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
+    )`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Create resource table (with foreign key to theme)
 	_, err = pool.Exec(ctx, `
 		CREATE TABLE resource (

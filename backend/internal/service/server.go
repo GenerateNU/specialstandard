@@ -134,11 +134,11 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Delete("/:id", resourceHandler.DeleteResource)
 	})
 
-	SessionStudentHandler := sessionstudent.NewHandler(repo.SessionStudent)
-	apiV1.Route("/session-students", func(r fiber.Router) {
-		r.Post("/", SessionStudentHandler.CreateSessionStudent)
-		r.Delete("/", SessionStudentHandler.DeleteSessionStudent)
-		r.Patch("/", SessionStudentHandler.PatchSessionStudent)
+	sessionStudentHandler := sessionstudent.NewHandler(repo.SessionStudent)
+	apiV1.Route("/session_students", func(r fiber.Router) {
+		r.Post("/", sessionStudentHandler.CreateSessionStudent)
+		r.Delete("/", sessionStudentHandler.DeleteSessionStudent)
+		r.Patch("/", sessionStudentHandler.PatchSessionStudent)
 	})
 
 	// Handle 404 - Route not found
