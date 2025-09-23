@@ -1511,41 +1511,41 @@ components:
           description: Content/URL of the resource (optional)
           example: "https://example.com/resource"
 
-      UpdateResourceBody:
-        type: object
-        properties:
-          theme_id:
-            type: string
-            format: uuid
-            nullable: true
-            description: ID of the theme associated with the resource (optional)
-            example: "123e4567-e89b-12d3-a456-426614174000"
-          grade_level:
-            type: string
-            nullable: true
-            description: Grade level for the resource (optional)
-            example: "5th Grade"
-          date:
-            type: string
-            format: date
-            nullable: true
-            description: Date associated with the resource (optional)
-            example: "2024-01-15"
-          type:
-            type: string
-            nullable: true
-            description: Type of resource (optional)
-          title:
-            type: string
-            nullable: true
-            description: Title of the resource (optional)
-            example: "Coping with Anxiety"
-          category:
-            type: string
-            nullable: true
-            description: Category of the resource (optional)
-          content:
-            type: string
-            nullable: true
-            description: Content/URL of the resource (optional)
-            example: "https://example.com/resource"
+    UpdateResourceBody:
+      type: object
+      properties:
+        theme_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID of the theme associated with the resource (optional)
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        grade_level:
+          type: string
+          nullable: true
+          description: Grade level for the resource (optional)
+          example: "5th Grade"
+        date:
+          type: string
+          format: date
+          nullable: true
+          description: Date associated with the resource (optional)
+          example: "2024-01-15"
+        type:
+          type: string
+          nullable: true
+          description: Type of resource (optional)
+        title:
+          type: string
+          nullable: true
+          description: Title of the resource (optional)
+          example: "Coping with Anxiety"
+        category:
+          type: string
+          nullable: true
+          description: Category of the resource (optional)
+        content:
+          type: string
+          nullable: true
+          description: Content/URL of the resource (optional)
+          example: "https://example.com/resource"
