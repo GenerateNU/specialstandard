@@ -157,16 +157,6 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
     `, sessionID, studentID).Scan(&count)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, count)
-
-	// Test deleting non-existent relationship
-	nonExistentInput := &models.DeleteSessionStudentInput{
-		SessionID: uuid.New(),
-		StudentID: uuid.New(),
-	}
-
-	err = repo.DeleteSessionStudent(ctx, nonExistentInput)
-	// This might or might not be an error depending on your implementation
-	// Some implementations return an error for "no rows affected", others don't
 }
 
 func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {

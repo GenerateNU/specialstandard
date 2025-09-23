@@ -33,15 +33,16 @@ func (h *Handler) PatchSessionStudent(c *fiber.Ctx) error {
 
 	updatedSessionStudent, err := h.sessionStudentRepository.PatchSessionStudent(c.Context(), &sessionStudent)
 	if err != nil {
-		if strings.Contains(err.Error(), "no rows affected") || strings.Contains(err.Error(), "not found") {
+		slog.Error("Failed to patch session student", "session_id", sessionStudent.SessionID, "student_id", sessionStudent.StudentID, "err", err)
+
+		errStr := err.Error()
+		switch {
+		case strings.Contains(errStr, "no rows affected") ||
+			strings.Contains(errStr, "not found") ||
+			strings.Contains(errStr, "no rows in result set"):
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Session student relationship not found",
 			})
-		}
-
-		slog.Error("Failed to patch session student", "session_id", sessionStudent.SessionID, "student_id", sessionStudent.StudentID, "err", err)
-		errStr := err.Error()
-		switch {
 		case strings.Contains(errStr, "foreign key"):
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Invalid Reference",

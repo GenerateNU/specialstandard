@@ -481,7 +481,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /session-students:
+  /session_students:
     post:
       summary: Create session-student relationship
       description: Associate a student with a session, creating an entry in the bridge table
