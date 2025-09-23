@@ -35,3 +35,29 @@ func (r *SessionStudentRepository) DeleteSessionStudent(ctx context.Context, ses
 	_, err := r.db.Exec(ctx, query, sessionID, studentID)
 	return err
 }
+
+func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, sessionID string, studentID string, input *models.PatchSessionStudentInput) (*models.SessionStudent, error) {
+	sessionStudent := &models.SessionStudent{}
+
+	query := `UPDATE session_Student
+				SET
+					present = COALESCE($1, present),
+					notes = COALESCE($2, notes),
+				WHERE session_id = $3 AND student_id = $4
+				RETURNING session_id, student_id, present, notes, created_at, updated_at`
+
+	row := r.db.QueryRow(ctx, query, input.Present, input.Notes, sessionID, studentID)
+
+	if err := row.Scan(
+		&sessionStudent.SessionID,
+		&sessionStudent.StudentID,
+		&sessionStudent.Present,
+		&sessionStudent.Notes,
+		&sessionStudent.CreatedAt,
+		&sessionStudent.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+
+	return sessionStudent, nil
+}
