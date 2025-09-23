@@ -1,4 +1,4 @@
-import { ArrowRight, Users } from 'lucide-react'
+import { ArrowRight, Calendar, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -33,6 +33,22 @@ export default function Home() {
             </h2>
             <p className="text-secondary text-sm">
               Browse and manage all student records in the system
+            </p>
+          </Link>
+
+          <Link
+            href="/sessions"
+            className="group p-6 bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-default hover:bg-card-hover hover:border-hover"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <Calendar className="w-10 h-10 text-accent" />
+              <ArrowRight className="w-5 h-5 text-muted group-hover:translate-x-1 transition-transform group-hover:text-accent" />
+            </div>
+            <h2 className="text-xl font-semibold text-primary mb-2">
+              Therapy Sessions
+            </h2>
+            <p className="text-secondary text-sm">
+              View and manage therapy session calendar
             </p>
           </Link>
 
