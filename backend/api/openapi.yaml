@@ -16,6 +16,8 @@ tags:
     description: Therapy session operations
   - name: Students
     description: Student management operations
+  - name: Session Students
+    description: Operations for managing the relationship between sessions and students
   - name: Therapists
     description: Physical Therapists Registered
   - name: Themes
@@ -483,7 +485,7 @@ paths:
     post:
       summary: Create session-student relationship
       description: Associate a student with a session, creating an entry in the bridge table
-      tags: [Sessions, Students]
+      tags: [Session Students]
       requestBody:
         required: true
         content:
@@ -531,7 +533,7 @@ paths:
     delete:
       summary: Delete session-student relationship
       description: Remove the association between a student and a session
-      tags: [Sessions, Students]
+      tags: [Session Students]
       requestBody:
         required: true
         content:
@@ -580,7 +582,7 @@ paths:
     patch:
       summary: Update session-student relationship
       description: Update the present status or notes for a session-student relationship
-      tags: [Sessions, Students]
+      tags: [Session Students]
       requestBody:
         required: true
         content:
