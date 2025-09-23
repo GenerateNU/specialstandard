@@ -1139,6 +1139,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
   /themes:
+    get:
+      summary: Get all themes
+      description: Retrieve all themes from the database
+      tags: [Themes]
+      responses:
+        "200":
+          description: List of themes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Theme"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
     post:
       summary: Create a new theme
       description: Create a new theme for therapy sessions
@@ -1158,6 +1178,138 @@ paths:
                 $ref: "#/components/schemas/Theme"
         "400":
           description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /themes/{id}:
+    get:
+      summary: Get theme by ID
+      description: Retrieve a specific theme by its UUID
+      tags: [Themes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the theme to retrieve
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: Theme found successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Theme"
+        "400":
+          description: Bad Request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        "404":
+          description: Theme not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Theme not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    patch:
+      summary: Update theme
+      description: Update an existing theme (partial update)
+      tags: [Themes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the theme to patch
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateThemeInput"
+      responses:
+        "200":
+          description: Theme updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Theme"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Theme not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete theme
+      description: Delete a theme from the database
+      tags: [Themes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the theme to delete
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Theme deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Theme deleted successfully"
+        "400":
+          description: Bad Request Error (parsing invalid uuid, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Theme not found
           content:
             application/json:
               schema:
@@ -1516,6 +1668,23 @@ components:
           type: integer
           description: Month of the theme
           example: 12
+        year:
+          type: integer
+          description: Year of the theme
+          example: 2024
+
+    UpdateThemeInput:
+      type: object
+      description: Fields that can be updated (all optional for partial updates)
+      properties:
+        name:
+          type: string
+          description: Name of the theme
+          example: "Spring Blossoms"
+        month:
+          type: integer
+          description: Month of the theme (1-12)
+          example: 3
         year:
           type: integer
           description: Year of the theme

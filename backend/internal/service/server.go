@@ -62,7 +62,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 
 	// Use CORS middleware to configure CORS and handle preflight/OPTIONS requests.
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:8080, http://127.0.0.1:8080,http://127.0.0.1:3000",
+		AllowOrigins:     "http://localhost:3000,http://localhost:8080, http://127.0.0.1:8080,http://127.0.0.1:3000, https://clownfish-app-wq7as.ondigitalocean.app",
 		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS", // Using these methods.
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true, // Allow cookies
@@ -110,10 +110,10 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	themeHandler := theme.NewHandler(repo.Theme)
 	apiV1.Route("/themes", func(r fiber.Router) {
 		r.Post("/", themeHandler.CreateTheme)
-		// r.Get("/", themeHandler.GetThemes)
-		// r.Get("/:id", themeHandler.GetThemeByID)
-		// r.Patch("/:id", themeHandler.UpdateTheme)
-		// r.Delete("/:id", themeHandler.DeleteTheme)
+		r.Get("/", themeHandler.GetThemes)
+		r.Get("/:id", themeHandler.GetThemeByID)
+		r.Patch("/:id", themeHandler.PatchTheme)
+		r.Delete("/:id", themeHandler.DeleteTheme)
 	})
 
 	therapistHandler := therapist.NewHandler(repo.Therapist)
