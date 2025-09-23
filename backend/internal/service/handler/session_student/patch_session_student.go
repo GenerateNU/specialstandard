@@ -2,14 +2,14 @@ package sessionstudent
 
 import (
 	"log/slog"
-	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
-
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
+// PatchSessionStudent handler
 func (h *Handler) PatchSessionStudent(c *fiber.Ctx) error {
 	var sessionStudent models.PatchSessionStudentInput
 
@@ -20,18 +20,18 @@ func (h *Handler) PatchSessionStudent(c *fiber.Ctx) error {
 	}
 
 	// Validate required fields
-	if sessionStudent.SessionID == "" {
+	if sessionStudent.SessionID == (uuid.UUID{}) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Session ID is required",
 		})
 	}
-	if sessionStudent.StudentID == "" {
+	if sessionStudent.StudentID == (uuid.UUID{}) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Student ID is required",
 		})
 	}
 
-	updatedSessionStudent, err := h.sessionStudentRepository.PatchSessionStudent(c.Context(), sessionStudent.SessionID, sessionStudent.StudentID, &sessionStudent)
+	updatedSessionStudent, err := h.sessionStudentRepository.PatchSessionStudent(c.Context(), &sessionStudent)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows affected") || strings.Contains(err.Error(), "not found") {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -39,19 +39,26 @@ func (h *Handler) PatchSessionStudent(c *fiber.Ctx) error {
 			})
 		}
 
-		slog.Error("Failed to patch session", "id", sessionStudent.SessionID, "err", err)
+		slog.Error("Failed to patch session student", "session_id", sessionStudent.SessionID, "student_id", sessionStudent.StudentID, "err", err)
 		errStr := err.Error()
 		switch {
 		case strings.Contains(errStr, "foreign key"):
-			return errs.BadRequest("Invalid Reference")
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid Reference",
+			})
 		case strings.Contains(errStr, "check constraint"):
-			return errs.BadRequest("Violated a check constraint")
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Violated a check constraint",
+			})
 		case strings.Contains(errStr, "connection refused"):
-			return errs.InternalServerError("Database Connection Error")
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Database Connection Error",
+			})
 		default:
-			return errs.InternalServerError("Failed to Update SessionStudent")
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to Update SessionStudent",
+			})
 		}
 	}
-
 	return c.Status(fiber.StatusOK).JSON(updatedSessionStudent)
 }

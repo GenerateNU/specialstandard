@@ -2,12 +2,13 @@ package sessionstudent
 
 import (
 	"specialstandard/internal/models"
-
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
+// DeleteSessionStudent handler
 func (h *Handler) DeleteSessionStudent(c *fiber.Ctx) error {
 	var req models.DeleteSessionStudentInput
 
@@ -18,18 +19,18 @@ func (h *Handler) DeleteSessionStudent(c *fiber.Ctx) error {
 	}
 
 	// Validate required fields
-	if req.SessionID == "" {
+	if req.SessionID == (uuid.UUID{}) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Session ID is required",
 		})
 	}
-	if req.StudentID == "" {
+	if req.StudentID == (uuid.UUID{}) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Student ID is required",
 		})
 	}
 
-	err := h.sessionStudentRepository.DeleteSessionStudent(c.Context(), req.SessionID, req.StudentID)
+	err := h.sessionStudentRepository.DeleteSessionStudent(c.Context(), &req)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows affected") || strings.Contains(err.Error(), "not found") {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{

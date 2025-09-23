@@ -30,23 +30,23 @@ func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, inp
 	return sessionStudent, nil
 }
 
-func (r *SessionStudentRepository) DeleteSessionStudent(ctx context.Context, sessionID, studentID string) error {
+func (r *SessionStudentRepository) DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error {
 	query := `DELETE FROM session_student WHERE session_id = $1 AND student_id = $2`
-	_, err := r.db.Exec(ctx, query, sessionID, studentID)
+	_, err := r.db.Exec(ctx, query, input.SessionID, input.StudentID)
 	return err
 }
 
-func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, sessionID string, studentID string, input *models.PatchSessionStudentInput) (*models.SessionStudent, error) {
+func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error) {
 	sessionStudent := &models.SessionStudent{}
 
-	query := `UPDATE session_Student
+	query := `UPDATE session_student
 				SET
 					present = COALESCE($1, present),
-					notes = COALESCE($2, notes),
+					notes = COALESCE($2, notes)
 				WHERE session_id = $3 AND student_id = $4
 				RETURNING session_id, student_id, present, notes, created_at, updated_at`
 
-	row := r.db.QueryRow(ctx, query, input.Present, input.Notes, sessionID, studentID)
+	row := r.db.QueryRow(ctx, query, input.Present, input.Notes, input.SessionID, input.StudentID)
 
 	if err := row.Scan(
 		&sessionStudent.SessionID,
