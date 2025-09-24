@@ -787,7 +787,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /resources/:id:
+  /resources/{id}:
     get:
       summary: Get resource by ID
       description: Retrieve a specific resource by its ID
