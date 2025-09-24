@@ -256,7 +256,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /sessions/{id}/resource:
+  /sessions/{id}/resources:
     get:
       summary: Get resources for a session
       description: Retrieve all resources associated with a specific session
@@ -1693,23 +1693,25 @@ components:
     SessionResource:
       type: object
       required:
-        - sessionId
-        - resourceId
+        - session_id
+        - resource_id
+        - created_at
+        - updated_at
       properties:
-        sessionId:
+        session_id:
           type: string
           format: uuid
           description: ID of completed session
-        resourceId:
+        resource_id:
           type: string
           format: uuid
           description: ID of referenced resource
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: When the session-resource link was created
           example: "2025-09-13T17:19:00Z"
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
           description: When the session-resource link was last updated
@@ -1717,14 +1719,14 @@ components:
     ModifySessionResource:
       type: object
       required:
-        - sessionId
-        - resourceId
+        - session_id
+        - resource_id
       properties:
-        sessionId:
+        session_id:
           type: string
           format: uuid
           description: ID of completed session
-        resourceId:
+        resource_id:
           type: string
           format: uuid
           description: ID of referenced resource
