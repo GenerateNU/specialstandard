@@ -979,6 +979,266 @@ func TestDeleteResourceEndpoint_NotFound(t *testing.T) {
 	mockResourceRepo.AssertExpectations(t)
 }
 
+func TestCreateSessionStudentEndpoint(t *testing.T) {
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockSessionStudentRepository)
+		expectedStatusCode int
+	}{
+		{
+			name: "Successful creation",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true,
+				"notes": "Student participated well in group activities"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
+
+				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&models.SessionStudent{
+					SessionID: sessionID,
+					StudentID: studentID,
+					Present:   true,
+					Notes:     ptrString("Student participated well in group activities"),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}, nil)
+			},
+			expectedStatusCode: fiber.StatusCreated,
+		},
+		{
+			name: "Missing session ID",
+			payload: `{
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Invalid JSON format",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": /* missing comma */
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Duplicate relationship",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true,
+				"notes": "Duplicate entry"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
+			},
+			expectedStatusCode: fiber.StatusConflict,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			tt.mockSetup(mockSessionStudentRepo)
+
+			repo := &storage.Repository{
+				SessionStudent: mockSessionStudentRepo,
+			}
+			app := service.SetupApp(config.Config{}, repo)
+
+			req := httptest.NewRequest("POST", "/api/v1/session_students", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			res, err := app.Test(req, -1)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockSessionStudentRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestDeleteSessionStudentEndpoint(t *testing.T) {
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockSessionStudentRepository)
+		expectedStatusCode int
+	}{
+		{
+			name: "Successful deletion",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("DeleteSessionStudent", mock.Anything, mock.AnythingOfType("*models.DeleteSessionStudentInput")).Return(nil)
+			},
+			expectedStatusCode: fiber.StatusNoContent,
+		},
+		{
+			name: "Missing student ID",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000"
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Invalid JSON format",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": /* missing comma */
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Relationship not found",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("DeleteSessionStudent", mock.Anything, mock.AnythingOfType("*models.DeleteSessionStudentInput")).Return(errors.New("no rows affected"))
+			},
+			expectedStatusCode: fiber.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			tt.mockSetup(mockSessionStudentRepo)
+
+			repo := &storage.Repository{
+				SessionStudent: mockSessionStudentRepo,
+			}
+			app := service.SetupApp(config.Config{}, repo)
+
+			req := httptest.NewRequest("DELETE", "/api/v1/session_students", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			res, err := app.Test(req, -1)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockSessionStudentRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestPatchSessionStudentEndpoint(t *testing.T) {
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockSessionStudentRepository)
+		expectedStatusCode int
+	}{
+		{
+			name: "Successful patch - present only",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": false
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
+
+				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+					SessionID: sessionID,
+					StudentID: studentID,
+					Present:   false,
+					Notes:     ptrString("Original notes"),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}, nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			name: "Successful patch - notes only",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"notes": "Updated progress notes"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
+
+				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+					SessionID: sessionID,
+					StudentID: studentID,
+					Present:   true,
+					Notes:     ptrString("Updated progress notes"),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}, nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			name: "Missing session ID",
+			payload: `{
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Relationship not found",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("no rows affected"))
+			},
+			expectedStatusCode: fiber.StatusNotFound,
+		},
+		{
+			name: "Foreign key violation",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("foreign key violation"))
+			},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			tt.mockSetup(mockSessionStudentRepo)
+
+			repo := &storage.Repository{
+				SessionStudent: mockSessionStudentRepo,
+			}
+			app := service.SetupApp(config.Config{}, repo)
+
+			req := httptest.NewRequest("PATCH", "/api/v1/session_students", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			res, err := app.Test(req, -1)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockSessionStudentRepo.AssertExpectations(t)
+		})
+	}
+}
+
 func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
 	sessionID := uuid.New()

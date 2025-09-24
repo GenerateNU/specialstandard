@@ -16,6 +16,8 @@ tags:
     description: Therapy session operations
   - name: Students
     description: Student management operations
+  - name: Session Students
+    description: Operations for managing the relationship between sessions and students
   - name: Therapists
     description: Physical Therapists Registered
   - name: Themes
@@ -256,6 +258,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
   /sessions/{id}/resources:
     get:
       summary: Get resources for a session
@@ -281,6 +284,60 @@ paths:
                   $ref: "#/components/schemas/Resource"
         "400":
           description: Bad Request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Session not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{session_id}/students:
+    get:
+      summary: Get all students for a session
+      description: Retrieve all students associated with a specific session, including bridge table information
+      tags: [Sessions]
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          description: UUID of the session
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: present
+          in: query
+          required: false
+          description: Filter students by attendance status
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of students with session relationship details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentWithSessionInfo"
+        "400":
+          description: Bad request (invalid UUID format)
           content:
             application/json:
               schema:
@@ -530,6 +587,211 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /students/{student_id}/sessions:
+    get:
+      summary: Get all sessions for a student
+      description: Retrieve all sessions associated with a specific student, including bridge table information
+      tags: [Students]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          description: UUID of the student
+          schema:
+            type: string
+            format: uuid
+            example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        - name: start_date
+          in: query
+          required: false
+          description: Filter sessions starting after this date
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: false
+          description: Filter sessions ending before this date
+          schema:
+            type: string
+            format: date
+        - name: present
+          in: query
+          required: false
+          description: Filter sessions by student's attendance status
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of sessions with student relationship details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionWithStudentInfo"
+        "400":
+          description: Bad request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Student not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /session_students:
+    post:
+      summary: Create session-student relationship
+      description: Associate a student with a session, creating an entry in the bridge table
+      tags: [Session Students]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionStudentInput"
+      responses:
+        "201":
+          description: Session-student relationship created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStudent"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Session or Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Session or Student not found"
+        "409":
+          description: Relationship already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 409
+                message: "Student is already associated with this session"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete session-student relationship
+      description: Remove the association between a student and a session
+      tags: [Session Students]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+                - student_id
+              properties:
+                session_id:
+                  type: string
+                  format: uuid
+                  description: UUID of the session
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                student_id:
+                  type: string
+                  format: uuid
+                  description: UUID of the student
+                  example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+      responses:
+        "204":
+          description: Session-student relationship deleted successfully (no content)
+        "400":
+          description: Bad request (e.g., invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Session-student relationship not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Session-student relationship not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    patch:
+      summary: Update session-student relationship
+      description: Update the present status or notes for a session-student relationship
+      tags: [Session Students]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSessionStudentInput"
+      responses:
+        "200":
+          description: Session-student relationship updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStudent"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Session-student relationship not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Session-student relationship not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /therapists:
     get:
       summary: Get all therapists
@@ -735,6 +997,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
   /resources:
     get:
       summary: Get all resources
@@ -838,6 +1101,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
   /resources/{id}:
     get:
       summary: Get resource by ID
@@ -928,6 +1192,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
   /session-resource:
     post:
       summary: Create a session-resource link
@@ -991,33 +1256,34 @@ paths:
               example:
                 session_id: "123e4567-e89b-12d3-a456-426614174001"
                 resource_id: "123e4567-e89b-12d3-a456-426614174002"
-        responses:
-          "204":
-            description: Session-resource link deleted successfully (no content)
-          "404":
-            description: Session-resource link not found
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/Error"
-                  example:
-                    code: 404
-                    message: "Session or Resource not found"
-          "400":
-            description: Bad request (e.g., validation errors)
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/Error"
-                  example:
-                    code: 400
-                    message: "Reference not found"
-          "500":
-            description: Internal server error
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/Error"
+      responses:
+        "204":
+          description: Session-resource link deleted successfully (no content)
+        "404":
+          description: Session-resource link not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  code: 404
+                  message: "Session or Resource not found"
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  code: 400
+                  message: "Reference not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /themes:
     get:
       summary: Get all themes
@@ -1219,6 +1485,7 @@ components:
             - type: object
           description: Error message or validation errors
           example: "Internal server error"
+
     Therapist:
       type: object
       required:
@@ -1690,6 +1957,144 @@ components:
           nullable: true
           description: Content/URL of the resource (optional)
           example: "https://example.com/resource"
+
+    SessionStudent:
+      type: object
+      required:
+        - session_id
+        - student_id
+        - present
+        - created_at
+        - updated_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: UUID of the session
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        student_id:
+          type: string
+          format: uuid
+          description: UUID of the student
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        present:
+          type: boolean
+          description: Whether the student was present at the session
+          example: true
+        notes:
+          type: string
+          nullable: true
+          description: Notes about the student's participation in the session
+          example: "Student actively participated in group activities"
+        created_at:
+          type: string
+          format: date-time
+          description: When the relationship was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the relationship was last updated
+          example: "2024-01-15T10:35:00Z"
+
+    CreateSessionStudentInput:
+      type: object
+      required:
+        - session_id
+        - student_id
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: UUID of the session
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        student_id:
+          type: string
+          format: uuid
+          description: UUID of the student
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        present:
+          type: boolean
+          description: Whether the student was present (defaults to true if not specified)
+          example: true
+        notes:
+          type: string
+          nullable: true
+          description: Initial notes about the student's participation
+          example: "First session with new group"
+
+    UpdateSessionStudentInput:
+      type: object
+      required:
+        - session_id
+        - student_id
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: UUID of the session (cannot be changed)
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        student_id:
+          type: string
+          format: uuid
+          description: UUID of the student (cannot be changed)
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        present:
+          type: boolean
+          description: Update the student's attendance status
+          example: false
+        notes:
+          type: string
+          nullable: true
+          description: Update or clear notes (set to null to clear)
+          example: "Student left early due to appointment"
+
+    StudentWithSessionInfo:
+      allOf:
+        - $ref: "#/components/schemas/Student"
+        - type: object
+          required:
+            - session_id
+            - present
+          properties:
+            session_id:
+              type: string
+              format: uuid
+              description: UUID of the associated session
+              example: "123e4567-e89b-12d3-a456-426614174000"
+            present:
+              type: boolean
+              description: Whether the student was present at the session
+              example: true
+            notes:
+              type: string
+              nullable: true
+              description: Session-specific notes about the student
+              example: "Showed significant progress with motor skills"
+
+    SessionWithStudentInfo:
+      allOf:
+        - $ref: "#/components/schemas/Session"
+        - type: object
+          required:
+            - student_id
+            - present
+          properties:
+            student_id:
+              type: string
+              format: uuid
+              description: UUID of the associated student
+              example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+            present:
+              type: boolean
+              description: Whether the student was present at this session
+              example: true
+            notes:
+              type: string
+              nullable: true
+              description: Session-specific notes about the student
+              example: "Worked on balance exercises"
+
     SessionResource:
       type: object
       required:
@@ -1716,6 +2121,7 @@ components:
           format: date-time
           description: When the session-resource link was last updated
           example: "2025-09-13T17:19:00Z"
+
     ModifySessionResource:
       type: object
       required:

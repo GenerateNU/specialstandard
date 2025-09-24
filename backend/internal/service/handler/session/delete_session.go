@@ -20,5 +20,7 @@ func (h *Handler) DeleteSessions(c *fiber.Ctx) error {
 		return errs.InternalServerError("Internal Server Error")
 	}
 
-	return c.SendStatus(fiber.StatusOK)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Session deleted successfully",
+	})
 }
