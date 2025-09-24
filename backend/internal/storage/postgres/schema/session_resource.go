@@ -36,7 +36,7 @@ func (sr *SessionResourceRepository) DeleteSessionResource(ctx context.Context, 
 }
 
 func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID) ([]models.Resource, error) {
-	var resources []models.Resource
+	resources := make([]models.Resource, 0)
 	query := `SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at
 				FROM session_resource sr
 				JOIN resource r ON sr.resource_id = r.id

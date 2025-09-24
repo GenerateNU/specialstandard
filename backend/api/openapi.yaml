@@ -928,7 +928,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /session-resources:
+  /session-resource:
     post:
       summary: Create a session-resource link
       description: Create a new association between each session and a utilized resource

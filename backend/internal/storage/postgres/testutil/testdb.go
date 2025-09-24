@@ -170,4 +170,18 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	_, err = pool.Exec(ctx, `
+		CREATE TABLE session_resource (
+    	session_id UUID,
+    	resource_id UUID,
+    	created_at TIMESTAMPTZ DEFAULT now(),
+    	updated_at TIMESTAMPTZ DEFAULT now(),
+    	PRIMARY KEY (session_id, resource_id),
+    	FOREIGN KEY (session_id) REFERENCES session(id) ON DELETE CASCADE,
+    	FOREIGN KEY (resource_id) REFERENCES resource(id) ON DELETE CASCADE
+		);`)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

@@ -1,4 +1,4 @@
-package sessionresource
+package session_resource
 
 import (
 	"log/slog"
@@ -9,23 +9,21 @@ import (
 	"github.com/google/uuid"
 )
 
-func (h *Handler) GetSessionResources(c *fiber.Ctx) (*[]models.Resource, error) {
-	idStr := c.Params("id")
-	if idStr == "" {
-		return nil, errs.InvalidRequestData(map[string]string{"id": "Given Empty ID"})
-	}
-
-	sessionId, err := uuid.Parse(idStr)
-
+func (h *Handler) GetSessionResources(c *fiber.Ctx) error {
+	sessionId, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return nil, errs.InvalidRequestData(map[string]string{"id": "Invalid UUID format"})
+		return errs.InvalidRequestData(map[string]string{"id": "Invalid UUID format"})
 	}
 
 	var resources []models.Resource
 	if resources, err = h.sessionResourceRepository.GetResourcesBySessionID(c.Context(), sessionId); err != nil {
-		slog.Error("Failed to get session", "id", sessionId, "err", err)
-		return nil, errs.InternalServerError("Failed to retrieve session resources", err.Error())
+		slog.Error("Failed to get session's resources", "id", sessionId, "err", err)
+		return errs.InternalServerError("Failed to retrieve session resources", err.Error())
 	}
 
-	return &resources, nil
+	if resources == nil {
+		resources = []models.Resource{}
+	}
+
+	return c.JSON(resources)
 }

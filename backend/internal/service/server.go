@@ -5,6 +5,7 @@ import (
 	"specialstandard/internal/errs"
 	"specialstandard/internal/service/handler/resource"
 	"specialstandard/internal/service/handler/session"
+	"specialstandard/internal/service/handler/session_resource"
 	"specialstandard/internal/service/handler/student"
 	"specialstandard/internal/service/handler/theme"
 	"specialstandard/internal/service/handler/therapist"
@@ -86,12 +87,14 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	})
 	// Setup
 	sessionHandler := session.NewHandler(repo.Session)
+	sessionResourceHandler := session_resource.NewHandler(repo.SessionResource)
 	apiV1.Route("/sessions", func(r fiber.Router) {
 		r.Get("/", sessionHandler.GetSessions)
-		r.Get("/:id", sessionHandler.GetSessionByID)
-		r.Delete("/:id", sessionHandler.DeleteSessions)
 		r.Post("/", sessionHandler.PostSessions)
+		r.Get("/:id", sessionHandler.GetSessionByID)
+		r.Get("/:id/resources", sessionResourceHandler.GetSessionResources)
 		r.Patch("/:id", sessionHandler.PatchSessions)
+		r.Delete("/:id", sessionHandler.DeleteSessions)
 	})
 
 	studentHandler := student.NewHandler(repo.Student)
@@ -129,6 +132,11 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Get("/:id", resourceHandler.GetResourceByID)
 		r.Patch("/:id", resourceHandler.UpdateResource)
 		r.Delete("/:id", resourceHandler.DeleteResource)
+	})
+
+	apiV1.Route("/session-resource", func(r fiber.Router) {
+		r.Post("/", sessionResourceHandler.PostSessionResource)
+		r.Delete("/", sessionResourceHandler.DeleteSessionResource)
 	})
 
 	// Handle 404 - Route not found

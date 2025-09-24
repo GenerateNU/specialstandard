@@ -1,4 +1,4 @@
-package sessionresource
+package session_resource
 
 import (
 	"log/slog"
@@ -14,7 +14,7 @@ func (h *Handler) PostSessionResource(c *fiber.Ctx) error {
 	var sessionResource models.CreateSessionResource
 
 	if err := c.BodyParser(&sessionResource); err != nil {
-		return errs.InvalidJSON("Failed to parse PostSessionResource data")
+		return errs.InvalidJSON("Failed to parse PostSessionResource request body")
 	}
 
 	if validationErrors := h.validator.Validate(sessionResource); len(validationErrors) > 0 {
@@ -26,14 +26,8 @@ func (h *Handler) PostSessionResource(c *fiber.Ctx) error {
 		slog.Error("Failed to post session_resource", "err", err)
 		errStr := err.Error()
 		switch {
-		case strings.Contains(errStr, "foreign key"):
-			if strings.Contains(errStr, "session_id") {
-				return errs.NotFound("session not found")
-			}
-			if strings.Contains(errStr, "resource_id") {
-				return errs.NotFound("resource not found")
-			}
-			return errs.BadRequest("Invalid Reference")
+		case strings.Contains(errStr, "23503"): // foreign key violation
+			return errs.NotFound("session not found")
 		case strings.Contains(errStr, "check constraint"):
 			return errs.BadRequest("Violated a check constraint")
 		case strings.Contains(errStr, "connection refused"):

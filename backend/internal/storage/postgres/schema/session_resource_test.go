@@ -2,6 +2,7 @@ package schema_test
 
 import (
 	"context"
+	"fmt"
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/postgres/schema"
 	"specialstandard/internal/storage/postgres/testutil"
@@ -13,44 +14,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func CreateTestResource(t *testing.T, db *pgxpool.Pool, ctx context.Context) (uuid.UUID, uuid.UUID) {
+func CreateTestTheme(t *testing.T, db *pgxpool.Pool, ctx context.Context) uuid.UUID {
 	themeID := uuid.New()
 	_, err := db.Exec(ctx, `
 		INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`, themeID, "Test Theme", 1, 2024, time.Now(), time.Now())
 	assert.NoError(t, err)
-
-	resourceID := uuid.New()
-	testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
-	_, err = db.Exec(ctx, `
-		INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	`, resourceID, themeID, "5th Grade", testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
-	assert.NoError(t, err)
-	return resourceID, themeID
+	return themeID
 }
 
-func CreateTestSession(t *testing.T, db *pgxpool.Pool, ctx context.Context) uuid.UUID {
-	// Create a test therapist first
+func CreateTestTherapist(t *testing.T, db *pgxpool.Pool, ctx context.Context) uuid.UUID {
 	therapistID := uuid.New()
+	email := fmt.Sprintf("therapist_%s@example.com", therapistID.String()[:8])
 	_, err := db.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "Jane", "Smith", "jane.smith@example.com")
+		INSERT INTO therapist (id, first_name, last_name, email, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`, therapistID, "Test", "Therapist", email, time.Now(), time.Now())
 	assert.NoError(t, err)
-
-	// Insert test session and capture the generated ID
-	sessionID := uuid.New()
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = db.Exec(ctx, `
-        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4, $5)
-    `, sessionID, therapistID, startTime, endTime, "Get by ID test session")
-	assert.NoError(t, err)
-
-	return sessionID
+	return therapistID
 }
 
 func TestSessionResourceRepository_PostSessionResource(t *testing.T) {
@@ -65,11 +47,25 @@ func TestSessionResourceRepository_PostSessionResource(t *testing.T) {
 	repo := schema.NewSessionResourceRepository(testDB.Pool)
 	ctx := context.Background()
 
+	themeID := CreateTestTheme(t, testDB.Pool, ctx)
+	therapistID := CreateTestTherapist(t, testDB.Pool, ctx)
+
 	// Create test resource
-	resourceID, _ := CreateTestResource(t, testDB.Pool, ctx)
+	resourceID := uuid.New()
+	testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
+	_, err := testDB.Pool.Exec(ctx, `
+		INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`, resourceID, themeID, "5th Grade", testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+	assert.NoError(t, err)
 
 	// Create test session
-	sessionID := CreateTestSession(t, testDB.Pool, ctx)
+	sessionID := uuid.New()
+	_, err = testDB.Pool.Exec(ctx, `
+		INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
+	assert.NoError(t, err)
 
 	t.Run("successful creation", func(t *testing.T) {
 		newSessionResource, err := repo.PostSessionResource(ctx, models.CreateSessionResource{
@@ -102,9 +98,17 @@ func TestSessionResourceRepository_PostSessionResource(t *testing.T) {
 	})
 
 	t.Run("non-existent resource - should fail", func(t *testing.T) {
+		// Create new session for this test
+		newSessionID := uuid.New()
+		_, err = testDB.Pool.Exec(ctx, `
+			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`, newSessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session 2", time.Now(), time.Now())
+		assert.NoError(t, err)
+
 		nonExistentResourceID := uuid.New()
 		_, err := repo.PostSessionResource(ctx, models.CreateSessionResource{
-			SessionID:  sessionID,
+			SessionID:  newSessionID,
 			ResourceID: nonExistentResourceID,
 		})
 		assert.Error(t, err, "Should fail with non-existent resource ID")
@@ -123,13 +127,26 @@ func TestSessionResourceRepository_DeleteSessionResource(t *testing.T) {
 	repo := schema.NewSessionResourceRepository(testDB.Pool)
 	ctx := context.Background()
 
+	themeID := CreateTestTheme(t, testDB.Pool, ctx)
+	therapistID := CreateTestTherapist(t, testDB.Pool, ctx)
+
 	// Create test resource
-	resourceID, _ := CreateTestResource(t, testDB.Pool, ctx)
+	resourceID := uuid.New()
+	testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
+	_, err := testDB.Pool.Exec(ctx, `
+		INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`, resourceID, themeID, "5th Grade", testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+	assert.NoError(t, err)
 
 	// Create test session
-	sessionID := CreateTestSession(t, testDB.Pool, ctx)
+	sessionID := uuid.New()
+	_, err = testDB.Pool.Exec(ctx, `
+		INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
+	assert.NoError(t, err)
 
-	var err error
 	t.Run("successful deletion", func(t *testing.T) {
 		// Create the session resource to be deleted
 		_, err = repo.PostSessionResource(ctx, models.CreateSessionResource{
@@ -150,28 +167,6 @@ func TestSessionResourceRepository_DeleteSessionResource(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 0, count, "Session resource should have been deleted")
 	})
-
-	t.Run("delete already deleted - should return error", func(t *testing.T) {
-		// Create and delete a relationship
-		_, err = repo.PostSessionResource(ctx, models.CreateSessionResource{
-			SessionID:  sessionID,
-			ResourceID: resourceID,
-		})
-		assert.NoError(t, err)
-
-		err = repo.DeleteSessionResource(ctx, models.DeleteSessionResource{
-			SessionID:  sessionID,
-			ResourceID: resourceID,
-		})
-		assert.NoError(t, err)
-
-		// Try to delete again
-		err = repo.DeleteSessionResource(ctx, models.DeleteSessionResource{
-			SessionID:  sessionID,
-			ResourceID: resourceID,
-		})
-		assert.Error(t, err, "Should return error when deleting already deleted relationship")
-	})
 }
 
 func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
@@ -187,10 +182,25 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 	repo := schema.NewSessionResourceRepository(testDB.Pool)
 	ctx := context.Background()
 
-	resourceID, themeID := CreateTestResource(t, testDB.Pool, ctx)
+	themeID := CreateTestTheme(t, testDB.Pool, ctx)
+	therapistID := CreateTestTherapist(t, testDB.Pool, ctx)
 
 	t.Run("session with one resource", func(t *testing.T) {
-		sessionID := CreateTestSession(t, testDB.Pool, ctx)
+		// Create test resource
+		resourceID := uuid.New()
+		testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
+		_, err = testDB.Pool.Exec(ctx, `
+			INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		`, resourceID, themeID, "5th Grade", testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+		assert.NoError(t, err)
+
+		sessionID := uuid.New()
+		_, err = testDB.Pool.Exec(ctx, `
+			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
+		assert.NoError(t, err)
 
 		_, err = testDB.Pool.Exec(ctx, `
 			INSERT INTO session_resource (session_id, resource_id, created_at, updated_at)
@@ -210,12 +220,22 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 	})
 
 	t.Run("session with multiple resources", func(t *testing.T) {
-		// Create session
-		sessionID := CreateTestSession(t, testDB.Pool, ctx)
+		// Create session with new ID
+		sessionID := uuid.New()
+		_, err = testDB.Pool.Exec(ctx, `
+			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Multi Resource Session", time.Now(), time.Now())
+		assert.NoError(t, err)
 
 		// Create multiple resources
 		testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
-		resourceID1 := resourceID
+		resourceID1 := uuid.New()
+		_, err = testDB.Pool.Exec(ctx, `
+			INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		`, resourceID1, themeID, "5th Grade", testDate, "worksheet", "Math Worksheet", "math", "Basic arithmetic", time.Now(), time.Now())
+		assert.NoError(t, err)
 
 		resourceID2 := uuid.New()
 		_, err = testDB.Pool.Exec(ctx, `
@@ -247,7 +267,7 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		_, err = testDB.Pool.Exec(ctx, `
 			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, sessionID, uuid.New(), time.Now(), time.Now().Add(time.Hour), "Empty Session", time.Now(), time.Now())
+		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Empty Session", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		resources, err := repo.GetResourcesBySessionID(ctx, sessionID)

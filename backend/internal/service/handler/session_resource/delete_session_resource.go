@@ -1,4 +1,4 @@
-package sessionresource
+package session_resource
 
 import (
 	"log/slog"
@@ -26,16 +26,8 @@ func (h *Handler) DeleteSessionResource(c *fiber.Ctx) error {
 		slog.Error("Failed to delete session_resource", "err", err)
 		errStr := err.Error()
 		switch {
-		case strings.Contains(errStr, "foreign key"):
-			if strings.Contains(errStr, "session_id") {
-				return errs.NotFound("session not found")
-			}
-			if strings.Contains(errStr, "resource_id") {
-				return errs.NotFound("resource not found")
-			}
-			return errs.BadRequest("Invalid Reference")
-		case strings.Contains(errStr, "check constraint"):
-			return errs.BadRequest("Violated a check constraint")
+		case strings.Contains(errStr, "23503") || strings.Contains(errStr, "relationship not found"): // foreign key violation
+			return errs.NotFound("session or resource not found")
 		case strings.Contains(errStr, "connection refused"):
 			return errs.InternalServerError("Database Connection Error")
 		default:
