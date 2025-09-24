@@ -58,6 +58,12 @@ type ResourceRepository interface {
 	DeleteResource(ctx context.Context, id uuid.UUID) error
 }
 
+type SessionResourceRepository interface {
+	PostSessionResource(ctx context.Context, sessionResource models.CreateSessionResource) (*models.SessionResource, error)
+	DeleteSessionResource(ctx context.Context, sessionResource models.DeleteSessionResource) error
+	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID) ([]models.Resource, error)
+}
+
 type Repository struct {
 	Resource       ResourceRepository
 	db             *pgxpool.Pool
@@ -66,6 +72,7 @@ type Repository struct {
 	Theme          ThemeRepository
 	Therapist      TherapistRepository
 	SessionStudent SessionStudentRepository
+  SessionResource SessionResourceRepository
 }
 
 func (r *Repository) Close() error {
@@ -86,5 +93,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		Theme:          schema.NewThemeRepository(db),
 		Therapist:      schema.NewTherapistRepository(db),
 		SessionStudent: schema.NewSessionStudentRepository(db),
+		SessionResource: schema.NewSessionResourceRepository(db),
 	}
 }
