@@ -838,7 +838,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /resources/:id:
+  /resources/{id}:
     get:
       summary: Get resource by ID
       description: Retrieve a specific resource by its ID
@@ -939,6 +939,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/ModifySessionResource"
+            example:
+              session_id: "123e4567-e89b-12d3-a456-426614174001"
+              resource_id: "123e4567-e89b-12d3-a456-426614174002"
       responses:
         "200":
           description: Session-resource link created successfully
@@ -947,7 +950,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/SessionResource"
               example:
-                id: "123e4567-e89b-12d3-a456-426614174000"
                 session_id: "123e4567-e89b-12d3-a456-426614174001"
                 resource_id: "123e4567-e89b-12d3-a456-426614174002"
                 created_at: "2025-09-13T17:19:00Z"
@@ -976,9 +978,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-                example:
-                  session_id: "123e4567-e89b-12d3-a456-426614174001"
-                  resource_id: "123e4567-e89b-12d3-a456-426614174002"
     delete:
       summary: Delete a session-resource link
       description: Delete an existing association between a session and a resource
@@ -1692,6 +1691,30 @@ components:
           description: Content/URL of the resource (optional)
           example: "https://example.com/resource"
     SessionResource:
+      type: object
+      required:
+        - sessionId
+        - resourceId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: ID of completed session
+        resourceId:
+          type: string
+          format: uuid
+          description: ID of referenced resource
+        createdAt:
+          type: string
+          format: date-time
+          description: When the session-resource link was created
+          example: "2025-09-13T17:19:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the session-resource link was last updated
+          example: "2025-09-13T17:19:00Z"
+    ModifySessionResource:
       type: object
       required:
         - sessionId
