@@ -1237,7 +1237,8 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 			mockSessionStudentRepo.AssertExpectations(t)
 		})
 	}
-  
+}
+
 func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
 	sessionID := uuid.New()
