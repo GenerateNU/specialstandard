@@ -31,7 +31,7 @@ func (h *Handler) DeleteSessionResource(c *fiber.Ctx) error {
 		case strings.Contains(errStr, "connection refused"):
 			return errs.InternalServerError("Database Connection Error")
 		default:
-			return errs.InternalServerError("Failed to Create Session Resource")
+			return errs.InternalServerError("Failed to Delete Session Resource")
 		}
 	}
 
