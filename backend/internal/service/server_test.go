@@ -1018,7 +1018,8 @@ func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 
 	var resources []models.Resource
-	json.NewDecoder(resp.Body).Decode(&resources)
+	err = json.NewDecoder(resp.Body).Decode(&resources)
+	assert.NoError(t, err)
 	assert.Len(t, resources, 2)
 
 	mockSessionResourceRepo.AssertExpectations(t)
@@ -1042,7 +1043,8 @@ func TestGetResourcesBySessionIDEndpoint_EmptyArray(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 
 	var resources []models.Resource
-	json.NewDecoder(resp.Body).Decode(&resources)
+	err = json.NewDecoder(resp.Body).Decode(&resources)
+	assert.NoError(t, err)
 	assert.Empty(t, resources)
 
 	mockSessionResourceRepo.AssertExpectations(t)
@@ -1118,7 +1120,8 @@ func TestPostSessionResourceEndpoint_Success(t *testing.T) {
 	assert.Equal(t, 201, resp.StatusCode)
 
 	var sessionResource models.SessionResource
-	json.NewDecoder(resp.Body).Decode(&sessionResource)
+	err = json.NewDecoder(resp.Body).Decode(&sessionResource)
+	assert.NoError(t, err)
 	assert.Equal(t, createReq.SessionID, sessionResource.SessionID)
 	assert.Equal(t, createReq.ResourceID, sessionResource.ResourceID)
 
