@@ -52,3 +52,11 @@ func (m *MockSessionRepository) PatchSession(ctx context.Context, id uuid.UUID, 
 	}
 	return args.Get(0).(*models.Session), args.Error(1)
 }
+
+func (m *MockSessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID) ([]models.SessionStudentsOutput, error) {
+	args := m.Called(ctx, sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.SessionStudentsOutput), args.Error(1)
+}

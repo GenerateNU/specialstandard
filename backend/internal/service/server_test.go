@@ -1,6 +1,8 @@
 package service_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http/httptest"
@@ -20,6 +22,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -1091,4 +1094,630 @@ func TestDeleteResourceEndpoint_NotFound(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 404, resp.StatusCode)
 	mockResourceRepo.AssertExpectations(t)
+}
+
+func TestCreateSessionStudentEndpoint(t *testing.T) {
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockSessionStudentRepository)
+		expectedStatusCode int
+	}{
+		{
+			name: "Successful creation",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true,
+				"notes": "Student participated well in group activities"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
+
+				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&models.SessionStudent{
+					SessionID: sessionID,
+					StudentID: studentID,
+					Present:   true,
+					Notes:     ptrString("Student participated well in group activities"),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}, nil)
+			},
+			expectedStatusCode: fiber.StatusCreated,
+		},
+		{
+			name: "Missing session ID",
+			payload: `{
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Invalid JSON format",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": /* missing comma */
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Duplicate relationship",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true,
+				"notes": "Duplicate entry"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
+			},
+			expectedStatusCode: fiber.StatusConflict,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			tt.mockSetup(mockSessionStudentRepo)
+
+			repo := &storage.Repository{
+				SessionStudent: mockSessionStudentRepo,
+			}
+			app := service.SetupApp(config.Config{}, repo)
+
+			req := httptest.NewRequest("POST", "/api/v1/session_students", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			res, err := app.Test(req, -1)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockSessionStudentRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestDeleteSessionStudentEndpoint(t *testing.T) {
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockSessionStudentRepository)
+		expectedStatusCode int
+	}{
+		{
+			name: "Successful deletion",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("DeleteSessionStudent", mock.Anything, mock.AnythingOfType("*models.DeleteSessionStudentInput")).Return(nil)
+			},
+			expectedStatusCode: fiber.StatusNoContent,
+		},
+		{
+			name: "Missing student ID",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000"
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Invalid JSON format",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": /* missing comma */
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Relationship not found",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("DeleteSessionStudent", mock.Anything, mock.AnythingOfType("*models.DeleteSessionStudentInput")).Return(errors.New("no rows affected"))
+			},
+			expectedStatusCode: fiber.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			tt.mockSetup(mockSessionStudentRepo)
+
+			repo := &storage.Repository{
+				SessionStudent: mockSessionStudentRepo,
+			}
+			app := service.SetupApp(config.Config{}, repo)
+
+			req := httptest.NewRequest("DELETE", "/api/v1/session_students", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			res, err := app.Test(req, -1)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockSessionStudentRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestPatchSessionStudentEndpoint(t *testing.T) {
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockSessionStudentRepository)
+		expectedStatusCode int
+	}{
+		{
+			name: "Successful patch - present only",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": false
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
+
+				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+					SessionID: sessionID,
+					StudentID: studentID,
+					Present:   false,
+					Notes:     ptrString("Original notes"),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}, nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			name: "Successful patch - notes only",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"notes": "Updated progress notes"
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
+
+				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+					SessionID: sessionID,
+					StudentID: studentID,
+					Present:   true,
+					Notes:     ptrString("Updated progress notes"),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}, nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			name: "Missing session ID",
+			payload: `{
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true
+			}`,
+			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Relationship not found",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("no rows affected"))
+			},
+			expectedStatusCode: fiber.StatusNotFound,
+		},
+		{
+			name: "Foreign key violation",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"present": true
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("foreign key violation"))
+			},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			tt.mockSetup(mockSessionStudentRepo)
+
+			repo := &storage.Repository{
+				SessionStudent: mockSessionStudentRepo,
+			}
+			app := service.SetupApp(config.Config{}, repo)
+
+			req := httptest.NewRequest("PATCH", "/api/v1/session_students", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			res, err := app.Test(req, -1)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockSessionStudentRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	sessionID := uuid.New()
+
+	expectedResources := []models.Resource{
+		{
+			ID:         uuid.New(),
+			ThemeID:    uuid.New(),
+			GradeLevel: ptrString("5th Grade"),
+			Type:       ptrString("worksheet"),
+			Title:      ptrString("Math Worksheet"),
+			Category:   ptrString("math"),
+			Content:    ptrString("Basic arithmetic"),
+		},
+		{
+			ID:         uuid.New(),
+			ThemeID:    uuid.New(),
+			GradeLevel: ptrString("5th Grade"),
+			Type:       ptrString("activity"),
+			Title:      ptrString("Reading Activity"),
+			Category:   ptrString("language"),
+			Content:    ptrString("Comprehension exercise"),
+		},
+	}
+
+	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID).Return(expectedResources, nil)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	var resources []models.Resource
+	err = json.NewDecoder(resp.Body).Decode(&resources)
+	assert.NoError(t, err)
+	assert.Len(t, resources, 2)
+
+	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+func TestGetResourcesBySessionIDEndpoint_EmptyArray(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	sessionID := uuid.New()
+
+	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID).Return([]models.Resource{}, nil)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	var resources []models.Resource
+	err = json.NewDecoder(resp.Body).Decode(&resources)
+	assert.NoError(t, err)
+	assert.Empty(t, resources)
+
+	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+func TestGetResourcesBySessionIDEndpoint_InvalidUUID(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/sessions/invalid-uuid/resources", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 400, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertNotCalled(t, "GetResourcesBySessionID")
+}
+
+func TestGetResourcesBySessionIDEndpoint_InternalError(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	sessionID := uuid.New()
+
+	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID).Return(nil, errors.New("database error"))
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 500, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+// POST /session-resource tests
+
+func TestPostSessionResourceEndpoint_Success(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	createReq := models.CreateSessionResource{
+		SessionID:  uuid.New(),
+		ResourceID: uuid.New(),
+	}
+
+	expectedResponse := &models.SessionResource{
+		SessionID:  createReq.SessionID,
+		ResourceID: createReq.ResourceID,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+
+	mockSessionResourceRepo.On("PostSessionResource", mock.Anything, createReq).Return(expectedResponse, nil)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	body, _ := json.Marshal(createReq)
+	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 201, resp.StatusCode)
+
+	var sessionResource models.SessionResource
+	err = json.NewDecoder(resp.Body).Decode(&sessionResource)
+	assert.NoError(t, err)
+	assert.Equal(t, createReq.SessionID, sessionResource.SessionID)
+	assert.Equal(t, createReq.ResourceID, sessionResource.ResourceID)
+
+	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+func TestPostSessionResourceEndpoint_SessionNotFound(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	createReq := models.CreateSessionResource{
+		SessionID:  uuid.New(),
+		ResourceID: uuid.New(),
+	}
+
+	pgErr := &pgconn.PgError{
+		Code:   "23503",
+		Detail: "Key (session_id)=(xxx) is not present in table",
+	}
+
+	mockSessionResourceRepo.On("PostSessionResource", mock.Anything, createReq).Return((*models.SessionResource)(nil), pgErr)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	body, _ := json.Marshal(createReq)
+	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+func TestPostSessionResourceEndpoint_ResourceNotFound(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	createReq := models.CreateSessionResource{
+		SessionID:  uuid.New(),
+		ResourceID: uuid.New(),
+	}
+
+	pgErr := &pgconn.PgError{
+		Code:   "23503",
+		Detail: "Key (resource_id)=(xxx) is not present in table",
+	}
+
+	mockSessionResourceRepo.On("PostSessionResource", mock.Anything, createReq).Return((*models.SessionResource)(nil), pgErr)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	body, _ := json.Marshal(createReq)
+	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+func TestPostSessionResourceEndpoint_InvalidBody(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader([]byte(`{"invalid": "json"`)))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 400, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertNotCalled(t, "PostSessionResource")
+}
+
+func TestPostSessionResourceEndpoint_MissingFields(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	body := `{"session_id": ""}`
+	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader([]byte(body)))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 400, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertNotCalled(t, "PostSessionResource")
+}
+
+// DELETE /session-resource tests
+
+func TestDeleteSessionResourceEndpoint_Success(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	deleteReq := models.DeleteSessionResource{
+		SessionID:  uuid.New(),
+		ResourceID: uuid.New(),
+	}
+
+	mockSessionResourceRepo.On("DeleteSessionResource", mock.Anything, deleteReq).Return(nil)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	body, _ := json.Marshal(deleteReq)
+	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+func TestDeleteSessionResourceEndpoint_NotFound(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	deleteReq := models.DeleteSessionResource{
+		SessionID:  uuid.New(),
+		ResourceID: uuid.New(),
+	}
+
+	mockSessionResourceRepo.On("DeleteSessionResource", mock.Anything, deleteReq).
+		Return(fiber.NewError(fiber.StatusNotFound, "session resource relationship not found"))
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	body, _ := json.Marshal(deleteReq)
+	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+func TestDeleteSessionResourceEndpoint_InvalidBody(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader([]byte(`{"invalid": "json"`)))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 400, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertNotCalled(t, "DeleteSessionResource")
+}
+
+func TestDeleteSessionResourceEndpoint_MissingFields(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	body := `{"session_id": ""}`
+	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader([]byte(body)))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 400, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertNotCalled(t, "DeleteSessionResource")
+}
+
+func TestDeleteSessionResourceEndpoint_InternalError(t *testing.T) {
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+
+	deleteReq := models.DeleteSessionResource{
+		SessionID:  uuid.New(),
+		ResourceID: uuid.New(),
+	}
+
+	mockSessionResourceRepo.On("DeleteSessionResource", mock.Anything, deleteReq).Return(errors.New("database error"))
+
+	repo := &storage.Repository{
+		SessionResource: mockSessionResourceRepo,
+	}
+	app := service.SetupApp(config.Config{}, repo)
+
+	body, _ := json.Marshal(deleteReq)
+	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 500, resp.StatusCode)
+
+	mockSessionResourceRepo.AssertExpectations(t)
 }

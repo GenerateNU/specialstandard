@@ -17,6 +17,13 @@ type SessionRepository interface {
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	PostSession(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
+	GetSessionStudents(ctx context.Context, sessionID uuid.UUID) ([]models.SessionStudentsOutput, error)
+}
+
+type SessionStudentRepository interface {
+	CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*models.SessionStudent, error)
+	DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error
+	PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error)
 }
 
 type StudentRepository interface {
@@ -25,10 +32,15 @@ type StudentRepository interface {
 	AddStudent(ctx context.Context, student models.Student) (models.Student, error)
 	UpdateStudent(ctx context.Context, student models.Student) (models.Student, error)
 	DeleteStudent(ctx context.Context, id uuid.UUID) error
+	GetStudentSessions(ctx context.Context, studentID uuid.UUID) ([]models.StudentSessionsOutput, error)
 }
 
 type ThemeRepository interface {
 	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)
+	GetThemes(ctx context.Context) ([]models.Theme, error)
+	GetThemeByID(ctx context.Context, id uuid.UUID) (*models.Theme, error)
+	PatchTheme(ctx context.Context, id uuid.UUID, theme *models.UpdateThemeInput) (*models.Theme, error)
+	DeleteTheme(ctx context.Context, id uuid.UUID) error
 }
 
 type TherapistRepository interface {
@@ -47,13 +59,21 @@ type ResourceRepository interface {
 	DeleteResource(ctx context.Context, id uuid.UUID) error
 }
 
+type SessionResourceRepository interface {
+	PostSessionResource(ctx context.Context, sessionResource models.CreateSessionResource) (*models.SessionResource, error)
+	DeleteSessionResource(ctx context.Context, sessionResource models.DeleteSessionResource) error
+	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID) ([]models.Resource, error)
+}
+
 type Repository struct {
-	db        *pgxpool.Pool
-	Session   SessionRepository
-	Student   StudentRepository
-	Therapist TherapistRepository
-	Resource  ResourceRepository
-	Theme     ThemeRepository
+	Resource       ResourceRepository
+	db             *pgxpool.Pool
+	Session        SessionRepository
+	Student        StudentRepository
+	Theme          ThemeRepository
+	Therapist      TherapistRepository
+	SessionStudent SessionStudentRepository
+  SessionResource SessionResourceRepository
 }
 
 func (r *Repository) Close() error {
@@ -67,11 +87,13 @@ func (r *Repository) GetDB() *pgxpool.Pool {
 
 func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{
-		db:        db,
-		Session:   schema.NewSessionRepository(db),
-		Student:   schema.NewStudentRepository(db),
-		Theme:     schema.NewThemeRepository(db),
-		Therapist: schema.NewTherapistRepository(db),
-		Resource:  schema.NewResourceRepository(db),
+		db:             db,
+		Resource:       schema.NewResourceRepository(db),
+		Session:        schema.NewSessionRepository(db),
+		Student:        schema.NewStudentRepository(db),
+		Theme:          schema.NewThemeRepository(db),
+		Therapist:      schema.NewTherapistRepository(db),
+		SessionStudent: schema.NewSessionStudentRepository(db),
+		SessionResource: schema.NewSessionResourceRepository(db),
 	}
 }

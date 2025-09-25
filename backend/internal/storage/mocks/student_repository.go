@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"specialstandard/internal/models"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
@@ -33,8 +34,16 @@ func (m *MockStudentRepository) AddStudent(ctx context.Context, student models.S
 }
 
 func (m *MockStudentRepository) UpdateStudent(ctx context.Context, student models.Student) (models.Student, error) {
-    args := m.Called(ctx, student)
-    return args.Get(0).(models.Student), args.Error(1)
+	args := m.Called(ctx, student)
+	return args.Get(0).(models.Student), args.Error(1)
+}
+
+func (m *MockStudentRepository) GetStudentSessions(ctx context.Context, studentID uuid.UUID) ([]models.StudentSessionsOutput, error) {
+	args := m.Called(ctx, studentID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.StudentSessionsOutput), args.Error(1)
 }
 
 func (m *MockStudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) error {
