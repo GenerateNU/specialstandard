@@ -120,16 +120,17 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 	}
 }
 
-func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID) ([]models.SessionStudentsOutput, error) {
+func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error) {
 	query := `
 	SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
 	       s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 
 	       s.grade, s.iep, s.created_at, s.updated_at
 	FROM session_student ss
 	JOIN student s ON ss.student_id = s.id
-	WHERE ss.session_id = $1`
+	WHERE ss.session_id = $1
+	LIMIT $2 OFFSET $3`
 
-	rows, err := r.db.Query(ctx, query, sessionID)
+	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
 	if err != nil {
 		return nil, err
 	}

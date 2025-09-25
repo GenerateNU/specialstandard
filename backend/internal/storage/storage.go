@@ -17,7 +17,7 @@ type SessionRepository interface {
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	PostSession(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
-	GetSessionStudents(ctx context.Context, sessionID uuid.UUID) ([]models.SessionStudentsOutput, error)
+	GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error)
 }
 
 type SessionStudentRepository interface {
@@ -66,14 +66,14 @@ type SessionResourceRepository interface {
 }
 
 type Repository struct {
-	Resource       ResourceRepository
-	db             *pgxpool.Pool
-	Session        SessionRepository
-	Student        StudentRepository
-	Theme          ThemeRepository
-	Therapist      TherapistRepository
-	SessionStudent SessionStudentRepository
-  SessionResource SessionResourceRepository
+	Resource        ResourceRepository
+	db              *pgxpool.Pool
+	Session         SessionRepository
+	Student         StudentRepository
+	Theme           ThemeRepository
+	Therapist       TherapistRepository
+	SessionStudent  SessionStudentRepository
+	SessionResource SessionResourceRepository
 }
 
 func (r *Repository) Close() error {
@@ -87,13 +87,13 @@ func (r *Repository) GetDB() *pgxpool.Pool {
 
 func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{
-		db:             db,
-		Resource:       schema.NewResourceRepository(db),
-		Session:        schema.NewSessionRepository(db),
-		Student:        schema.NewStudentRepository(db),
-		Theme:          schema.NewThemeRepository(db),
-		Therapist:      schema.NewTherapistRepository(db),
-		SessionStudent: schema.NewSessionStudentRepository(db),
+		db:              db,
+		Resource:        schema.NewResourceRepository(db),
+		Session:         schema.NewSessionRepository(db),
+		Student:         schema.NewStudentRepository(db),
+		Theme:           schema.NewThemeRepository(db),
+		Therapist:       schema.NewTherapistRepository(db),
+		SessionStudent:  schema.NewSessionStudentRepository(db),
 		SessionResource: schema.NewSessionResourceRepository(db),
 	}
 }
