@@ -82,7 +82,7 @@ func TestHandler_GetSessions(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name: "Default Pagination",
+			name: "Pagination Parameters",
 			url:  "?page=2&limit=5",
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				pagination := utils.Pagination{

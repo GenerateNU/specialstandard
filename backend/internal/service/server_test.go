@@ -144,7 +144,7 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
-	mockStudentRepo.On("GetStudents", mock.Anything).Return([]models.Student{
+	mockStudentRepo.On("GetStudents", mock.Anything, utils.NewPagination()).Return([]models.Student{
 		{
 			ID:          uuid.New(),
 			FirstName:   "Emma",
