@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 	"strings"
 
 	"github.com/google/uuid"
@@ -42,13 +43,14 @@ func (r *ThemeRepository) CreateTheme(ctx context.Context, input *models.CreateT
 	return theme, nil
 }
 
-func (r *ThemeRepository) GetThemes(ctx context.Context) ([]models.Theme, error) {
+func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagination) ([]models.Theme, error) {
 	query := `
 	SELECT id, theme_name, month, year, created_at, updated_at
 	FROM theme
-	ORDER BY year DESC, month DESC`
+	ORDER BY year DESC, month DESC
+	LIMIT $1 OFFSET $2`
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GettOffset())
 
 	if err != nil {
 		return nil, errs.InternalServerError("Database connection error")
@@ -151,7 +153,7 @@ func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 	if err != nil {
 		return errs.InternalServerError("Database connection error")
 	}
-	
+
 	return nil
 }
 

@@ -2,6 +2,8 @@ package schema_test
 
 import (
 	"context"
+	"fmt"
+	"specialstandard/internal/utils"
 	"testing"
 	"time"
 
@@ -41,7 +43,7 @@ func TestThemeRepository_CreateTheme(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, theme)
-	
+
 	if theme != nil {
 		assert.NotEqual(t, uuid.Nil, theme.ID)
 		assert.Equal(t, "Spring 2024", theme.Name)
@@ -94,12 +96,12 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test
-	themes, err := repo.GetThemes(ctx)
+	themes, err := repo.GetThemes(ctx, utils.NewPagination())
 
 	// Assert
 	assert.NoError(t, err)
 	assert.Len(t, themes, 2)
-	
+
 	// Themes should be ordered by year DESC, month DESC
 	// Both are 2024, so Summer (month 6) should come before Spring (month 3)
 	assert.Equal(t, "Summer 2024", themes[0].Name)
@@ -107,11 +109,34 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	assert.Equal(t, theme2ID, themes[0].ID)
 	assert.Equal(t, theme1ID, themes[1].ID)
 
+	// More Tests for Pagination Behaviour
+	for i := 3; i <= 12; i++ {
+		_, err := testDB.Pool.Exec(ctx, `
+            INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            `, uuid.New(), fmt.Sprintf("Spring 20%d", i), 4, 2024, time.Now(), time.Now())
+		assert.NoError(t, err)
+	}
+
+	themes, err = repo.GetThemes(ctx, utils.NewPagination())
+
+	assert.NoError(t, err)
+	assert.Len(t, themes, 10)
+
+	themes, err = repo.GetThemes(ctx, utils.Pagination{
+		Page:  2,
+		Limit: 10,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, themes, 2)
+	assert.Equal(t, "Spring 2012", themes[0].Name)
+
 	// Test empty result
 	_, err = testDB.Pool.Exec(ctx, "DELETE FROM theme")
 	assert.NoError(t, err)
-	
-	themes, err = repo.GetThemes(ctx)
+
+	themes, err = repo.GetThemes(ctx, utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, themes, 0)
 }
@@ -191,7 +216,7 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 	assert.NotNil(t, theme)
 	assert.Equal(t, themeID, theme.ID)
 	assert.Equal(t, "Winter Wonderland 2024", theme.Name)
-	assert.Equal(t, 12, theme.Month) // Unchanged
+	assert.Equal(t, 12, theme.Month)  // Unchanged
 	assert.Equal(t, 2024, theme.Year) // Unchanged
 
 	// Test patch with multiple fields
@@ -205,8 +230,8 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, "Winter Wonderland 2024", theme.Name) // Unchanged from previous update
-	assert.Equal(t, 1, theme.Month) // Updated
-	assert.Equal(t, 2025, theme.Year) // Updated
+	assert.Equal(t, 1, theme.Month)                       // Updated
+	assert.Equal(t, 2025, theme.Year)                     // Updated
 
 	// Test not found
 	nonExistentID := uuid.New()

@@ -1352,6 +1352,19 @@ paths:
       summary: Get all themes
       description: Retrieve all themes from the database
       tags: [Themes]
+      parameters:
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of themes
