@@ -62,7 +62,7 @@ type ResourceRepository interface {
 type SessionResourceRepository interface {
 	PostSessionResource(ctx context.Context, sessionResource models.CreateSessionResource) (*models.SessionResource, error)
 	DeleteSessionResource(ctx context.Context, sessionResource models.DeleteSessionResource) error
-	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID) ([]models.Resource, error)
+	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error)
 }
 
 type Repository struct {

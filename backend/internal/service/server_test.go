@@ -1381,7 +1381,7 @@ func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 		},
 	}
 
-	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID).Return(expectedResources, nil)
+	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID, utils.NewPagination()).Return(expectedResources, nil)
 
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,

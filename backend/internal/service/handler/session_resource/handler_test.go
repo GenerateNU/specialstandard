@@ -10,6 +10,7 @@ import (
 	"specialstandard/internal/models"
 	"specialstandard/internal/service/handler/session_resource"
 	"specialstandard/internal/storage/mocks"
+	"specialstandard/internal/utils"
 	"testing"
 	"time"
 
@@ -31,13 +32,15 @@ func TestHandler_GetSessionResources(t *testing.T) {
 	tests := []struct {
 		name           string
 		sessionID      string
+		url            string
 		mockSetup      func(*mocks.MockSessionResourceRepository)
 		expectedStatus int
 		wantErr        bool
 	}{
 		{
-			name:      "successful get resources - multiple resources",
+			name:      "successful get resources - multiple resources with default pagination",
 			sessionID: uuid.New().String(),
+			url:       "",
 			mockSetup: func(m *mocks.MockSessionResourceRepository) {
 				resources := []models.Resource{
 					{
@@ -65,7 +68,7 @@ func TestHandler_GetSessionResources(t *testing.T) {
 						UpdatedAt:  ptrTime(time.Now()),
 					},
 				}
-				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(resources, nil)
+				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID"), utils.NewPagination()).Return(resources, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -73,8 +76,9 @@ func TestHandler_GetSessionResources(t *testing.T) {
 		{
 			name:      "successful get resources - empty array",
 			sessionID: uuid.New().String(),
+			url:       "",
 			mockSetup: func(m *mocks.MockSessionResourceRepository) {
-				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return([]models.Resource{}, nil)
+				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID"), utils.NewPagination()).Return([]models.Resource{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -82,8 +86,9 @@ func TestHandler_GetSessionResources(t *testing.T) {
 		{
 			name:      "repository returns nil - converts to empty array",
 			sessionID: uuid.New().String(),
+			url:       "",
 			mockSetup: func(m *mocks.MockSessionResourceRepository) {
-				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(([]models.Resource)(nil), nil)
+				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID"), utils.NewPagination()).Return(([]models.Resource)(nil), nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -91,11 +96,43 @@ func TestHandler_GetSessionResources(t *testing.T) {
 		{
 			name:      "repository error",
 			sessionID: uuid.New().String(),
+			url:       "",
 			mockSetup: func(m *mocks.MockSessionResourceRepository) {
-				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(nil, errors.New("database error"))
+				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID"), utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			sessionID:      uuid.New().String(),
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockSessionResourceRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			sessionID:      uuid.New().String(),
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockSessionResourceRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			wantErr:        true,
+		},
+		{
+			name:      "Pagination Parameters",
+			sessionID: uuid.New().String(),
+			url:       "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockSessionResourceRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetResourcesBySessionID", mock.Anything, mock.AnythingOfType("uuid.UUID"), pagination).Return([]models.Resource{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
 		},
 	}
 
@@ -142,7 +179,7 @@ func TestHandler_GetSessionResources(t *testing.T) {
 			handler := session_resource.NewHandler(mockRepo)
 			app.Get("/sessions/:id/resources", handler.GetSessionResources)
 
-			req := httptest.NewRequest("GET", fmt.Sprintf("/sessions/%s/resources", tt.sessionID), nil)
+			req := httptest.NewRequest("GET", fmt.Sprintf("/sessions/%s/resources", tt.sessionID)+tt.url, nil)
 			resp, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
