@@ -334,6 +334,12 @@ paths:
             type: string
             format: uuid
             example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: present
+          in: query
+          required: false
+          description: Filter students by attendance status
+          schema:
+            type: boolean
         - name: page
           in: query
           description: Page Number of pagination
@@ -346,12 +352,6 @@ paths:
           schema:
             type: integer
             minimum: 1
-        - name: present
-          in: query
-          required: false
-          description: Filter students by attendance status
-          schema:
-            type: boolean
       responses:
         "200":
           description: List of students with session relationship details
@@ -639,18 +639,6 @@ paths:
             type: string
             format: uuid
             example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        - name: page
-          in: query
-          description: Page Number of pagination
-          schema:
-            type: integer
-            minimum: 1
-        - name: limit
-          in: query
-          description: Number of Items per page in pagination
-          schema:
-            type: integer
-            minimum: 1
         - name: start_date
           in: query
           required: false
@@ -671,6 +659,18 @@ paths:
           description: Filter sessions by student's attendance status
           schema:
             type: boolean
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of sessions with student relationship details

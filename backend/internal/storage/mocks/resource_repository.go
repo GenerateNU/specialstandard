@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,8 +24,8 @@ func (m *MockResourceRepository) GetResourceByID(ctx context.Context, id uuid.UU
 	return args.Get(0).(*models.Resource), args.Error(1)
 }
 
-func (m *MockResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time) ([]models.Resource, error) {
-	args := m.Called(ctx, theme_id, gradeLevel, res_type, title, category, content, date)
+func (m *MockResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time, pagination utils.Pagination) ([]models.Resource, error) {
+	args := m.Called(ctx, theme_id, gradeLevel, res_type, title, category, content, date, pagination)
 	return args.Get(0).([]models.Resource), args.Error(1)
 }
 

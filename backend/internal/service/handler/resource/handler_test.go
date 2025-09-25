@@ -5,6 +5,8 @@ import (
 	"errors"
 	"io"
 	"net/http/httptest"
+	"specialstandard/internal/errs"
+	"specialstandard/internal/utils"
 	"strings"
 	"testing"
 
@@ -131,46 +133,77 @@ func TestHandler_GetResource(t *testing.T) {
 func TestHandler_GetResources(t *testing.T) {
 	tests := []struct {
 		name           string
+		url            string
 		mockSetup      func(*mocks.MockResourceRepository)
 		expectedStatus int
 	}{
 		{
-			name: "successful_get_resources",
+			name: "successful_get_resources with default pagination",
+			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
 				resources := []models.Resource{
 					{ID: uuid.New(), Title: ptrString("Resource1"), Type: ptrString("doc")},
 				}
 				// Fix: Use mock.Anything for all parameters
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resources, nil)
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return(resources, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 		},
 		{
 			name: "empty_resources_list",
+			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]models.Resource{}, nil)
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 		},
 		{
 			name: "repository_error",
+			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]models.Resource(nil), errors.New("database error"))
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource(nil), errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockResourceRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockResourceRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+		},
+		{
+			name: "Pagination Parameters",
+			url:  "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockResourceRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, pagination).Return([]models.Resource{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockResourceRepository)
 			tt.mockSetup(mockRepo)
 
 			handler := resource.NewHandler(mockRepo)
 			app.Get("/resources", handler.GetResources)
 
-			req := httptest.NewRequest("GET", "/resources", nil)
+			req := httptest.NewRequest("GET", "/resources"+tt.url, nil)
 			resp, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)

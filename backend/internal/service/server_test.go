@@ -955,7 +955,7 @@ func TestCreateResourceEndpoint(t *testing.T) {
 
 func TestGetResourcesEndpoint(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
-	mockResourceRepo.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]models.Resource{
+	mockResourceRepo.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource{
 		{
 			ID:    uuid.New(),
 			Title: ptrString("Resource1"),

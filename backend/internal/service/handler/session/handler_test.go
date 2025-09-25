@@ -38,7 +38,7 @@ func TestHandler_GetSessions(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			name: "successful get sessions",
+			name: "successful get sessions with default pagination",
 			url:  "",
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				sessions := []models.Session{
