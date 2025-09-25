@@ -497,6 +497,19 @@ paths:
       summary: Get all therapists
       description: Retrieve all therapists from the database
       tags: [Therapists]
+      parameters:
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: A list of Therapists

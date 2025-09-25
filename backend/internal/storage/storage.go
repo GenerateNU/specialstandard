@@ -33,7 +33,7 @@ type ThemeRepository interface {
 
 type TherapistRepository interface {
 	GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error)
-	GetTherapists(ctx context.Context) ([]models.Therapist, error)
+	GetTherapists(ctx context.Context, pagination utils.Pagination) ([]models.Therapist, error)
 	CreateTherapist(ctx context.Context, therapist *models.CreateTherapistInput) (*models.Therapist, error)
 	DeleteTherapist(ctx context.Context, therapistID string) error
 	PatchTherapist(ctx context.Context, therapistID string, updatedValue *models.UpdateTherapist) (*models.Therapist, error)

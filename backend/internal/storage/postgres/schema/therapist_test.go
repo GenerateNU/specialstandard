@@ -2,6 +2,8 @@ package schema_test
 
 import (
 	"context"
+	"fmt"
+	"specialstandard/internal/utils"
 	"testing"
 	"time"
 
@@ -67,12 +69,36 @@ func TestSessionRepository_GetTherapists(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test
-	therapists, err := repo.GetTherapists(ctx)
+	therapists, err := repo.GetTherapists(ctx, utils.NewPagination())
 
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, "Matula", therapists[0].LastName)
 	assert.Equal(t, therapistID, therapists[0].ID) // Optional: verify the therapist ID matches
+
+	// More Tests for Pagination Behaviour
+	for i := 2; i <= 10; i++ {
+		_, err := testDB.Pool.Exec(ctx, `
+            INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `, uuid.New(), "Doctor", fmt.Sprintf("Person %d", i), fmt.Sprintf("doctor%d@doctor.com", i),
+			(i%2 == 0), time.Now(), time.Now())
+		assert.NoError(t, err)
+	}
+
+	therapists, err = repo.GetTherapists(ctx, utils.NewPagination())
+
+	assert.NoError(t, err)
+	assert.Len(t, therapists, 10)
+
+	therapists, err = repo.GetTherapists(ctx, utils.Pagination{
+		Page:  2,
+		Limit: 7,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, therapists, 3)
+	assert.Equal(t, "Person 8", therapists[0].LastName)
 }
 
 func TestSessionRepository_PatchTherapist(t *testing.T) {
