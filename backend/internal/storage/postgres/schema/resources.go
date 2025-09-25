@@ -70,7 +70,6 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 
 	queryString += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argNum, argNum+1)
 	args = append(args, pagination.Limit, pagination.GettOffset())
-	argNum = argNum + 2
 
 	rows, err := r.db.Query(ctx, queryString, args...)
 	if err != nil {

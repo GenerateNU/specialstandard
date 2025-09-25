@@ -1406,7 +1406,7 @@ func TestGetResourcesBySessionIDEndpoint_EmptyArray(t *testing.T) {
 	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
 	sessionID := uuid.New()
 
-	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID).Return([]models.Resource{}, nil)
+	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID, utils.NewPagination()).Return([]models.Resource{}, nil)
 
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
@@ -1448,7 +1448,7 @@ func TestGetResourcesBySessionIDEndpoint_InternalError(t *testing.T) {
 	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
 	sessionID := uuid.New()
 
-	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID).Return(nil, errors.New("database error"))
+	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID, utils.NewPagination()).Return(nil, errors.New("database error"))
 
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,

@@ -60,7 +60,7 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 
 	// More Tests for Pagination Behaviour
 	for i := 2; i <= 6; i++ {
-		testDOB, _ := time.Parse("2004-09-24", "2004-09-24")
+		testDOB, _ := time.Parse("2006-01-02", "2004-09-24")
 		_, err := testDB.Pool.Exec(ctx, `
             INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
