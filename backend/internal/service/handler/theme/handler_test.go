@@ -3,6 +3,7 @@ package theme_test
 import (
 	"errors"
 	"net/http/httptest"
+	"specialstandard/internal/utils"
 	"strings"
 	"testing"
 	"time"
@@ -167,12 +168,14 @@ func TestHandler_CreateTheme(t *testing.T) {
 func TestHandler_GetThemes(t *testing.T) {
 	tests := []struct {
 		name           string
+		url            string
 		mockSetup      func(*mocks.MockThemeRepository)
 		expectedStatus int
 		wantErr        bool
 	}{
 		{
 			name: "successful get themes",
+			url:  "",
 			mockSetup: func(m *mocks.MockThemeRepository) {
 				themes := []models.Theme{
 					{
@@ -184,18 +187,47 @@ func TestHandler_GetThemes(t *testing.T) {
 						UpdatedAt: ptrTime(time.Now()),
 					},
 				}
-				m.On("GetThemes", mock.Anything).Return(themes, nil)
+				m.On("GetThemes", mock.Anything, utils.NewPagination()).Return(themes, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "repository error",
+			url:  "",
 			mockSetup: func(m *mocks.MockThemeRepository) {
-				m.On("GetThemes", mock.Anything).Return(nil, errors.New("database error"))
+				m.On("GetThemes", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			wantErr:        true,
+		},
+		{
+			name: "Pagination Parameters",
+			url:  "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetThemes", mock.Anything, pagination).Return([]models.Theme{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
 		},
 	}
 
@@ -210,7 +242,7 @@ func TestHandler_GetThemes(t *testing.T) {
 			handler := theme.NewHandler(mockRepo)
 			app.Get("/themes", handler.GetThemes)
 
-			req := httptest.NewRequest("GET", "/themes", nil)
+			req := httptest.NewRequest("GET", "/themes"+tt.url, nil)
 			resp, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)

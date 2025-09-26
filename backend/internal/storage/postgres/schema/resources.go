@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"specialstandard/internal/utils"
 	"strings"
 	"time"
 
@@ -25,7 +26,7 @@ func NewResourceRepository(db *pgxpool.Pool) *ResourceRepository {
 	}
 }
 
-func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time) ([]models.Resource, error) {
+func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time, pagination utils.Pagination) ([]models.Resource, error) {
 	var resources []models.Resource
 	queryString := "SELECT id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at FROM resource WHERE 1=1"
 	args := []interface{}{}
@@ -64,7 +65,11 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 	if date != nil {
 		queryString += fmt.Sprintf(" AND date = $%d", argNum)
 		args = append(args, date)
+		argNum++
 	}
+
+	queryString += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argNum, argNum+1)
+	args = append(args, pagination.Limit, pagination.GettOffset())
 
 	rows, err := r.db.Query(ctx, queryString, args...)
 	if err != nil {

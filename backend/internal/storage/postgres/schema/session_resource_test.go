@@ -6,6 +6,7 @@ import (
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/postgres/schema"
 	"specialstandard/internal/storage/postgres/testutil"
+	"specialstandard/internal/utils"
 	"testing"
 	"time"
 
@@ -208,7 +209,7 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		`, sessionID, resourceID, time.Now(), time.Now())
 		assert.NoError(t, err)
 
-		resources, err := repo.GetResourcesBySessionID(ctx, sessionID)
+		resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
 
 		// Assert
 		assert.NoError(t, err)
@@ -257,7 +258,7 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		`, sessionID, resourceID2, time.Now(), time.Now())
 		assert.NoError(t, err)
 
-		resources, err := repo.GetResourcesBySessionID(ctx, sessionID)
+		resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
 		assert.NoError(t, err)
 		assert.Len(t, resources, 2, "Expected exactly 2 resources")
 	})
@@ -270,7 +271,7 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Empty Session", time.Now(), time.Now())
 		assert.NoError(t, err)
 
-		resources, err := repo.GetResourcesBySessionID(ctx, sessionID)
+		resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
 		assert.NoError(t, err)
 		assert.NotNil(t, resources, "Should return non-nil slice")
 		assert.Empty(t, resources, "Should return empty array for session with no resources")
@@ -279,10 +280,49 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 
 	t.Run("non-existent session - returns empty array", func(t *testing.T) {
 		nonExistentSessionID := uuid.New()
-		resources, err := repo.GetResourcesBySessionID(ctx, nonExistentSessionID)
+		resources, err := repo.GetResourcesBySessionID(ctx, nonExistentSessionID, utils.NewPagination())
 		assert.NoError(t, err)
 		assert.NotNil(t, resources, "Should return non-nil slice")
 		assert.Empty(t, resources, "Should return empty array for non-existent session")
 		assert.Len(t, resources, 0)
+	})
+
+	t.Run("More Test Cases for Pagination", func(t *testing.T) {
+		// Create session with new ID
+		sessionID := uuid.New()
+		_, err = testDB.Pool.Exec(ctx, `
+			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Multi Resource Session", time.Now(), time.Now())
+		assert.NoError(t, err)
+
+		testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
+
+		// Create multiple resources
+		for i := 1; i <= 15; i++ {
+			resourceID := uuid.New()
+			_, err := testDB.Pool.Exec(ctx, `
+                INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+				resourceID, themeID, fmt.Sprintf("Grade = %d", i), testDate, "activity", "Reading Activity", "language", "Comprehension", time.Now(), time.Now())
+			assert.NoError(t, err)
+
+			_, err = testDB.Pool.Exec(ctx, `
+                INSERT INTO session_resource (session_id, resource_id, created_at, updated_at)
+                VALUES ($1, $2, $3, $4)
+                `, sessionID, resourceID, time.Now(), time.Now())
+			assert.NoError(t, err)
+		}
+
+		resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
+		assert.NoError(t, err)
+		assert.Len(t, resources, 10, "Expected 10 as per default pagination")
+
+		resources, err = repo.GetResourcesBySessionID(ctx, sessionID, utils.Pagination{
+			Page:  2,
+			Limit: 13,
+		})
+		assert.NoError(t, err)
+		assert.Len(t, resources, 2, "Expected Length 2 on last page")
 	})
 }

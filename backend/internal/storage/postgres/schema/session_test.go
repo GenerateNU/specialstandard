@@ -2,7 +2,9 @@ package schema_test
 
 import (
 	"context"
+	"fmt"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 	"testing"
 	"time"
 
@@ -47,7 +49,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test
-	sessions, err := repo.GetSessions(ctx)
+	sessions, err := repo.GetSessions(ctx, utils.NewPagination())
 
 	// Assert
 	assert.NoError(t, err)
@@ -55,6 +57,32 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.Equal(t, "Test session", *sessions[0].Notes)
 	assert.Equal(t, therapistID, sessions[0].TherapistID)
 	assert.True(t, sessions[0].EndDateTime.After(sessions[0].StartDateTime))
+
+	// More Tests for Pagination Behaviour
+	for i := 1; i <= 18; i++ {
+		start := startTime.Add(time.Duration(i) * time.Hour)
+		end := start.Add(time.Hour)
+
+		_, err := testDB.Pool.Exec(ctx, `
+			INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
+			VALUES ($1, $2, $3, $4)
+       `, therapistID, start, end, fmt.Sprintf("Test session%d", i))
+		assert.NoError(t, err)
+	}
+
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination())
+
+	assert.NoError(t, err)
+	assert.Len(t, sessions, 10)
+
+	sessions, err = repo.GetSessions(ctx, utils.Pagination{
+		Page:  4,
+		Limit: 5,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, sessions, 4)
+	assert.Equal(t, "Test session18", *sessions[3].Notes)
 }
 
 func TestSessionRepository_GetSessionByID(t *testing.T) {

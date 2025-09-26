@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -35,15 +36,16 @@ func (sr *SessionResourceRepository) DeleteSessionResource(ctx context.Context, 
 	return nil
 }
 
-func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID) ([]models.Resource, error) {
+func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error) {
 	resources := make([]models.Resource, 0)
 	query := `SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at
 				FROM session_resource sr
 				JOIN resource r ON sr.resource_id = r.id
 				WHERE sr.session_id = $1
-				ORDER BY r.created_at DESC`
+				ORDER BY r.created_at DESC
+				LIMIT $2 OFFSET $3`
 
-	rows, err := sr.db.Query(ctx, query, sessionID)
+	rows, err := sr.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
 	if err != nil {
 		return nil, err
 	}

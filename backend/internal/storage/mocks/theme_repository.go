@@ -3,6 +3,8 @@ package mocks
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
@@ -19,8 +21,8 @@ func (m *MockThemeRepository) CreateTheme(ctx context.Context, theme *models.Cre
 	return args.Get(0).(*models.Theme), args.Error(1)
 }
 
-func (m *MockThemeRepository) GetThemes(ctx context.Context) ([]models.Theme, error) {
-	args := m.Called(ctx)
+func (m *MockThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagination) ([]models.Theme, error) {
+	args := m.Called(ctx, pagination)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

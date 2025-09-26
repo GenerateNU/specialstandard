@@ -5,6 +5,8 @@ import (
 	"errors"
 	"io"
 	"net/http/httptest"
+	"specialstandard/internal/errs"
+	"specialstandard/internal/utils"
 	"testing"
 	"time"
 
@@ -12,30 +14,33 @@ import (
 	"specialstandard/internal/service/handler/student"
 	"specialstandard/internal/storage/mocks"
 
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"strings"
 )
 
 func ptrTime(t time.Time) *time.Time {
-    return &t
+	return &t
 }
 
 func ptrString(s string) *string {
-    return &s
+	return &s
 }
 
 func TestHandler_GetStudents(t *testing.T) {
 	tests := []struct {
 		name           string
+		url            string
 		mockSetup      func(*mocks.MockStudentRepository)
 		expectedStatus int
 		wantErr        bool
 	}{
 		{
-			name: "successful get students",
+			name: "successful get students with default pagination",
+			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				students := []models.Student{
 					{
@@ -50,39 +55,71 @@ func TestHandler_GetStudents(t *testing.T) {
 						UpdatedAt:   time.Now(),
 					},
 				}
-				m.On("GetStudents", mock.Anything).Return(students, nil)
+				m.On("GetStudents", mock.Anything, utils.NewPagination()).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "empty students list",
+			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, utils.NewPagination()).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "repository error",
+			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything).Return(nil, errors.New("database error"))
+				m.On("GetStudents", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			wantErr:        true,
+		},
+		{
+			name: "Pagination Parameters",
+			url:  "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetStudents", mock.Anything, pagination).Return([]models.Student{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 
 			handler := student.NewHandler(mockRepo)
 			app.Get("/students", handler.GetStudents)
 
-			req := httptest.NewRequest("GET", "/students", nil)
+			req := httptest.NewRequest("GET", "/students"+tt.url, nil)
 			resp, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
@@ -251,8 +288,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			name:      "update grade only",
-			studentID: studentID.String(),
+			name:        "update grade only",
+			studentID:   studentID.String(),
 			requestBody: `{"grade": "5th"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
@@ -283,8 +320,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name:      "update IEP only",
-			studentID: studentID.String(),
+			name:        "update IEP only",
+			studentID:   studentID.String(),
 			requestBody: `{"iep": "Updated IEP with math accommodations"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
@@ -315,8 +352,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name:      "update name and grade",
-			studentID: studentID.String(),
+			name:        "update name and grade",
+			studentID:   studentID.String(),
 			requestBody: `{"first_name": "Updated", "last_name": "TestStudent", "grade": "5th"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
@@ -347,8 +384,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name:      "update DOB with valid date",
-			studentID: studentID.String(),
+			name:        "update DOB with valid date",
+			studentID:   studentID.String(),
 			requestBody: `{"dob": "2010-05-15"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
@@ -379,8 +416,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name:      "invalid UUID format",
-			studentID: "invalid-uuid",
+			name:        "invalid UUID format",
+			studentID:   "invalid-uuid",
 			requestBody: `{"grade": "5th"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				// No mock setup needed - UUID parsing fails before repository call
@@ -389,8 +426,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name:      "student not found",
-			studentID: studentID.String(),
+			name:        "student not found",
+			studentID:   studentID.String(),
 			requestBody: `{"grade": "5th"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("GetStudent", mock.Anything, studentID).Return(models.Student{}, errors.New("no rows in result set"))
@@ -399,8 +436,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name:      "invalid JSON body",
-			studentID: studentID.String(),
+			name:        "invalid JSON body",
+			studentID:   studentID.String(),
 			requestBody: `{"grade": "5th" /* missing comma */}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				// No mock setup needed - JSON parsing fails before repository call
@@ -409,8 +446,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name:      "invalid date format",
-			studentID: studentID.String(),
+			name:        "invalid date format",
+			studentID:   studentID.String(),
 			requestBody: `{"dob": "invalid-date"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
@@ -430,8 +467,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name:      "invalid therapist UUID",
-			studentID: studentID.String(),
+			name:        "invalid therapist UUID",
+			studentID:   studentID.String(),
 			requestBody: `{"therapist_id": "bad-uuid"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
@@ -451,8 +488,8 @@ func TestHandler_UpdateStudent(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name:      "UpdateStudent repository error",
-			studentID: studentID.String(),
+			name:        "UpdateStudent repository error",
+			studentID:   studentID.String(),
 			requestBody: `{"grade": "5th"}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
@@ -560,7 +597,7 @@ func TestHandler_AddStudent(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name: "invalid JSON body",
+			name:        "invalid JSON body",
 			requestBody: `{"first_name": "John", "last_name": "Doe" /* missing comma */}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				// No mock setup needed - JSON parsing fails before repository call

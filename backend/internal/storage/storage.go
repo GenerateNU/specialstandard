@@ -4,6 +4,7 @@ import (
 	"context"
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/postgres/schema"
+	"specialstandard/internal/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,12 +12,12 @@ import (
 )
 
 type SessionRepository interface {
-	GetSessions(ctx context.Context) ([]models.Session, error)
+	GetSessions(ctx context.Context, pagination utils.Pagination) ([]models.Session, error)
 	GetSessionByID(ctx context.Context, id string) (*models.Session, error)
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	PostSession(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
-	GetSessionStudents(ctx context.Context, sessionID uuid.UUID) ([]models.SessionStudentsOutput, error)
+	GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error)
 }
 
 type SessionStudentRepository interface {
@@ -26,17 +27,17 @@ type SessionStudentRepository interface {
 }
 
 type StudentRepository interface {
-	GetStudents(ctx context.Context) ([]models.Student, error)
+	GetStudents(ctx context.Context, pagination utils.Pagination) ([]models.Student, error)
 	GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error)
 	AddStudent(ctx context.Context, student models.Student) (models.Student, error)
 	UpdateStudent(ctx context.Context, student models.Student) (models.Student, error)
 	DeleteStudent(ctx context.Context, id uuid.UUID) error
-	GetStudentSessions(ctx context.Context, studentID uuid.UUID) ([]models.StudentSessionsOutput, error)
+	GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination) ([]models.StudentSessionsOutput, error)
 }
 
 type ThemeRepository interface {
 	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)
-	GetThemes(ctx context.Context) ([]models.Theme, error)
+	GetThemes(ctx context.Context, pagination utils.Pagination) ([]models.Theme, error)
 	GetThemeByID(ctx context.Context, id uuid.UUID) (*models.Theme, error)
 	PatchTheme(ctx context.Context, id uuid.UUID, theme *models.UpdateThemeInput) (*models.Theme, error)
 	DeleteTheme(ctx context.Context, id uuid.UUID) error
@@ -44,14 +45,14 @@ type ThemeRepository interface {
 
 type TherapistRepository interface {
 	GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error)
-	GetTherapists(ctx context.Context) ([]models.Therapist, error)
+	GetTherapists(ctx context.Context, pagination utils.Pagination) ([]models.Therapist, error)
 	CreateTherapist(ctx context.Context, therapist *models.CreateTherapistInput) (*models.Therapist, error)
 	DeleteTherapist(ctx context.Context, therapistID string) error
 	PatchTherapist(ctx context.Context, therapistID string, updatedValue *models.UpdateTherapist) (*models.Therapist, error)
 }
 
 type ResourceRepository interface {
-	GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time) ([]models.Resource, error)
+	GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time, pagination utils.Pagination) ([]models.Resource, error)
 	GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error)
 	UpdateResource(ctx context.Context, id uuid.UUID, resourceBody models.UpdateResourceBody) (*models.Resource, error)
 	CreateResource(ctx context.Context, resourceBody models.ResourceBody) (*models.Resource, error)
@@ -61,18 +62,18 @@ type ResourceRepository interface {
 type SessionResourceRepository interface {
 	PostSessionResource(ctx context.Context, sessionResource models.CreateSessionResource) (*models.SessionResource, error)
 	DeleteSessionResource(ctx context.Context, sessionResource models.DeleteSessionResource) error
-	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID) ([]models.Resource, error)
+	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error)
 }
 
 type Repository struct {
-	Resource       ResourceRepository
-	db             *pgxpool.Pool
-	Session        SessionRepository
-	Student        StudentRepository
-	Theme          ThemeRepository
-	Therapist      TherapistRepository
-	SessionStudent SessionStudentRepository
-  SessionResource SessionResourceRepository
+	Resource        ResourceRepository
+	db              *pgxpool.Pool
+	Session         SessionRepository
+	Student         StudentRepository
+	Theme           ThemeRepository
+	Therapist       TherapistRepository
+	SessionStudent  SessionStudentRepository
+	SessionResource SessionResourceRepository
 }
 
 func (r *Repository) Close() error {
@@ -86,13 +87,13 @@ func (r *Repository) GetDB() *pgxpool.Pool {
 
 func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{
-		db:             db,
-		Resource:       schema.NewResourceRepository(db),
-		Session:        schema.NewSessionRepository(db),
-		Student:        schema.NewStudentRepository(db),
-		Theme:          schema.NewThemeRepository(db),
-		Therapist:      schema.NewTherapistRepository(db),
-		SessionStudent: schema.NewSessionStudentRepository(db),
+		db:              db,
+		Resource:        schema.NewResourceRepository(db),
+		Session:         schema.NewSessionRepository(db),
+		Student:         schema.NewStudentRepository(db),
+		Theme:           schema.NewThemeRepository(db),
+		Therapist:       schema.NewTherapistRepository(db),
+		SessionStudent:  schema.NewSessionStudentRepository(db),
 		SessionResource: schema.NewSessionResourceRepository(db),
 	}
 }

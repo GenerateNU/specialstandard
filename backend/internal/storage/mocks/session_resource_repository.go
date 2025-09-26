@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -25,8 +26,8 @@ func (m *MockSessionResourceRepository) DeleteSessionResource(ctx context.Contex
 	return args.Error(0)
 }
 
-func (m *MockSessionResourceRepository) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID) ([]models.Resource, error) {
-	args := m.Called(mock.Anything, sessionID)
+func (m *MockSessionResourceRepository) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error) {
+	args := m.Called(ctx, sessionID, pagination)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

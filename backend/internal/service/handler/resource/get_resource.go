@@ -2,6 +2,8 @@ package resource
 
 import (
 	"specialstandard/internal/errs"
+	"specialstandard/internal/utils"
+	"specialstandard/internal/xvalidator"
 	"strings"
 	"time"
 
@@ -33,7 +35,16 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 	category := c.Query("category")
 	content := c.Query("content")
 
-	resources, err := h.resourceRepository.GetResources(c.Context(), themeId, gradeLevel, res_type, title, category, content, date)
+	pagination := utils.NewPagination()
+	if err := c.QueryParser(&pagination); err != nil {
+		return errs.BadRequest("Invalid Pagination Query Parameters")
+	}
+
+	if validationErrors := xvalidator.Validator.Validate(pagination); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
+	}
+
+	resources, err := h.resourceRepository.GetResources(c.Context(), themeId, gradeLevel, res_type, title, category, content, date, pagination)
 	if err != nil {
 		return errs.InternalServerError(err.Error())
 	}

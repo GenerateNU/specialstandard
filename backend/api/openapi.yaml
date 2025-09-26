@@ -48,6 +48,19 @@ paths:
       summary: Get all sessions
       description: Retrieve all therapy sessions from the database
       tags: [Sessions]
+      parameters:
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of therapy sessions
@@ -273,6 +286,18 @@ paths:
             type: string
             format: uuid
             example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of resources associated with the session
@@ -327,6 +352,18 @@ paths:
           description: Filter students by attendance status
           schema:
             type: boolean
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of students with session relationship details
@@ -366,6 +403,19 @@ paths:
       summary: Get all students
       description: Retrieve all students from the database
       tags: [Students]
+      parameters:
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of students
@@ -621,6 +671,18 @@ paths:
           description: Filter sessions by student's attendance status
           schema:
             type: boolean
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of sessions with student relationship details
@@ -797,6 +859,19 @@ paths:
       summary: Get all therapists
       description: Retrieve all therapists from the database
       tags: [Therapists]
+      parameters:
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: A list of Therapists
@@ -1289,6 +1364,19 @@ paths:
       summary: Get all themes
       description: Retrieve all themes from the database
       tags: [Themes]
+      parameters:
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of themes
