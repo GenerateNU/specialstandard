@@ -29,3 +29,9 @@ type PatchSessionInput struct {
 	TherapistID *uuid.UUID `json:"therapist_id"`
 	Notes       *string    `json:"notes"`
 }
+
+type GetSessionRequest struct {
+	StartTime   *time.Time `query:"start_datetime"`
+	EndTime     *time.Time `query:"end_datetime"`
+	StudentIDs 	*[]uuid.UUID `query:"ids"`
+}
