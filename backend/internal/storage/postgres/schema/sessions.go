@@ -2,8 +2,10 @@ package schema
 
 import (
 	"context"
+	"fmt"
 	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -14,13 +16,67 @@ type SessionRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination) ([]models.Session, error) {
+func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRequest) ([]models.Session, error) {
 	query := `
 	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
-	FROM session
-	LIMIT $1 OFFSET $2`
+	FROM session`
 
-	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GettOffset())
+	conditions := []string{}
+	args := []interface{}{}
+	argCount := 1
+
+	if filter != nil {
+		if filter.Month != nil && filter.Year != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM start_datetime) = $%d AND EXTRACT(YEAR FROM start_datetime) = $%d", argCount, argCount+1))
+			args = append(args, *filter.Month, *filter.Year)
+			argCount += 2
+		} else if filter.Year != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(YEAR FROM start_datetime) = $%d", argCount))
+			args = append(args, *filter.Year)
+			argCount++
+		} else if filter.Month != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM start_datetime) = $%d", argCount))
+			args = append(args, *filter.Month)
+			argCount++
+		}
+
+		if filter.StartTime != nil {
+			conditions = append(conditions, fmt.Sprintf("start_datetime = $%d", argCount))
+			args = append(args, *filter.StartTime)
+			argCount++
+		}
+
+		if filter.EndTime != nil {
+			conditions = append(conditions, fmt.Sprintf("end_datetime = $%d", argCount))
+			args = append(args, *filter.EndTime)
+			argCount++
+		}
+
+		if filter.StudentIDs != nil && len(*filter.StudentIDs) > 0 {
+			placeholders := make([]string, len(*filter.StudentIDs))
+			for i, studentID := range *filter.StudentIDs {
+				placeholders[i] = fmt.Sprintf("$%d", argCount)
+				args = append(args, studentID)
+				argCount++
+			}
+			
+			conditions = append(conditions, fmt.Sprintf(
+				"EXISTS (SELECT 1 FROM session_student WHERE session_id = session.id AND student_id IN (%s))",
+				strings.Join(placeholders, ", "),
+			))
+		}
+	}
+
+	if(len(conditions) > 0) {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	query += fmt.Sprintf(`ORDER BY year DESC, month DESC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
+
+	args = append(args, pagination.Limit, pagination.GettOffset())
+
+
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
