@@ -77,8 +77,8 @@ func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagina
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += ` ORDER BY year DESC, month DESC
-	LIMIT $` + fmt.Sprintf("%d", argCount) + ` OFFSET $` + fmt.Sprintf("%d", argCount+1)
+	query += fmt.Sprintf(` ORDER BY year DESC, month DESC
+	LIMIT $%d OFFSET $%d`, argCount, argCount+1)
 	
 	args = append(args, pagination.Limit, pagination.GettOffset())
 
