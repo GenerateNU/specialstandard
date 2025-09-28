@@ -1362,7 +1362,7 @@ paths:
   /themes:
     get:
       summary: Get all themes
-      description: Retrieve all themes from the database
+      description: Retrieve all themes from the database with optional filtering by month, year, and name search
       tags: [Themes]
       parameters:
         - name: page
@@ -1377,15 +1377,85 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: month
+          in: query
+          description: Filter themes by month (1-12)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          example: 3
+        - name: year
+          in: query
+          description: Filter themes by year
+          required: false
+          schema:
+            type: integer
+            minimum: 1900
+            maximum: 2100
+          example: 2024
+        - name: search
+          in: query
+          description: Search themes by name (case-insensitive, partial matching)
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+          example: "spring"
       responses:
         "200":
-          description: List of themes
+          description: List of themes (filtered and paginated based on query parameters)
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/Theme"
+              examples:
+                all_themes:
+                  summary: Get all themes with pagination
+                  value:
+                    - id: "123e4567-e89b-12d3-a456-426614174000"
+                      name: "Spring Activities"
+                      month: 3
+                      year: 2024
+                      created_at: "2024-01-15T10:30:00Z"
+                      updated_at: "2024-01-15T10:35:00Z"
+                filtered_themes:
+                  summary: Get spring themes for 2024
+                  description: Example response for GET /themes?month=3&year=2024&search=spring
+                  value:
+                    - id: "123e4567-e89b-12d3-a456-426614174000"
+                      name: "Spring Activities"
+                      month: 3
+                      year: 2024
+                      created_at: "2024-01-15T10:30:00Z"
+                      updated_at: "2024-01-15T10:35:00Z"
+        "400":
+          description: Bad request (e.g., invalid filter parameters)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_month:
+                  summary: Invalid month parameter
+                  value:
+                    code: 400
+                    message:
+                      month: "Month must be less than or equal to 12"
+                invalid_year:
+                  summary: Invalid year parameter
+                  value:
+                    code: 400
+                    message:
+                      year: "Year must be greater than or equal to 1900"
+                invalid_pagination:
+                  summary: Invalid pagination parameters
+                  value:
+                    code: 400
+                    message: "Invalid Pagination Query Parameters"
         "500":
           description: Internal server error
           content:
