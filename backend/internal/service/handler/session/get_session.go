@@ -3,10 +3,12 @@ package session
 import (
 	"log/slog"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
 	"specialstandard/internal/xvalidator"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func (h *Handler) GetSessions(c *fiber.Ctx) error {
@@ -21,17 +23,29 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 	}
 
 	// check for no students in request body
-	if len(req.StudentIDs) == 0 {
+	if req.StudentIDs == nil || len(*req.StudentIDs) == 0 {
 		return errs.BadRequest("No Student ID's recieved.")
 	}
 
+	// check for duplicate students in request body
+	if checkForDuplicates(*req.StudentIDs) {
+		return errs.BadRequest("Given multiple of the same students")
+	}
+
+	// we do not need to check for invalid uuid in request body
+	// because since it is a list of UUIDs, if they provide a non-uuid it will auto-error
+
+	// check for valid time range in request body
+	if req.EndTime.Before(*req.StartTime) {
+		return errs.BadRequest("Given invalid time range.")
+	}
 
 
 	if validationErrors := xvalidator.Validator.Validate(pagination); len(validationErrors) > 0 {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination)
+	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination) //TODO: add req to this param and then adjust schema + postgres stuff (NOTE: look at arenius get_contact_emissions.go for reference)
 	if err != nil {
 		// For all database errors, return internal server error without exposing details
 		slog.Error("Failed to get session", "err", err)
