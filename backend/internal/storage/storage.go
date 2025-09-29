@@ -37,7 +37,7 @@ type StudentRepository interface {
 
 type ThemeRepository interface {
 	CreateTheme(ctx context.Context, theme *models.CreateThemeInput) (*models.Theme, error)
-	GetThemes(ctx context.Context, pagination utils.Pagination) ([]models.Theme, error)
+	GetThemes(ctx context.Context, pagination utils.Pagination, filter *models.ThemeFilter) ([]models.Theme, error)
 	GetThemeByID(ctx context.Context, id uuid.UUID) (*models.Theme, error)
 	PatchTheme(ctx context.Context, id uuid.UUID, theme *models.UpdateThemeInput) (*models.Theme, error)
 	DeleteTheme(ctx context.Context, id uuid.UUID) error
