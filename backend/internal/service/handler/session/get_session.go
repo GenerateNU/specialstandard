@@ -18,13 +18,28 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 	}
 
 	filter := &models.GetSessionRequest{}
-	if err := c.QueryParser(&filter); err != nil {
+	if err := c.QueryParser(filter); err != nil {
+		slog.Error("Query parsing failed", "error", err, "query", c.OriginalURL())
 		return errs.BadRequest("Error parsing request body.")
 	}
 
-	// checks if there are studentIDs and then (using cancellation) checks for duplicate students in request body
-	if filter.StudentIDs != nil && checkForDuplicates(*filter.StudentIDs) {
-		return errs.BadRequest("Given multiple of the same students")
+	var uuidStudentIDs []uuid.UUID
+	if filter.StudentIDs != nil && len(*filter.StudentIDs) > 0 {
+		for _, idStr := range *filter.StudentIDs {
+			if idStr == "" {
+				continue // Skip empty strings
+			}
+			id, err := uuid.Parse(idStr)
+			if err != nil {
+				return errs.BadRequest("Invalid student ID format")
+			}
+			uuidStudentIDs = append(uuidStudentIDs, id)
+		}
+
+		// Check for duplicates if we have any IDs, and uses that one cancellation property that iforgot what what it was called
+		if len(uuidStudentIDs) > 0 && checkForDuplicates(uuidStudentIDs) {
+			return errs.BadRequest("Given multiple of the same students")
+		}
 	}
 
 	// we do not need to check for invalid uuid in request body
@@ -44,8 +59,21 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
+	repoFilter := &models.GetSessionRepositoryRequest{
+		StartTime:  filter.StartTime,
+		EndTime:    filter.EndTime,
+		Month:      filter.Month,
+		Year:       filter.Year,
+		StudentIDs: nil,
+	}
+	
+	// Only set StudentIDs if we have valid UUIDs
+	if len(uuidStudentIDs) > 0 {
+		repoFilter.StudentIDs = &uuidStudentIDs
+	}
 
-	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination, filter) //TODO: add req to this param and then adjust schema + postgres stuff (NOTE: look at arenius get_contact_emissions.go for reference)
+
+	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination, repoFilter)
 	if err != nil {
 		// For all database errors, return internal server error without exposing details
 		slog.Error("Failed to get session", "err", err)

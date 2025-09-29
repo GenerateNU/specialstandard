@@ -16,7 +16,7 @@ type SessionRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRequest) ([]models.Session, error) {
+func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error) {
 	query := `
 	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
 	FROM session`
@@ -41,37 +41,35 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 		}
 
 		if filter.StartTime != nil {
-			conditions = append(conditions, fmt.Sprintf("start_datetime = $%d", argCount))
+			conditions = append(conditions, fmt.Sprintf("start_datetime >= $%d", argCount))
 			args = append(args, *filter.StartTime)
 			argCount++
 		}
 
 		if filter.EndTime != nil {
-			conditions = append(conditions, fmt.Sprintf("end_datetime = $%d", argCount))
+			conditions = append(conditions, fmt.Sprintf("end_datetime <= $%d", argCount))
 			args = append(args, *filter.EndTime)
 			argCount++
 		}
 
 		if filter.StudentIDs != nil && len(*filter.StudentIDs) > 0 {
-			placeholders := make([]string, len(*filter.StudentIDs))
-			for i, studentID := range *filter.StudentIDs {
-				placeholders[i] = fmt.Sprintf("$%d", argCount)
-				args = append(args, studentID)
-				argCount++
-			}
-			
+		// For each student ID, add a condition that checks if that specific student exists in the session
+		for _, studentID := range *filter.StudentIDs {
 			conditions = append(conditions, fmt.Sprintf(
-				"EXISTS (SELECT 1 FROM session_student WHERE session_id = session.id AND student_id IN (%s))",
-				strings.Join(placeholders, ", "),
+				"EXISTS (SELECT 1 FROM session_student WHERE session_id = session.id AND student_id = $%d)",
+				argCount,
 			))
+			args = append(args, studentID)
+			argCount++
 		}
+	}
 	}
 
 	if(len(conditions) > 0) {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += fmt.Sprintf(`ORDER BY year DESC, month DESC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
+	query += fmt.Sprintf(` ORDER BY start_datetime DESC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
 
 	args = append(args, pagination.Limit, pagination.GettOffset())
 
