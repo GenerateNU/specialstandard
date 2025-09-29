@@ -3,6 +3,7 @@ package theme
 import (
 	"log/slog"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
 	"specialstandard/internal/xvalidator"
 
@@ -19,7 +20,18 @@ func (h *Handler) GetThemes(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	themes, err := h.themeRepository.GetThemes(c.Context(), pagination)
+	// Parse filter parameters
+	filter := &models.ThemeFilter{}
+	if err := c.QueryParser(filter); err != nil {
+		return errs.BadRequest("Invalid Filter Query Parameters")
+	}
+
+	// Validate filter parameters
+	if validationErrors := xvalidator.Validator.Validate(filter); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
+	}
+
+	themes, err := h.themeRepository.GetThemes(c.Context(), pagination, filter)
 	if err != nil {
 		slog.Error("Failed to fetch themes", "error", err)
 		return errs.InternalServerError("Failed to fetch themes")

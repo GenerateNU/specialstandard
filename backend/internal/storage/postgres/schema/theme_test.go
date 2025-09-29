@@ -96,7 +96,7 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test
-	themes, err := repo.GetThemes(ctx, utils.NewPagination())
+	themes, err := repo.GetThemes(ctx, utils.NewPagination(), nil)
 
 	// Assert
 	assert.NoError(t, err)
@@ -118,7 +118,7 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	themes, err = repo.GetThemes(ctx, utils.NewPagination())
+	themes, err = repo.GetThemes(ctx, utils.NewPagination(), nil)
 
 	assert.NoError(t, err)
 	assert.Len(t, themes, 10)
@@ -126,7 +126,7 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	themes, err = repo.GetThemes(ctx, utils.Pagination{
 		Page:  2,
 		Limit: 10,
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 	assert.Len(t, themes, 2)
@@ -136,9 +136,145 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, "DELETE FROM theme")
 	assert.NoError(t, err)
 
-	themes, err = repo.GetThemes(ctx, utils.NewPagination())
+	themes, err = repo.GetThemes(ctx, utils.NewPagination(), nil)
 	assert.NoError(t, err)
 	assert.Len(t, themes, 0)
+}
+
+func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+
+	// Setup
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewThemeRepository(testDB.Pool)
+	ctx := context.Background()
+
+	// Insert test themes
+	themes := []struct {
+		name  string
+		month int
+		year  int
+	}{
+		{"Spring 2024", 3, 2024},
+		{"Summer 2024", 6, 2024},
+		{"Fall 2024", 9, 2024},
+		{"Winter 2023", 12, 2023},
+		{"Spring Activities", 3, 2023},
+	}
+
+	for _, theme := range themes {
+		_, err := testDB.Pool.Exec(ctx, `
+            INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        `, uuid.New(), theme.name, theme.month, theme.year, time.Now(), time.Now())
+		assert.NoError(t, err)
+	}
+
+	// Test filter by month
+	monthFilter := &models.ThemeFilter{
+		Month: func() *int { i := 3; return &i }(),
+	}
+	result, err := repo.GetThemes(ctx, utils.NewPagination(), monthFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	// Should return both March themes ordered by year DESC
+	assert.Equal(t, "Spring 2024", result[0].Name)
+	assert.Equal(t, "Spring Activities", result[1].Name)
+
+	// Test filter by year
+	yearFilter := &models.ThemeFilter{
+		Year: func() *int { i := 2024; return &i }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), yearFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 3)
+	// Should return all 2024 themes ordered by month DESC
+	assert.Equal(t, "Fall 2024", result[0].Name)
+	assert.Equal(t, "Summer 2024", result[1].Name)
+	assert.Equal(t, "Spring 2024", result[2].Name)
+
+	// Test filter by search term (case insensitive)
+	searchFilter := &models.ThemeFilter{
+		Search: func() *string { s := "spring"; return &s }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), searchFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+
+	// Test filter by multiple parameters
+	multiFilter := &models.ThemeFilter{
+		Month:  func() *int { i := 3; return &i }(),
+		Year:   func() *int { i := 2024; return &i }(),
+		Search: func() *string { s := "spring"; return &s }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), multiFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+	assert.Equal(t, "Spring 2024", result[0].Name)
+
+	// Test no results for filter
+	noResultFilter := &models.ThemeFilter{
+		Year: func() *int { i := 2025; return &i }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), noResultFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 0)
+	
+	// Test case-insensitive search variations
+	upperCaseFilter := &models.ThemeFilter{
+		Search: func() *string { s := "SPRING"; return &s }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), upperCaseFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 2) // Should still match "Spring 2024" and "Spring Activities"
+	
+	// Test partial word search
+	partialFilter := &models.ThemeFilter{
+		Search: func() *string { s := "Act"; return &s }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), partialFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 1) // Should match "Spring Activities"
+	assert.Equal(t, "Spring Activities", result[0].Name)
+	
+	// Test search with numbers
+	numberFilter := &models.ThemeFilter{
+		Search: func() *string { s := "2024"; return &s }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), numberFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 3) // Should match all 2024 themes
+	
+	// Test empty search string (should return all themes)
+	emptySearchFilter := &models.ThemeFilter{
+		Search: func() *string { s := ""; return &s }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), emptySearchFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 5) // Should return all themes
+	
+	// Test search with no matches
+	noMatchFilter := &models.ThemeFilter{
+		Search: func() *string { s := "nonexistent"; return &s }(),
+	}
+	result, err = repo.GetThemes(ctx, utils.NewPagination(), noMatchFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 0)
+	
+	// Test filters with pagination
+	paginatedFilter := &models.ThemeFilter{
+		Year: func() *int { i := 2024; return &i }(),
+	}
+	pagination := utils.Pagination{Page: 1, Limit: 2}
+	result, err = repo.GetThemes(ctx, pagination, paginatedFilter)
+	assert.NoError(t, err)
+	assert.Len(t, result, 2) // Should return first 2 of 3 2024 themes
+	assert.Equal(t, "Fall 2024", result[0].Name)   // Ordered by month DESC
+	assert.Equal(t, "Summer 2024", result[1].Name)
 }
 
 func TestThemeRepository_GetThemeByID(t *testing.T) {
