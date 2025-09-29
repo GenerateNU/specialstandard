@@ -37,10 +37,10 @@ func (r *StudentRepository) GetStudents(ctx context.Context, grade string, thera
 	}
 
 	if name != "" {
-		queryString += fmt.Sprintf(" AND (first_name ILIKE $%d OR last_name ILIKE $%d)", argNum, argNum+1)
+		queryString += fmt.Sprintf(" AND (first_name ILIKE $%d OR last_name ILIKE $%d OR CONCAT(first_name, ' ', last_name) ILIKE $%d)", argNum, argNum, argNum)
 		searchPattern := "%" + name + "%"
-		args = append(args, searchPattern, searchPattern)
-		argNum += 2
+		args = append(args, searchPattern)
+		argNum++
 	}
 
 	// Add pagination

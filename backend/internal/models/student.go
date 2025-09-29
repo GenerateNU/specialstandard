@@ -19,7 +19,6 @@ type Student struct {
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
 
-// Input struct for creating students
 type CreateStudentInput struct {
 	FirstName   string  `json:"first_name" validate:"required,min=1,max=100"`
 	LastName    string  `json:"last_name" validate:"required,min=1,max=100"`
@@ -36,7 +35,6 @@ type GetStudentsQuery struct {
 	utils.Pagination
 }
 
-// Input struct for updating students (all fields optional for PATCH)
 type UpdateStudentInput struct {
 	FirstName   *string `json:"first_name,omitempty"`
 	LastName    *string `json:"last_name,omitempty"`
