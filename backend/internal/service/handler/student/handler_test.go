@@ -102,6 +102,118 @@ func TestHandler_GetStudents(t *testing.T) {
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
+		{
+			name: "successful get students with grade filter",
+			url:  "?grade=5th",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				students := []models.Student{
+					{
+						ID:        uuid.New(),
+						FirstName: "John",
+						LastName:  "Doe",
+						Grade:     ptrString("5th"),
+					},
+				}
+				m.On("GetStudents", mock.Anything, "5th", uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "successful get students with therapist filter",
+			url:  "?therapist_id=123e4567-e89b-12d3-a456-426614174000",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				students := []models.Student{
+					{
+						ID:          uuid.New(),
+						FirstName:   "Jane",
+						LastName:    "Smith",
+						TherapistID: therapistID,
+					},
+				}
+				m.On("GetStudents", mock.Anything, "", therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "successful get students with name filter",
+			url:  "?name=John",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				students := []models.Student{
+					{
+						ID:        uuid.New(),
+						FirstName: "John",
+						LastName:  "Doe",
+					},
+				}
+				m.On("GetStudents", mock.Anything, "", uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "successful get students with all filters",
+			url:  "?grade=5th&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				students := []models.Student{
+					{
+						ID:          uuid.New(),
+						FirstName:   "John",
+						LastName:    "Doe",
+						Grade:       ptrString("5th"),
+						TherapistID: therapistID,
+					},
+				}
+				m.On("GetStudents", mock.Anything, "5th", therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "empty results with filters",
+			url:  "?grade=12th&name=Nonexistent",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				m.On("GetStudents", mock.Anything, "12th", uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "case insensitive name search",
+			url:  "?name=JOHN",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				students := []models.Student{
+					{
+						ID:        uuid.New(),
+						FirstName: "John",
+						LastName:  "Doe",
+					},
+				}
+				m.On("GetStudents", mock.Anything, "", uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "filter by grade with pagination",
+			url:  "?grade=5th&page=2&limit=3",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				students := []models.Student{
+					{
+						ID:        uuid.New(),
+						FirstName: "Student",
+						LastName:  "Four",
+						Grade:     ptrString("5th"),
+					},
+				}
+				m.On("GetStudents", mock.Anything, "5th", uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
 	}
 
 	for _, tt := range tests {
