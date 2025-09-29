@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/utils"
 	"strings"
 	"testing"
 	"time"
@@ -31,12 +32,14 @@ func ptrTime(t time.Time) *time.Time {
 func TestHandler_GetSessions(t *testing.T) {
 	tests := []struct {
 		name           string
+		url            string
 		mockSetup      func(*mocks.MockSessionRepository)
 		expectedStatus int
 		wantErr        bool
 	}{
 		{
-			name: "successful get sessions",
+			name: "successful get sessions with default pagination",
+			url:  "",
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				sessions := []models.Session{
 					{
@@ -49,36 +52,65 @@ func TestHandler_GetSessions(t *testing.T) {
 						UpdatedAt:     ptrTime(time.Now()),
 					},
 				}
-				m.On("GetSessions", mock.Anything).Return(sessions, nil)
+				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(sessions, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "repository error",
+			url:  "/",
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				m.On("GetSessions", mock.Anything).Return(nil, errors.New("database error"))
+				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			wantErr:        true,
+		},
+		{
+			name: "Pagination Parameters",
+			url:  "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetSessions", mock.Anything, pagination).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockSessionRepository)
 			tt.mockSetup(mockRepo)
 
 			handler := session.NewHandler(mockRepo)
 			app.Get("/sessions", handler.GetSessions)
 
-			// Make request
-			req := httptest.NewRequest("GET", "/sessions", nil)
+			req := httptest.NewRequest("GET", "/sessions"+tt.url, nil)
 			resp, _ := app.Test(req, -1)
 
-			// Assert
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
 			mockRepo.AssertExpectations(t)
 		})

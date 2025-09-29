@@ -3,6 +3,8 @@ package therapist_test
 import (
 	"errors"
 	"net/http/httptest"
+	"specialstandard/internal/errs"
+	"specialstandard/internal/utils"
 	"strings"
 	"testing"
 	"time"
@@ -75,12 +77,14 @@ func TestHandler_GetTherapistByID(t *testing.T) {
 func TestHandler_GetTherapists(t *testing.T) {
 	tests := []struct {
 		name           string
+		url            string
 		mockSetup      func(*mocks.MockTherapistRepository)
 		expectedStatus int
 		wantErr        bool
 	}{
 		{
-			name: "successful get therapists",
+			name: "successful get therapists and default pagination",
+			url:  "",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
 				therapists := []models.Therapist{
 					{
@@ -93,25 +97,56 @@ func TestHandler_GetTherapists(t *testing.T) {
 						UpdatedAt: time.Now(),
 					},
 				}
-				m.On("GetTherapists", mock.Anything).Return(therapists, nil)
+				m.On("GetTherapists", mock.Anything, utils.NewPagination()).Return(therapists, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "repository error",
+			url:  "",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
-				m.On("GetTherapists", mock.Anything).Return(nil, errors.New("database error"))
+				m.On("GetTherapists", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Bad Pagination Arguments",
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockTherapistRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			wantErr:        true,
+		},
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockTherapistRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name: "Pagination with parameters",
+			url:  "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetTherapists", mock.Anything, pagination).Return([]models.Therapist{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockTherapistRepository)
 			tt.mockSetup(mockRepo)
 
@@ -119,7 +154,7 @@ func TestHandler_GetTherapists(t *testing.T) {
 			app.Get("/therapists", handler.GetTherapists)
 
 			// Make request
-			req := httptest.NewRequest("GET", "/therapists", nil)
+			req := httptest.NewRequest("GET", "/therapists"+tt.url, nil)
 			resp, _ := app.Test(req, -1)
 
 			// Assert

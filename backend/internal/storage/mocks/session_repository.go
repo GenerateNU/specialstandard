@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -12,8 +13,8 @@ type MockSessionRepository struct {
 	mock.Mock
 }
 
-func (m *MockSessionRepository) GetSessions(ctx context.Context) ([]models.Session, error) {
-	args := m.Called(ctx)
+func (m *MockSessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination) ([]models.Session, error) {
+	args := m.Called(ctx, pagination)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -50,4 +51,12 @@ func (m *MockSessionRepository) PatchSession(ctx context.Context, id uuid.UUID, 
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.Session), args.Error(1)
+}
+
+func (m *MockSessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error) {
+	args := m.Called(ctx, sessionID, pagination)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.SessionStudentsOutput), args.Error(1)
 }

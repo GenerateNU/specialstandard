@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -39,12 +40,13 @@ func (r *TherapistRepository) GetTherapistByID(ctx context.Context, therapistID 
 	return &therapist, nil
 }
 
-func (r *TherapistRepository) GetTherapists(ctx context.Context) ([]models.Therapist, error) {
+func (r *TherapistRepository) GetTherapists(ctx context.Context, pagination utils.Pagination) ([]models.Therapist, error) {
 	query := `
 	SELECT id, first_name, last_name, email, active, created_at, updated_at
-	FROM therapist`
+	FROM therapist
+	LIMIT $1 OFFSET $2`
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GettOffset())
 
 	if err != nil {
 		return nil, err

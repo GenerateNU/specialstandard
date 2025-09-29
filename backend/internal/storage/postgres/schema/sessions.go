@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -13,12 +14,13 @@ type SessionRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *SessionRepository) GetSessions(ctx context.Context) ([]models.Session, error) {
+func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination) ([]models.Session, error) {
 	query := `
 	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
-	FROM session`
+	FROM session
+	LIMIT $1 OFFSET $2`
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GettOffset())
 	if err != nil {
 		return nil, err
 	}
@@ -116,4 +118,41 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 	return &SessionRepository{
 		db,
 	}
+}
+
+func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error) {
+	query := `
+	SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
+	       s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 
+	       s.grade, s.iep, s.created_at, s.updated_at
+	FROM session_student ss
+	JOIN student s ON ss.student_id = s.id
+	WHERE ss.session_id = $1
+	LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sessionStudents []models.SessionStudentsOutput
+	for rows.Next() {
+		var result models.SessionStudentsOutput
+		var student models.Student
+
+		err := rows.Scan(
+			&result.SessionID, &result.Present, &result.Notes, &result.CreatedAt, &result.UpdatedAt,
+			&student.ID, &student.FirstName, &student.LastName, &student.DOB, &student.TherapistID,
+			&student.Grade, &student.IEP, &student.CreatedAt, &student.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Student = student
+		sessionStudents = append(sessionStudents, result)
+	}
+
+	return sessionStudents, nil
 }

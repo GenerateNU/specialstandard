@@ -3,22 +3,24 @@ package schema
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/google/uuid"
 )
 
 type StudentRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *StudentRepository) GetStudents(ctx context.Context) ([]models.Student, error) {
+func (r *StudentRepository) GetStudents(ctx context.Context, pagination utils.Pagination) ([]models.Student, error) {
 	query := `
 	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
-	FROM student`
+	FROM student
+	LIMIT $1 OFFSET $2`
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GettOffset())
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,7 @@ func (r *StudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) err
 	query := `
 	DELETE FROM student
 	WHERE id = $1`
-	
+
 	_, err := r.db.Exec(ctx, query, id)
 	return err
 }
@@ -75,12 +77,12 @@ func (r *StudentRepository) AddStudent(ctx context.Context, student models.Stude
 	INSERT INTO student (first_name, last_name, dob, therapist_id, grade, iep, created_at)
 	VALUES ($1, $2, $3, $4, $5, $6, NOW())
 	RETURNING id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at`
-	
+
 	var createdStudent models.Student
 	err := r.db.QueryRow(ctx, query,
 		student.FirstName,
 		student.LastName,
-		student.DOB,         
+		student.DOB,
 		student.TherapistID,
 		student.Grade,
 		student.IEP,
@@ -95,17 +97,16 @@ func (r *StudentRepository) AddStudent(ctx context.Context, student models.Stude
 		&createdStudent.CreatedAt,
 		&createdStudent.UpdatedAt,
 	)
-	
+
 	return createdStudent, err
 }
-
 
 func (r *StudentRepository) GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error) {
 	query := `
 	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
 	FROM student
 	WHERE id = $1`
-	
+
 	var student models.Student
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&student.ID,
@@ -128,4 +129,42 @@ func NewStudentRepository(db *pgxpool.Pool) *StudentRepository {
 	return &StudentRepository{
 		db,
 	}
+}
+
+// This is our function to get all the sessions associated with a specific student from PostGres DB
+func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination) ([]models.StudentSessionsOutput, error) {
+	query := `
+	SELECT ss.student_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
+	       s.id, s.start_datetime, s.end_datetime, s.therapist_id, s.notes, 
+	       s.created_at, s.updated_at
+	FROM session_student ss
+	JOIN session s ON ss.session_id = s.id
+	WHERE ss.student_id = $1
+	LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(ctx, query, studentID, pagination.Limit, pagination.GettOffset())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var studentSessions []models.StudentSessionsOutput
+	for rows.Next() {
+		var result models.StudentSessionsOutput
+		var session models.Session
+
+		err := rows.Scan(
+			&result.StudentID, &result.Present, &result.Notes, &result.CreatedAt, &result.UpdatedAt,
+			&session.ID, &session.StartDateTime, &session.EndDateTime, &session.TherapistID, &session.Notes,
+			&session.CreatedAt, &session.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Session = session
+		studentSessions = append(studentSessions, result)
+	}
+
+	return studentSessions, nil
 }

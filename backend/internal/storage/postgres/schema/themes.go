@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
 	"strings"
 
 	"github.com/google/uuid"
@@ -42,13 +43,46 @@ func (r *ThemeRepository) CreateTheme(ctx context.Context, input *models.CreateT
 	return theme, nil
 }
 
-func (r *ThemeRepository) GetThemes(ctx context.Context) ([]models.Theme, error) {
+func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagination, filter *models.ThemeFilter) ([]models.Theme, error) {
 	query := `
 	SELECT id, theme_name, month, year, created_at, updated_at
-	FROM theme
-	ORDER BY year DESC, month DESC`
+	FROM theme`
+	
+	conditions := []string{}
+	args := []interface{}{}
+	argCount := 1
 
-	rows, err := r.db.Query(ctx, query)
+	// Add WHERE conditions based on filter
+	if filter != nil {
+		if filter.Month != nil {
+			conditions = append(conditions, fmt.Sprintf("month = $%d", argCount))
+			args = append(args, *filter.Month)
+			argCount++
+		}
+		
+		if filter.Year != nil {
+			conditions = append(conditions, fmt.Sprintf("year = $%d", argCount))
+			args = append(args, *filter.Year)
+			argCount++
+		}
+		
+		if filter.Search != nil && *filter.Search != "" {
+			conditions = append(conditions, fmt.Sprintf("theme_name ILIKE $%d", argCount))
+			args = append(args, "%"+*filter.Search+"%")
+			argCount++
+		}
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	query += fmt.Sprintf(` ORDER BY year DESC, month DESC
+	LIMIT $%d OFFSET $%d`, argCount, argCount+1)
+	
+	args = append(args, pagination.Limit, pagination.GettOffset())
+
+	rows, err := r.db.Query(ctx, query, args...)
 
 	if err != nil {
 		return nil, errs.InternalServerError("Database connection error")
@@ -151,7 +185,7 @@ func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 	if err != nil {
 		return errs.InternalServerError("Database connection error")
 	}
-	
+
 	return nil
 }
 

@@ -2,6 +2,8 @@ package schema_test
 
 import (
 	"context"
+	"fmt"
+	"specialstandard/internal/utils"
 	"testing"
 	"time"
 
@@ -42,7 +44,7 @@ func TestResourceRepository_GetResources(t *testing.T) {
     `, resourceID, themeID, "5th Grade", testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", nil)
+	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", nil, utils.NewPagination())
 
 	// Assert
 	assert.NoError(t, err)
@@ -50,6 +52,27 @@ func TestResourceRepository_GetResources(t *testing.T) {
 		assert.Equal(t, "Math Worksheet", *resources[0].Title)
 		assert.Equal(t, resourceID, resources[0].ID)
 	}
+
+	// More Tests for Pagination Behaviour
+	for i := 2; i <= 15; i++ {
+		_, err := testDB.Pool.Exec(ctx,
+			`INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `, uuid.New(), themeID, fmt.Sprintf("%d-th Grade", i), testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
+		assert.NoError(t, err)
+	}
+
+	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", nil, utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, resources, 10)
+
+	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", nil, utils.Pagination{
+		Page:  2,
+		Limit: 9,
+	})
+	assert.NoError(t, err)
+	assert.Len(t, resources, 6)
+	assert.Equal(t, "10-th Grade", *resources[0].GradeLevel)
 }
 
 func TestResourceRepository_GetResourceByID(t *testing.T) {

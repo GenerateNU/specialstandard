@@ -3,6 +3,7 @@ package theme_test
 import (
 	"errors"
 	"net/http/httptest"
+	"specialstandard/internal/utils"
 	"strings"
 	"testing"
 	"time"
@@ -167,12 +168,14 @@ func TestHandler_CreateTheme(t *testing.T) {
 func TestHandler_GetThemes(t *testing.T) {
 	tests := []struct {
 		name           string
+		url            string
 		mockSetup      func(*mocks.MockThemeRepository)
 		expectedStatus int
 		wantErr        bool
 	}{
 		{
 			name: "successful get themes",
+			url:  "",
 			mockSetup: func(m *mocks.MockThemeRepository) {
 				themes := []models.Theme{
 					{
@@ -184,18 +187,235 @@ func TestHandler_GetThemes(t *testing.T) {
 						UpdatedAt: ptrTime(time.Now()),
 					},
 				}
-				m.On("GetThemes", mock.Anything).Return(themes, nil)
+				m.On("GetThemes", mock.Anything, utils.NewPagination(), &models.ThemeFilter{}).Return(themes, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "repository error",
+			url:  "",
 			mockSetup: func(m *mocks.MockThemeRepository) {
-				m.On("GetThemes", mock.Anything).Return(nil, errors.New("database error"))
+				m.On("GetThemes", mock.Anything, utils.NewPagination(), &models.ThemeFilter{}).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			wantErr:        true,
+		},
+		{
+			name: "Pagination Parameters",
+			url:  "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetThemes", mock.Anything, pagination, &models.ThemeFilter{}).Return([]models.Theme{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		// ------- Filtering Cases -------
+		{
+			name: "Filter by month",
+			url:  "?month=3",
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				filter := &models.ThemeFilter{
+					Month: func() *int { i := 3; return &i }(),
+				}
+				themes := []models.Theme{
+					{
+						ID:        uuid.New(),
+						Name:      "Spring",
+						Month:     3,
+						Year:      2024,
+						CreatedAt: ptrTime(time.Now()),
+						UpdatedAt: ptrTime(time.Now()),
+					},
+				}
+				m.On("GetThemes", mock.Anything, utils.NewPagination(), filter).Return(themes, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "Filter by year",
+			url:  "?year=2024",
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				filter := &models.ThemeFilter{
+					Year: func() *int { i := 2024; return &i }(),
+				}
+				themes := []models.Theme{
+					{
+						ID:        uuid.New(),
+						Name:      "Spring",
+						Month:     3,
+						Year:      2024,
+						CreatedAt: ptrTime(time.Now()),
+						UpdatedAt: ptrTime(time.Now()),
+					},
+				}
+				m.On("GetThemes", mock.Anything, utils.NewPagination(), filter).Return(themes, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "Filter by search term",
+			url:  "?search=spring",
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				filter := &models.ThemeFilter{
+					Search: func() *string { s := "spring"; return &s }(),
+				}
+				themes := []models.Theme{
+					{
+						ID:        uuid.New(),
+						Name:      "Spring",
+						Month:     3,
+						Year:      2024,
+						CreatedAt: ptrTime(time.Now()),
+						UpdatedAt: ptrTime(time.Now()),
+					},
+				}
+				m.On("GetThemes", mock.Anything, utils.NewPagination(), filter).Return(themes, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "Filter by multiple parameters",
+			url:  "?month=3&year=2024&search=spring",
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				filter := &models.ThemeFilter{
+					Month:  func() *int { i := 3; return &i }(),
+					Year:   func() *int { i := 2024; return &i }(),
+					Search: func() *string { s := "spring"; return &s }(),
+				}
+				themes := []models.Theme{
+					{
+						ID:        uuid.New(),
+						Name:      "Spring",
+						Month:     3,
+						Year:      2024,
+						CreatedAt: ptrTime(time.Now()),
+						UpdatedAt: ptrTime(time.Now()),
+					},
+				}
+				m.On("GetThemes", mock.Anything, utils.NewPagination(), filter).Return(themes, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:           "Invalid month filter",
+			url:            "?month=13",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid year filter",
+			url:            "?year=1800",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid month filter - zero",
+			url:            "?month=0",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid month filter - negative",
+			url:            "?month=-1",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid year filter - too high",
+			url:            "?year=2101",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Non-integer month parameter",
+			url:            "?month=abc",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Non-integer year parameter",
+			url:            "?year=xyz",
+			mockSetup:      func(m *mocks.MockThemeRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name: "Empty search parameter",
+			url:  "?search=",
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				// Empty search creates a filter with empty string pointer (not nil)
+				filter := &models.ThemeFilter{
+					Search: func() *string { s := ""; return &s }(),
+				}
+				themes := []models.Theme{
+					{
+						ID:        uuid.New(),
+						Name:      "Spring",
+						Month:     3,
+						Year:      2024,
+						CreatedAt: ptrTime(time.Now()),
+						UpdatedAt: ptrTime(time.Now()),
+					},
+				}
+				m.On("GetThemes", mock.Anything, utils.NewPagination(), filter).Return(themes, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "Combined filters with pagination",
+			url:  "?month=3&year=2024&search=spring&page=1&limit=10",
+			mockSetup: func(m *mocks.MockThemeRepository) {
+				filter := &models.ThemeFilter{
+					Month:  func() *int { i := 3; return &i }(),
+					Year:   func() *int { i := 2024; return &i }(),
+					Search: func() *string { s := "spring"; return &s }(),
+				}
+				pagination := utils.Pagination{Page: 1, Limit: 10}
+				themes := []models.Theme{
+					{
+						ID:        uuid.New(),
+						Name:      "Spring 2024",
+						Month:     3,
+						Year:      2024,
+						CreatedAt: ptrTime(time.Now()),
+						UpdatedAt: ptrTime(time.Now()),
+					},
+				}
+				m.On("GetThemes", mock.Anything, pagination, filter).Return(themes, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
 		},
 	}
 
@@ -210,7 +430,7 @@ func TestHandler_GetThemes(t *testing.T) {
 			handler := theme.NewHandler(mockRepo)
 			app.Get("/themes", handler.GetThemes)
 
-			req := httptest.NewRequest("GET", "/themes", nil)
+			req := httptest.NewRequest("GET", "/themes"+tt.url, nil)
 			resp, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
