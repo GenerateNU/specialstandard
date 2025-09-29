@@ -206,7 +206,8 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 
 	var students []models.Student
-	json.NewDecoder(resp.Body).Decode(&students)
+	err = json.NewDecoder(resp.Body).Decode(&students)
+	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "5th", *students[0].Grade)
 
@@ -245,7 +246,8 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 
 	var students []models.Student
-	json.NewDecoder(resp.Body).Decode(&students)
+	err = json.NewDecoder(resp.Body).Decode(&students)
+	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, therapistID, students[0].TherapistID)
 
@@ -287,7 +289,8 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 
 	var students []models.Student
-	json.NewDecoder(resp.Body).Decode(&students)
+	err = json.NewDecoder(resp.Body).Decode(&students)
+	assert.NoError(t, err)
 	assert.Len(t, students, 2)
 
 	mockStudentRepo.AssertExpectations(t)
@@ -324,7 +327,8 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 
 	var students []models.Student
-	json.NewDecoder(resp.Body).Decode(&students)
+	err = json.NewDecoder(resp.Body).Decode(&students)
+	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "5th", *students[0].Grade)
 	assert.Equal(t, therapistID, students[0].TherapistID)
