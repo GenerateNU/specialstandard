@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"fmt"
 	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
 
@@ -14,13 +15,39 @@ type StudentRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *StudentRepository) GetStudents(ctx context.Context, pagination utils.Pagination) ([]models.Student, error) {
-	query := `
+func (r *StudentRepository) GetStudents(ctx context.Context, grade string, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
+	queryString := `
 	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
-	FROM student
-	LIMIT $1 OFFSET $2`
+	FROM student WHERE 1=1`
 
-	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GettOffset())
+	args := []interface{}{}
+	argNum := 1
+
+	// Add filters if provided
+	if grade != "" {
+		queryString += fmt.Sprintf(" AND grade = $%d", argNum)
+		args = append(args, grade)
+		argNum++
+	}
+
+	if therapistID != uuid.Nil {
+		queryString += fmt.Sprintf(" AND therapist_id = $%d", argNum)
+		args = append(args, therapistID)
+		argNum++
+	}
+
+	if name != "" {
+		queryString += fmt.Sprintf(" AND (first_name ILIKE $%d OR last_name ILIKE $%d)", argNum, argNum+1)
+		searchPattern := "%" + name + "%"
+		args = append(args, searchPattern, searchPattern)
+		argNum += 2
+	}
+
+	// Add pagination
+	queryString += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argNum, argNum+1)
+	args = append(args, pagination.Limit, pagination.GettOffset())
+
+	rows, err := r.db.Query(ctx, queryString, args...)
 	if err != nil {
 		return nil, err
 	}
