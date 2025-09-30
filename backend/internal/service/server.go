@@ -3,6 +3,7 @@ package service
 import (
 	"specialstandard/internal/config"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/service/handler/auth"
 	"specialstandard/internal/service/handler/resource"
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/service/handler/session_resource"
@@ -15,6 +16,7 @@ import (
 
 	"context"
 	"net/http"
+	supabase_auth "specialstandard/internal/auth"
 
 	go_json "github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
@@ -88,6 +90,15 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 	})
 	// Setup
 
+	SupabaseAuthHandler := auth.NewHandler(config.Supabase, repo.Therapist)
+
+	apiV1.Route("/auth", func(r fiber.Router) {
+		r.Post("/login", SupabaseAuthHandler.Login)
+		r.Post("/signup", SupabaseAuthHandler.SignUp)
+	})
+
+	apiV1.Use(supabase_auth.Middleware(&config.Supabase))
+
 	studentHandler := student.NewHandler(repo.Student)
 	// Student route
 	apiV1.Route("/students", func(r fiber.Router) {
@@ -157,6 +168,10 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 			"error": "Route not found",
 			"path":  c.Path(),
 		})
+	})
+
+	app.Get("/secret", supabase_auth.Middleware(&config.Supabase), func(c *fiber.Ctx) error {
+		return c.SendStatus(http.StatusOK)
 	})
 
 	return app

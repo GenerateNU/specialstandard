@@ -17,13 +17,14 @@ type Therapist struct {
 }
 
 type CreateTherapistInput struct {
-	FirstName string `json:"first_name" validate:"required,min=1,max=255"`
-	LastName  string `json:"last_name" validate:"required,min=1,max=255"`
-	Email     string `json:"email" validate:"required,min=1,max=255"`
+	ID        uuid.UUID `json:"id" validate:"required"`
+	FirstName string    `json:"first_name" validate:"required,min=1,max=255"`
+	LastName  string    `json:"last_name" validate:"required,min=1,max=255"`
+	Email     string    `json:"email" validate:"required,min=1,max=255"`
 }
 
 type UpdateTherapist struct {
-	FirstName *string `json:"first_name" validate:"omitempty,min=1,max=255"` 
+	FirstName *string `json:"first_name" validate:"omitempty,min=1,max=255"`
 	LastName  *string `json:"last_name" validate:"omitempty,min=1,max=255"`
 	Email     *string `json:"email" validate:"omitempty,min=1,max=255"`
 	Active    *bool   `json:"active" validate:"omitempty,min=1,max=255"`
