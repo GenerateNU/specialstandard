@@ -19,6 +19,10 @@ func ptrString(s string) *string {
 	return &s
 }
 
+func intPtr(i int) *int {
+	return &i
+}
+
 func TestSessionRepository_GetSessions(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
@@ -83,6 +87,48 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 4)
 	assert.Equal(t, "Test session", *sessions[3].Notes)
+
+	// Test filtering by year
+	yearFilter := &models.GetSessionRepositoryRequest{
+		Year: intPtr(startTime.Year()),
+	}
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), yearFilter)
+	assert.NoError(t, err)
+	assert.Equal(t, 10, len(sessions))
+
+	// Test filtering by month and year
+	monthYearFilter := &models.GetSessionRepositoryRequest{
+		Month: intPtr(int(startTime.Month())),
+		Year:  intPtr(startTime.Year()),
+	}
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), monthYearFilter)
+	assert.NoError(t, err)
+	assert.Equal(t, 10, len(sessions))
+
+	// Test filtering by student IDs 
+	studentID1 := uuid.New()
+	studentID2 := uuid.New()
+	
+	// Insert student associations for one of the sessions
+	sessionWithStudents := sessions[0].ID
+	_, err = testDB.Pool.Exec(ctx, `
+		INSERT INTO student (id, first_name, last_name, therapist_id)
+		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)
+	`, studentID1, "Student", "One", therapistID, studentID2, "Student", "Two", therapistID)
+	assert.NoError(t, err)
+	
+	_, err = testDB.Pool.Exec(ctx, `
+		INSERT INTO session_student (session_id, student_id, present)
+		VALUES ($1, $2, true), ($3, $4, true)
+	`, sessionWithStudents, studentID1, sessionWithStudents, studentID2)
+	assert.NoError(t, err)
+
+	studentFilter := &models.GetSessionRepositoryRequest{
+		StudentIDs: &[]uuid.UUID{studentID1, studentID2},
+	}
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), studentFilter)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(sessions))
 }
 
 func TestSessionRepository_GetSessionByID(t *testing.T) {
