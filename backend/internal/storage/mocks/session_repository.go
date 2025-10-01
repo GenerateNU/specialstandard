@@ -13,7 +13,7 @@ type MockSessionRepository struct {
 	mock.Mock
 }
 
-func (m *MockSessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination) ([]models.Session, error) {
+func (m *MockSessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error) {
 	args := m.Called(ctx, pagination)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

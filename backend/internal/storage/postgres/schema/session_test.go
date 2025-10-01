@@ -49,7 +49,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test
-	sessions, err := repo.GetSessions(ctx, utils.NewPagination())
+	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
 
 	// Assert
 	assert.NoError(t, err)
@@ -70,7 +70,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination())
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), nil)
 
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 10)
@@ -78,7 +78,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	sessions, err = repo.GetSessions(ctx, utils.Pagination{
 		Page:  4,
 		Limit: 5,
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 4)
