@@ -26,3 +26,9 @@ type UpdateThemeInput struct {
 	Month *int    `json:"month,omitempty" validate:"omitempty,gte=1,lte=12"`
 	Year  *int    `json:"year,omitempty" validate:"omitempty,gte=1900,lte=2100"`
 }
+
+type ThemeFilter struct {
+	Month  *int    `query:"month" validate:"omitempty,gte=1,lte=12"`
+	Year   *int    `query:"year" validate:"omitempty,gte=1900,lte=2100"`
+	Search *string `query:"search" validate:"omitempty,max=255"`
+}

@@ -452,36 +452,110 @@ paths:
   /students:
     get:
       summary: Get all students
-      description: Retrieve all students from the database
-      tags: [Students]
+      description: Retrieve a paginated list of students with optional filtering by grade, therapist, and name
+      tags:
+        - Students
       parameters:
         - name: page
           in: query
-          description: Page Number of pagination
+          description: Page number for pagination (starts at 1)
+          required: false
           schema:
             type: integer
             minimum: 1
+            default: 1
+            example: 1
         - name: limit
           in: query
-          description: Number of Items per page in pagination
+          description: Number of students per page
+          required: false
           schema:
             type: integer
             minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+        - name: grade
+          in: query
+          description: Filter students by grade level (exact match)
+          required: false
+          schema:
+            type: string
+            example: "5th"
+        - name: therapist_id
+          in: query
+          description: Filter students by therapist UUID
+          required: false
+          schema:
+            type: string
+            format: uuid
+            example: "9dad94d8-6534-4510-90d7-e4e97c175a65"
+        - name: name
+          in: query
+          description: Search students by name (case-insensitive, matches first or last name)
+          required: false
+          schema:
+            type: string
+            example: "John"
       responses:
-        "200":
-          description: List of students
+        '200':
+          description: Successful response with list of students
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Student"
-        "500":
+                  $ref: '#/components/schemas/Student'
+              examples:
+                allStudents:
+                  summary: All students (no filters)
+                  value:
+                    - id: "843d4807-1397-4227-9328-330adea56993"
+                      first_name: "John"
+                      last_name: "Doe"
+                      dob: "2010-05-15T00:00:00Z"
+                      therapist_id: "9dad94d8-6534-4510-90d7-e4e97c175a65"
+                      grade: "5th"
+                      iep: "Active IEP with speech therapy goals"
+                      created_at: "2025-09-18T14:14:11.66268Z"
+                      updated_at: "2025-09-18T14:14:11.66268Z"
+                filteredByGrade:
+                  summary: Filtered by grade
+                  value:
+                    - id: "843d4807-1397-4227-9328-330adea56993"
+                      first_name: "John"
+                      last_name: "Doe"
+                      grade: "5th"
+                      therapist_id: "9dad94d8-6534-4510-90d7-e4e97c175a65"
+                emptyResults:
+                  summary: No matching results
+                  value: []
+        '400':
+          description: Bad request - Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidTherapistId:
+                  summary: Invalid therapist_id format
+                  value:
+                    code: 400
+                    message:
+                      therapistid: "TherapistID is invalid"
+                invalidPagination:
+                  summary: Invalid pagination values
+                  value:
+                    code: 400
+                    message:
+                      page: "Page must be greater than or equal to 1"
+                      limit: "Limit must be greater than or equal to 1"
+        '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
     post:
       summary: Create a new student
       description: Create a new student record
@@ -1413,7 +1487,7 @@ paths:
   /themes:
     get:
       summary: Get all themes
-      description: Retrieve all themes from the database
+      description: Retrieve all themes from the database with optional filtering by month, year, and name search
       tags: [Themes]
       parameters:
         - name: page
@@ -1428,15 +1502,85 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: month
+          in: query
+          description: Filter themes by month (1-12)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          example: 3
+        - name: year
+          in: query
+          description: Filter themes by year
+          required: false
+          schema:
+            type: integer
+            minimum: 1900
+            maximum: 2100
+          example: 2024
+        - name: search
+          in: query
+          description: Search themes by name (case-insensitive, partial matching)
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+          example: "spring"
       responses:
         "200":
-          description: List of themes
+          description: List of themes (filtered and paginated based on query parameters)
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/Theme"
+              examples:
+                all_themes:
+                  summary: Get all themes with pagination
+                  value:
+                    - id: "123e4567-e89b-12d3-a456-426614174000"
+                      name: "Spring Activities"
+                      month: 3
+                      year: 2024
+                      created_at: "2024-01-15T10:30:00Z"
+                      updated_at: "2024-01-15T10:35:00Z"
+                filtered_themes:
+                  summary: Get spring themes for 2024
+                  description: Example response for GET /themes?month=3&year=2024&search=spring
+                  value:
+                    - id: "123e4567-e89b-12d3-a456-426614174000"
+                      name: "Spring Activities"
+                      month: 3
+                      year: 2024
+                      created_at: "2024-01-15T10:30:00Z"
+                      updated_at: "2024-01-15T10:35:00Z"
+        "400":
+          description: Bad request (e.g., invalid filter parameters)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_month:
+                  summary: Invalid month parameter
+                  value:
+                    code: 400
+                    message:
+                      month: "Month must be less than or equal to 12"
+                invalid_year:
+                  summary: Invalid year parameter
+                  value:
+                    code: 400
+                    message:
+                      year: "Year must be greater than or equal to 1900"
+                invalid_pagination:
+                  summary: Invalid pagination parameters
+                  value:
+                    code: 400
+                    message: "Invalid Pagination Query Parameters"
         "500":
           description: Internal server error
           content:
@@ -1777,19 +1921,12 @@ components:
 
     Student:
       type: object
-      required:
-        - id
-        - first_name
-        - last_name
-        - therapist_id
-        - created_at
-        - updated_at
       properties:
         id:
           type: string
           format: uuid
           description: Unique identifier for the student
-          example: "123e4567-e89b-12d3-a456-426614174000"
+          example: "843d4807-1397-4227-9328-330adea56993"
         first_name:
           type: string
           description: Student's first name
@@ -1800,36 +1937,41 @@ components:
           example: "Doe"
         dob:
           type: string
-          format: date
-          nullable: true
-          description: Student's date of birth (optional)
-          example: "2010-05-15"
+          format: date-time
+          description: Student's date of birth
+          example: "2010-05-15T00:00:00Z"
         therapist_id:
           type: string
           format: uuid
-          description: ID of the assigned therapist
-          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+          description: UUID of the assigned therapist
+          example: "9dad94d8-6534-4510-90d7-e4e97c175a65"
         grade:
           type: string
           nullable: true
-          description: Student's current grade level (optional)
-          example: "5th Grade"
+          description: Student's current grade level
+          example: "5th"
         iep:
           type: string
           nullable: true
-          description: Individualized Education Program details (optional)
+          description: Individualized Education Program details
           example: "Active IEP with speech therapy goals"
         created_at:
           type: string
           format: date-time
-          description: When the student record was created
-          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when the student record was created
+          example: "2025-09-18T14:14:11.66268Z"
         updated_at:
           type: string
           format: date-time
-          description: When the student record was last updated
-          example: "2024-01-15T10:35:00Z"
-
+          description: Timestamp when the student record was last updated
+          example: "2025-09-18T14:14:11.66268Z"
+      required:
+        - id
+        - first_name
+        - last_name
+        - therapist_id
+        - created_at
+        - updated_at
     CreateStudentInput:
       type: object
       required:
