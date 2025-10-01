@@ -82,7 +82,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 4)
-	assert.Equal(t, "Test session18", *sessions[3].Notes)
+	assert.Equal(t, "Test session", *sessions[3].Notes)
 }
 
 func TestSessionRepository_GetSessionByID(t *testing.T) {

@@ -77,15 +77,3 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(sessions)
 }
-
-// Basic function to check for duplicates in a list of uuids!
-func checkForDuplicates(ids []uuid.UUID) bool {
-	seen := make(map[uuid.UUID]bool)
-	for _, i := range ids {
-		if seen[i] {
-			return true
-		}
-		seen[i] = true
-	}
-	return false
-}
