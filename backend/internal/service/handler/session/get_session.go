@@ -35,11 +35,6 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 			}
 			uuidStudentIDs = append(uuidStudentIDs, id)
 		}
-
-		// Check for duplicates if we have any IDs, and uses that one cancellation property that iforgot what what it was called
-		if len(uuidStudentIDs) > 0 && checkForDuplicates(uuidStudentIDs) {
-			return errs.BadRequest("Given multiple of the same students")
-		}
 	}
 
 	// we do not need to check for invalid uuid in request body
