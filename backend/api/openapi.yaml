@@ -44,9 +44,10 @@ paths:
                 $ref: "#/components/schemas/Error"
 
   /sessions:
+    /sessions:
     get:
       summary: Get all sessions
-      description: Retrieve all therapy sessions from the database
+      description: Retrieve all therapy sessions from the database with optional filtering
       tags: [Sessions]
       parameters:
         - name: page
@@ -61,15 +62,65 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: startdate
+          in: query
+          description: Filter sessions starting on or after this datetime
+          schema:
+            type: string
+            format: date-time
+          example: "2025-01-01T00:00:00Z"
+        - name: enddate
+          in: query
+          description: Filter sessions starting on or before this datetime
+          schema:
+            type: string
+            format: date-time
+          example: "2025-12-31T23:59:59Z"
+        - name: month
+          in: query
+          description: Filter sessions by month (1-12)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          example: 9
+        - name: year
+          in: query
+          description: Filter sessions by year
+          schema:
+            type: integer
+            minimum: 1776
+            maximum: 2200
+          example: 2025
+        - name: id
+          in: query
+          description: Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+          style: form
+          explode: true
+          example: ["550e8400-e29b-41d4-a716-446655440000"]
       responses:
         "200":
-          description: List of therapy sessions
+          description: List of therapy sessions matching the filters
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/Session"
+        "400":
+          description: Bad request (e.g., invalid query parameters)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid student ID format"
         "500":
           description: Internal server error
           content:
