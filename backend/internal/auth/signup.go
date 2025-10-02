@@ -20,13 +20,13 @@ type Payload struct {
 	Password string `json:"password"`
 }
 
-type userSignupResponse struct {
+type UserSignupResponse struct {
 	ID uuid.UUID `json:"id"`
 }
 
-type signupResponse struct {
+type SignupResponse struct {
 	AccessToken string             `json:"access_token"`
-	User        userSignupResponse `json:"user"`
+	User        UserSignupResponse `json:"user"`
 }
 
 func validatePasswordStrength(password string) error {
@@ -36,7 +36,7 @@ func validatePasswordStrength(password string) error {
 	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
 	hasLower := regexp.MustCompile(`[a-z]`).MatchString(password)
 	hasDigit := regexp.MustCompile(`[0-9]`).MatchString(password)
-	hasSpecial := regexp.MustCompile(`[!@#~$%^&*()+|_.,<>?/{}\-]`).MatchString(password)
+	hasSpecial := regexp.MustCompile(`[!@#~$%^&*()+|_.,;<>?/{}\-]`).MatchString(password)
 
 	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
 		return errors.New("Password must include uppercase, lowercase, digit and special characters")
@@ -45,9 +45,9 @@ func validatePasswordStrength(password string) error {
 	return nil
 }
 
-func SupabaseSignup(cfg *config.Supabase, email string, password string) (signupResponse, error) {
+func SupabaseSignup(cfg *config.Supabase, email, password string) (SignupResponse, error) {
 	if err := validatePasswordStrength(password); err != nil {
-		return signupResponse{}, errs.BadRequest(fmt.Sprintf("Weak Password: %v", err))
+		return SignupResponse{}, errs.BadRequest(fmt.Sprintf("Weak Password: %v", err))
 	}
 
 	supabaseURL := cfg.URL
@@ -59,13 +59,13 @@ func SupabaseSignup(cfg *config.Supabase, email string, password string) (signup
 	}
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return signupResponse{}, err
+		return SignupResponse{}, err
 	}
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/auth/v1/signup", supabaseURL), bytes.NewBuffer(payloadBytes))
 	if err != nil {
 		slog.Error("Error in Request Creation: ", err)
-		return signupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to create request: %v", err))
+		return SignupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to create request: %v", err))
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -75,25 +75,25 @@ func SupabaseSignup(cfg *config.Supabase, email string, password string) (signup
 	res, err := Client.Do(req)
 	if err != nil {
 		slog.Error("Error executing request: ", err)
-		return signupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to execute request: %v, %s", err, supabaseURL))
+		return SignupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to execute request: %v, %s", err, supabaseURL))
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		slog.Error("Error reading response body: ", body)
-		return signupResponse{}, errs.BadRequest("Failed to read response body", string(body))
+		return SignupResponse{}, errs.BadRequest("Failed to read response body", string(body))
 	}
 
 	if res.StatusCode != http.StatusOK {
 		slog.Error("Error Response: ", res.StatusCode, string(body))
-		return signupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to login %d, %s", res.StatusCode, body))
+		return SignupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to login %d, %s", res.StatusCode, body))
 	}
 
-	var response signupResponse
+	var response SignupResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		slog.Error("Error parsing response: ", err)
-		return signupResponse{}, errs.BadRequest("Failed to parse request")
+		return SignupResponse{}, errs.BadRequest("Failed to parse request")
 	}
 
 	return response, nil

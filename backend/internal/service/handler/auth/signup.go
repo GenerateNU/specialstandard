@@ -19,7 +19,7 @@ func (h *Handler) SignUp(c *fiber.Ctx) error {
 	var cred Credentials
 
 	if err := c.BodyParser(&cred); err != nil {
-		return errs.BadRequest(fmt.Sprintf("Invalid Request Body: %v", cred))
+		return errs.BadRequest(fmt.Sprintf("Invalid Request Body: %v", err))
 	}
 
 	res, err := auth.SupabaseSignup(&h.config, cred.Email, cred.Password)

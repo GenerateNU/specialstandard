@@ -3,6 +3,7 @@ module specialstandard
 go 1.23.1
 
 require (
+	bou.ke/monkey v1.0.2
 	github.com/goccy/go-json v0.10.5
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/gofiber/swagger v1.1.1
