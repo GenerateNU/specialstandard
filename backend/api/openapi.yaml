@@ -12,6 +12,8 @@ servers:
 tags:
   - name: Health
     description: Health check operations
+  - name: Auth
+    description: Authentication Management Operations
   - name: Sessions
     description: Therapy session operations
   - name: Students
@@ -42,6 +44,160 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
+  /auth/signup:
+    post:
+      summary: SignUp Feature
+      description: Signs Up New User to the Platform as a Therapist
+      tags: [ Auth ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email ID of the User/Therapist
+                  example: "dr.doolittle@zoolittle.com"
+                password:
+                  type: string
+                  description: Password of the User/Therapist (meets strong password requirements)
+                  example: "IlikeMYanimalsLITTLE@34"
+                first_name:
+                  type: string
+                  description: First Name of the User/Therapist
+                  example: "John"
+                last_name:
+                  type: string
+                  description: Last Name of the User/Therapist
+                  example: "Dolittle"
+      responses:
+        "201":
+          description: User/Therapist created successfully!
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: The JWT Access Token issued for this User
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: The unique identifier of the newly created therapist
+                        example: "f20e5948-01ba-4113-b453-db05d8bde3bc"
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad Request"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                message: "Internal Server Error"
+
+  /auth/login:
+    post:
+      summary: Login Feature
+      description: Log into the Platform
+      tags: [ Auth ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email ID of the User/Therapist
+                  example: "dr.doolittle@zoolittle.com"
+                password:
+                  type: string
+                  description: Password of the User/Therapist (meets strong password requirements)
+                  example: "IlikeMYanimalsLITTLE@34"
+      responses:
+        "200":
+          description: User/Therapist created successfully!
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: The JWT Access Token issued for this User
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  token_type:
+                    type: string
+                    description: Describes the type of JWT Token designated to this User
+                    example: "bearer"
+                  expires_in:
+                    type: int
+                    description: The Amount of Time it will take for this token to expire
+                    example: 3600
+                  refresh_token:
+                    type: string
+                    description: Used to get a new access token after the current one expires...
+                    example: "67z4xav34h37"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: The unique identifier of the newly created therapist
+                        example: "f20e5948-01ba-4113-b453-db05d8bde3bc"
+                  error:
+                    content:
+                      application/json:
+                        schema:
+                          $ref: "#/components/schemas/Error"
+                        example:
+                          code: 500
+                          message: "Internal Server Error"
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad Request"
+        "401":
+          description: Status Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 401
+                message: "Status Unauthorized?!"
 
   /sessions:
     /sessions:
