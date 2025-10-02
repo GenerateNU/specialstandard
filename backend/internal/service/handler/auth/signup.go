@@ -29,6 +29,7 @@ func (h *Handler) SignUp(c *fiber.Ctx) error {
 	}
 
 	postTherapist := models.CreateTherapistInput{
+		ID:        res.User.ID,
 		FirstName: derefString(cred.FirstName),
 		LastName:  derefString(cred.LastName),
 		Email:     cred.Email,

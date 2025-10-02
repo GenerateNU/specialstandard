@@ -92,12 +92,18 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 
 	SupabaseAuthHandler := auth.NewHandler(config.Supabase, repo.Therapist)
 
-	apiV1.Route("/auth", func(r fiber.Router) {
-		r.Post("/login", SupabaseAuthHandler.Login)
-		r.Post("/signup", SupabaseAuthHandler.SignUp)
-	})
+	authGroup := apiV1.Group("/auth")
+	authGroup.Post("/login", SupabaseAuthHandler.Login)
+	authGroup.Post("/signup", SupabaseAuthHandler.SignUp)
 
-	apiV1.Use(supabase_auth.Middleware(&config.Supabase))
+	if !config.TestMode {
+		apiV1.Use(supabase_auth.Middleware(&config.Supabase))
+	} else {
+		apiV1.Use(func(c *fiber.Ctx) error {
+			c.Locals("user", "test-user")
+			return c.Next()
+		})
+	}
 
 	studentHandler := student.NewHandler(repo.Student)
 	// Student route

@@ -858,13 +858,16 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 		Therapist: mockTherapistRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
-	body := `{
+	body := fmt.Sprintf(`{
+		"id": "%s",
 		"first_name": "Kevin",
 		"last_name": "Matula",
 		"email": "matulakevin91@gmail.com"
-	}`
+	}`, uuid.New())
 
 	req := httptest.NewRequest("POST", "/api/v1/therapists", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
