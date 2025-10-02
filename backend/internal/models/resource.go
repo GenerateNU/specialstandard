@@ -9,7 +9,7 @@ import (
 type Resource struct {
 	ID         uuid.UUID  `json:"id"`
 	ThemeID    uuid.UUID  `json:"theme_id"`
-	GradeLevel *string    `json:"grade_level"`
+	GradeLevel *int       `json:"grade_level"`
 	Date       *time.Time `json:"date"`
 	Type       *string    `json:"type"`
 	Title      *string    `json:"title"`
@@ -21,7 +21,7 @@ type Resource struct {
 
 type ResourceBody struct {
 	ThemeID    uuid.UUID  `json:"theme_id"`
-	GradeLevel *string    `json:"grade_level"`
+	GradeLevel *int       `json:"grade_level" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	Date       *time.Time `json:"date"`
 	Type       *string    `json:"type"`
 	Title      *string    `json:"title"`
@@ -31,7 +31,7 @@ type ResourceBody struct {
 
 type UpdateResourceBody struct {
 	ThemeID    *uuid.UUID `json:"theme_id"`
-	GradeLevel *string    `json:"grade_level"`
+	GradeLevel *int       `json:"grade_level" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	Date       *time.Time `json:"date"`
 	Type       *string    `json:"type"`
 	Title      *string    `json:"title"`

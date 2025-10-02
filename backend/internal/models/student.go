@@ -13,7 +13,7 @@ type Student struct {
 	LastName    string     `json:"last_name" db:"last_name"`
 	DOB         *time.Time `json:"dob,omitempty" db:"dob"`
 	TherapistID uuid.UUID  `json:"therapist_id" db:"therapist_id"`
-	Grade       *string    `json:"grade,omitempty" db:"grade"`
+	Grade       *int       `json:"grade,omitempty" db:"grade"`
 	IEP         *string    `json:"iep,omitempty" db:"iep"`
 	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
@@ -24,12 +24,12 @@ type CreateStudentInput struct {
 	LastName    string  `json:"last_name" validate:"required,min=1,max=100"`
 	DOB         *string `json:"dob,omitempty" validate:"omitempty,datetime=2006-01-02"`
 	TherapistID string  `json:"therapist_id" validate:"required,uuid"`
-	Grade       *string `json:"grade,omitempty" validate:"omitempty,numeric,min=1,max=12"`
+	Grade       *int    `json:"grade,omitempty" validate:"omitempty,oneof=-1 0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	IEP         *string `json:"iep,omitempty"`
 }
 
 type GetStudentsQuery struct {
-	Grade       string `query:"grade" validate:"omitempty"`
+	Grade       *int   `query:"grade" validate:"omitempty,oneof=-1 0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	TherapistID string `query:"therapist_id" validate:"omitempty,uuid"`
 	Name        string `query:"name" validate:"omitempty"`
 	utils.Pagination
@@ -40,6 +40,11 @@ type UpdateStudentInput struct {
 	LastName    *string `json:"last_name,omitempty"`
 	DOB         *string `json:"dob,omitempty"`
 	TherapistID *string `json:"therapist_id,omitempty"`
-	Grade       *string `json:"grade,omitempty"`
+	Grade       *int    `json:"grade,omitempty" validate:"omitempty,oneof=-1 0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	IEP         *string `json:"iep,omitempty"`
+}
+
+type PromoteStudentsInput struct {
+	TherapistID        string   `json:"therapist_id" validate:"required,uuid"`
+	ExcludedStudentIDs []string `json:"excluded_student_ids" validate:"dive,uuid"`
 }
