@@ -1,12 +1,12 @@
 package student
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"specialstandard/internal/models"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
@@ -22,42 +22,19 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 	}
 
 	var req models.UpdateStudentInput
-	
+
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid JSON format",
 		})
 	}
 
-	// Validate grade if provided (same validation as AddStudent)
-	if req.Grade != nil && *req.Grade != "" {
-		grade := strings.ToLower(strings.TrimSpace(*req.Grade))
-		var gradeNum int
-		var err error
-		
-		// Handle kindergarten as special case
-		if grade == "k" || grade == "kindergarten" {
-			gradeNum = 0
-		} else {
-			// Remove ordinal suffixes (st, nd, rd, th)
-			if len(grade) >= 2 {
-				suffix := grade[len(grade)-2:]
-				if suffix == "st" || suffix == "nd" || suffix == "rd" || suffix == "th" {
-					grade = grade[:len(grade)-2]
-				}
-			}
-			
-			gradeNum, err = strconv.Atoi(grade)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "Grade must be a valid grade (K, 1-12, or 1st-12th)",
-				})
-			}
-		}
-		
-		if gradeNum < 0 || gradeNum > 12 {
+	// Validate grade if provided (now expects integer input)
+	if req.Grade != nil {
+		grade := *req.Grade
+		if grade != -1 && (grade < 0 || grade > 12) {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Grade must be between K and 12",
+				"error": "Grade must be -1 (graduated), 0 (kindergarten), or 1-12",
 			})
 		}
 	}
@@ -102,12 +79,8 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 		existingStudent.TherapistID = therapistID
 	}
 	if req.Grade != nil {
-		if *req.Grade == "" {
-			// Empty string means set to NULL
-			existingStudent.Grade = nil
-		} else {
-			existingStudent.Grade = req.Grade
-		}
+		// Grade is now *int, so just assign it directly
+		existingStudent.Grade = req.Grade
 	}
 	if req.IEP != nil {
 		if *req.IEP == "" {

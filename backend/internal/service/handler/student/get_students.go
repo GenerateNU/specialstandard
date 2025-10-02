@@ -11,7 +11,7 @@ import (
 
 // GetStudentsQuery represents the query parameters for filtering students
 type GetStudentsQuery struct {
-	Grade       string `query:"grade" validate:"omitempty"`
+	Grade       int    `query:"grade" validate:"omitempty,oneof=-1 0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	TherapistID string `query:"therapist_id" validate:"omitempty,uuid"`
 	Name        string `query:"name" validate:"omitempty"`
 	utils.Pagination

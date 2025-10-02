@@ -2,8 +2,6 @@ package student
 
 import (
 	"specialstandard/internal/models"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -36,35 +34,12 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate grade if provided (as suggested by reviewer)
-	if req.Grade != nil && *req.Grade != "" {
-		grade := strings.ToLower(strings.TrimSpace(*req.Grade))
-		var gradeNum int
-		var err error
-
-		// Handle kindergarten as special case
-		if grade == "k" || grade == "kindergarten" {
-			gradeNum = 0
-		} else {
-			// Remove ordinal suffixes (st, nd, rd, th)
-			if len(grade) >= 2 {
-				suffix := grade[len(grade)-2:]
-				if suffix == "st" || suffix == "nd" || suffix == "rd" || suffix == "th" {
-					grade = grade[:len(grade)-2]
-				}
-			}
-
-			gradeNum, err = strconv.Atoi(grade)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "Grade must be a valid grade (K, 1-12, or 1st-12th)",
-				})
-			}
-		}
-
-		if gradeNum < 0 || gradeNum > 12 {
+	// Validate grade if provided (now expects integer input)
+	if req.Grade != nil {
+		grade := *req.Grade
+		if grade != -1 && (grade < 0 || grade > 12) {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Grade must be between K and 12",
+				"error": "Grade must be -1 (graduated), 0 (kindergarten), or 1-12",
 			})
 		}
 	}
@@ -95,8 +70,8 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 		LastName:    req.LastName,
 		DOB:         dob,
 		TherapistID: therapistID,
-		Grade:       req.Grade, // Keep as *string since that's what Student expects
-		IEP:         req.IEP,   // Keep as *string since that's what Student expects
+		Grade:       req.Grade, // Now *int as expected by the model
+		IEP:         req.IEP,
 	}
 
 	createdStudent, err := h.studentRepository.AddStudent(c.Context(), student)
