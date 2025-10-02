@@ -1,6 +1,7 @@
 package models
 
 import (
+	"specialstandard/internal/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,7 +19,6 @@ type Student struct {
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
 
-// Input struct for creating students
 type CreateStudentInput struct {
 	FirstName   string  `json:"first_name" validate:"required,min=1,max=100"`
 	LastName    string  `json:"last_name" validate:"required,min=1,max=100"`
@@ -28,7 +28,13 @@ type CreateStudentInput struct {
 	IEP         *string `json:"iep,omitempty"`
 }
 
-// Input struct for updating students (all fields optional for PATCH)
+type GetStudentsQuery struct {
+	Grade       string `query:"grade" validate:"omitempty"`
+	TherapistID string `query:"therapist_id" validate:"omitempty,uuid"`
+	Name        string `query:"name" validate:"omitempty"`
+	utils.Pagination
+}
+
 type UpdateStudentInput struct {
 	FirstName   *string `json:"first_name,omitempty"`
 	LastName    *string `json:"last_name,omitempty"`

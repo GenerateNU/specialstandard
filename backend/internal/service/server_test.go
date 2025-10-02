@@ -150,7 +150,7 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
-	mockStudentRepo.On("GetStudents", mock.Anything, utils.NewPagination()).Return([]models.Student{
+	mockStudentRepo.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
 		{
 			ID:          uuid.New(),
 			FirstName:   "Emma",
@@ -178,6 +178,220 @@ func TestGetStudentsEndpoint(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
+}
+
+// Add these tests to your server_test.go file
+
+func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
+	mockStudentRepo := new(mocks.MockStudentRepository)
+
+	expectedStudents := []models.Student{
+		{
+			ID:          uuid.New(),
+			FirstName:   "John",
+			LastName:    "Doe",
+			DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
+			TherapistID: uuid.New(),
+			Grade:       ptrString("5th"),
+			IEP:         ptrString("Test IEP"),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+	}
+
+	mockStudentRepo.On("GetStudents", mock.Anything, "5th", uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+
+	repo := &storage.Repository{
+		Student: mockStudentRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/students?grade=5th", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	var students []models.Student
+	err = json.NewDecoder(resp.Body).Decode(&students)
+	assert.NoError(t, err)
+	assert.Len(t, students, 1)
+	assert.Equal(t, "5th", *students[0].Grade)
+
+	mockStudentRepo.AssertExpectations(t)
+}
+
+func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
+	mockStudentRepo := new(mocks.MockStudentRepository)
+	therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+
+	expectedStudents := []models.Student{
+		{
+			ID:          uuid.New(),
+			FirstName:   "Jane",
+			LastName:    "Smith",
+			DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
+			TherapistID: therapistID,
+			Grade:       ptrString("4th"),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+	}
+
+	mockStudentRepo.On("GetStudents", mock.Anything, "", therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+
+	repo := &storage.Repository{
+		Student: mockStudentRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/students?therapist_id=123e4567-e89b-12d3-a456-426614174000", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	var students []models.Student
+	err = json.NewDecoder(resp.Body).Decode(&students)
+	assert.NoError(t, err)
+	assert.Len(t, students, 1)
+	assert.Equal(t, therapistID, students[0].TherapistID)
+
+	mockStudentRepo.AssertExpectations(t)
+}
+
+func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
+	mockStudentRepo := new(mocks.MockStudentRepository)
+
+	expectedStudents := []models.Student{
+		{
+			ID:        uuid.New(),
+			FirstName: "John",
+			LastName:  "Doe",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		{
+			ID:        uuid.New(),
+			FirstName: "Johnny",
+			LastName:  "Smith",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+	}
+
+	mockStudentRepo.On("GetStudents", mock.Anything, "", uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+
+	repo := &storage.Repository{
+		Student: mockStudentRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/students?name=John", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	var students []models.Student
+	err = json.NewDecoder(resp.Body).Decode(&students)
+	assert.NoError(t, err)
+	assert.Len(t, students, 2)
+
+	mockStudentRepo.AssertExpectations(t)
+}
+
+func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
+	mockStudentRepo := new(mocks.MockStudentRepository)
+	therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+
+	expectedStudents := []models.Student{
+		{
+			ID:          uuid.New(),
+			FirstName:   "John",
+			LastName:    "Doe",
+			Grade:       ptrString("5th"),
+			TherapistID: therapistID,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+	}
+
+	mockStudentRepo.On("GetStudents", mock.Anything, "5th", therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
+
+	repo := &storage.Repository{
+		Student: mockStudentRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/students?grade=5th&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	var students []models.Student
+	err = json.NewDecoder(resp.Body).Decode(&students)
+	assert.NoError(t, err)
+	assert.Len(t, students, 1)
+	assert.Equal(t, "5th", *students[0].Grade)
+	assert.Equal(t, therapistID, students[0].TherapistID)
+
+	mockStudentRepo.AssertExpectations(t)
+}
+
+func TestGetStudentsEndpoint_InvalidTherapistID(t *testing.T) {
+	mockStudentRepo := new(mocks.MockStudentRepository)
+
+	repo := &storage.Repository{
+		Student: mockStudentRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/students?therapist_id=invalid-uuid", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 400, resp.StatusCode)
+
+	// Should not call repository if validation fails
+	mockStudentRepo.AssertNotCalled(t, "GetStudents")
+}
+
+func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
+	mockStudentRepo := new(mocks.MockStudentRepository)
+
+	expectedStudents := []models.Student{
+		{
+			ID:        uuid.New(),
+			FirstName: "Test",
+			LastName:  "Student",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+	}
+
+	// Empty string filters should be treated as no filter
+	mockStudentRepo.On("GetStudents", mock.Anything, "", uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+
+	repo := &storage.Repository{
+		Student: mockStudentRepo,
+	}
+
+	app := service.SetupApp(config.Config{}, repo)
+
+	req := httptest.NewRequest("GET", "/api/v1/students?grade=&name=&therapist_id=", nil)
+	resp, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	mockStudentRepo.AssertExpectations(t)
 }
 
 func TestGetStudentByIDEndpoint(t *testing.T) {
