@@ -64,7 +64,7 @@ func SupabaseSignup(cfg *config.Supabase, email, password string) (SignupRespons
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/auth/v1/signup", supabaseURL), bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		slog.Error("Error in Request Creation: ", err)
+		slog.Error("Error in Request Creation: ", "err", err)
 		return SignupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to create request: %v", err))
 	}
 
@@ -74,25 +74,25 @@ func SupabaseSignup(cfg *config.Supabase, email, password string) (SignupRespons
 
 	res, err := Client.Do(req)
 	if err != nil {
-		slog.Error("Error executing request: ", err)
+		slog.Error("Error executing request: ", "err", err)
 		return SignupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to execute request: %v, %s", err, supabaseURL))
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		slog.Error("Error reading response body: ", body)
+		slog.Error("Error reading response body: ", "body", body)
 		return SignupResponse{}, errs.BadRequest("Failed to read response body", string(body))
 	}
 
 	if res.StatusCode != http.StatusOK {
-		slog.Error("Error Response: ", res.StatusCode, string(body))
+		slog.Error("Error Response: ", "res.StatusCode", res.StatusCode, "body", string(body))
 		return SignupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to login %d, %s", res.StatusCode, body))
 	}
 
 	var response SignupResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		slog.Error("Error parsing response: ", err)
+		slog.Error("Error parsing response: ", "err", err)
 		return SignupResponse{}, errs.BadRequest("Failed to parse request")
 	}
 

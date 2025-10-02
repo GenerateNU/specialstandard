@@ -50,14 +50,14 @@ func SupabaseLogin(cfg *config.Supabase, email string, password string) (SignInR
 
 	res, err := Client.Do(req)
 	if err != nil {
-		slog.Error("Failed to execute Request", err)
+		slog.Error("Failed to execute Request", "err", err)
 		return SignInResponse{}, errs.BadRequest("Failed to execute Request")
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		slog.Error("Failed to read response body", err)
+		slog.Error("Failed to read response body", "err", err)
 		return SignInResponse{}, errs.BadRequest("Failed to read response body")
 	}
 
@@ -70,7 +70,7 @@ func SupabaseLogin(cfg *config.Supabase, email string, password string) (SignInR
 	var signInResponse SignInResponse
 	err = json.Unmarshal(body, &signInResponse)
 	if err != nil {
-		slog.Error("Failed to parse response body", err)
+		slog.Error("Failed to parse response body", "body", err)
 		return SignInResponse{}, errs.BadRequest("Failed to parse response body")
 	}
 

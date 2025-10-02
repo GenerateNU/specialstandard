@@ -2075,7 +2075,7 @@ func TestHandler_Signup(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{
+				_, _ = w.Write([]byte(`{
 					"access_token": "dummy-token",
 					"user": {"id": "f20e5948-01ba-4113-b453-db05d8bde3bc"}
 				}`))
@@ -2141,7 +2141,7 @@ func TestHandler_Login(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{
+				_, _ = w.Write([]byte(`{
 					"access_token": "dummy-token",
 					"user": {"id": "f20e5948-01ba-4113-b453-db05d8bde3bc"}
 				}`))
