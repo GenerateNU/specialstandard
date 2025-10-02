@@ -30,6 +30,10 @@ func ptrString(s string) *string {
 	return &s
 }
 
+func ptrInt(i int) *int {
+	return &i
+}
+
 func TestHandler_GetStudents(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -49,13 +53,13 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:    "Student",
 						DOB:         ptrTime(time.Now().AddDate(-10, 0, 0)),
 						TherapistID: uuid.New(),
-						Grade:       ptrString("Test Grade"),
+						Grade:       ptrInt(99),
 						IEP:         ptrString("Test IEP"),
 						CreatedAt:   time.Now(),
 						UpdatedAt:   time.Now(),
 					},
 				}
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.NewPagination()).Return(students, nil)
+				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "", utils.NewPagination()).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -64,7 +68,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "empty students list",
 			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.NewPagination()).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "", utils.NewPagination()).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -73,7 +77,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "repository error",
 			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.NewPagination()).Return(nil, errors.New("database error"))
+				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "", utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -97,24 +101,24 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "Pagination Parameters",
 			url:  "?page=2&limit=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.Pagination{Page: 2, Limit: 5}).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "", utils.Pagination{Page: 2, Limit: 5}).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "successful get students with grade filter",
-			url:  "?grade=5th",
+			url:  "?grade=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				students := []models.Student{
 					{
 						ID:        uuid.New(),
 						FirstName: "John",
 						LastName:  "Doe",
-						Grade:     ptrString("5th"),
+						Grade:     ptrInt(5),
 					},
 				}
-				m.On("GetStudents", mock.Anything, "5th", uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, 5, uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -132,7 +136,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						TherapistID: therapistID,
 					},
 				}
-				m.On("GetStudents", mock.Anything, "", therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, 0, therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -148,14 +152,14 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:  "Doe",
 					},
 				}
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "successful get students with all filters",
-			url:  "?grade=5th&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5",
+			url:  "?grade=5&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 				students := []models.Student{
@@ -163,20 +167,20 @@ func TestHandler_GetStudents(t *testing.T) {
 						ID:          uuid.New(),
 						FirstName:   "John",
 						LastName:    "Doe",
-						Grade:       ptrString("5th"),
+						Grade:       ptrInt(5),
 						TherapistID: therapistID,
 					},
 				}
-				m.On("GetStudents", mock.Anything, "5th", therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
+				m.On("GetStudents", mock.Anything, 5, therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "empty results with filters",
-			url:  "?grade=12th&name=Nonexistent",
+			url:  "?grade=12&name=Nonexistent",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, "12th", uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, 12, uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -192,24 +196,24 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:  "Doe",
 					},
 				}
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "filter by grade with pagination",
-			url:  "?grade=5th&page=2&limit=3",
+			url:  "?grade=5&page=2&limit=3",
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				students := []models.Student{
 					{
 						ID:        uuid.New(),
 						FirstName: "Student",
 						LastName:  "Four",
-						Grade:     ptrString("5th"),
+						Grade:     ptrInt(5),
 					},
 				}
-				m.On("GetStudents", mock.Anything, "5th", uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
+				m.On("GetStudents", mock.Anything, 5, uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -251,7 +255,7 @@ func TestHandler_GetStudents(t *testing.T) {
 					assert.Equal(t, "Student", students[0].LastName)
 					// Update assertions to handle nullable pointers
 					if students[0].Grade != nil {
-						assert.Equal(t, "Test Grade", *students[0].Grade)
+						assert.Equal(t, 99, *students[0].Grade)
 					}
 					if students[0].IEP != nil {
 						assert.Equal(t, "Test IEP", *students[0].IEP)
@@ -282,7 +286,7 @@ func TestHandler_GetStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Now().AddDate(-10, 0, 0)),
 					TherapistID: uuid.New(),
-					Grade:       ptrString("Test Grade"),
+					Grade:       ptrInt(99),
 					IEP:         ptrString("Test IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -352,7 +356,7 @@ func TestHandler_GetStudent(t *testing.T) {
 				assert.Equal(t, "Test", student.FirstName)
 				assert.Equal(t, "Student", student.LastName)
 				if student.Grade != nil {
-					assert.Equal(t, "Test Grade", *student.Grade)
+					assert.Equal(t, 99, *student.Grade)
 				}
 				if student.IEP != nil {
 					assert.Equal(t, "Test IEP", *student.IEP)
@@ -398,7 +402,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "update grade only",
 			studentID:   studentID.String(),
-			requestBody: `{"grade": "5th"}`,
+			requestBody: `{"grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
 					ID:          studentID,
@@ -406,7 +410,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -416,7 +420,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					ID:          studentID,
 					FirstName:   "Test",
 					LastName:    "Student",
-					Grade:       ptrString("5th"),
+					Grade:       ptrInt(5),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Original IEP"),
@@ -438,7 +442,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -448,7 +452,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					ID:          studentID,
 					FirstName:   "Test",
 					LastName:    "Student",
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Updated IEP with math accommodations"),
@@ -462,7 +466,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "update name and grade",
 			studentID:   studentID.String(),
-			requestBody: `{"first_name": "Updated", "last_name": "TestStudent", "grade": "5th"}`,
+			requestBody: `{"first_name": "Updated", "last_name": "TestStudent", "grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
 					ID:          studentID,
@@ -470,7 +474,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -480,7 +484,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					ID:          studentID,
 					FirstName:   "Updated",
 					LastName:    "TestStudent",
-					Grade:       ptrString("5th"),
+					Grade:       ptrInt(5),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Original IEP"),
@@ -502,7 +506,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -512,7 +516,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					ID:          studentID,
 					FirstName:   "Test",
 					LastName:    "Student",
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Original IEP"),
@@ -526,7 +530,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "invalid UUID format",
 			studentID:   "invalid-uuid",
-			requestBody: `{"grade": "5th"}`,
+			requestBody: `{"grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				// No mock setup needed - UUID parsing fails before repository call
 			},
@@ -536,7 +540,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "student not found",
 			studentID:   studentID.String(),
-			requestBody: `{"grade": "5th"}`,
+			requestBody: `{"grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("GetStudent", mock.Anything, studentID).Return(models.Student{}, errors.New("no rows in result set"))
 			},
@@ -546,7 +550,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "invalid JSON body",
 			studentID:   studentID.String(),
-			requestBody: `{"grade": "5th" /* missing comma */}`,
+			requestBody: `{"grade": 5 /* missing comma */}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				// No mock setup needed - JSON parsing fails before repository call
 			},
@@ -564,7 +568,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -585,7 +589,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -598,7 +602,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "UpdateStudent repository error",
 			studentID:   studentID.String(),
-			requestBody: `{"grade": "5th"}`,
+			requestBody: `{"grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
 					ID:          studentID,
@@ -606,7 +610,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -659,7 +663,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"last_name": "Doe",
 				"dob": "2010-05-15",
 				"therapist_id": "` + therapistID.String() + `",
-				"grade": "5th",
+				"grade": 5,
 				"iep": "Active IEP with speech therapy goals"
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
@@ -667,7 +671,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					ID:          uuid.New(),
 					FirstName:   "John",
 					LastName:    "Doe",
-					Grade:       ptrString("5th"),
+					Grade:       ptrInt(5),
 					IEP:         ptrString("Active IEP with speech therapy goals"),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
@@ -685,7 +689,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"last_name": "Johnson", 
 				"dob": "2012-03-22",
 				"therapist_id": "` + therapistID.String() + `",
-				"grade": "3rd",
+				"grade": 3,
 				"iep": "Math accommodations and extended time"
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
@@ -693,7 +697,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					ID:          uuid.New(),
 					FirstName:   "Emma",
 					LastName:    "Johnson",
-					Grade:       ptrString("3rd"),
+					Grade:       ptrInt(3),
 					IEP:         ptrString("Math accommodations and extended time"),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2012, 3, 22, 0, 0, 0, 0, time.UTC)),
@@ -769,7 +773,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"last_name": "Student",
 				"dob": "2000-02-29",
 				"therapist_id": "` + therapistID.String() + `",
-				"grade": "12th",
+				"grade": 12,
 				"iep": "Graduation accommodations"
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
@@ -777,7 +781,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					ID:          uuid.New(),
 					FirstName:   "Test",
 					LastName:    "Student",
-					Grade:       ptrString("12th"),
+					Grade:       ptrInt(12),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2000, 2, 29, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Graduation accommodations"),
@@ -823,7 +827,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					assert.Equal(t, "John", student.FirstName)
 					assert.Equal(t, "Doe", student.LastName)
 					if student.Grade != nil {
-						assert.Equal(t, "5th", *student.Grade)
+						assert.Equal(t, 5, *student.Grade)
 					}
 					if student.IEP != nil {
 						assert.Contains(t, *student.IEP, "speech therapy")
@@ -832,7 +836,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					assert.Equal(t, "Emma", student.FirstName)
 					assert.Equal(t, "Johnson", student.LastName)
 					if student.Grade != nil {
-						assert.Equal(t, "3rd", *student.Grade)
+						assert.Equal(t, 3, *student.Grade)
 					}
 					if student.IEP != nil {
 						assert.Contains(t, *student.IEP, "Math accommodations")
@@ -840,7 +844,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				case "valid date edge cases":
 					assert.Equal(t, "Test", student.FirstName)
 					if student.Grade != nil {
-						assert.Equal(t, "12th", *student.Grade)
+						assert.Equal(t, 12, *student.Grade)
 					}
 				}
 

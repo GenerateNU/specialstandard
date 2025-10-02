@@ -47,7 +47,7 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Test", "Student", therapistID, "5th")
+    `, studentID, "Test", "Student", therapistID, 5)
 	assert.NoError(t, err)
 
 	// Test successful creation
@@ -130,7 +130,7 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Delete", "Student", therapistID, "3rd")
+    `, studentID, "Delete", "Student", therapistID, 3)
 	assert.NoError(t, err)
 
 	// Create session-student relationship
@@ -194,7 +194,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Patch", "Student", therapistID, "4th")
+    `, studentID, "Patch", "Student", therapistID, 4)
 	assert.NoError(t, err)
 
 	// Create initial session-student relationship

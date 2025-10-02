@@ -57,7 +57,7 @@ func TestSessionResourceRepository_PostSessionResource(t *testing.T) {
 	_, err := testDB.Pool.Exec(ctx, `
 		INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	`, resourceID, themeID, "5th Grade", testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+	`, resourceID, themeID, 5, testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Create test session
@@ -137,7 +137,7 @@ func TestSessionResourceRepository_DeleteSessionResource(t *testing.T) {
 	_, err := testDB.Pool.Exec(ctx, `
 		INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	`, resourceID, themeID, "5th Grade", testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+	`, resourceID, themeID, 5, testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Create test session
@@ -193,7 +193,7 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		_, err = testDB.Pool.Exec(ctx, `
 			INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		`, resourceID, themeID, "5th Grade", testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+		`, resourceID, themeID, 5, testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		sessionID := uuid.New()
@@ -235,14 +235,14 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		_, err = testDB.Pool.Exec(ctx, `
 			INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		`, resourceID1, themeID, "5th Grade", testDate, "worksheet", "Math Worksheet", "math", "Basic arithmetic", time.Now(), time.Now())
+		`, resourceID1, themeID, 5, testDate, "worksheet", "Math Worksheet", "math", "Basic arithmetic", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		resourceID2 := uuid.New()
 		_, err = testDB.Pool.Exec(ctx, `
 			INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		`, resourceID2, themeID, "5th Grade", testDate, "activity", "Reading Activity", "language", "Comprehension exercise", time.Now(), time.Now())
+		`, resourceID2, themeID, 5, testDate, "activity", "Reading Activity", "language", "Comprehension exercise", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		// Link resources to session
@@ -299,12 +299,12 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 
 		// Create multiple resources
-		for i := 1; i <= 15; i++ {
+		for i := 1; i <= 12; i++ {
 			resourceID := uuid.New()
 			_, err := testDB.Pool.Exec(ctx, `
                 INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-				resourceID, themeID, fmt.Sprintf("Grade = %d", i), testDate, "activity", "Reading Activity", "language", "Comprehension", time.Now(), time.Now())
+				resourceID, themeID, i, testDate, "activity", "Reading Activity", "language", "Comprehension", time.Now(), time.Now())
 			assert.NoError(t, err)
 
 			_, err = testDB.Pool.Exec(ctx, `
@@ -323,6 +323,6 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 			Limit: 13,
 		})
 		assert.NoError(t, err)
-		assert.Len(t, resources, 2, "Expected Length 2 on last page")
+		assert.Len(t, resources, 0, "Expected Length 0 on last page")
 	})
 }
