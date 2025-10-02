@@ -205,7 +205,9 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=5th", nil)
 	resp, err := app.Test(req, -1)
@@ -245,7 +247,9 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?therapist_id=123e4567-e89b-12d3-a456-426614174000", nil)
 	resp, err := app.Test(req, -1)
@@ -288,7 +292,9 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?name=John", nil)
 	resp, err := app.Test(req, -1)
@@ -326,7 +332,9 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=5th&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5", nil)
 	resp, err := app.Test(req, -1)
@@ -351,7 +359,9 @@ func TestGetStudentsEndpoint_InvalidTherapistID(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?therapist_id=invalid-uuid", nil)
 	resp, err := app.Test(req, -1)
@@ -383,7 +393,9 @@ func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=&name=&therapist_id=", nil)
 	resp, err := app.Test(req, -1)
