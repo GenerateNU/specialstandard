@@ -45,6 +45,6 @@ type UpdateStudentInput struct {
 }
 
 type PromoteStudentsInput struct {
-	TherapistID        string   `json:"therapist_id" validate:"required,uuid"`
-	ExcludedStudentIDs []string `json:"excluded_student_ids" validate:"dive,uuid"`
+	TherapistID        uuid.UUID   `json:"therapist_id" validate:"required"`
+	ExcludedStudentIDs []uuid.UUID `json:"excluded_student_ids" validate:"dive"`
 }

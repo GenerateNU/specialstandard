@@ -33,6 +33,7 @@ type StudentRepository interface {
 	UpdateStudent(ctx context.Context, student models.Student) (models.Student, error)
 	DeleteStudent(ctx context.Context, id uuid.UUID) error
 	GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination) ([]models.StudentSessionsOutput, error)
+	PromoteStudents(ctx context.Context, input models.PromoteStudentsInput) error
 }
 
 type ThemeRepository interface {
