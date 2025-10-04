@@ -25,7 +25,7 @@ func (h *Handler) CreateTherapist(c *fiber.Ctx) error {
 
 	createdTherapist, err := h.therapistRepository.CreateTherapist(c.Context(), &therapist)
 
-		if err != nil {
+	if err != nil {
 		// Specific error handling with custom messages
 		errStr := err.Error()
 		switch {

@@ -177,6 +177,7 @@ func TestSessionRepository_CreateTherapist(t *testing.T) {
 	ctx := context.Background()
 
 	updated := &models.CreateTherapistInput{
+		ID:        uuid.New(),
 		FirstName: "Kevin",
 		LastName:  "Matula",
 		Email:     "matulakevin91@gmai.com",

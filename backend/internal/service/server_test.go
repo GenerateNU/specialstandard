@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/service/handler/auth"
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/utils"
 	"strings"
@@ -47,7 +49,9 @@ func TestHealthEndpoint(t *testing.T) {
 		Session: mockSessionRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	// Test
 	req := httptest.NewRequest("GET", "/api/v1/health", nil)
@@ -132,7 +136,9 @@ func TestGetSessionsEndpoint(t *testing.T) {
 			repo := &storage.Repository{
 				Session: mockSessionRepo,
 			}
-			app := service.SetupApp(config.Config{}, repo)
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo)
 
 			req := httptest.NewRequest("GET", "/api/v1/sessions"+tt.url, nil)
 			res, _ := app.Test(req, -1)
@@ -166,7 +172,9 @@ func TestGetStudentsEndpoint(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	// Test
 	req := httptest.NewRequest("GET", "/api/v1/students", nil)
@@ -201,7 +209,9 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=5", nil)
 	resp, err := app.Test(req, -1)
@@ -241,7 +251,9 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?therapist_id=123e4567-e89b-12d3-a456-426614174000", nil)
 	resp, err := app.Test(req, -1)
@@ -284,7 +296,9 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?name=John", nil)
 	resp, err := app.Test(req, -1)
@@ -322,7 +336,9 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=5&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5", nil)
 	resp, err := app.Test(req, -1)
@@ -347,7 +363,9 @@ func TestGetStudentsEndpoint_InvalidTherapistID(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?therapist_id=invalid-uuid", nil)
 	resp, err := app.Test(req, -1)
@@ -379,7 +397,9 @@ func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=&name=&therapist_id=", nil)
 	resp, err := app.Test(req, -1)
@@ -411,7 +431,9 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	// Test
 	req := httptest.NewRequest("GET", "/api/v1/students/"+studentID.String(), nil)
@@ -440,7 +462,9 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	testTherapistID := uuid.New()
 
@@ -498,7 +522,9 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body := `{
 		"grade": 5,
@@ -525,7 +551,9 @@ func TestDeleteStudentEndpoint(t *testing.T) {
 		Student: mockStudentRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	// Test
 	req := httptest.NewRequest("DELETE", "/api/v1/students/"+studentID.String(), nil)
@@ -581,7 +609,9 @@ func TestGetSessionByIDEndpoint(t *testing.T) {
 				Session: mockSessionRepo,
 			}
 
-			app := service.SetupApp(config.Config{}, repo)
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo)
 
 			// Test
 			req := httptest.NewRequest("GET", "/api/v1/sessions/"+tt.sessionID, nil)
@@ -635,7 +665,9 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 			repo := &storage.Repository{
 				Session: mockSessionRepo,
 			}
-			app := service.SetupApp(config.Config{}, repo)
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo)
 
 			req := httptest.NewRequest("DELETE", "/api/v1/sessions/"+tt.sessionID.String(), nil)
 			res, err := app.Test(req, -1)
@@ -745,7 +777,9 @@ func TestHandler_PostSessions(t *testing.T) {
 			repo := &storage.Repository{
 				Session: mockSessionRepo,
 			}
-			app := service.SetupApp(config.Config{}, repo)
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo)
 
 			req := httptest.NewRequest("POST", "/api/v1/sessions", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
@@ -962,7 +996,9 @@ func TestGetTherapistByIDEndpoint(t *testing.T) {
 		Therapist: mockTherapistRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	// Test
 	req := httptest.NewRequest("GET", "/api/v1/therapists/9dad94d8-6534-4510-90d7-e4e97c175a65", nil)
@@ -1047,7 +1083,9 @@ func TestGetTherapistsEndpoint(t *testing.T) {
 			repo := &storage.Repository{
 				Therapist: mockTherapistRepo,
 			}
-			app := service.SetupApp(config.Config{}, repo)
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo)
 
 			req := httptest.NewRequest("GET", "/api/v1/therapists"+tt.url, nil)
 			res, err := app.Test(req, -1)
@@ -1076,13 +1114,16 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 		Therapist: mockTherapistRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
-	body := `{
+	body := fmt.Sprintf(`{
+		"id": "%s",
 		"first_name": "Kevin",
 		"last_name": "Matula",
 		"email": "matulakevin91@gmail.com"
-	}`
+	}`, uuid.New())
 
 	req := httptest.NewRequest("POST", "/api/v1/therapists", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -1103,7 +1144,9 @@ func TestDeleteTherapistEndpoint(t *testing.T) {
 		Therapist: mockTherapistRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	// Test
 	req := httptest.NewRequest("DELETE", "/api/v1/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112", nil)
@@ -1131,7 +1174,9 @@ func TestPatchTherapistEndpoint(t *testing.T) {
 		Therapist: mockTherapistRepo,
 	}
 
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body := `{
 		"first_name": "Kevin",
@@ -1159,7 +1204,9 @@ func TestCreateResourceEndpoint(t *testing.T) {
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body := `{"title": "Resource1", "type": "doc"}`
 	req := httptest.NewRequest("POST", "/api/v1/resources", strings.NewReader(body))
@@ -1184,7 +1231,9 @@ func TestGetResourcesEndpoint(t *testing.T) {
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1206,7 +1255,9 @@ func TestGetResourceByIDEndpoint(t *testing.T) {
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/resources/"+resourceID.String(), nil)
 	resp, err := app.Test(req, -1)
@@ -1228,7 +1279,9 @@ func TestUpdateResourceEndpoint(t *testing.T) {
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body := `{"title": "Updated Resource"}`
 	req := httptest.NewRequest("PATCH", "/api/v1/resources/"+resourceID.String(), strings.NewReader(body))
@@ -1248,7 +1301,9 @@ func TestDeleteResourceEndpoint(t *testing.T) {
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/resources/"+resourceID.String(), nil)
 	resp, err := app.Test(req, -1)
@@ -1266,7 +1321,9 @@ func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/resources/"+resourceID.String(), nil)
 	resp, err := app.Test(req, -1)
@@ -1284,7 +1341,9 @@ func TestUpdateResourceEndpoint_NotFound(t *testing.T) {
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body := `{"title": "Updated Resource"}`
 	req := httptest.NewRequest("PATCH", "/api/v1/resources/"+resourceID.String(), strings.NewReader(body))
@@ -1304,7 +1363,9 @@ func TestDeleteResourceEndpoint_NotFound(t *testing.T) {
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/resources/"+resourceID.String(), nil)
 	resp, err := app.Test(req, -1)
@@ -1385,7 +1446,9 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 			repo := &storage.Repository{
 				SessionStudent: mockSessionStudentRepo,
 			}
-			app := service.SetupApp(config.Config{}, repo)
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo)
 
 			req := httptest.NewRequest("POST", "/api/v1/session_students", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
@@ -1454,7 +1517,9 @@ func TestDeleteSessionStudentEndpoint(t *testing.T) {
 			repo := &storage.Repository{
 				SessionStudent: mockSessionStudentRepo,
 			}
-			app := service.SetupApp(config.Config{}, repo)
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo)
 
 			req := httptest.NewRequest("DELETE", "/api/v1/session_students", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
@@ -1561,7 +1626,9 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 			repo := &storage.Repository{
 				SessionStudent: mockSessionStudentRepo,
 			}
-			app := service.SetupApp(config.Config{}, repo)
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo)
 
 			req := httptest.NewRequest("PATCH", "/api/v1/session_students", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
@@ -1604,7 +1671,9 @@ func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1629,7 +1698,9 @@ func TestGetResourcesBySessionIDEndpoint_EmptyArray(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1651,7 +1722,9 @@ func TestGetResourcesBySessionIDEndpoint_InvalidUUID(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/sessions/invalid-uuid/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1671,7 +1744,9 @@ func TestGetResourcesBySessionIDEndpoint_InternalError(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1704,7 +1779,9 @@ func TestPostSessionResourceEndpoint_Success(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1741,7 +1818,9 @@ func TestPostSessionResourceEndpoint_SessionNotFound(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1772,7 +1851,9 @@ func TestPostSessionResourceEndpoint_ResourceNotFound(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1791,7 +1872,9 @@ func TestPostSessionResourceEndpoint_InvalidBody(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader([]byte(`{"invalid": "json"`)))
 	req.Header.Set("Content-Type", "application/json")
@@ -1809,7 +1892,9 @@ func TestPostSessionResourceEndpoint_MissingFields(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body := `{"session_id": ""}`
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader([]byte(body)))
@@ -1837,7 +1922,9 @@ func TestDeleteSessionResourceEndpoint_Success(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body, _ := json.Marshal(deleteReq)
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1864,7 +1951,9 @@ func TestDeleteSessionResourceEndpoint_NotFound(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body, _ := json.Marshal(deleteReq)
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1883,7 +1972,9 @@ func TestDeleteSessionResourceEndpoint_InvalidBody(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader([]byte(`{"invalid": "json"`)))
 	req.Header.Set("Content-Type", "application/json")
@@ -1901,7 +1992,9 @@ func TestDeleteSessionResourceEndpoint_MissingFields(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body := `{"session_id": ""}`
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader([]byte(body)))
@@ -1927,7 +2020,9 @@ func TestDeleteSessionResourceEndpoint_InternalError(t *testing.T) {
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
 	}
-	app := service.SetupApp(config.Config{}, repo)
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
 
 	body, _ := json.Marshal(deleteReq)
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1938,4 +2033,151 @@ func TestDeleteSessionResourceEndpoint_InternalError(t *testing.T) {
 	assert.Equal(t, 500, resp.StatusCode)
 
 	mockSessionResourceRepo.AssertExpectations(t)
+}
+
+func TestHandler_Signup(t *testing.T) {
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockTherapistRepository)
+		expectedStatusCode int
+		wantErr            bool
+	}{
+		{
+			name: "Invalid Request Body",
+			payload: fmt.Sprintf(`{
+				"id": "%s",
+				"first_name": 123,
+				"last_name": true,
+				"email": "doctor.guess.who.suess@gmail.com"
+			}`, uuid.New()),
+			mockSetup:          func(m *mocks.MockTherapistRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+			wantErr:            true,
+		},
+		{
+			name: "Successful Signup Request",
+			payload: `{
+				"email": "meow.thegato@gmail.com",
+				"password": "Meow123;TunaToMe",
+				"first_name": "El",
+				"last_name": "Catto"
+			}`,
+			mockSetup: func(m *mocks.MockTherapistRepository) {
+				therapist := &models.Therapist{
+					ID:        uuid.New(),
+					FirstName: "El",
+					LastName:  "Catto",
+					Email:     "meow.thegato@gmail.com",
+					Active:    true,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+			},
+			expectedStatusCode: fiber.StatusCreated,
+			wantErr:            false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{
+					"access_token": "dummy-token",
+					"user": {"id": "f20e5948-01ba-4113-b453-db05d8bde3bc"}
+				}`))
+			}))
+			defer ts.Close()
+			mockConfig := config.Supabase{
+				URL:            ts.URL,
+				ServiceRoleKey: "SRK",
+			}
+
+			handler := auth.NewHandler(mockConfig, mockRepo)
+			app.Post("/signup", handler.SignUp)
+
+			req := httptest.NewRequest("POST", "/signup", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			res, _ := app.Test(req, -1)
+
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandler_Login(t *testing.T) {
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockTherapistRepository)
+		expectedStatusCode int
+		wantErr            bool
+	}{
+		{
+			name: "Invalid Request Body",
+			payload: `{
+				"email": 123,
+				"password": true
+			}`,
+			mockSetup:          func(m *mocks.MockTherapistRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+			wantErr:            true,
+		},
+		{
+			name: "Successful Login Request",
+			payload: `{
+				"email": "meow.thegato@gmail.com",
+				"password": "Meow123;TunaToMe"
+			}`,
+			mockSetup:          func(m *mocks.MockTherapistRepository) {},
+			expectedStatusCode: fiber.StatusOK,
+			wantErr:            false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockTherapistRepository)
+			tt.mockSetup(mockRepo)
+
+			// Test Supabase server for login
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{
+					"access_token": "dummy-token",
+					"user": {"id": "f20e5948-01ba-4113-b453-db05d8bde3bc"}
+				}`))
+			}))
+			defer ts.Close()
+
+			mockConfig := config.Supabase{
+				URL:            ts.URL,
+				ServiceRoleKey: "SRK",
+			}
+
+			handler := auth.NewHandler(mockConfig, mockRepo)
+			app.Post("/login", handler.Login)
+
+			req := httptest.NewRequest("POST", "/login", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			res, _ := app.Test(req, -1)
+
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
 }

@@ -2,6 +2,7 @@ package therapist_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/utils"
@@ -208,11 +209,13 @@ func TestHandler_CreateTherapist(t *testing.T) {
 			handler := therapist.NewHandler(mockRepo)
 			app.Post("/therapists", handler.CreateTherapist)
 
-			body := `{
-    		"first_name": "Kevin",
-    		"last_name": "Matula",
-    		"email": "poop123@gmail.com"
-			}`
+			therapistID := uuid.New()
+			body := fmt.Sprintf(`{
+				"id": "%s",
+				"first_name": "Kevin",
+				"last_name": "Matula",
+				"email": "poop123@gmail.com"
+			}`, therapistID.String())
 
 			req := httptest.NewRequest("POST", "/therapists", strings.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")

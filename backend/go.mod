@@ -3,6 +3,7 @@ module specialstandard
 go 1.23.1
 
 require (
+	bou.ke/monkey v1.0.2
 	github.com/goccy/go-json v0.10.5
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/gofiber/swagger v1.1.1
@@ -12,6 +13,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.38.0
+	golang.org/x/oauth2 v0.30.0
 )
 
 require (
