@@ -27,7 +27,7 @@ func NewResourceRepository(db *pgxpool.Pool) *ResourceRepository {
 }
 
 func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
-	var resources []models.ResourceWithTheme
+	resources := []models.ResourceWithTheme{}
 	queryString := "SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE 1=1"
 	args := []interface{}{}
 	argNum := 1
