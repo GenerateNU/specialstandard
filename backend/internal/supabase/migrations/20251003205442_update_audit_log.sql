@@ -5,5 +5,44 @@ CREATE TABLE Audit_Log (
     previous_data json,
     new_data json,
     time_of_operation TIMESTAMPTZ DEFAULT now(),
-    user NULL,
+    person TEXT,
+    
 );
+
+CREATE TRIGGER TABLE_ACCESSED_THERAPISTS AFTER UPDATE OR INSERT OR DELETE ON therapist
+    FOR EACH ROW EXECUTE FUNCTION log_table_access();
+
+CREATE TRIGGER TABLE_ACCESSED_THEME AFTER UPDATE OR INSERT OR DELETE ON theme
+    FOR EACH ROW EXECUTE FUNCTION log_table_access();
+
+CREATE TRIGGER TABLE_ACCESSED_STUDENT AFTER UPDATE OR INSERT OR DELETE ON student
+    FOR EACH ROW EXECUTE FUNCTION log_table_access();
+
+CREATE TRIGGER TABLE_ACCESSED_SESSION AFTER UPDATE OR INSERT OR DELETE ON session
+    FOR EACH ROW EXECUTE FUNCTION log_table_access();
+
+CREATE TRIGGER TABLE_ACCESSED_SESSION_STUDENT AFTER UPDATE OR INSERT OR DELETE ON session_student
+    FOR EACH ROW EXECUTE FUNCTION log_table_access();
+
+CREATE TRIGGER TABLE_ACCESSED_SESSION_RESOURCE AFTER UPDATE OR INSERT OR DELETE ON resource
+    FOR EACH ROW EXECUTE FUNCTION log_table_access();
+
+CREATE OR REPLACE FUNCTION log_table_access()
+RETURN TRIGGER AS $$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        INSERT INTO Audit_Log(access_type, previous_data, new_data, time_of_operation, person)
+        VALUES ('CREATE', NULL, row_to_json(NEW), now(), NULL);
+        RETURN NEW;
+    ELSIF (TG_OP = 'UPDATE') THEN
+        INSERT INTO Audit_Log(access_type, previous_data, new_data, time_of_operation, person)
+        VALUES ('UPDATE', row_to_json(OLD), row_to_json(NEW), now(), NULL);
+        RETURN NEW;
+    ELSIF (TG_OP = 'DELETE') THEN
+        INSERT INTO Audit_Log(access_type, previous_data, new_data, time_of_operation, person)
+        VALUES ('DELETE', row_to_json(OLD), NULL, now(), NULL);
+        RETURN NEW;
+    END IF;
+    RETURN NULL;
+    END;
+    $$ LANGUAGE plpgsql;
