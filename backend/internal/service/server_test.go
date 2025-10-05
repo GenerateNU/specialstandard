@@ -1330,7 +1330,7 @@ func TestDeleteResourceEndpoint(t *testing.T) {
 func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
 	mockResourceRepo := new(mocks.MockResourceRepository)
 	resourceID := uuid.New()
-	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return((*models.Resource)(nil), errors.New("no rows in result set"))
+	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return((*models.ResourceWithTheme)(nil), errors.New("no rows in result set"))
 
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,

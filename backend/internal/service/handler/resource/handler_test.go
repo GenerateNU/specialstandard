@@ -83,10 +83,19 @@ func TestHandler_GetResource(t *testing.T) {
 			name:       "successful_get_resource",
 			resourceID: resourceID.String(),
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResourceByID", mock.Anything, resourceID).Return(&models.Resource{
-					ID:    resourceID,
-					Title: ptrString("Resource1"),
-					Type:  ptrString("doc"),
+				m.On("GetResourceByID", mock.Anything, resourceID).Return(&models.ResourceWithTheme{
+					Resource: models.Resource{
+						ID:    resourceID,
+						Title: ptrString("Resource1"),
+						Type:  ptrString("doc"),
+					},
+					Theme: models.ThemeInfo{
+						Name:      "Theme1",
+						Month:     6,
+						Year:      2025,
+						CreatedAt: nil,
+						UpdatedAt: nil,
+					},
 				}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
@@ -96,7 +105,7 @@ func TestHandler_GetResource(t *testing.T) {
 			name:       "repository_error",
 			resourceID: resourceID.String(),
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResourceByID", mock.Anything, resourceID).Return(&models.Resource{}, errors.New("database error"))
+				m.On("GetResourceByID", mock.Anything, resourceID).Return(&models.ResourceWithTheme{}, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -121,7 +130,7 @@ func TestHandler_GetResource(t *testing.T) {
 			if !tt.wantErr && resp.StatusCode == fiber.StatusOK {
 				body, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				var res models.Resource
+				var res models.ResourceWithTheme
 				err = json.Unmarshal(body, &res)
 				assert.NoError(t, err)
 				assert.Equal(t, resourceID, res.ID)
