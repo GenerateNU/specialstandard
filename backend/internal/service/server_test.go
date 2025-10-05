@@ -1213,8 +1213,8 @@ func TestGetResourcesEndpoint(t *testing.T) {
 		{
 			Resource: models.Resource{
 				ID:    uuid.New(),
-				Title: ptrString("Resource1"),
-				Type:  ptrString("doc"),
+				Title: testutil.Ptr("Resource1"),
+				Type:  testutil.Ptr("doc"),
 			},
 			Theme: models.ThemeInfo{
 				Name:      "Theme1",
@@ -1247,8 +1247,8 @@ func TestGetResourceByIDEndpoint(t *testing.T) {
 	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return(&models.ResourceWithTheme{
 		Resource: models.Resource{
 			ID:    resourceID,
-			Title: ptrString("Resource1"),
-			Type:  ptrString("doc"),
+			Title: testutil.Ptr("Resource1"),
+			Type:  testutil.Ptr("doc"),
 		},
 		Theme: models.ThemeInfo{
 			Name:      "Theme1",
