@@ -338,7 +338,7 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 
 	// Test successful patch with name only
 	input := &models.UpdateThemeInput{
-		Name: ptrString("Winter Wonderland 2024"),
+		Name: testutil.Ptr("Winter Wonderland 2024"),
 	}
 
 	theme, err := repo.PatchTheme(ctx, themeID, input)
@@ -353,8 +353,8 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 
 	// Test patch with multiple fields
 	input2 := &models.UpdateThemeInput{
-		Month: ptrInt(1),
-		Year:  ptrInt(2025),
+		Month: testutil.Ptr(1),
+		Year:  testutil.Ptr(2025),
 	}
 
 	theme, err = repo.PatchTheme(ctx, themeID, input2)
@@ -368,7 +368,7 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 	// Test not found
 	nonExistentID := uuid.New()
 	input3 := &models.UpdateThemeInput{
-		Name: ptrString("Non-existent"),
+		Name: testutil.Ptr("Non-existent"),
 	}
 	theme, err = repo.PatchTheme(ctx, nonExistentID, input3)
 	assert.Error(t, err)

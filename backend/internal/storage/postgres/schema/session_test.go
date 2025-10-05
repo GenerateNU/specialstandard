@@ -82,7 +82,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 
 	// Test filtering by year
 	yearFilter := &models.GetSessionRepositoryRequest{
-		Year: ptrInt(startTime.Year()),
+		Year: testutil.Ptr(startTime.Year()),
 	}
 	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), yearFilter)
 	assert.NoError(t, err)
@@ -90,8 +90,8 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 
 	// Test filtering by month and year
 	monthYearFilter := &models.GetSessionRepositoryRequest{
-		Month: ptrInt(int(startTime.Month())),
-		Year:  ptrInt(startTime.Year()),
+		Month: testutil.Ptr(int(startTime.Month())),
+		Year:  testutil.Ptr(startTime.Year()),
 	}
 	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), monthYearFilter)
 	assert.NoError(t, err)
@@ -217,7 +217,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	therapistID := uuid.New()
 	startTime := time.Now()
 	endTime := time.Now().Add(time.Hour)
-	notes := ptrString("foreign key violation")
+	notes := testutil.Ptr("foreign key violation")
 	postSession := &models.PostSessionInput{
 		StartTime:   startTime,
 		EndTime:     endTime,
@@ -238,7 +238,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 
 	startTime = time.Now()
 	endTime = time.Now().Add(-time.Hour)
-	notes = ptrString("check constraint violation")
+	notes = testutil.Ptr("check constraint violation")
 	postSession = &models.PostSessionInput{
 		StartTime:   startTime,
 		EndTime:     endTime,
@@ -252,7 +252,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 
 	startTime = time.Now()
 	endTime = time.Now().Add(time.Hour)
-	notes = ptrString("success")
+	notes = testutil.Ptr("success")
 	postSession = &models.PostSessionInput{
 		StartTime:   startTime,
 		EndTime:     endTime,
@@ -281,7 +281,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	// Given ID Not Found 404 Error
 	badID := uuid.New()
 	patch := &models.PatchSessionInput{
-		Notes: ptrString("404 NOT FOUND ERROR"),
+		Notes: testutil.Ptr("404 NOT FOUND ERROR"),
 	}
 	patchedSession, err := repo.PatchSession(ctx, badID, patch)
 	assert.Error(t, err)
@@ -307,7 +307,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 
 	startTime := time.Now()
 	endTime := time.Now().Add(-time.Hour)
-	notes := ptrString("check constraint violation")
+	notes := testutil.Ptr("check constraint violation")
 	patch = &models.PatchSessionInput{
 		StartTime: &startTime,
 		EndTime:   &endTime,
@@ -328,7 +328,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 		id, therapistID, startTime, endTime, "Inserted")
 	assert.NoError(t, err)
 
-	notes = ptrString("success with one change")
+	notes = testutil.Ptr("success with one change")
 	patch = &models.PatchSessionInput{
 		Notes: notes,
 	}
@@ -362,7 +362,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 
 	startTime = time.Now()
 	endTime = time.Now().Add(time.Hour)
-	notes = ptrString("New Note")
+	notes = testutil.Ptr("New Note")
 	patch = &models.PatchSessionInput{
 		StartTime:   &startTime,
 		EndTime:     &endTime,

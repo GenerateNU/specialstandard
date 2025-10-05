@@ -15,10 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrTime(t time.Time) *time.Time {
-	return &t
-}
-
 func TestStudentRepository_GetStudents(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
@@ -69,7 +65,7 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 	assert.Len(t, students, 2)
 
 	// Test 2: Filter by grade
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, testutil.Ptr(5), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Doe", students[0].LastName)
@@ -95,14 +91,14 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 	assert.Equal(t, "Smith", students[0].LastName)
 
 	// Test 6: Multiple filters
-	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, testutil.Ptr(5), therapistID1, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "John", students[0].FirstName)
 	assert.Equal(t, 5, *students[0].Grade)
 
 	// Test 7: Filter that returns no results
-	students, err = repo.GetStudents(ctx, ptrInt(99), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, testutil.Ptr(99), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 
@@ -173,7 +169,7 @@ func TestStudentRepository_GetStudents_FilterByGrade(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test: Filter by grade 5
-	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, testutil.Ptr(5), uuid.Nil, "", utils.NewPagination())
 
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // Should only return John and Mike
@@ -368,7 +364,7 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test 1: Filter by grade only
-	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, testutil.Ptr(5), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson
 	for _, student := range students {
@@ -389,7 +385,7 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson (has "John" in last name)
 
 	// Test 4: Combine grade + therapist
-	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, testutil.Ptr(5), therapistID1, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // John Doe, Sarah Johnson
 	for _, student := range students {
@@ -398,7 +394,7 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	}
 
 	// Test 5: Combine grade + name
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, testutil.Ptr(5), uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson
 
@@ -408,12 +404,12 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	assert.Len(t, students, 2) // John Doe, Sarah Johnson
 
 	// Test 7: All filters combined
-	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, testutil.Ptr(5), therapistID1, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // John Doe, Sarah Johnson
 
 	// Test 8: Filters that return no results
-	students, err = repo.GetStudents(ctx, ptrInt(12), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, testutil.Ptr(12), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 }
@@ -493,22 +489,22 @@ func TestStudentRepository_GetStudents_WithPagination(t *testing.T) {
 	}
 
 	// Test: First page with limit 3
-	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 1, Limit: 3})
+	students, err := repo.GetStudents(ctx, testutil.Ptr(5), uuid.Nil, "", utils.Pagination{Page: 1, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 3)
 
 	// Test: Second page with limit 3
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3})
+	students, err = repo.GetStudents(ctx, testutil.Ptr(5), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 3)
 
 	// Test: Third page with limit 3 (should be empty or partial)
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 3, Limit: 3})
+	students, err = repo.GetStudents(ctx, testutil.Ptr(5), uuid.Nil, "", utils.Pagination{Page: 3, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 
 	// Test: Get all with large limit
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 1, Limit: 100})
+	students, err = repo.GetStudents(ctx, testutil.Ptr(5), uuid.Nil, "", utils.Pagination{Page: 1, Limit: 100})
 	assert.NoError(t, err)
 	assert.Len(t, students, 6)
 }
@@ -580,10 +576,10 @@ func TestStudentRepository_AddStudent(t *testing.T) {
 		// ID removed - let database generate it
 		FirstName:   "Alex",
 		LastName:    "Johnson",
-		DOB:         ptrTime(testDOB),
+		DOB:         testutil.Ptr(testDOB),
 		TherapistID: therapistID,
-		Grade:       ptrInt(2),
-		IEP:         ptrString("IEP Goals: Fluency and articulation"),
+		Grade:       testutil.Ptr(2),
+		IEP:         testutil.Ptr("IEP Goals: Fluency and articulation"),
 	}
 
 	// Test - get the database-generated student
@@ -647,10 +643,10 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 		ID:          studentID,
 		FirstName:   "Sam",
 		LastName:    "Wilson-Updated",
-		DOB:         ptrTime(testDOB),
+		DOB:         testutil.Ptr(testDOB),
 		TherapistID: therapistID,
-		Grade:       ptrInt(5),
-		IEP:         ptrString("Updated IEP Goals: Advanced speech therapy"),
+		Grade:       testutil.Ptr(5),
+		IEP:         testutil.Ptr("Updated IEP Goals: Advanced speech therapy"),
 	}
 
 	// Test

@@ -14,14 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrString(s string) *string {
-	return &s
-}
-
-func ptrInt(i int) *int {
-	return &i
-}
-
 func TestResourceRepository_GetResources(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
@@ -146,12 +138,12 @@ func TestResourceRepository_CreateResource(t *testing.T) {
 	testDate := time.Date(2024, 3, 10, 0, 0, 0, 0, time.UTC)
 	resourceBody := models.ResourceBody{
 		ThemeID:    themeID,
-		GradeLevel: ptrInt(4),
+		GradeLevel: testutil.Ptr(4),
 		Date:       &testDate,
-		Type:       ptrString("book"),
-		Title:      ptrString("Reading Comprehension"),
-		Category:   ptrString("literacy"),
-		Content:    ptrString("Story analysis exercises"),
+		Type:       testutil.Ptr("book"),
+		Title:      testutil.Ptr("Reading Comprehension"),
+		Category:   testutil.Ptr("literacy"),
+		Content:    testutil.Ptr("Story analysis exercises"),
 	}
 
 	// Test
@@ -196,8 +188,8 @@ func TestResourceRepository_UpdateResource(t *testing.T) {
 	assert.NoError(t, err)
 
 	updateBody := models.UpdateResourceBody{
-		Title:    ptrString("Updated Art Activity"),
-		Category: ptrString("creative"),
+		Title:    testutil.Ptr("Updated Art Activity"),
+		Category: testutil.Ptr("creative"),
 	}
 
 	// Test
