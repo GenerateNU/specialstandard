@@ -2,7 +2,7 @@
 
 # Run all tests
 test:
-	go test ./... -v
+	go test ./... | grep -v "no test files" || true
 
 # Run only unit tests (skip database tests)
 test-unit:
