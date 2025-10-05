@@ -1000,6 +1000,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /students/promote:
+    patch:
+      summary: Promotes all of a therapist's students
+      description: Promotes all of a therapist's students other than the ones that are not moving up.
+      tags: [Students]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromoteStudentsInput"
+      responses:
+        "204":
+          description: Patch Done Successfully
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /session_students:
     post:
       summary: Create session-student relationship
@@ -2652,3 +2679,19 @@ components:
           type: string
           format: uuid
           description: ID of referenced resource
+
+    PromoteStudentsInput:
+      type: object
+      required:
+        - therapist_id
+      properties:
+        therapist_id:
+          type: string
+          format: uuid
+          description: ID of Therapist
+        excluded_student_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of Students this Therapist will not be promoting...

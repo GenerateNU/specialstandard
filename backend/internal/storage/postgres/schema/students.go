@@ -198,28 +198,30 @@ func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uu
 
 func (r *StudentRepository) PromoteStudents(ctx context.Context, input models.PromoteStudentsInput) error {
 	baseQuery := `UPDATE student
-			  SET grade = CASE
-			  	WHEN grade BETWEEN 0 AND 11 THEN (grade + 1)
-				WHEN grade = 12 THEN -1
-				ELSE grade
-			  END
-			  WHERE therapist_id = $1
-					AND grade != -1`
+				  SET grade = CASE
+					WHEN grade BETWEEN 0 AND 11 THEN (grade + 1)
+					WHEN grade = 12 THEN -1
+					ELSE grade
+				  END
+				  WHERE therapist_id = $1
+						AND grade != -1`
 
 	args := []interface{}{input.TherapistID}
 	if len(input.ExcludedStudentIDs) > 0 {
-		baseQuery += ` AND id NOT IN (`
-		for i := range input.ExcludedStudentIDs {
-			baseQuery += fmt.Sprintf("$%d", i+2)
-			if i < len(input.ExcludedStudentIDs)-1 {
-				baseQuery += `, `
-			}
-		}
-		baseQuery += `)`
+		baseQuery += ` AND id != ALL($2)`
+		args = append(args, input.ExcludedStudentIDs)
+		//baseQuery += ` AND id NOT IN (`
+		//for i := range input.ExcludedStudentIDs {
+		//	baseQuery += fmt.Sprintf("$%d", i+2)
+		//	if i < len(input.ExcludedStudentIDs)-1 {
+		//		baseQuery += `, `
+		//	}
+		//}
+		//baseQuery += `)`
 
-		for _, id := range input.ExcludedStudentIDs {
-			args = append(args, id)
-		}
+		//for _, id := range input.ExcludedStudentIDs {
+		//	args = append(args, id)
+		//}
 	}
 
 	_, err := r.db.Exec(ctx, baseQuery, args...)
