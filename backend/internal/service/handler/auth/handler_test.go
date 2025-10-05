@@ -56,7 +56,7 @@ func TestHandler_SignUp(t *testing.T) {
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
-				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(therapist, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 			wantErr:            false,
@@ -68,7 +68,7 @@ func TestHandler_SignUp(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +133,7 @@ func TestHandler_Login(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			// Test Supabase server for login

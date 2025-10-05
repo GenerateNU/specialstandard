@@ -11,11 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type StudentRepository struct {
+type StudentRepositoryImpl struct {
 	db *pgxpool.Pool
 }
 
-func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
+func (r *StudentRepositoryImpl) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
 	queryString := `
 	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
 	FROM student WHERE 1=1`
@@ -60,7 +60,7 @@ func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapi
 	return students, nil
 }
 
-func (r *StudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) error {
+func (r *StudentRepositoryImpl) DeleteStudent(ctx context.Context, id uuid.UUID) error {
 	query := `
 	DELETE FROM student
 	WHERE id = $1`
@@ -69,7 +69,7 @@ func (r *StudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) err
 	return err
 }
 
-func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.Student) (models.Student, error) {
+func (r *StudentRepositoryImpl) UpdateStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	query := `
 	UPDATE student
 	SET first_name = $1, last_name = $2, dob = $3, therapist_id = $4, grade = $5, iep = $6
@@ -99,7 +99,7 @@ func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.St
 	return updatedStudent, err
 }
 
-func (r *StudentRepository) AddStudent(ctx context.Context, student models.Student) (models.Student, error) {
+func (r *StudentRepositoryImpl) AddStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	query := `
 	INSERT INTO student (first_name, last_name, dob, therapist_id, grade, iep, created_at)
 	VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -128,7 +128,7 @@ func (r *StudentRepository) AddStudent(ctx context.Context, student models.Stude
 	return createdStudent, err
 }
 
-func (r *StudentRepository) GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error) {
+func (r *StudentRepositoryImpl) GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error) {
 	query := `
 	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
 	FROM student
@@ -152,14 +152,14 @@ func (r *StudentRepository) GetStudent(ctx context.Context, id uuid.UUID) (model
 	return student, nil
 }
 
-func NewStudentRepository(db *pgxpool.Pool) *StudentRepository {
-	return &StudentRepository{
+func NewStudentRepository(db *pgxpool.Pool) *StudentRepositoryImpl {
+	return &StudentRepositoryImpl{
 		db,
 	}
 }
 
 // This is our function to get all the sessions associated with a specific student from PostGres DB
-func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination) ([]models.StudentSessionsOutput, error) {
+func (r *StudentRepositoryImpl) GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination) ([]models.StudentSessionsOutput, error) {
 	query := `
 	SELECT ss.student_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
 	       s.id, s.start_datetime, s.end_datetime, s.therapist_id, s.notes, 

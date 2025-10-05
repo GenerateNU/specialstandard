@@ -39,7 +39,7 @@ func TestHandler_GetTherapistByID(t *testing.T) {
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
-				m.On("GetTherapistByID", mock.Anything).Return(therapist, nil)
+				m.On("GetTherapistByID", mock.Anything, mock.AnythingOfType("string")).Return(therapist, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -47,7 +47,7 @@ func TestHandler_GetTherapistByID(t *testing.T) {
 		{
 			name: "repository error",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
-				m.On("GetTherapistByID", mock.Anything).Return(nil, errors.New("database error"))
+				m.On("GetTherapistByID", mock.Anything, mock.AnythingOfType("string")).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -58,7 +58,7 @@ func TestHandler_GetTherapistByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
 			app := fiber.New()
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			handler := therapist.NewHandler(mockRepo)
@@ -70,7 +70,6 @@ func TestHandler_GetTherapistByID(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -148,7 +147,7 @@ func TestHandler_GetTherapists(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			handler := therapist.NewHandler(mockRepo)
@@ -160,7 +159,6 @@ func TestHandler_GetTherapists(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -184,7 +182,7 @@ func TestHandler_CreateTherapist(t *testing.T) {
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
-				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(therapist, nil)
 			},
 			expectedStatus: fiber.StatusCreated,
 			wantErr:        false,
@@ -192,7 +190,7 @@ func TestHandler_CreateTherapist(t *testing.T) {
 		{
 			name: "repository error",
 			mockSetup: func(m *mocks.MockTherapistRepository) {
-				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("database error"))
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -203,7 +201,7 @@ func TestHandler_CreateTherapist(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
 			app := fiber.New()
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			handler := therapist.NewHandler(mockRepo)
@@ -223,7 +221,6 @@ func TestHandler_CreateTherapist(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -257,7 +254,7 @@ func TestHandler_DeleteTherapist(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
 			app := fiber.New()
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			handler := therapist.NewHandler(mockRepo)
@@ -269,7 +266,6 @@ func TestHandler_DeleteTherapist(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -312,7 +308,7 @@ func TestHandler_PatchTherapist(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
 			app := fiber.New()
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			handler := therapist.NewHandler(mockRepo)
@@ -330,7 +326,6 @@ func TestHandler_PatchTherapist(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }

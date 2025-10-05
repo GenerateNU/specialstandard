@@ -20,6 +20,7 @@ import (
 	"specialstandard/internal/service"
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/mocks"
+	"specialstandard/internal/storage/postgres/testutil"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -29,22 +30,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func ptrTime(t time.Time) *time.Time {
-	return &t
-}
-
-func ptrString(s string) *string {
-	return &s
-}
-
-func ptrInt(i int) *int {
-	return &i
-}
-
 // Health and Session Tests
 func TestHealthEndpoint(t *testing.T) {
 	// Setup
-	mockSessionRepo := new(mocks.MockSessionRepository)
+	mockSessionRepo := mocks.NewMockSessionRepository(t)
 	repo := &storage.Repository{
 		Session: mockSessionRepo,
 	}
@@ -79,12 +68,12 @@ func TestGetSessionsEndpoint(t *testing.T) {
 						TherapistID:   uuid.New(),
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
-						Notes:         ptrString("Test session"),
-						CreatedAt:     ptrTime(time.Now()),
-						UpdatedAt:     ptrTime(time.Now()),
+						Notes:         testutil.Ptr("Test session"),
+						CreatedAt:     testutil.Ptr(time.Now()),
+						UpdatedAt:     testutil.Ptr(time.Now()),
 					},
 				}
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(sessions, nil)
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.AnythingOfType("*models.GetSessionRepositoryRequest")).Return(sessions, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -93,7 +82,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 			name: "repository error",
 			url:  "/",
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.AnythingOfType("*models.GetSessionRepositoryRequest")).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -121,7 +110,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 					Page:  2,
 					Limit: 5,
 				}
-				m.On("GetSessions", mock.Anything, pagination).Return([]models.Session{}, nil)
+				m.On("GetSessions", mock.Anything, pagination, mock.AnythingOfType("*models.GetSessionRepositoryRequest")).Return([]models.Session{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -130,7 +119,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockSessionRepo := new(mocks.MockSessionRepository)
+			mockSessionRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockSessionRepo)
 
 			repo := &storage.Repository{
@@ -152,17 +141,17 @@ func TestGetSessionsEndpoint(t *testing.T) {
 // Student Integration Tests
 func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 
 	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
 		{
 			ID:          uuid.New(),
 			FirstName:   "Emma",
 			LastName:    "Johnson",
-			DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
+			DOB:         testutil.Ptr(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
-			Grade:       ptrInt(4),
-			IEP:         ptrString("Reading comprehension support"),
+			Grade:       testutil.Ptr(4),
+			IEP:         testutil.Ptr("Reading comprehension support"),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -187,23 +176,23 @@ func TestGetStudentsEndpoint(t *testing.T) {
 // Add these tests to your server_test.go file
 
 func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 
 	expectedStudents := []models.Student{
 		{
 			ID:          uuid.New(),
 			FirstName:   "John",
 			LastName:    "Doe",
-			DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
+			DOB:         testutil.Ptr(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
-			Grade:       ptrInt(5),
-			IEP:         ptrString("Test IEP"),
+			Grade:       testutil.Ptr(5),
+			IEP:         testutil.Ptr("Test IEP"),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, testutil.Ptr(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -229,7 +218,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 }
 
 func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 	therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 
 	expectedStudents := []models.Student{
@@ -237,9 +226,9 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 			ID:          uuid.New(),
 			FirstName:   "Jane",
 			LastName:    "Smith",
-			DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
+			DOB:         testutil.Ptr(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 			TherapistID: therapistID,
-			Grade:       ptrInt(4),
+			Grade:       testutil.Ptr(4),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -271,7 +260,7 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 }
 
 func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 
 	expectedStudents := []models.Student{
 		{
@@ -315,7 +304,7 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 }
 
 func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 	therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 
 	expectedStudents := []models.Student{
@@ -323,14 +312,14 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 			ID:          uuid.New(),
 			FirstName:   "John",
 			LastName:    "Doe",
-			Grade:       ptrInt(5),
+			Grade:       testutil.Ptr(5),
 			TherapistID: therapistID,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, testutil.Ptr(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -357,7 +346,7 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 }
 
 func TestGetStudentsEndpoint_InvalidTherapistID(t *testing.T) {
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -378,7 +367,7 @@ func TestGetStudentsEndpoint_InvalidTherapistID(t *testing.T) {
 }
 
 func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 
 	expectedStudents := []models.Student{
 		{
@@ -412,17 +401,17 @@ func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
 
 func TestGetStudentByIDEndpoint(t *testing.T) {
 	// Setup
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 	studentID := uuid.New()
 
 	mockStudentRepo.On("GetStudent", mock.Anything, studentID).Return(models.Student{
 		ID:          studentID,
 		FirstName:   "Emma",
 		LastName:    "Johnson",
-		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
+		DOB:         testutil.Ptr(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
-		Grade:       ptrInt(4),
-		IEP:         ptrString("Reading comprehension support"),
+		Grade:       testutil.Ptr(4),
+		IEP:         testutil.Ptr("Reading comprehension support"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -445,15 +434,15 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 
 func TestCreateStudentEndpoint(t *testing.T) {
 	// Setup
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 	mockStudentRepo.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
 		ID:          uuid.New(),
 		FirstName:   "John",
 		LastName:    "Doe",
-		Grade:       ptrInt(5),
+		Grade:       testutil.Ptr(5),
 		TherapistID: uuid.New(),
-		DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
-		IEP:         ptrString("Active IEP with speech therapy goals"),
+		DOB:         testutil.Ptr(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
+		IEP:         testutil.Ptr("Active IEP with speech therapy goals"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -489,7 +478,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 
 func TestUpdateStudentEndpoint(t *testing.T) {
 	// Setup
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 	studentID := uuid.New()
 
 	// Mock GetStudent call (UpdateStudent handler calls this first)
@@ -497,10 +486,10 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		ID:          studentID,
 		FirstName:   "Emma",
 		LastName:    "Johnson",
-		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
+		DOB:         testutil.Ptr(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
-		Grade:       ptrInt(4),
-		IEP:         ptrString("Original IEP"),
+		Grade:       testutil.Ptr(4),
+		IEP:         testutil.Ptr("Original IEP"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -510,10 +499,10 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		ID:          studentID,
 		FirstName:   "Emma",
 		LastName:    "Johnson",
-		Grade:       ptrInt(5), // updated grade
+		Grade:       testutil.Ptr(5), // updated grade
 		TherapistID: uuid.New(),
-		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
-		IEP:         ptrString("Updated IEP with math accommodations"),
+		DOB:         testutil.Ptr(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
+		IEP:         testutil.Ptr("Updated IEP with math accommodations"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -542,7 +531,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 
 func TestDeleteStudentEndpoint(t *testing.T) {
 	// Setup
-	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockStudentRepo := mocks.NewMockStudentRepository(t)
 	studentID := uuid.New()
 
 	mockStudentRepo.On("DeleteStudent", mock.Anything, studentID).Return(nil)
@@ -577,7 +566,7 @@ func TestGetSessionByIDEndpoint(t *testing.T) {
 				session := models.Session{
 					ID:          uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
 					TherapistID: uuid.New(),
-					Notes:       ptrString("Test session"),
+					Notes:       testutil.Ptr("Test session"),
 				}
 				m.On("GetSessionByID", mock.Anything, "123e4567-e89b-12d3-a456-426614174000").Return(&session, nil)
 			},
@@ -602,7 +591,7 @@ func TestGetSessionByIDEndpoint(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			mockSessionRepo := new(mocks.MockSessionRepository)
+			mockSessionRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockSessionRepo)
 
 			repo := &storage.Repository{
@@ -635,7 +624,7 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 			name:      "Success",
 			sessionID: uuid.New(),
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSession", mock.Anything, id).Return("deleted", nil)
+				m.On("DeleteSession", mock.Anything, id).Return(nil)
 			},
 			expectedStatusCode: 200,
 		},
@@ -645,7 +634,7 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 		app := fiber.New(fiber.Config{
 			ErrorHandler: errs.ErrorHandler,
 		})
-		mockRepo := new(mocks.MockSessionRepository)
+		mockRepo := mocks.NewMockSessionRepository(t)
 
 		handler := session.NewHandler(mockRepo)
 		app.Delete("/sessions/:id", handler.DeleteSessions)
@@ -659,7 +648,7 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockSessionRepo := new(mocks.MockSessionRepository)
+			mockSessionRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockSessionRepo, tt.sessionID)
 
 			repo := &storage.Repository{
@@ -744,7 +733,7 @@ func TestHandler_PostSessions(t *testing.T) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T10:00:00Z")
 				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T11:00:00Z")
 				sessionUUID := uuid.MustParse("28eedfdc-81e1-44e5-a42c-022dc4c3b64d")
-				notes := ptrString("Test Session")
+				notes := testutil.Ptr("Test Session")
 				now := time.Now()
 
 				postSession := &models.PostSessionInput{
@@ -771,7 +760,7 @@ func TestHandler_PostSessions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockSessionRepo := new(mocks.MockSessionRepository)
+			mockSessionRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockSessionRepo)
 
 			repo := &storage.Repository{
@@ -813,7 +802,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 			payload: `{"notes": "Trying to update non-existent"}`,
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
 				patch := &models.PatchSessionInput{
-					Notes: ptrString("Trying to update non-existent"),
+					Notes: testutil.Ptr("Trying to update non-existent"),
 				}
 				m.On("PatchSession", mock.Anything, id, patch).Return(nil, pgx.ErrNoRows)
 			},
@@ -852,7 +841,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 			name:    "Successfully changed 1 field",
 			payload: `{"notes": "The child seeks to be seen more than they wish to be heard"}`,
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				notes := ptrString("The child seeks to be seen more than they wish to be heard")
+				notes := testutil.Ptr("The child seeks to be seen more than they wish to be heard")
 				createdAt := time.Now().Add(-24 * time.Hour)
 				now := time.Now()
 
@@ -893,7 +882,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 					StartDateTime: startTime,
 					EndDateTime:   endTime,
 					TherapistID:   uuid.New(),
-					Notes:         ptrString("Rescheduled for convenience"),
+					Notes:         testutil.Ptr("Rescheduled for convenience"),
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
@@ -914,7 +903,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T12:00:00Z")
 				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T13:00:00Z")
 				therapistID := uuid.MustParse("28eedfdc-81e1-44e5-a42c-022dc4c3b64d")
-				notes := ptrString("Starting Over")
+				notes := testutil.Ptr("Starting Over")
 				createdAt := time.Now().Add(-24 * time.Hour)
 				now := time.Now()
 
@@ -944,7 +933,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 		app := fiber.New(fiber.Config{
 			ErrorHandler: errs.ErrorHandler,
 		})
-		mockRepo := new(mocks.MockSessionRepository)
+		mockRepo := mocks.NewMockSessionRepository(t)
 
 		handler := session.NewHandler(mockRepo)
 		app.Patch("/sessions/:id", handler.PatchSessions)
@@ -962,7 +951,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockSessionRepository)
+			mockRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockRepo, tt.id)
 
 			handler := session.NewHandler(mockRepo)
@@ -980,7 +969,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 
 func TestGetTherapistByIDEndpoint(t *testing.T) {
 	// Setup
-	mockTherapistRepo := new(mocks.MockTherapistRepository)
+	mockTherapistRepo := mocks.NewMockTherapistRepository(t)
 
 	mockTherapistRepo.On("GetTherapistByID", mock.Anything, mock.AnythingOfType("string")).Return(&models.Therapist{
 		ID:        uuid.New(),
@@ -1077,7 +1066,7 @@ func TestGetTherapistsEndpoint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockTherapistRepo := new(mocks.MockTherapistRepository)
+			mockTherapistRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockTherapistRepo)
 
 			repo := &storage.Repository{
@@ -1098,9 +1087,9 @@ func TestGetTherapistsEndpoint(t *testing.T) {
 
 func TestCreateTherapistEndpoint(t *testing.T) {
 	// Setup
-	mockTherapistRepo := new(mocks.MockTherapistRepository)
+	mockTherapistRepo := mocks.NewMockTherapistRepository(t)
 
-	mockTherapistRepo.On("CreateTherapist", mock.Anything).Return(&models.Therapist{
+	mockTherapistRepo.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(&models.Therapist{
 		ID:        uuid.New(),
 		FirstName: "Kevin",
 		LastName:  "Matula",
@@ -1136,7 +1125,7 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 
 func TestDeleteTherapistEndpoint(t *testing.T) {
 	// Setup
-	mockTherapistRepo := new(mocks.MockTherapistRepository)
+	mockTherapistRepo := mocks.NewMockTherapistRepository(t)
 
 	mockTherapistRepo.On("DeleteTherapist", mock.Anything, mock.AnythingOfType("string")).Return(nil)
 
@@ -1158,7 +1147,7 @@ func TestDeleteTherapistEndpoint(t *testing.T) {
 
 func TestPatchTherapistEndpoint(t *testing.T) {
 	// Setup
-	mockTherapistRepo := new(mocks.MockTherapistRepository)
+	mockTherapistRepo := mocks.NewMockTherapistRepository(t)
 
 	mockTherapistRepo.On("PatchTherapist", mock.Anything, mock.AnythingOfType("string"), mock.Anything).Return(&models.Therapist{
 		ID:        uuid.New(),
@@ -1194,11 +1183,11 @@ func TestPatchTherapistEndpoint(t *testing.T) {
 }
 
 func TestCreateResourceEndpoint(t *testing.T) {
-	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	mockResourceRepo.On("CreateResource", mock.Anything, mock.Anything).Return(&models.Resource{
 		ID:    uuid.New(),
-		Title: ptrString("Resource1"),
-		Type:  ptrString("doc"),
+		Title: testutil.Ptr("Resource1"),
+		Type:  testutil.Ptr("doc"),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -1219,12 +1208,12 @@ func TestCreateResourceEndpoint(t *testing.T) {
 }
 
 func TestGetResourcesEndpoint(t *testing.T) {
-	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	mockResourceRepo.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource{
 		{
 			ID:    uuid.New(),
-			Title: ptrString("Resource1"),
-			Type:  ptrString("doc"),
+			Title: testutil.Ptr("Resource1"),
+			Type:  testutil.Ptr("doc"),
 		},
 	}, nil)
 
@@ -1244,12 +1233,12 @@ func TestGetResourcesEndpoint(t *testing.T) {
 }
 
 func TestGetResourceByIDEndpoint(t *testing.T) {
-	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	resourceID := uuid.New()
 	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return(&models.Resource{
 		ID:    resourceID,
-		Title: ptrString("Resource1"),
-		Type:  ptrString("doc"),
+		Title: testutil.Ptr("Resource1"),
+		Type:  testutil.Ptr("doc"),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -1268,12 +1257,12 @@ func TestGetResourceByIDEndpoint(t *testing.T) {
 }
 
 func TestUpdateResourceEndpoint(t *testing.T) {
-	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	resourceID := uuid.New()
 	mockResourceRepo.On("UpdateResource", mock.Anything, resourceID, mock.Anything).Return(&models.Resource{
 		ID:    resourceID,
-		Title: ptrString("Updated Resource"),
-		Type:  ptrString("doc"),
+		Title: testutil.Ptr("Updated Resource"),
+		Type:  testutil.Ptr("doc"),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -1294,7 +1283,7 @@ func TestUpdateResourceEndpoint(t *testing.T) {
 }
 
 func TestDeleteResourceEndpoint(t *testing.T) {
-	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	resourceID := uuid.New()
 	mockResourceRepo.On("DeleteResource", mock.Anything, resourceID).Return(nil)
 
@@ -1314,7 +1303,7 @@ func TestDeleteResourceEndpoint(t *testing.T) {
 }
 
 func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
-	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	resourceID := uuid.New()
 	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return((*models.Resource)(nil), errors.New("no rows in result set"))
 
@@ -1334,7 +1323,7 @@ func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
 }
 
 func TestUpdateResourceEndpoint_NotFound(t *testing.T) {
-	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	resourceID := uuid.New()
 	mockResourceRepo.On("UpdateResource", mock.Anything, mock.Anything, mock.Anything).Return((*models.Resource)(nil), errors.New("no rows in result set"))
 
@@ -1356,7 +1345,7 @@ func TestUpdateResourceEndpoint_NotFound(t *testing.T) {
 }
 
 func TestDeleteResourceEndpoint_NotFound(t *testing.T) {
-	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	resourceID := uuid.New()
 	mockResourceRepo.On("DeleteResource", mock.Anything, resourceID).Return(errors.New("resource not found"))
 
@@ -1398,7 +1387,7 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 					SessionID: sessionID,
 					StudentID: studentID,
 					Present:   true,
-					Notes:     ptrString("Student participated well in group activities"),
+					Notes:     testutil.Ptr("Student participated well in group activities"),
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}, nil)
@@ -1440,7 +1429,7 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			mockSessionStudentRepo := mocks.NewMockSessionStudentRepository(t)
 			tt.mockSetup(mockSessionStudentRepo)
 
 			repo := &storage.Repository{
@@ -1511,7 +1500,7 @@ func TestDeleteSessionStudentEndpoint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			mockSessionStudentRepo := mocks.NewMockSessionStudentRepository(t)
 			tt.mockSetup(mockSessionStudentRepo)
 
 			repo := &storage.Repository{
@@ -1554,7 +1543,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 					SessionID: sessionID,
 					StudentID: studentID,
 					Present:   false,
-					Notes:     ptrString("Original notes"),
+					Notes:     testutil.Ptr("Original notes"),
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}, nil)
@@ -1576,7 +1565,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 					SessionID: sessionID,
 					StudentID: studentID,
 					Present:   true,
-					Notes:     ptrString("Updated progress notes"),
+					Notes:     testutil.Ptr("Updated progress notes"),
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}, nil)
@@ -1620,7 +1609,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+			mockSessionStudentRepo := mocks.NewMockSessionStudentRepository(t)
 			tt.mockSetup(mockSessionStudentRepo)
 
 			repo := &storage.Repository{
@@ -1642,27 +1631,27 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 }
 
 func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 	sessionID := uuid.New()
 
 	expectedResources := []models.Resource{
 		{
 			ID:         uuid.New(),
 			ThemeID:    uuid.New(),
-			GradeLevel: ptrInt(5),
-			Type:       ptrString("worksheet"),
-			Title:      ptrString("Math Worksheet"),
-			Category:   ptrString("math"),
-			Content:    ptrString("Basic arithmetic"),
+			GradeLevel: testutil.Ptr(5),
+			Type:       testutil.Ptr("worksheet"),
+			Title:      testutil.Ptr("Math Worksheet"),
+			Category:   testutil.Ptr("math"),
+			Content:    testutil.Ptr("Basic arithmetic"),
 		},
 		{
 			ID:         uuid.New(),
 			ThemeID:    uuid.New(),
-			GradeLevel: ptrInt(5),
-			Type:       ptrString("activity"),
-			Title:      ptrString("Reading Activity"),
-			Category:   ptrString("language"),
-			Content:    ptrString("Comprehension exercise"),
+			GradeLevel: testutil.Ptr(5),
+			Type:       testutil.Ptr("activity"),
+			Title:      testutil.Ptr("Reading Activity"),
+			Category:   testutil.Ptr("language"),
+			Content:    testutil.Ptr("Comprehension exercise"),
 		},
 	}
 
@@ -1690,7 +1679,7 @@ func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 }
 
 func TestGetResourcesBySessionIDEndpoint_EmptyArray(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 	sessionID := uuid.New()
 
 	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID, utils.NewPagination()).Return([]models.Resource{}, nil)
@@ -1717,7 +1706,7 @@ func TestGetResourcesBySessionIDEndpoint_EmptyArray(t *testing.T) {
 }
 
 func TestGetResourcesBySessionIDEndpoint_InvalidUUID(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
@@ -1736,7 +1725,7 @@ func TestGetResourcesBySessionIDEndpoint_InvalidUUID(t *testing.T) {
 }
 
 func TestGetResourcesBySessionIDEndpoint_InternalError(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 	sessionID := uuid.New()
 
 	mockSessionResourceRepo.On("GetResourcesBySessionID", mock.Anything, sessionID, utils.NewPagination()).Return(nil, errors.New("database error"))
@@ -1760,7 +1749,7 @@ func TestGetResourcesBySessionIDEndpoint_InternalError(t *testing.T) {
 // POST /session-resource tests
 
 func TestPostSessionResourceEndpoint_Success(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	createReq := models.CreateSessionResource{
 		SessionID:  uuid.New(),
@@ -1801,7 +1790,7 @@ func TestPostSessionResourceEndpoint_Success(t *testing.T) {
 }
 
 func TestPostSessionResourceEndpoint_SessionNotFound(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	createReq := models.CreateSessionResource{
 		SessionID:  uuid.New(),
@@ -1834,7 +1823,7 @@ func TestPostSessionResourceEndpoint_SessionNotFound(t *testing.T) {
 }
 
 func TestPostSessionResourceEndpoint_ResourceNotFound(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	createReq := models.CreateSessionResource{
 		SessionID:  uuid.New(),
@@ -1867,7 +1856,7 @@ func TestPostSessionResourceEndpoint_ResourceNotFound(t *testing.T) {
 }
 
 func TestPostSessionResourceEndpoint_InvalidBody(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
@@ -1887,7 +1876,7 @@ func TestPostSessionResourceEndpoint_InvalidBody(t *testing.T) {
 }
 
 func TestPostSessionResourceEndpoint_MissingFields(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
@@ -1910,7 +1899,7 @@ func TestPostSessionResourceEndpoint_MissingFields(t *testing.T) {
 // DELETE /session-resource tests
 
 func TestDeleteSessionResourceEndpoint_Success(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	deleteReq := models.DeleteSessionResource{
 		SessionID:  uuid.New(),
@@ -1938,7 +1927,7 @@ func TestDeleteSessionResourceEndpoint_Success(t *testing.T) {
 }
 
 func TestDeleteSessionResourceEndpoint_NotFound(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	deleteReq := models.DeleteSessionResource{
 		SessionID:  uuid.New(),
@@ -1967,7 +1956,7 @@ func TestDeleteSessionResourceEndpoint_NotFound(t *testing.T) {
 }
 
 func TestDeleteSessionResourceEndpoint_InvalidBody(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
@@ -1987,7 +1976,7 @@ func TestDeleteSessionResourceEndpoint_InvalidBody(t *testing.T) {
 }
 
 func TestDeleteSessionResourceEndpoint_MissingFields(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	repo := &storage.Repository{
 		SessionResource: mockSessionResourceRepo,
@@ -2008,7 +1997,7 @@ func TestDeleteSessionResourceEndpoint_MissingFields(t *testing.T) {
 }
 
 func TestDeleteSessionResourceEndpoint_InternalError(t *testing.T) {
-	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockSessionResourceRepo := mocks.NewMockSessionResourceRepository(t)
 
 	deleteReq := models.DeleteSessionResource{
 		SessionID:  uuid.New(),
@@ -2073,7 +2062,7 @@ func TestHandler_Signup(t *testing.T) {
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
-				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(therapist, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 			wantErr:            false,
@@ -2085,7 +2074,7 @@ func TestHandler_Signup(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -2110,7 +2099,6 @@ func TestHandler_Signup(t *testing.T) {
 			res, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -2150,7 +2138,7 @@ func TestHandler_Login(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockTherapistRepository)
+			mockRepo := mocks.NewMockTherapistRepository(t)
 			tt.mockSetup(mockRepo)
 
 			// Test Supabase server for login
@@ -2177,7 +2165,6 @@ func TestHandler_Login(t *testing.T) {
 			res, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }

@@ -52,7 +52,8 @@ func TestHandler_GetSessions(t *testing.T) {
 						UpdatedAt:     ptrTime(time.Now()),
 					},
 				}
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(sessions, nil)
+				// FIXED: Added third parameter - the filter request
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.AnythingOfType("*models.GetSessionRepositoryRequest")).Return(sessions, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -61,7 +62,8 @@ func TestHandler_GetSessions(t *testing.T) {
 			name: "repository error",
 			url:  "/",
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
+				// FIXED: Added third parameter
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.AnythingOfType("*models.GetSessionRepositoryRequest")).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -89,7 +91,8 @@ func TestHandler_GetSessions(t *testing.T) {
 					Page:  2,
 					Limit: 5,
 				}
-				m.On("GetSessions", mock.Anything, pagination).Return([]models.Session{}, nil)
+				// FIXED: Added third parameter
+				m.On("GetSessions", mock.Anything, pagination, mock.AnythingOfType("*models.GetSessionRepositoryRequest")).Return([]models.Session{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -102,7 +105,7 @@ func TestHandler_GetSessions(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockSessionRepository)
+			mockRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockRepo)
 
 			handler := session.NewHandler(mockRepo)
@@ -129,7 +132,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "Successful Delete Session",
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSession", mock.Anything, id).Return("deleted", nil)
+				m.On("DeleteSession", mock.Anything, id).Return(nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -138,7 +141,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "internal server error",
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSession", mock.Anything, id).Return(nil, errors.New("database error"))
+				m.On("DeleteSession", mock.Anything, id).Return(errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -149,7 +152,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 		app := fiber.New(fiber.Config{
 			ErrorHandler: errs.ErrorHandler,
 		})
-		mockRepo := new(mocks.MockSessionRepository)
+		mockRepo := mocks.NewMockSessionRepository(t)
 
 		handler := session.NewHandler(mockRepo)
 		app.Delete("/sessions/:id", handler.DeleteSessions)
@@ -166,7 +169,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockSessionRepository)
+			mockRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockRepo, tt.id)
 
 			handler := session.NewHandler(mockRepo)
@@ -294,7 +297,7 @@ func TestHandler_PostSessions(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockSessionRepository)
+			mockRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockRepo)
 
 			handler := session.NewHandler(mockRepo)
@@ -462,7 +465,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 		app := fiber.New(fiber.Config{
 			ErrorHandler: errs.ErrorHandler,
 		})
-		mockRepo := new(mocks.MockSessionRepository)
+		mockRepo := mocks.NewMockSessionRepository(t)
 
 		handler := session.NewHandler(mockRepo)
 		app.Patch("/sessions/:id", handler.PatchSessions)
@@ -480,7 +483,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 			app := fiber.New(fiber.Config{
 				ErrorHandler: errs.ErrorHandler,
 			})
-			mockRepo := new(mocks.MockSessionRepository)
+			mockRepo := mocks.NewMockSessionRepository(t)
 			tt.mockSetup(mockRepo, tt.id)
 
 			handler := session.NewHandler(mockRepo)

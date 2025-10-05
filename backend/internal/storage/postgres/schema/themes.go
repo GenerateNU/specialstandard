@@ -13,11 +13,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type ThemeRepository struct {
+type ThemeRepositoryImpl struct {
 	db *pgxpool.Pool
 }
 
-func (r *ThemeRepository) CreateTheme(ctx context.Context, input *models.CreateThemeInput) (*models.Theme, error) {
+func (r *ThemeRepositoryImpl) CreateTheme(ctx context.Context, input *models.CreateThemeInput) (*models.Theme, error) {
 	// Create a Theme object to return
 	theme := &models.Theme{}
 
@@ -43,11 +43,11 @@ func (r *ThemeRepository) CreateTheme(ctx context.Context, input *models.CreateT
 	return theme, nil
 }
 
-func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagination, filter *models.ThemeFilter) ([]models.Theme, error) {
+func (r *ThemeRepositoryImpl) GetThemes(ctx context.Context, pagination utils.Pagination, filter *models.ThemeFilter) ([]models.Theme, error) {
 	query := `
 	SELECT id, theme_name, month, year, created_at, updated_at
 	FROM theme`
-	
+
 	conditions := []string{}
 	args := []interface{}{}
 	argCount := 1
@@ -59,13 +59,13 @@ func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagina
 			args = append(args, *filter.Month)
 			argCount++
 		}
-		
+
 		if filter.Year != nil {
 			conditions = append(conditions, fmt.Sprintf("year = $%d", argCount))
 			args = append(args, *filter.Year)
 			argCount++
 		}
-		
+
 		if filter.Search != nil && *filter.Search != "" {
 			conditions = append(conditions, fmt.Sprintf("theme_name ILIKE $%d", argCount))
 			args = append(args, "%"+*filter.Search+"%")
@@ -79,7 +79,7 @@ func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagina
 
 	query += fmt.Sprintf(` ORDER BY year DESC, month DESC
 	LIMIT $%d OFFSET $%d`, argCount, argCount+1)
-	
+
 	args = append(args, pagination.Limit, pagination.GettOffset())
 
 	rows, err := r.db.Query(ctx, query, args...)
@@ -100,7 +100,7 @@ func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagina
 	return themes, nil
 }
 
-func (r *ThemeRepository) GetThemeByID(ctx context.Context, id uuid.UUID) (*models.Theme, error) {
+func (r *ThemeRepositoryImpl) GetThemeByID(ctx context.Context, id uuid.UUID) (*models.Theme, error) {
 	query := `
 	SELECT id, theme_name, month, year, created_at, updated_at
 	FROM theme
@@ -124,7 +124,7 @@ func (r *ThemeRepository) GetThemeByID(ctx context.Context, id uuid.UUID) (*mode
 	return &theme, nil
 }
 
-func (r *ThemeRepository) PatchTheme(ctx context.Context, id uuid.UUID, input *models.UpdateThemeInput) (*models.Theme, error) {
+func (r *ThemeRepositoryImpl) PatchTheme(ctx context.Context, id uuid.UUID, input *models.UpdateThemeInput) (*models.Theme, error) {
 	query := `UPDATE theme SET`
 	updates := []string{}
 	args := []interface{}{}
@@ -175,7 +175,7 @@ func (r *ThemeRepository) PatchTheme(ctx context.Context, id uuid.UUID, input *m
 	return &theme, nil
 }
 
-func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
+func (r *ThemeRepositoryImpl) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 	query := `
 	DELETE 
 	FROM theme
@@ -189,8 +189,8 @@ func (r *ThemeRepository) DeleteTheme(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func NewThemeRepository(db *pgxpool.Pool) *ThemeRepository {
-	return &ThemeRepository{
+func NewThemeRepository(db *pgxpool.Pool) *ThemeRepositoryImpl {
+	return &ThemeRepositoryImpl{
 		db,
 	}
 }
