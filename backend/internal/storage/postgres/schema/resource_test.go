@@ -44,7 +44,7 @@ func TestResourceRepository_GetResources(t *testing.T) {
     `, resourceID, themeID, "5th Grade", testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, 0, 0, utils.NewPagination())
+	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
 
 	// Assert
 	assert.NoError(t, err)
@@ -67,11 +67,11 @@ func TestResourceRepository_GetResources(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, 0, 0, utils.NewPagination())
+	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, resources, 10)
 
-	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, 0, 0, utils.Pagination{
+	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.Pagination{
 		Page:  2,
 		Limit: 9,
 	})

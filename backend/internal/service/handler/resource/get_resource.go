@@ -40,17 +40,23 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 	themeMonthStr := c.Query("theme_month")
 	themeYearStr := c.Query("theme_year")
 
-	var themeMonth, themeYear int
+	var themeMonth, themeYear *int
 	if themeMonthStr != "" {
 		parsedMonth, err := strconv.Atoi(themeMonthStr)
 		if err == nil {
-			themeMonth = parsedMonth
+			if parsedMonth < 1 || parsedMonth > 12 {
+				return errs.InvalidRequestData(map[string]string{"theme_month": "month must be between 1 and 12"})
+			}
+			themeMonth = &parsedMonth
 		}
 	}
 	if themeYearStr != "" {
 		parsedYear, err := strconv.Atoi(themeYearStr)
 		if err == nil {
-			themeYear = parsedYear
+			if parsedYear < 1900 || parsedYear > 3000 {
+				return errs.InvalidRequestData(map[string]string{"theme_year": "year is invalid"})
+			}
+			themeYear = &parsedYear
 		}
 	}
 

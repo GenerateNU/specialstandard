@@ -24,7 +24,7 @@ func (m *MockResourceRepository) GetResourceByID(ctx context.Context, id uuid.UU
 	return args.Get(0).(*models.ResourceWithTheme), args.Error(1)
 }
 
-func (m *MockResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
+func (m *MockResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
 	args := m.Called(ctx, themeID, gradeLevel, resType, title, category, content, date, themeName, themeMonth, themeYear, pagination)
 	return args.Get(0).([]models.ResourceWithTheme), args.Error(1)
 }

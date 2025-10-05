@@ -168,12 +168,18 @@ func TestHandler_GetResources(t *testing.T) {
 			expectedStatus: fiber.StatusOK,
 		},
 		{
-			name: "theme_params filter",
+			name: "theme_params_filter",
 			url:  "?theme_name=Spring&theme_month=3&theme_year=2024",
 			mockSetup: func(m *mocks.MockResourceRepository) {
 				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.ResourceWithTheme{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name:           "invalid theme year filter",
+			url:            "?theme_year=50000",
+			mockSetup:      func(m *mocks.MockResourceRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
 		},
 		{
 			name: "repository_error",

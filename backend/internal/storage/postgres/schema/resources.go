@@ -26,7 +26,7 @@ func NewResourceRepository(db *pgxpool.Pool) *ResourceRepository {
 	}
 }
 
-func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
+func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
 	resources := []models.ResourceWithTheme{}
 	queryString := "SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE 1=1"
 	args := []interface{}{}
@@ -72,14 +72,14 @@ func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID
 		args = append(args, "%"+themeName+"%")
 		argNum++
 	}
-	if themeMonth != 0 {
+	if themeMonth != nil {
 		queryString += fmt.Sprintf(" AND t.month = $%d", argNum)
-		args = append(args, themeMonth)
+		args = append(args, *themeMonth)
 		argNum++
 	}
-	if themeYear != 0 {
+	if themeYear != nil {
 		queryString += fmt.Sprintf(" AND t.year = $%d", argNum)
-		args = append(args, themeYear)
+		args = append(args, *themeYear)
 		argNum++
 	}
 

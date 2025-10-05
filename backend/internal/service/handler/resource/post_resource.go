@@ -9,7 +9,6 @@ import (
 )
 
 func (h *Handler) PostResource(c *fiber.Ctx) error {
-
 	var resourceBody models.ResourceBody
 	if err := c.BodyParser(&resourceBody); err != nil {
 		return errs.InvalidRequestData(map[string]string{"body": "invalid body"})
