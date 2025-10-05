@@ -1,7 +1,9 @@
 package student
 
 import (
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/xvalidator"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,36 +14,12 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 	var req models.CreateStudentInput
 
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid JSON format",
-		})
+		return errs.InvalidJSON("Invalid JSON format")
 	}
 
-	// Validate required fields
-	if req.FirstName == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "First name is required",
-		})
-	}
-	if req.LastName == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Last name is required",
-		})
-	}
-	if req.TherapistID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Therapist ID is required",
-		})
-	}
-
-	// Validate grade if provided (now expects integer input)
-	if req.Grade != nil {
-		grade := *req.Grade
-		if grade != -1 && (grade < 0 || grade > 12) {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Grade must be -1 (graduated), 0 (kindergarten), or 1-12",
-			})
-		}
+	// Validate using xvalidator
+	if validationErrors := xvalidator.Validator.Validate(req); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
 	// Parse therapist UUID
@@ -77,9 +55,7 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 	createdStudent, err := h.studentRepository.AddStudent(c.Context(), student)
 	if err != nil {
 		// Database will catch invalid therapist_id foreign key violations
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Database error",
-		})
+		return errs.InternalServerError("Database error")
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(createdStudent)

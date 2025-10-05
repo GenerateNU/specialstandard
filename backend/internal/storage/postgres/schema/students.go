@@ -15,7 +15,7 @@ type StudentRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *StudentRepository) GetStudents(ctx context.Context, grade int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
+func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
 	queryString := `
 	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
 	FROM student WHERE 1=1`
@@ -23,10 +23,10 @@ func (r *StudentRepository) GetStudents(ctx context.Context, grade int, therapis
 	args := []interface{}{}
 	argNum := 1
 
-	// Add filters if provided (0 means no grade filter)
-	if grade != 0 {
+	// Add filters if provided (nil means no grade filter)
+	if grade != nil {
 		queryString += fmt.Sprintf(" AND grade = $%d", argNum)
-		args = append(args, grade)
+		args = append(args, *grade)
 		argNum++
 	}
 

@@ -59,7 +59,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						UpdatedAt:   time.Now(),
 					},
 				}
-				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "", utils.NewPagination()).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -68,7 +68,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "empty students list",
 			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "", utils.NewPagination()).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -77,7 +77,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "repository error",
 			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "", utils.NewPagination()).Return(nil, errors.New("database error"))
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -101,7 +101,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "Pagination Parameters",
 			url:  "?page=2&limit=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "", utils.Pagination{Page: 2, Limit: 5}).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 5}).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -118,7 +118,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						Grade:     ptrInt(5),
 					},
 				}
-				m.On("GetStudents", mock.Anything, 5, uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -136,7 +136,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						TherapistID: therapistID,
 					},
 				}
-				m.On("GetStudents", mock.Anything, 0, therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -152,7 +152,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:  "Doe",
 					},
 				}
-				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -171,7 +171,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						TherapistID: therapistID,
 					},
 				}
-				m.On("GetStudents", mock.Anything, 5, therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -180,7 +180,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "empty results with filters",
 			url:  "?grade=12&name=Nonexistent",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, 12, uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(12), uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -196,7 +196,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:  "Doe",
 					},
 				}
-				m.On("GetStudents", mock.Anything, 0, uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -213,7 +213,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						Grade:     ptrInt(5),
 					},
 				}
-				m.On("GetStudents", mock.Anything, 5, uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -328,7 +328,9 @@ func TestHandler_GetStudent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 
@@ -626,7 +628,9 @@ func TestHandler_UpdateStudent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 
@@ -797,7 +801,9 @@ func TestHandler_AddStudent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 
@@ -866,16 +872,29 @@ func TestHandler_AddStudent(t *testing.T) {
 				var errorResp map[string]interface{}
 				err = json.Unmarshal(body, &errorResp)
 				assert.NoError(t, err)
-				assert.Contains(t, errorResp, "error")
 
-				// Validate specific error messages
+				// Check for HTTPError structure with code and message
+				assert.Contains(t, errorResp, "code")
+				assert.Contains(t, errorResp, "message")
+
+				// Validate specific error messages based on test case
 				switch tt.name {
 				case "invalid date format":
-					assert.Contains(t, errorResp["error"], "Invalid date format")
+					// For validation errors, message is a map
+					if msgMap, ok := errorResp["message"].(map[string]interface{}); ok {
+						assert.Contains(t, msgMap, "dob")
+					}
 				case "invalid therapist UUID format":
-					assert.Contains(t, errorResp["error"], "Invalid therapist ID format")
+					// For validation errors, message is a map
+					if msgMap, ok := errorResp["message"].(map[string]interface{}); ok {
+						assert.Contains(t, msgMap, "therapistid")
+					}
 				case "missing required fields":
-					assert.Contains(t, errorResp["error"], "required")
+					// For validation errors, message is a map
+					if msgMap, ok := errorResp["message"].(map[string]interface{}); ok {
+						// Should have errors for missing fields
+						assert.True(t, len(msgMap) > 0)
+					}
 				}
 			}
 		})
@@ -923,7 +942,9 @@ func TestHandler_DeleteStudent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 

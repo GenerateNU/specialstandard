@@ -24,7 +24,7 @@ type CreateStudentInput struct {
 	LastName    string  `json:"last_name" validate:"required,min=1,max=100"`
 	DOB         *string `json:"dob,omitempty" validate:"omitempty,datetime=2006-01-02"`
 	TherapistID string  `json:"therapist_id" validate:"required,uuid"`
-	Grade       *int    `json:"grade,omitempty" validate:"omitempty,oneof=-1 0 1 2 3 4 5 6 7 8 9 10 11 12"`
+	Grade       *int    `json:"grade,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	IEP         *string `json:"iep,omitempty"`
 }
 

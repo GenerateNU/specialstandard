@@ -1,7 +1,9 @@
 package student
 
 import (
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/xvalidator"
 	"strings"
 	"time"
 
@@ -29,14 +31,9 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate grade if provided (now expects integer input)
-	if req.Grade != nil {
-		grade := *req.Grade
-		if grade != -1 && (grade < 0 || grade > 12) {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Grade must be -1 (graduated), 0 (kindergarten), or 1-12",
-			})
-		}
+	// Validate using xvalidator
+	if validationErrors := xvalidator.Validator.Validate(req); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
 	// Get existing student for merging (don't check for "not found" errors here)

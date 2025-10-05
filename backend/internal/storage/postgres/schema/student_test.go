@@ -64,45 +64,45 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test 1: Get all students (no filters)
-	students, err := repo.GetStudents(ctx, 0, uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 2)
 
 	// Test 2: Filter by grade
-	students, err = repo.GetStudents(ctx, 5, uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Doe", students[0].LastName)
 	assert.Equal(t, studentID1, students[0].ID)
 
 	// Test 3: Filter by therapist
-	students, err = repo.GetStudents(ctx, 0, therapistID2, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, therapistID2, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Smith", students[0].LastName)
 	assert.Equal(t, therapistID2, students[0].TherapistID)
 
 	// Test 4: Filter by name (first name)
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "John", students[0].FirstName)
 
 	// Test 5: Filter by name (last name)
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "Smith", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "Smith", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Smith", students[0].LastName)
 
 	// Test 6: Multiple filters
-	students, err = repo.GetStudents(ctx, 5, therapistID1, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "John", students[0].FirstName)
 	assert.Equal(t, 5, *students[0].Grade)
 
 	// Test 7: Filter that returns no results
-	students, err = repo.GetStudents(ctx, 99, uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, ptrInt(99), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 
@@ -117,12 +117,12 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 	}
 
 	// Test 8: Pagination - get all students
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 6) // 2 original + 4 new
 
 	// Test 9: Pagination - second page
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "", utils.Pagination{
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "", utils.Pagination{
 		Page:  2,
 		Limit: 5,
 	})
@@ -173,7 +173,7 @@ func TestStudentRepository_GetStudents_FilterByGrade(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test: Filter by grade 5
-	students, err := repo.GetStudents(ctx, 5, uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
 
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // Should only return John and Mike
@@ -231,7 +231,7 @@ func TestStudentRepository_GetStudents_FilterByTherapist(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test: Filter by therapist 1
-	students, err := repo.GetStudents(ctx, 0, therapistID1, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, therapistID1, "", utils.NewPagination())
 
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // Should only return students assigned to therapist 1
@@ -240,7 +240,7 @@ func TestStudentRepository_GetStudents_FilterByTherapist(t *testing.T) {
 	}
 
 	// Test: Filter by therapist 2
-	students, err = repo.GetStudents(ctx, 0, therapistID2, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, therapistID2, "", utils.NewPagination())
 
 	assert.NoError(t, err)
 	assert.Len(t, students, 1) // Should only return student assigned to therapist 2
@@ -288,23 +288,23 @@ func TestStudentRepository_GetStudents_FilterByName(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test: Search by first name
-	students, err := repo.GetStudents(ctx, 0, uuid.Nil, "John", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // Should find "John" and "Johnson"
 
 	// Test: Search by last name
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "Doe", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "Doe", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Doe", students[0].LastName)
 
 	// Test: Case insensitive search
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "JOHN", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "JOHN", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // Should find "John", "Johnson", and "Johns"
 
 	// Test: Partial name search
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "oh", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "oh", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // Should find "John", "Johnson", and "Johns"
 }
@@ -368,7 +368,7 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test 1: Filter by grade only
-	students, err := repo.GetStudents(ctx, 5, uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson
 	for _, student := range students {
@@ -376,7 +376,7 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	}
 
 	// Test 2: Filter by therapist only
-	students, err = repo.GetStudents(ctx, 0, therapistID1, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, therapistID1, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // John Doe, Jane Smith, Sarah Johnson
 	for _, student := range students {
@@ -384,12 +384,12 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	}
 
 	// Test 3: Filter by name only
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson (has "John" in last name)
 
 	// Test 4: Combine grade + therapist
-	students, err = repo.GetStudents(ctx, 5, therapistID1, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // John Doe, Sarah Johnson
 	for _, student := range students {
@@ -398,22 +398,22 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	}
 
 	// Test 5: Combine grade + name
-	students, err = repo.GetStudents(ctx, 5, uuid.Nil, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson
 
 	// Test 6: Combine therapist + name
-	students, err = repo.GetStudents(ctx, 0, therapistID1, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, therapistID1, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // John Doe, Sarah Johnson
 
 	// Test 7: All filters combined
-	students, err = repo.GetStudents(ctx, 5, therapistID1, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // John Doe, Sarah Johnson
 
 	// Test 8: Filters that return no results
-	students, err = repo.GetStudents(ctx, 12, uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, ptrInt(12), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 }
@@ -446,19 +446,19 @@ func TestStudentRepository_GetStudents_CaseInsensitiveSearch(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test lowercase search
-	students, err := repo.GetStudents(ctx, 0, uuid.Nil, "john", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, uuid.Nil, "john", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "John", students[0].FirstName)
 
 	// Test uppercase search
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "SMITH", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "SMITH", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Smith", students[0].LastName)
 
 	// Test mixed case search
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "JoHn", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "JoHn", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 }
@@ -493,22 +493,22 @@ func TestStudentRepository_GetStudents_WithPagination(t *testing.T) {
 	}
 
 	// Test: First page with limit 3
-	students, err := repo.GetStudents(ctx, 5, uuid.Nil, "", utils.Pagination{Page: 1, Limit: 3})
+	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 1, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 3)
 
 	// Test: Second page with limit 3
-	students, err = repo.GetStudents(ctx, 5, uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3})
+	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 3)
 
 	// Test: Third page with limit 3 (should be empty or partial)
-	students, err = repo.GetStudents(ctx, 5, uuid.Nil, "", utils.Pagination{Page: 3, Limit: 3})
+	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 3, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 
 	// Test: Get all with large limit
-	students, err = repo.GetStudents(ctx, 5, uuid.Nil, "", utils.Pagination{Page: 1, Limit: 100})
+	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 1, Limit: 100})
 	assert.NoError(t, err)
 	assert.Len(t, students, 6)
 }
