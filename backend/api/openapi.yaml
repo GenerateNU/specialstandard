@@ -2307,22 +2307,22 @@ components:
     ThemeInfo:
       type: object
       required:
-        - name
+        - theme_name
         - month
         - year
       properties:
-        name:
+        theme_name:
           type: string
           description: Name of the theme
           example: "Jungle Adventure"
-        month:
+        theme_month:
           type: integer
           description: Month of the theme (1-12)
           example: 6
-        year:
+        theme_year:
           type: integer
           description: Year of the theme
-          example:
+          example: 2024
         created_at:
           type: string
           format: date-time
@@ -2405,7 +2405,7 @@ components:
           type: string
           nullable: true
           description: Title of the resource (optional)
-          example: "Coping with Anxiety"
+          example: "Reading Exercises: b vs d"
         category:
           type: string
           nullable: true
