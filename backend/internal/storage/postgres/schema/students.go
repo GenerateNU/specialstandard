@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -159,17 +160,66 @@ func NewStudentRepository(db *pgxpool.Pool) *StudentRepository {
 }
 
 // This is our function to get all the sessions associated with a specific student from PostGres DB
-func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination) ([]models.StudentSessionsOutput, error) {
+func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination, filter *models.GetStudentSessionsRepositoryRequest) ([]models.StudentSessionsOutput, error) {
 	query := `
 	SELECT ss.student_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
 	       s.id, s.start_datetime, s.end_datetime, s.therapist_id, s.notes, 
 	       s.created_at, s.updated_at
 	FROM session_student ss
 	JOIN session s ON ss.session_id = s.id
-	WHERE ss.student_id = $1
-	LIMIT $2 OFFSET $3`
+	WHERE ss.student_id = $1`
 
-	rows, err := r.db.Query(ctx, query, studentID, pagination.Limit, pagination.GettOffset())
+	conditions := []string{}
+	args := []interface{}{studentID}
+	argCount := 2
+
+	if filter != nil {
+		// Date filtering - similar to sessions
+		if filter.Month != nil && filter.Year != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM s.start_datetime) = $%d AND EXTRACT(YEAR FROM s.start_datetime) = $%d", argCount, argCount+1))
+			args = append(args, *filter.Month, *filter.Year)
+			argCount += 2
+		} else if filter.Year != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(YEAR FROM s.start_datetime) = $%d", argCount))
+			args = append(args, *filter.Year)
+			argCount++
+		} else if filter.Month != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM s.start_datetime) = $%d", argCount))
+			args = append(args, *filter.Month)
+			argCount++
+		}
+
+		// Start and end date filtering
+		if filter.StartDate != nil {
+			conditions = append(conditions, fmt.Sprintf("s.start_datetime >= $%d", argCount))
+			args = append(args, *filter.StartDate)
+			argCount++
+		}
+
+		if filter.EndDate != nil {
+			conditions = append(conditions, fmt.Sprintf("s.end_datetime <= $%d", argCount))
+			args = append(args, *filter.EndDate)
+			argCount++
+		}
+
+		// Attendance filtering
+		if filter.Present != nil {
+			conditions = append(conditions, fmt.Sprintf("ss.present = $%d", argCount))
+			args = append(args, *filter.Present)
+			argCount++
+		}
+	}
+
+	// Add conditions to query
+	if len(conditions) > 0 {
+		query += " AND " + strings.Join(conditions, " AND ")
+	}
+
+	// Add pagination
+	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount, argCount+1)
+	args = append(args, pagination.Limit, pagination.GettOffset())
+
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

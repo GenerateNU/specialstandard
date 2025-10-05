@@ -921,7 +921,19 @@ paths:
   /students/{student_id}/sessions:
     get:
       summary: Get all sessions for a student
-      description: Retrieve all sessions associated with a specific student, including bridge table information
+      description: |
+        Retrieve all sessions associated with a specific student, including bridge table information.
+        
+        **Date Filtering Options:**
+        - Use `startDate` and `endDate` for date range filtering: `?startDate=2025-09-01&endDate=2025-09-30`
+        - Use `month` and `year` for monthly filtering: `?month=9&year=2025`  
+        - Use `year` alone for yearly filtering: `?year=2025`
+        
+        **Attendance Filtering:**
+        - Use `present` to filter by attendance: `?present=true` or `?present=false`
+        
+        **Combining Filters:**
+        All filters can be combined: `?month=9&year=2025&present=true`
       tags: [Students]
       parameters:
         - name: student_id
@@ -932,26 +944,47 @@ paths:
             type: string
             format: uuid
             example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        - name: start_date
+        - name: startDate
           in: query
           required: false
-          description: Filter sessions starting after this date
+          description: Filter sessions starting after this date (YYYY-MM-DD format)
           schema:
             type: string
             format: date
-        - name: end_date
+            example: "2025-09-01"
+        - name: endDate
           in: query
           required: false
-          description: Filter sessions ending before this date
+          description: Filter sessions ending before this date (YYYY-MM-DD format)
           schema:
             type: string
             format: date
+            example: "2025-09-30"
+        - name: month
+          in: query
+          required: false
+          description: Filter sessions by month (1-12). Can be combined with year parameter.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 9
+        - name: year
+          in: query
+          required: false
+          description: Filter sessions by year. Can be combined with month parameter or used alone.
+          schema:
+            type: integer
+            minimum: 1776
+            maximum: 2200
+            example: 2025
         - name: present
           in: query
           required: false
           description: Filter sessions by student's attendance status
           schema:
             type: boolean
+            example: true
         - name: page
           in: query
           description: Page Number of pagination

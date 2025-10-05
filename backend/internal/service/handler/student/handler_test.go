@@ -3,18 +3,18 @@ package student_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/utils"
+	"strings"
 	"testing"
 	"time"
 
 	"specialstandard/internal/models"
 	"specialstandard/internal/service/handler/student"
 	"specialstandard/internal/storage/mocks"
-
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -953,6 +953,460 @@ func TestHandler_DeleteStudent(t *testing.T) {
 					assert.Contains(t, errorResp["error"], "Invalid UUID format")
 				case "repository error":
 					assert.Contains(t, errorResp["error"], "Database error")
+				}
+			}
+		})
+	}
+}
+
+func TestHandler_GetStudentSessions(t *testing.T) {
+	studentID := uuid.New()
+	sessionID := uuid.New()
+	therapistID := uuid.New()
+	
+	// Helper to create mock session data
+	createMockSession := func(startTime time.Time, present bool) models.StudentSessionsOutput {
+		return models.StudentSessionsOutput{
+			StudentID: studentID,
+			Present:   present,
+			Notes:     ptrString("Test session notes"),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Session: models.Session{
+				ID:            sessionID,
+				StartDateTime: startTime,
+				EndDateTime:   startTime.Add(time.Hour),
+				TherapistID:   therapistID,
+				Notes:         ptrString("Session notes"),
+				CreatedAt:     ptrTime(time.Now()),
+				UpdatedAt:     ptrTime(time.Now()),
+			},
+		}
+	}
+
+	tests := []struct {
+		name           string
+		studentID      string
+		url            string
+		mockSetup      func(*mocks.MockStudentRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name:      "successful get student sessions with default pagination",
+			studentID: studentID.String(),
+			url:       "",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Now(), true),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), (*models.GetStudentSessionsRepositoryRequest)(nil)).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "empty sessions list",
+			studentID: studentID.String(),
+			url:       "",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), (*models.GetStudentSessionsRepositoryRequest)(nil)).Return([]models.StudentSessionsOutput{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "repository error",
+			studentID: studentID.String(),
+			url:       "",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), (*models.GetStudentSessionsRepositoryRequest)(nil)).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+		{
+			name:      "invalid UUID format",
+			studentID: "invalid-uuid",
+			url:       "",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				// No mock setup needed - UUID parsing fails before repository call
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			studentID:      studentID.String(),
+			url:            "?page=0&limit=-1",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			studentID:      studentID.String(),
+			url:            "?page=abc&limit=-1",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:      "Pagination Parameters",
+			studentID: studentID.String(),
+			url:       "?page=2&limit=5",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				pagination := utils.Pagination{Page: 2, Limit: 5}
+				m.On("GetStudentSessions", mock.Anything, studentID, pagination, (*models.GetStudentSessionsRepositoryRequest)(nil)).Return([]models.StudentSessionsOutput{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		// ------- Attendance Filter Cases -------
+		{
+			name:      "Filter by present=true",
+			studentID: studentID.String(),
+			url:       "?present=true",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Now(), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					Present: func() *bool { b := true; return &b }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "Filter by present=false",
+			studentID: studentID.String(),
+			url:       "?present=false",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Now(), false),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					Present: func() *bool { b := false; return &b }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		// ------- Date Range Filter Cases -------
+		{
+			name:      "Filter by date range",
+			studentID: studentID.String(),
+			url:       "?startDate=2025-09-01&endDate=2025-09-30",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				startDate, _ := time.Parse("2006-01-02", "2025-09-01")
+				endDate, _ := time.Parse("2006-01-02", "2025-09-30")
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					StartDate: &startDate,
+					EndDate:   &endDate,
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "Filter by start date only",
+			studentID: studentID.String(),
+			url:       "?startDate=2025-09-01",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				startDate, _ := time.Parse("2006-01-02", "2025-09-01")
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					StartDate: &startDate,
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "Filter by end date only",
+			studentID: studentID.String(),
+			url:       "?endDate=2025-09-30",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				endDate, _ := time.Parse("2006-01-02", "2025-09-30")
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					EndDate: &endDate,
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		// ------- Month/Year Filter Cases -------
+		{
+			name:      "Filter by month and year",
+			studentID: studentID.String(),
+			url:       "?month=9&year=2025",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					Month: func() *int { i := 9; return &i }(),
+					Year:  func() *int { i := 2025; return &i }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "Filter by year only",
+			studentID: studentID.String(),
+			url:       "?year=2025",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					Year: func() *int { i := 2025; return &i }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "Filter by month only (should work with current year)",
+			studentID: studentID.String(),
+			url:       "?month=9",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					Month: func() *int { i := 9; return &i }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		// ------- Combined Filter Cases -------
+		{
+			name:      "Filter by attendance and date range",
+			studentID: studentID.String(),
+			url:       "?present=true&startDate=2025-09-01&endDate=2025-09-30",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				startDate, _ := time.Parse("2006-01-02", "2025-09-01")
+				endDate, _ := time.Parse("2006-01-02", "2025-09-30")
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					StartDate: &startDate,
+					EndDate:   &endDate,
+					Present:   func() *bool { b := true; return &b }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "Filter by attendance and month/year",
+			studentID: studentID.String(),
+			url:       "?present=false&month=9&year=2025",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), false),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					Month:   func() *int { i := 9; return &i }(),
+					Year:    func() *int { i := 2025; return &i }(),
+					Present: func() *bool { b := false; return &b }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:      "All filters combined with pagination",
+			studentID: studentID.String(),
+			url:       "?present=true&month=9&year=2025&page=2&limit=3",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				pagination := utils.Pagination{Page: 2, Limit: 3}
+				sessions := []models.StudentSessionsOutput{
+					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
+				}
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					Month:   func() *int { i := 9; return &i }(),
+					Year:    func() *int { i := 2025; return &i }(),
+					Present: func() *bool { b := true; return &b }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, pagination, expectedFilter).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		// ------- Invalid Query Parameter Cases -------
+		{
+			name:           "Invalid month value (too low)",
+			studentID:      studentID.String(),
+			url:            "?month=0",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid month value (too high)",
+			studentID:      studentID.String(),
+			url:            "?month=13",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid year value (too low)",
+			studentID:      studentID.String(),
+			url:            "?year=1775",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid year value (too high)",
+			studentID:      studentID.String(),
+			url:            "?year=2201",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid present boolean value",
+			studentID:      studentID.String(),
+			url:            "?present=maybe",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid startDate format",
+			studentID:      studentID.String(),
+			url:            "?startDate=invalid-date",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid endDate format",
+			studentID:      studentID.String(),
+			url:            "?endDate=2025-13-45",
+			mockSetup:      func(m *mocks.MockStudentRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		// ------- Empty Filter Results Cases -------
+		{
+			name:      "No sessions match filters",
+			studentID: studentID.String(),
+			url:       "?present=true&year=2024",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
+					Year:    func() *int { i := 2024; return &i }(),
+					Present: func() *bool { b := true; return &b }(),
+				}
+				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return([]models.StudentSessionsOutput{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockStudentRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := student.NewHandler(mockRepo)
+			app.Get("/students/:id/sessions", handler.GetStudentSessions)
+
+			req := httptest.NewRequest("GET", "/students/"+tt.studentID+"/sessions"+tt.url, nil)
+			resp, _ := app.Test(req, -1)
+
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+
+			// Response body validation for successful cases
+			if !tt.wantErr && resp.StatusCode == fiber.StatusOK {
+				body, err := io.ReadAll(resp.Body)
+				assert.NoError(t, err)
+
+				var sessions []models.StudentSessionsOutput
+				err = json.Unmarshal(body, &sessions)
+				assert.NoError(t, err)
+
+				// Validate response structure
+				if len(sessions) > 0 {
+					session := sessions[0]
+					assert.Equal(t, studentID, session.StudentID)
+					assert.NotNil(t, session.Session.ID)
+					assert.False(t, session.Session.StartDateTime.IsZero())
+					assert.False(t, session.Session.EndDateTime.IsZero())
+					
+					// Validate filter-specific expectations
+					switch {
+					case strings.Contains(tt.url, "present=true"):
+						assert.True(t, session.Present)
+					case strings.Contains(tt.url, "present=false"):
+						assert.False(t, session.Present)
+					}
+				}
+			}
+
+			// Error response validation
+			if tt.wantErr {
+				body, err := io.ReadAll(resp.Body)
+				assert.NoError(t, err)
+
+				var errorResp map[string]interface{}
+				err = json.Unmarshal(body, &errorResp)
+				assert.NoError(t, err)
+				
+				// The API returns {"code": X, "message": "..."} not {"error": "..."}
+				assert.Contains(t, errorResp, "message")
+
+				// Validate specific error messages based on status code and test name
+				switch {
+				case strings.Contains(tt.name, "Invalid UUID"):
+					assert.Contains(t, errorResp["message"], "Invalid UUID format")
+				case strings.Contains(tt.name, "repository error"):
+					assert.Contains(t, errorResp["message"], "Failed to retrieve student sessions")
+				case strings.Contains(tt.name, "month") && strings.Contains(tt.name, "Invalid"):
+					assert.Contains(t, errorResp["message"], "Month must be between 1 and 12")
+				case strings.Contains(tt.name, "year") && strings.Contains(tt.name, "Invalid"):
+					assert.Contains(t, errorResp["message"], "Year must be between 1776 and 2200")
+				case strings.Contains(tt.name, "present") && strings.Contains(tt.name, "Invalid"):
+					assert.Contains(t, errorResp["message"], "Present must be 'true' or 'false'")
+				case strings.Contains(tt.name, "Date") && strings.Contains(tt.name, "Invalid"):
+					assert.Contains(t, errorResp["message"], "Invalid")
+				case strings.Contains(tt.name, "Pagination"):
+					// Pagination errors can have different formats
+					assert.True(t, strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "Pagination") || 
+						strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "limit") ||
+						strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "page"))
 				}
 			}
 		})
