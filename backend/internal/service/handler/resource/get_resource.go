@@ -12,47 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// func (h *Handler) GetResources(c *fiber.Ctx) error {
-// 	themeIdStr := c.Query("theme_id")
-// 	var themeId uuid.UUID
-// 	if themeIdStr != "" {
-// 		parsedThemeId, err := uuid.Parse(themeIdStr)
-// 		if err != nil {
-// 			return errs.InvalidRequestData(map[string]string{"theme_id": "invalid UUID"})
-// 		}
-// 		themeId = parsedThemeId
-// 	}
-// 	gradeLevel := c.Query("grade_level")
-// 	dateStr := c.Query("date")
-// 	var date *time.Time
-// 	if dateStr != "" {
-// 		parsedDate, err := time.Parse("2006-01-02", dateStr)
-// 		if err == nil {
-// 			date = &parsedDate
-// 		}
-// 	}
-// 	res_type := c.Query("type")
-// 	title := c.Query("title")
-// 	category := c.Query("category")
-// 	content := c.Query("content")
-
-// 	pagination := utils.NewPagination()
-// 	if err := c.QueryParser(&pagination); err != nil {
-// 		return errs.BadRequest("Invalid Pagination Query Parameters")
-// 	}
-
-// 	if validationErrors := xvalidator.Validator.Validate(pagination); len(validationErrors) > 0 {
-// 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
-// 	}
-
-// 	resources, err := h.resourceRepository.GetResources(c.Context(), themeId, gradeLevel, res_type, title, category, content, date, pagination)
-// 	if err != nil {
-// 		return errs.InternalServerError(err.Error())
-// 	}
-
-// 	return c.JSON(resources)
-// }
-
 func (h *Handler) GetResources(c *fiber.Ctx) error {
 	themeIdStr := c.Query("theme_id")
 	var themeId uuid.UUID
