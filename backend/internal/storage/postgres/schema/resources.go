@@ -26,15 +26,15 @@ func NewResourceRepository(db *pgxpool.Pool) *ResourceRepository {
 	}
 }
 
-func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time, pagination utils.Pagination) ([]models.Resource, error) {
-	var resources []models.Resource
-	queryString := "SELECT id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at FROM resource WHERE 1=1"
+func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
+	resources := []models.ResourceWithTheme{}
+	queryString := "SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE 1=1"
 	args := []interface{}{}
 	argNum := 1
 
-	if theme_id != uuid.Nil {
+	if themeID != uuid.Nil {
 		queryString += fmt.Sprintf(" AND theme_id = $%d::uuid", argNum)
-		args = append(args, theme_id)
+		args = append(args, themeID)
 		argNum++
 	}
 	if gradeLevel != "" {
@@ -42,9 +42,9 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 		args = append(args, gradeLevel)
 		argNum++
 	}
-	if res_type != "" {
+	if resType != "" {
 		queryString += fmt.Sprintf(" AND type = $%d", argNum)
-		args = append(args, res_type)
+		args = append(args, resType)
 		argNum++
 	}
 	if title != "" {
@@ -67,6 +67,21 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 		args = append(args, date)
 		argNum++
 	}
+	if themeName != "" {
+		queryString += fmt.Sprintf(" AND t.theme_name ILIKE $%d", argNum)
+		args = append(args, "%"+themeName+"%")
+		argNum++
+	}
+	if themeMonth != nil {
+		queryString += fmt.Sprintf(" AND t.month = $%d", argNum)
+		args = append(args, *themeMonth)
+		argNum++
+	}
+	if themeYear != nil {
+		queryString += fmt.Sprintf(" AND t.year = $%d", argNum)
+		args = append(args, *themeYear)
+		argNum++
+	}
 
 	queryString += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argNum, argNum+1)
 	args = append(args, pagination.Limit, pagination.GettOffset())
@@ -79,7 +94,7 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 	defer rows.Close()
 
 	for rows.Next() {
-		var resource models.Resource
+		var resource models.ResourceWithTheme
 		err := rows.Scan(
 			&resource.ID,
 			&resource.ThemeID,
@@ -91,6 +106,11 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 			&resource.Content,
 			&resource.CreatedAt,
 			&resource.UpdatedAt,
+			&resource.Theme.Name,
+			&resource.Theme.Month,
+			&resource.Theme.Year,
+			&resource.Theme.CreatedAt,
+			&resource.Theme.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -103,9 +123,9 @@ func (r *ResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUI
 	return resources, nil
 }
 
-func (r *ResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error) {
-	var resource models.Resource
-	err := r.db.QueryRow(ctx, "SELECT id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at FROM resource WHERE id = $1", id.String()).Scan(
+func (r *ResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.ResourceWithTheme, error) {
+	var resource models.ResourceWithTheme
+	err := r.db.QueryRow(ctx, "SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE r.id = $1", id.String()).Scan(
 		&resource.ID,
 		&resource.ThemeID,
 		&resource.GradeLevel,
@@ -116,6 +136,11 @@ func (r *ResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) 
 		&resource.Content,
 		&resource.CreatedAt,
 		&resource.UpdatedAt,
+		&resource.Theme.Name,
+		&resource.Theme.Month,
+		&resource.Theme.Year,
+		&resource.Theme.CreatedAt,
+		&resource.Theme.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
