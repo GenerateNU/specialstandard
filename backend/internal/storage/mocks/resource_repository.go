@@ -166,119 +166,14 @@ func (_c *MockResourceRepository_DeleteResource_Call) RunAndReturn(run func(ctx 
 	return _c
 }
 
-// GetResourceByID provides a mock function for the type MockResourceRepository
-func (_mock *MockResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error) {
-	ret := _mock.Called(ctx, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetResourceByID")
-	}
-
-	var r0 *models.Resource
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (*models.Resource, error)); ok {
-		return returnFunc(ctx, id)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) *models.Resource); ok {
-		r0 = returnFunc(ctx, id)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*models.Resource)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
-		r1 = returnFunc(ctx, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
+func (m *MockResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.ResourceWithTheme, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(*models.ResourceWithTheme), args.Error(1)
 }
 
-// MockResourceRepository_GetResourceByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetResourceByID'
-type MockResourceRepository_GetResourceByID_Call struct {
-	*mock.Call
-}
-
-// GetResourceByID is a helper method to define mock.On call
-//   - ctx context.Context
-//   - id uuid.UUID
-func (_e *MockResourceRepository_Expecter) GetResourceByID(ctx interface{}, id interface{}) *MockResourceRepository_GetResourceByID_Call {
-	return &MockResourceRepository_GetResourceByID_Call{Call: _e.mock.On("GetResourceByID", ctx, id)}
-}
-
-func (_c *MockResourceRepository_GetResourceByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockResourceRepository_GetResourceByID_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 uuid.UUID
-		if args[1] != nil {
-			arg1 = args[1].(uuid.UUID)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockResourceRepository_GetResourceByID_Call) Return(resource *models.Resource, err error) *MockResourceRepository_GetResourceByID_Call {
-	_c.Call.Return(resource, err)
-	return _c
-}
-
-func (_c *MockResourceRepository_GetResourceByID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (*models.Resource, error)) *MockResourceRepository_GetResourceByID_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetResources provides a mock function for the type MockResourceRepository
-func (_mock *MockResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel string, res_type string, title string, category string, content string, date *time.Time, pagination utils.Pagination) ([]models.Resource, error) {
-	ret := _mock.Called(ctx, theme_id, gradeLevel, res_type, title, category, content, date, pagination)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetResources")
-	}
-
-	var r0 []models.Resource
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, string, string, string, string, *time.Time, utils.Pagination) ([]models.Resource, error)); ok {
-		return returnFunc(ctx, theme_id, gradeLevel, res_type, title, category, content, date, pagination)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string, string, string, string, string, *time.Time, utils.Pagination) []models.Resource); ok {
-		r0 = returnFunc(ctx, theme_id, gradeLevel, res_type, title, category, content, date, pagination)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]models.Resource)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, string, string, string, string, string, *time.Time, utils.Pagination) error); ok {
-		r1 = returnFunc(ctx, theme_id, gradeLevel, res_type, title, category, content, date, pagination)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockResourceRepository_GetResources_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetResources'
-type MockResourceRepository_GetResources_Call struct {
-	*mock.Call
-}
-
-// GetResources is a helper method to define mock.On call
-//   - ctx context.Context
-//   - theme_id uuid.UUID
-//   - gradeLevel string
-//   - res_type string
-//   - title string
-//   - category string
-//   - content string
-//   - date *time.Time
-//   - pagination utils.Pagination
-func (_e *MockResourceRepository_Expecter) GetResources(ctx interface{}, theme_id interface{}, gradeLevel interface{}, res_type interface{}, title interface{}, category interface{}, content interface{}, date interface{}, pagination interface{}) *MockResourceRepository_GetResources_Call {
-	return &MockResourceRepository_GetResources_Call{Call: _e.mock.On("GetResources", ctx, theme_id, gradeLevel, res_type, title, category, content, date, pagination)}
+func (m *MockResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
+	args := m.Called(ctx, themeID, gradeLevel, resType, title, category, content, date, themeName, themeMonth, themeYear, pagination)
+	return args.Get(0).([]models.ResourceWithTheme), args.Error(1)
 }
 
 func (_c *MockResourceRepository_GetResources_Call) Run(run func(ctx context.Context, theme_id uuid.UUID, gradeLevel string, res_type string, title string, category string, content string, date *time.Time, pagination utils.Pagination)) *MockResourceRepository_GetResources_Call {

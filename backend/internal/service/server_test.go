@@ -1208,12 +1208,21 @@ func TestCreateResourceEndpoint(t *testing.T) {
 }
 
 func TestGetResourcesEndpoint(t *testing.T) {
-	mockResourceRepo := mocks.NewMockResourceRepository(t)
-	mockResourceRepo.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource{
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockResourceRepo.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.ResourceWithTheme{
 		{
-			ID:    uuid.New(),
-			Title: testutil.Ptr("Resource1"),
-			Type:  testutil.Ptr("doc"),
+			Resource: models.Resource{
+				ID:    uuid.New(),
+				Title: ptrString("Resource1"),
+				Type:  ptrString("doc"),
+			},
+			Theme: models.ThemeInfo{
+				Name:      "Theme1",
+				Month:     6,
+				Year:      2025,
+				CreatedAt: nil,
+				UpdatedAt: nil,
+			},
 		},
 	}, nil)
 
@@ -1235,10 +1244,19 @@ func TestGetResourcesEndpoint(t *testing.T) {
 func TestGetResourceByIDEndpoint(t *testing.T) {
 	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	resourceID := uuid.New()
-	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return(&models.Resource{
-		ID:    resourceID,
-		Title: testutil.Ptr("Resource1"),
-		Type:  testutil.Ptr("doc"),
+	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return(&models.ResourceWithTheme{
+		Resource: models.Resource{
+			ID:    resourceID,
+			Title: ptrString("Resource1"),
+			Type:  ptrString("doc"),
+		},
+		Theme: models.ThemeInfo{
+			Name:      "Theme1",
+			Month:     6,
+			Year:      2025,
+			CreatedAt: nil,
+			UpdatedAt: nil,
+		},
 	}, nil)
 
 	repo := &storage.Repository{
@@ -1305,7 +1323,7 @@ func TestDeleteResourceEndpoint(t *testing.T) {
 func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
 	mockResourceRepo := mocks.NewMockResourceRepository(t)
 	resourceID := uuid.New()
-	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return((*models.Resource)(nil), errors.New("no rows in result set"))
+	mockResourceRepo.On("GetResourceByID", mock.Anything, resourceID).Return((*models.ResourceWithTheme)(nil), errors.New("no rows in result set"))
 
 	repo := &storage.Repository{
 		Resource: mockResourceRepo,
