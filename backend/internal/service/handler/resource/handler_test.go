@@ -141,11 +141,12 @@ func TestHandler_GetResources(t *testing.T) {
 			name: "successful_get_resources with default pagination",
 			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				resources := []models.Resource{
-					{ID: uuid.New(), Title: ptrString("Resource1"), Type: ptrString("doc")},
+				resources := []models.ResourceWithTheme{
+					{Resource: models.Resource{ID: uuid.New(), Title: ptrString("Resource1"), Type: ptrString("doc")},
+						Theme: models.ThemeInfo{Name: "Spring", Month: 3, Year: 2024, CreatedAt: nil, UpdatedAt: nil}},
 				}
-				// Fix: Use mock.Anything for all parameters
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return(resources, nil)
+
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return(resources, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 		},
@@ -153,7 +154,15 @@ func TestHandler_GetResources(t *testing.T) {
 			name: "empty_resources_list",
 			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource{}, nil)
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.ResourceWithTheme{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name: "theme_params filter",
+			url:  "?theme_name=Spring&theme_month=3&theme_year=2024",
+			mockSetup: func(m *mocks.MockResourceRepository) {
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.ResourceWithTheme{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 		},
@@ -161,7 +170,7 @@ func TestHandler_GetResources(t *testing.T) {
 			name: "repository_error",
 			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource(nil), errors.New("database error"))
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.ResourceWithTheme(nil), errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 		},
@@ -176,7 +185,7 @@ func TestHandler_GetResources(t *testing.T) {
 			name:           "Bad Pagination Arguments",
 			url:            "?page=abc&limit=-1",
 			mockSetup:      func(m *mocks.MockResourceRepository) {},
-			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			expectedStatus: fiber.StatusBadRequest,
 		},
 		{
 			name: "Pagination Parameters",
@@ -186,7 +195,7 @@ func TestHandler_GetResources(t *testing.T) {
 					Page:  2,
 					Limit: 5,
 				}
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, pagination).Return([]models.Resource{}, nil)
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, pagination).Return([]models.ResourceWithTheme{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 		},
@@ -263,7 +272,6 @@ func TestHandler_DeleteResource(t *testing.T) {
 			name:       "successful_delete_resource",
 			resourceID: resourceID.String(),
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				// Fix: Use mock.Anything
 				m.On("DeleteResource", mock.Anything, mock.Anything).Return(nil)
 			},
 			expectedStatus: fiber.StatusNoContent,

@@ -19,14 +19,14 @@ func (m *MockResourceRepository) CreateResource(ctx context.Context, body models
 	return args.Get(0).(*models.Resource), args.Error(1)
 }
 
-func (m *MockResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error) {
+func (m *MockResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.ResourceWithTheme, error) {
 	args := m.Called(ctx, id)
-	return args.Get(0).(*models.Resource), args.Error(1)
+	return args.Get(0).(*models.ResourceWithTheme), args.Error(1)
 }
 
-func (m *MockResourceRepository) GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time, pagination utils.Pagination) ([]models.Resource, error) {
-	args := m.Called(ctx, theme_id, gradeLevel, res_type, title, category, content, date, pagination)
-	return args.Get(0).([]models.Resource), args.Error(1)
+func (m *MockResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
+	args := m.Called(ctx, themeID, gradeLevel, resType, title, category, content, date, themeName, themeMonth, themeYear, pagination)
+	return args.Get(0).([]models.ResourceWithTheme), args.Error(1)
 }
 
 func (m *MockResourceRepository) UpdateResource(ctx context.Context, id uuid.UUID, resource models.UpdateResourceBody) (*models.Resource, error) {

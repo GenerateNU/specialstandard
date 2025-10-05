@@ -19,6 +19,11 @@ type Resource struct {
 	UpdatedAt  *time.Time `json:"updated_at"`
 }
 
+type ResourceWithTheme struct {
+	Resource
+	Theme ThemeInfo `json:"theme"`
+}
+
 type ResourceBody struct {
 	ThemeID    uuid.UUID  `json:"theme_id"`
 	GradeLevel *string    `json:"grade_level"`
