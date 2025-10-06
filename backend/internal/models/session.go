@@ -48,11 +48,9 @@ type GetSessionRepositoryRequest struct {
 }
 
 type GetStudentSessionsRequest struct {
-	StartDate *time.Time `query:"startDate" validate:"omitempty"`
-	EndDate   *time.Time `query:"endDate" validate:"omitempty"`
-	Month     *int       `query:"month" validate:"omitempty,gte=1,lte=12"`
-	Year      *int       `query:"year" validate:"omitempty,gte=1776,lte=2200"`
-	Present   *bool      `query:"present" validate:"omitempty"`
+	Month   *int  `query:"month" validate:"omitempty,gte=1,lte=12"`
+	Year    *int  `query:"year" validate:"omitempty,gte=1776,lte=2200"`
+	Present *bool `query:"present" validate:"omitempty"`
 }
 
 // This is what repository uses
