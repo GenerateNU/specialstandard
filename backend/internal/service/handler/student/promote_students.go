@@ -36,5 +36,7 @@ func (h *Handler) PromoteStudents(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Successfully Promoted Students!",
+	})
 }

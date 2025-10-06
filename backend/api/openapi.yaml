@@ -1012,8 +1012,16 @@ paths:
             schema:
               $ref: "#/components/schemas/PromoteStudentsInput"
       responses:
-        "204":
+        "200":
           description: Patch Done Successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successfully Promoted Students!"
         "400":
           description: Bad Request (e.g., validation errors)
           content:
