@@ -9,11 +9,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type SessionResourceRepository struct {
+type SessionResourceRepositoryImpl struct {
 	db *pgxpool.Pool
 }
 
-func (sr *SessionResourceRepository) PostSessionResource(ctx context.Context, sessionResource models.CreateSessionResource) (*models.SessionResource, error) {
+func (sr *SessionResourceRepositoryImpl) PostSessionResource(ctx context.Context, sessionResource models.CreateSessionResource) (*models.SessionResource, error) {
 	var newSessionResource models.SessionResource
 	query := `INSERT INTO session_resource (session_id, resource_id)
 				VALUES ($1, $2)
@@ -27,7 +27,7 @@ func (sr *SessionResourceRepository) PostSessionResource(ctx context.Context, se
 	return &newSessionResource, nil
 }
 
-func (sr *SessionResourceRepository) DeleteSessionResource(ctx context.Context, sessionResource models.DeleteSessionResource) error {
+func (sr *SessionResourceRepositoryImpl) DeleteSessionResource(ctx context.Context, sessionResource models.DeleteSessionResource) error {
 	query := `DELETE FROM session_resource WHERE session_id = $1 AND resource_id = $2`
 	_, err := sr.db.Exec(ctx, query, sessionResource.SessionID, sessionResource.ResourceID)
 	if err != nil {
@@ -36,7 +36,7 @@ func (sr *SessionResourceRepository) DeleteSessionResource(ctx context.Context, 
 	return nil
 }
 
-func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error) {
+func (sr *SessionResourceRepositoryImpl) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error) {
 	resources := make([]models.Resource, 0)
 	query := `SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at
 				FROM session_resource sr
@@ -66,8 +66,8 @@ func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context
 	return resources, nil
 }
 
-func NewSessionResourceRepository(db *pgxpool.Pool) *SessionResourceRepository {
-	return &SessionResourceRepository{
+func NewSessionResourceRepository(db *pgxpool.Pool) *SessionResourceRepositoryImpl {
+	return &SessionResourceRepositoryImpl{
 		db,
 	}
 }

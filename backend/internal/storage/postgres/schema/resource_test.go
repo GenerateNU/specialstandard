@@ -2,7 +2,6 @@ package schema_test
 
 import (
 	"context"
-	"fmt"
 	"specialstandard/internal/utils"
 	"testing"
 	"time"
@@ -41,7 +40,7 @@ func TestResourceRepository_GetResources(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, resourceID, themeID, "5th Grade", testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
+    `, resourceID, themeID, 5, testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
@@ -59,11 +58,11 @@ func TestResourceRepository_GetResources(t *testing.T) {
 	}
 
 	// More Tests for Pagination Behaviour
-	for i := 2; i <= 15; i++ {
+	for i := 1; i <= 12; i++ {
 		_, err := testDB.Pool.Exec(ctx,
 			`INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        `, uuid.New(), themeID, fmt.Sprintf("%d-th Grade", i), testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
+        `, uuid.New(), themeID, i, testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
 		assert.NoError(t, err)
 	}
 
@@ -76,8 +75,8 @@ func TestResourceRepository_GetResources(t *testing.T) {
 		Limit: 9,
 	})
 	assert.NoError(t, err)
-	assert.Len(t, resources, 6)
-	assert.Equal(t, "10-th Grade", *resources[0].GradeLevel)
+	assert.Len(t, resources, 4)
+	assert.Equal(t, 9, *resources[0].GradeLevel)
 }
 
 func TestResourceRepository_GetResourceByID(t *testing.T) {
@@ -106,7 +105,7 @@ func TestResourceRepository_GetResourceByID(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, resourceID, themeID, "3rd Grade", testDate, "video", "Science Video", "science", "Volcano experiment", time.Now(), time.Now())
+    `, resourceID, themeID, 3, testDate, "video", "Science Video", "science", "Volcano experiment", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Test
@@ -146,12 +145,12 @@ func TestResourceRepository_CreateResource(t *testing.T) {
 	testDate := time.Date(2024, 3, 10, 0, 0, 0, 0, time.UTC)
 	resourceBody := models.ResourceBody{
 		ThemeID:    themeID,
-		GradeLevel: ptrString("4th Grade"),
+		GradeLevel: testutil.Ptr(4),
 		Date:       &testDate,
-		Type:       ptrString("book"),
-		Title:      ptrString("Reading Comprehension"),
-		Category:   ptrString("literacy"),
-		Content:    ptrString("Story analysis exercises"),
+		Type:       testutil.Ptr("book"),
+		Title:      testutil.Ptr("Reading Comprehension"),
+		Category:   testutil.Ptr("literacy"),
+		Content:    testutil.Ptr("Story analysis exercises"),
 	}
 
 	// Test
@@ -192,12 +191,12 @@ func TestResourceRepository_UpdateResource(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, resourceID, themeID, "2nd Grade", testDate, "activity", "Art Activity", "art", "Drawing exercise", time.Now(), time.Now())
+    `, resourceID, themeID, 2, testDate, "activity", "Art Activity", "art", "Drawing exercise", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	updateBody := models.UpdateResourceBody{
-		Title:    ptrString("Updated Art Activity"),
-		Category: ptrString("creative"),
+		Title:    testutil.Ptr("Updated Art Activity"),
+		Category: testutil.Ptr("creative"),
 	}
 
 	// Test
@@ -238,7 +237,7 @@ func TestResourceRepository_DeleteResource(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, resourceID, themeID, "6th Grade", testDate, "document", "History Document", "history", "Ancient civilizations", time.Now(), time.Now())
+    `, resourceID, themeID, 6, testDate, "document", "History Document", "history", "Ancient civilizations", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Test

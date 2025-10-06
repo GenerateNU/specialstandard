@@ -29,7 +29,9 @@ func Middleware(cfg *config.Supabase) fiber.Handler {
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to validate token"})
 		}
-		defer res.Body.Close()
+		defer func() {
+			_ = res.Body.Close()
+		}()
 
 		if res.StatusCode != http.StatusOK {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid/Expired Token"})

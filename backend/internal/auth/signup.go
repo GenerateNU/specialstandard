@@ -31,7 +31,7 @@ type SignupResponse struct {
 
 func validatePasswordStrength(password string) error {
 	if len(password) < 8 {
-		return errors.New("Password must be atleast 8 characters long")
+		return errors.New("password must be atleast 8 characters long")
 	}
 	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
 	hasLower := regexp.MustCompile(`[a-z]`).MatchString(password)
@@ -39,7 +39,7 @@ func validatePasswordStrength(password string) error {
 	hasSpecial := regexp.MustCompile(`[!@#~$%^&*()+|_.,;<>?/{}\-]`).MatchString(password)
 
 	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
-		return errors.New("Password must include uppercase, lowercase, digit and special characters")
+		return errors.New("password must include uppercase, lowercase, digit and special characters")
 	}
 
 	return nil
@@ -77,7 +77,9 @@ func SupabaseSignup(cfg *config.Supabase, email, password string) (SignupRespons
 		slog.Error("Error executing request: ", "err", err)
 		return SignupResponse{}, errs.BadRequest(fmt.Sprintf("Failed to execute request: %v, %s", err, supabaseURL))
 	}
-	defer res.Body.Close()
+	defer func() {
+		_ = res.Body.Close()
+	}()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {

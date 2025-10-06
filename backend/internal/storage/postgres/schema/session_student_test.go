@@ -47,7 +47,7 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Test", "Student", therapistID, "5th")
+    `, studentID, "Test", "Student", therapistID, 5)
 	assert.NoError(t, err)
 
 	// Test successful creation
@@ -55,7 +55,7 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 		SessionID: sessionID,
 		StudentID: studentID,
 		Present:   true,
-		Notes:     ptrString("Student participated actively in today's session"),
+		Notes:     testutil.Ptr("Student participated actively in today's session"),
 	}
 
 	result, err := repo.CreateSessionStudent(ctx, input)
@@ -74,7 +74,7 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 		SessionID: sessionID,
 		StudentID: studentID,
 		Present:   false,
-		Notes:     ptrString("Duplicate entry"),
+		Notes:     testutil.Ptr("Duplicate entry"),
 	}
 
 	duplicateResult, err := repo.CreateSessionStudent(ctx, duplicateInput)
@@ -130,7 +130,7 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Delete", "Student", therapistID, "3rd")
+    `, studentID, "Delete", "Student", therapistID, 3)
 	assert.NoError(t, err)
 
 	// Create session-student relationship
@@ -194,7 +194,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	_, err = testDB.Pool.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Patch", "Student", therapistID, "4th")
+    `, studentID, "Patch", "Student", therapistID, 4)
 	assert.NoError(t, err)
 
 	// Create initial session-student relationship
@@ -223,7 +223,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	assert.Equal(t, "Original notes", *result.Notes) // Should remain unchanged
 
 	// Test patching notes field only
-	newNotes := ptrString("Updated progress notes")
+	newNotes := testutil.Ptr("Updated progress notes")
 	patchInput = &models.PatchSessionStudentInput{
 		SessionID: sessionID,
 		StudentID: studentID,
@@ -242,7 +242,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 
 	// Test patching both fields
 	presentTrue := true
-	bothFieldsNotes := ptrString("Final comprehensive notes")
+	bothFieldsNotes := testutil.Ptr("Final comprehensive notes")
 	patchInput = &models.PatchSessionStudentInput{
 		SessionID: sessionID,
 		StudentID: studentID,
@@ -264,7 +264,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 		SessionID: uuid.New(),
 		StudentID: uuid.New(),
 		Present:   &presentTrue,
-		Notes:     ptrString("Should fail"),
+		Notes:     testutil.Ptr("Should fail"),
 	}
 
 	failResult, err := repo.PatchSessionStudent(ctx, nonExistentInput)

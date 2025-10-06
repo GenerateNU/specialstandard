@@ -52,8 +52,9 @@ jobs:
       - name: Generate Coverage Report
         run: |
           cd backend
-          go test ./... -v -coverprofile=coverage.out
-          go tool cover -func=coverage.out
+          go test ./... -v -coverprofile=coverage_temp.out
+          grep -v "/mocks/" coverage_temp.out > coverage.out || true
+          rm coverage_temp.out
           go tool cover -html=coverage.out -o coverage.html
       - name: Display Coverage Info
         run: |

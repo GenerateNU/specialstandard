@@ -12,11 +12,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type SessionRepository struct {
+type SessionRepositoryImpl struct {
 	db *pgxpool.Pool
 }
 
-func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error) {
+func (r *SessionRepositoryImpl) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error) {
 	query := `
 	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
 	FROM session`
@@ -53,26 +53,25 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 		}
 
 		if filter.StudentIDs != nil && len(*filter.StudentIDs) > 0 {
-		// For each student ID, add a condition that checks if that specific student exists in the session
-		for _, studentID := range *filter.StudentIDs {
-			conditions = append(conditions, fmt.Sprintf(
-				"EXISTS (SELECT 1 FROM session_student WHERE session_id = session.id AND student_id = $%d)",
-				argCount,
-			))
-			args = append(args, studentID)
-			argCount++
+			// For each student ID, add a condition that checks if that specific student exists in the session
+			for _, studentID := range *filter.StudentIDs {
+				conditions = append(conditions, fmt.Sprintf(
+					"EXISTS (SELECT 1 FROM session_student WHERE session_id = session.id AND student_id = $%d)",
+					argCount,
+				))
+				args = append(args, studentID)
+				argCount++
+			}
 		}
 	}
-	}
 
-	if(len(conditions) > 0) {
+	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
 	query += fmt.Sprintf(` ORDER BY start_datetime DESC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
 
 	args = append(args, pagination.Limit, pagination.GettOffset())
-
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -87,7 +86,7 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 	return sessions, nil
 }
 
-func (r *SessionRepository) GetSessionByID(ctx context.Context, id string) (*models.Session, error) {
+func (r *SessionRepositoryImpl) GetSessionByID(ctx context.Context, id string) (*models.Session, error) {
 	query := `
 	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
 	FROM session
@@ -108,14 +107,14 @@ func (r *SessionRepository) GetSessionByID(ctx context.Context, id string) (*mod
 	return &session, nil
 }
 
-func (r *SessionRepository) DeleteSession(ctx context.Context, id uuid.UUID) error {
+func (r *SessionRepositoryImpl) DeleteSession(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM session WHERE id = $1`
 
 	_, err := r.db.Exec(ctx, query, id)
 	return err
 }
 
-func (r *SessionRepository) PostSession(ctx context.Context, input *models.PostSessionInput) (*models.Session, error) {
+func (r *SessionRepositoryImpl) PostSession(ctx context.Context, input *models.PostSessionInput) (*models.Session, error) {
 	session := &models.Session{}
 
 	query := `INSERT INTO session (start_datetime, end_datetime, therapist_id, notes)
@@ -139,7 +138,7 @@ func (r *SessionRepository) PostSession(ctx context.Context, input *models.PostS
 	return session, nil
 }
 
-func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, input *models.PatchSessionInput) (*models.Session, error) {
+func (r *SessionRepositoryImpl) PatchSession(ctx context.Context, id uuid.UUID, input *models.PatchSessionInput) (*models.Session, error) {
 	session := &models.Session{}
 
 	query := `UPDATE session
@@ -168,13 +167,13 @@ func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, inpu
 	return session, nil
 }
 
-func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
-	return &SessionRepository{
+func NewSessionRepository(db *pgxpool.Pool) *SessionRepositoryImpl {
+	return &SessionRepositoryImpl{
 		db,
 	}
 }
 
-func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error) {
+func (r *SessionRepositoryImpl) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error) {
 	query := `
 	SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
 	       s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 

@@ -12,11 +12,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type TherapistRepository struct {
+type TherapistRepositoryImpl struct {
 	db *pgxpool.Pool
 }
 
-func (r *TherapistRepository) GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error) {
+func (r *TherapistRepositoryImpl) GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error) {
 	query := `
 	SELECT id, first_name, last_name, email, active, created_at, updated_at
 	FROM therapist
@@ -40,7 +40,7 @@ func (r *TherapistRepository) GetTherapistByID(ctx context.Context, therapistID 
 	return &therapist, nil
 }
 
-func (r *TherapistRepository) GetTherapists(ctx context.Context, pagination utils.Pagination) ([]models.Therapist, error) {
+func (r *TherapistRepositoryImpl) GetTherapists(ctx context.Context, pagination utils.Pagination) ([]models.Therapist, error) {
 	query := `
 	SELECT id, first_name, last_name, email, active, created_at, updated_at
 	FROM therapist
@@ -64,7 +64,7 @@ func (r *TherapistRepository) GetTherapists(ctx context.Context, pagination util
 	return therapists, nil
 }
 
-func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models.CreateTherapistInput) (*models.Therapist, error) {
+func (r *TherapistRepositoryImpl) CreateTherapist(ctx context.Context, input *models.CreateTherapistInput) (*models.Therapist, error) {
 	// Create a Therapist object to return
 	therapist := &models.Therapist{}
 
@@ -91,7 +91,7 @@ func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models
 	return therapist, nil
 }
 
-func (r *TherapistRepository) DeleteTherapist(ctx context.Context, therapistID string) error {
+func (r *TherapistRepositoryImpl) DeleteTherapist(ctx context.Context, therapistID string) error {
 	query := `
 	DELETE 
 	FROM therapist
@@ -110,7 +110,7 @@ func (r *TherapistRepository) DeleteTherapist(ctx context.Context, therapistID s
 }
 
 // Here, we are just iterating through all of the potential changes, and updating the DB accordingly!
-func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID string, updatedValue *models.UpdateTherapist) (*models.Therapist, error) {
+func (r *TherapistRepositoryImpl) PatchTherapist(ctx context.Context, therapistID string, updatedValue *models.UpdateTherapist) (*models.Therapist, error) {
 	query := `UPDATE therapist uc SET`
 	updates := []string{}
 	args := []interface{}{}
@@ -167,8 +167,8 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 	return &therapist, nil
 }
 
-func NewTherapistRepository(db *pgxpool.Pool) *TherapistRepository {
-	return &TherapistRepository{
+func NewTherapistRepository(db *pgxpool.Pool) *TherapistRepositoryImpl {
+	return &TherapistRepositoryImpl{
 		db,
 	}
 }

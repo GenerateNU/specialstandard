@@ -24,6 +24,10 @@ func ptrString(s string) *string {
 	return &s
 }
 
+func ptrInt(i int) *int {
+	return &i
+}
+
 func ptrTime(t time.Time) *time.Time {
 	return &t
 }
@@ -46,7 +50,7 @@ func TestHandler_GetSessionResources(t *testing.T) {
 					{
 						ID:         uuid.New(),
 						ThemeID:    uuid.New(),
-						GradeLevel: ptrString("5th Grade"),
+						GradeLevel: ptrInt(5),
 						Date:       ptrTime(time.Now()),
 						Type:       ptrString("worksheet"),
 						Title:      ptrString("Math Worksheet"),
@@ -58,7 +62,7 @@ func TestHandler_GetSessionResources(t *testing.T) {
 					{
 						ID:         uuid.New(),
 						ThemeID:    uuid.New(),
-						GradeLevel: ptrString("5th Grade"),
+						GradeLevel: ptrInt(5),
 						Date:       ptrTime(time.Now()),
 						Type:       ptrString("activity"),
 						Title:      ptrString("Reading Activity"),

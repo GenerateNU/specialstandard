@@ -15,10 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrInt(i int) *int {
-	return &i
-}
-
 func TestThemeRepository_CreateTheme(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
@@ -223,7 +219,7 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	result, err = repo.GetThemes(ctx, utils.NewPagination(), noResultFilter)
 	assert.NoError(t, err)
 	assert.Len(t, result, 0)
-	
+
 	// Test case-insensitive search variations
 	upperCaseFilter := &models.ThemeFilter{
 		Search: func() *string { s := "SPRING"; return &s }(),
@@ -231,7 +227,7 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	result, err = repo.GetThemes(ctx, utils.NewPagination(), upperCaseFilter)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2) // Should still match "Spring 2024" and "Spring Activities"
-	
+
 	// Test partial word search
 	partialFilter := &models.ThemeFilter{
 		Search: func() *string { s := "Act"; return &s }(),
@@ -240,7 +236,7 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, result, 1) // Should match "Spring Activities"
 	assert.Equal(t, "Spring Activities", result[0].Name)
-	
+
 	// Test search with numbers
 	numberFilter := &models.ThemeFilter{
 		Search: func() *string { s := "2024"; return &s }(),
@@ -248,7 +244,7 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	result, err = repo.GetThemes(ctx, utils.NewPagination(), numberFilter)
 	assert.NoError(t, err)
 	assert.Len(t, result, 3) // Should match all 2024 themes
-	
+
 	// Test empty search string (should return all themes)
 	emptySearchFilter := &models.ThemeFilter{
 		Search: func() *string { s := ""; return &s }(),
@@ -256,7 +252,7 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	result, err = repo.GetThemes(ctx, utils.NewPagination(), emptySearchFilter)
 	assert.NoError(t, err)
 	assert.Len(t, result, 5) // Should return all themes
-	
+
 	// Test search with no matches
 	noMatchFilter := &models.ThemeFilter{
 		Search: func() *string { s := "nonexistent"; return &s }(),
@@ -264,7 +260,7 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	result, err = repo.GetThemes(ctx, utils.NewPagination(), noMatchFilter)
 	assert.NoError(t, err)
 	assert.Len(t, result, 0)
-	
+
 	// Test filters with pagination
 	paginatedFilter := &models.ThemeFilter{
 		Year: func() *int { i := 2024; return &i }(),
@@ -272,8 +268,8 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	pagination := utils.Pagination{Page: 1, Limit: 2}
 	result, err = repo.GetThemes(ctx, pagination, paginatedFilter)
 	assert.NoError(t, err)
-	assert.Len(t, result, 2) // Should return first 2 of 3 2024 themes
-	assert.Equal(t, "Fall 2024", result[0].Name)   // Ordered by month DESC
+	assert.Len(t, result, 2)                     // Should return first 2 of 3 2024 themes
+	assert.Equal(t, "Fall 2024", result[0].Name) // Ordered by month DESC
 	assert.Equal(t, "Summer 2024", result[1].Name)
 }
 
@@ -342,7 +338,7 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 
 	// Test successful patch with name only
 	input := &models.UpdateThemeInput{
-		Name: ptrString("Winter Wonderland 2024"),
+		Name: testutil.Ptr("Winter Wonderland 2024"),
 	}
 
 	theme, err := repo.PatchTheme(ctx, themeID, input)
@@ -357,8 +353,8 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 
 	// Test patch with multiple fields
 	input2 := &models.UpdateThemeInput{
-		Month: ptrInt(1),
-		Year:  ptrInt(2025),
+		Month: testutil.Ptr(1),
+		Year:  testutil.Ptr(2025),
 	}
 
 	theme, err = repo.PatchTheme(ctx, themeID, input2)
@@ -372,7 +368,7 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 	// Test not found
 	nonExistentID := uuid.New()
 	input3 := &models.UpdateThemeInput{
-		Name: ptrString("Non-existent"),
+		Name: testutil.Ptr("Non-existent"),
 	}
 	theme, err = repo.PatchTheme(ctx, nonExistentID, input3)
 	assert.Error(t, err)

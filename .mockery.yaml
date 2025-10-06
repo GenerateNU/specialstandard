@@ -1,0 +1,38 @@
+packages:
+  specialstandard/internal/storage:
+    interfaces:
+      StudentRepository:
+        config:
+          dir: "internal/storage/mocks"
+          pkgname: "mocks"
+          filename: "student_repository.go"
+      TherapistRepository:
+        config:
+          dir: "internal/storage/mocks"
+          pkgname: "mocks"
+          filename: "therapist_repository.go"
+      ThemeRepository:
+        config:
+          dir: "internal/storage/mocks"
+          pkgname: "mocks"
+          filename: "theme_repository.go"
+      SessionRepository:
+        config:
+          dir: "internal/storage/mocks"
+          pkgname: "mocks"
+          filename: "session_repository.go"
+      SessionStudentRepository:
+        config:
+          dir: "internal/storage/mocks"
+          pkgname: "mocks"
+          filename: "session_student_repository.go"
+      SessionResourceRepository:
+        config:
+          dir: "internal/storage/mocks"
+          pkgname: "mocks"
+          filename: "session_resource_repository.go"
+      ResourceRepository:
+        config:
+          dir: "internal/storage/mocks"
+          pkgname: "mocks"
+          filename: "resource_repository.go"
