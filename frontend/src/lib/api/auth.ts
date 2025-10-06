@@ -4,158 +4,186 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useMutation
-} from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
 import type {
   MutationFunction,
   QueryClient,
   UseMutationOptions,
-  UseMutationResult
-} from '@tanstack/react-query';
+  UseMutationResult,
+} from "@tanstack/react-query";
 
-import axios from 'axios';
-import type {
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
+import axios from "axios";
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import type {
   Error,
   PostAuthLogin200,
   PostAuthLoginBody,
   PostAuthSignup201,
-  PostAuthSignupBody
-} from './api.schemas';
-
-
-
-
-
+  PostAuthSignupBody,
+} from "./api.schemas";
 
 /**
  * Signs Up New User to the Platform as a Therapist
  * @summary SignUp Feature
  */
 export const postAuthSignup = (
-    postAuthSignupBody: PostAuthSignupBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<PostAuthSignup201>> => {
-    
-    
-    return axios.post(
-      `/auth/signup`,
-      postAuthSignupBody,options
-    );
-  }
+  postAuthSignupBody: PostAuthSignupBody,
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<PostAuthSignup201>> => {
+  return axios.post(`/auth/signup`, postAuthSignupBody, options);
+};
 
+export const getPostAuthSignupMutationOptions = <
+  TError = AxiosError<Error | Error>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postAuthSignup>>,
+    TError,
+    { data: PostAuthSignupBody },
+    TContext
+  >;
+  axios?: AxiosRequestConfig;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postAuthSignup>>,
+  TError,
+  { data: PostAuthSignupBody },
+  TContext
+> => {
+  const mutationKey = ["postAuthSignup"];
+  const { mutation: mutationOptions, axios: axiosOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, axios: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postAuthSignup>>,
+    { data: PostAuthSignupBody }
+  > = (props) => {
+    const { data } = props ?? {};
 
-export const getPostAuthSignupMutationOptions = <TError = AxiosError<Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthSignup>>, TError,{data: PostAuthSignupBody}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthSignup>>, TError,{data: PostAuthSignupBody}, TContext> => {
+    return postAuthSignup(data, axiosOptions);
+  };
 
-const mutationKey = ['postAuthSignup'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+  return { mutationFn, ...mutationOptions };
+};
 
-      
+export type PostAuthSignupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postAuthSignup>>
+>;
+export type PostAuthSignupMutationBody = PostAuthSignupBody;
+export type PostAuthSignupMutationError = AxiosError<Error | Error>;
 
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthSignup>>, {data: PostAuthSignupBody}> = (props) => {
-          const {data} = props ?? {};
-
-          return  postAuthSignup(data,axiosOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostAuthSignupMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthSignup>>>
-    export type PostAuthSignupMutationBody = PostAuthSignupBody
-    export type PostAuthSignupMutationError = AxiosError<Error | Error>
-
-    /**
+/**
  * @summary SignUp Feature
  */
-export const usePostAuthSignup = <TError = AxiosError<Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthSignup>>, TError,{data: PostAuthSignupBody}, TContext>, axios?: AxiosRequestConfig}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postAuthSignup>>,
-        TError,
-        {data: PostAuthSignupBody},
-        TContext
-      > => {
+export const usePostAuthSignup = <
+  TError = AxiosError<Error | Error>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postAuthSignup>>,
+      TError,
+      { data: PostAuthSignupBody },
+      TContext
+    >;
+    axios?: AxiosRequestConfig;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postAuthSignup>>,
+  TError,
+  { data: PostAuthSignupBody },
+  TContext
+> => {
+  const mutationOptions = getPostAuthSignupMutationOptions(options);
 
-      const mutationOptions = getPostAuthSignupMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
+  return useMutation(mutationOptions, queryClient);
+};
+/**
  * Log into the Platform
  * @summary Login Feature
  */
 export const postAuthLogin = (
-    postAuthLoginBody: PostAuthLoginBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<PostAuthLogin200>> => {
-    
-    
-    return axios.post(
-      `/auth/login`,
-      postAuthLoginBody,options
-    );
-  }
+  postAuthLoginBody: PostAuthLoginBody,
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<PostAuthLogin200>> => {
+  return axios.post(`/auth/login`, postAuthLoginBody, options);
+};
 
+export const getPostAuthLoginMutationOptions = <
+  TError = AxiosError<Error | Error>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postAuthLogin>>,
+    TError,
+    { data: PostAuthLoginBody },
+    TContext
+  >;
+  axios?: AxiosRequestConfig;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postAuthLogin>>,
+  TError,
+  { data: PostAuthLoginBody },
+  TContext
+> => {
+  const mutationKey = ["postAuthLogin"];
+  const { mutation: mutationOptions, axios: axiosOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, axios: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postAuthLogin>>,
+    { data: PostAuthLoginBody }
+  > = (props) => {
+    const { data } = props ?? {};
 
-export const getPostAuthLoginMutationOptions = <TError = AxiosError<Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: PostAuthLoginBody}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: PostAuthLoginBody}, TContext> => {
+    return postAuthLogin(data, axiosOptions);
+  };
 
-const mutationKey = ['postAuthLogin'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+  return { mutationFn, ...mutationOptions };
+};
 
-      
+export type PostAuthLoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postAuthLogin>>
+>;
+export type PostAuthLoginMutationBody = PostAuthLoginBody;
+export type PostAuthLoginMutationError = AxiosError<Error | Error>;
 
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogin>>, {data: PostAuthLoginBody}> = (props) => {
-          const {data} = props ?? {};
-
-          return  postAuthLogin(data,axiosOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostAuthLoginMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthLogin>>>
-    export type PostAuthLoginMutationBody = PostAuthLoginBody
-    export type PostAuthLoginMutationError = AxiosError<Error | Error>
-
-    /**
+/**
  * @summary Login Feature
  */
-export const usePostAuthLogin = <TError = AxiosError<Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: PostAuthLoginBody}, TContext>, axios?: AxiosRequestConfig}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postAuthLogin>>,
-        TError,
-        {data: PostAuthLoginBody},
-        TContext
-      > => {
+export const usePostAuthLogin = <
+  TError = AxiosError<Error | Error>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postAuthLogin>>,
+      TError,
+      { data: PostAuthLoginBody },
+      TContext
+    >;
+    axios?: AxiosRequestConfig;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postAuthLogin>>,
+  TError,
+  { data: PostAuthLoginBody },
+  TContext
+> => {
+  const mutationOptions = getPostAuthLoginMutationOptions(options);
 
-      const mutationOptions = getPostAuthLoginMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
+  return useMutation(mutationOptions, queryClient);
+};

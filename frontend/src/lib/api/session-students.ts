@@ -4,220 +4,277 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useMutation
-} from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
 import type {
   MutationFunction,
   QueryClient,
   UseMutationOptions,
-  UseMutationResult
-} from '@tanstack/react-query';
+  UseMutationResult,
+} from "@tanstack/react-query";
 
-import axios from 'axios';
-import type {
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
+import axios from "axios";
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import type {
   CreateSessionStudentInput,
   DeleteSessionStudentsBody,
   Error,
   SessionStudent,
-  UpdateSessionStudentInput
-} from './api.schemas';
-
-
-
-
-
+  UpdateSessionStudentInput,
+} from "./api.schemas";
 
 /**
  * Associate a student with a session, creating an entry in the bridge table
  * @summary Create session-student relationship
  */
 export const postSessionStudents = (
-    createSessionStudentInput: CreateSessionStudentInput, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SessionStudent>> => {
-    
-    
-    return axios.post(
-      `/session_students`,
-      createSessionStudentInput,options
-    );
-  }
+  createSessionStudentInput: CreateSessionStudentInput,
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<SessionStudent>> => {
+  return axios.post(`/session_students`, createSessionStudentInput, options);
+};
 
+export const getPostSessionStudentsMutationOptions = <
+  TError = AxiosError<Error | Error | Error | Error>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postSessionStudents>>,
+    TError,
+    { data: CreateSessionStudentInput },
+    TContext
+  >;
+  axios?: AxiosRequestConfig;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postSessionStudents>>,
+  TError,
+  { data: CreateSessionStudentInput },
+  TContext
+> => {
+  const mutationKey = ["postSessionStudents"];
+  const { mutation: mutationOptions, axios: axiosOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, axios: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postSessionStudents>>,
+    { data: CreateSessionStudentInput }
+  > = (props) => {
+    const { data } = props ?? {};
 
-export const getPostSessionStudentsMutationOptions = <TError = AxiosError<Error | Error | Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postSessionStudents>>, TError,{data: CreateSessionStudentInput}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof postSessionStudents>>, TError,{data: CreateSessionStudentInput}, TContext> => {
+    return postSessionStudents(data, axiosOptions);
+  };
 
-const mutationKey = ['postSessionStudents'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+  return { mutationFn, ...mutationOptions };
+};
 
-      
+export type PostSessionStudentsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postSessionStudents>>
+>;
+export type PostSessionStudentsMutationBody = CreateSessionStudentInput;
+export type PostSessionStudentsMutationError = AxiosError<
+  Error | Error | Error | Error
+>;
 
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postSessionStudents>>, {data: CreateSessionStudentInput}> = (props) => {
-          const {data} = props ?? {};
-
-          return  postSessionStudents(data,axiosOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostSessionStudentsMutationResult = NonNullable<Awaited<ReturnType<typeof postSessionStudents>>>
-    export type PostSessionStudentsMutationBody = CreateSessionStudentInput
-    export type PostSessionStudentsMutationError = AxiosError<Error | Error | Error | Error>
-
-    /**
+/**
  * @summary Create session-student relationship
  */
-export const usePostSessionStudents = <TError = AxiosError<Error | Error | Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postSessionStudents>>, TError,{data: CreateSessionStudentInput}, TContext>, axios?: AxiosRequestConfig}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postSessionStudents>>,
-        TError,
-        {data: CreateSessionStudentInput},
-        TContext
-      > => {
+export const usePostSessionStudents = <
+  TError = AxiosError<Error | Error | Error | Error>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postSessionStudents>>,
+      TError,
+      { data: CreateSessionStudentInput },
+      TContext
+    >;
+    axios?: AxiosRequestConfig;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postSessionStudents>>,
+  TError,
+  { data: CreateSessionStudentInput },
+  TContext
+> => {
+  const mutationOptions = getPostSessionStudentsMutationOptions(options);
 
-      const mutationOptions = getPostSessionStudentsMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
+  return useMutation(mutationOptions, queryClient);
+};
+/**
  * Remove the association between a student and a session
  * @summary Delete session-student relationship
  */
 export const deleteSessionStudents = (
-    deleteSessionStudentsBody: DeleteSessionStudentsBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<void>> => {
-    
-    
-    return axios.delete(
-      `/session_students`,{data:
-      deleteSessionStudentsBody, ...options}
-    );
-  }
+  deleteSessionStudentsBody: DeleteSessionStudentsBody,
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<void>> => {
+  return axios.delete(`/session_students`, {
+    data: deleteSessionStudentsBody,
+    ...options,
+  });
+};
 
+export const getDeleteSessionStudentsMutationOptions = <
+  TError = AxiosError<Error | Error | Error>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSessionStudents>>,
+    TError,
+    { data: DeleteSessionStudentsBody },
+    TContext
+  >;
+  axios?: AxiosRequestConfig;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteSessionStudents>>,
+  TError,
+  { data: DeleteSessionStudentsBody },
+  TContext
+> => {
+  const mutationKey = ["deleteSessionStudents"];
+  const { mutation: mutationOptions, axios: axiosOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, axios: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteSessionStudents>>,
+    { data: DeleteSessionStudentsBody }
+  > = (props) => {
+    const { data } = props ?? {};
 
-export const getDeleteSessionStudentsMutationOptions = <TError = AxiosError<Error | Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSessionStudents>>, TError,{data: DeleteSessionStudentsBody}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteSessionStudents>>, TError,{data: DeleteSessionStudentsBody}, TContext> => {
+    return deleteSessionStudents(data, axiosOptions);
+  };
 
-const mutationKey = ['deleteSessionStudents'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+  return { mutationFn, ...mutationOptions };
+};
 
-      
+export type DeleteSessionStudentsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteSessionStudents>>
+>;
+export type DeleteSessionStudentsMutationBody = DeleteSessionStudentsBody;
+export type DeleteSessionStudentsMutationError = AxiosError<
+  Error | Error | Error
+>;
 
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSessionStudents>>, {data: DeleteSessionStudentsBody}> = (props) => {
-          const {data} = props ?? {};
-
-          return  deleteSessionStudents(data,axiosOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteSessionStudentsMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSessionStudents>>>
-    export type DeleteSessionStudentsMutationBody = DeleteSessionStudentsBody
-    export type DeleteSessionStudentsMutationError = AxiosError<Error | Error | Error>
-
-    /**
+/**
  * @summary Delete session-student relationship
  */
-export const useDeleteSessionStudents = <TError = AxiosError<Error | Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSessionStudents>>, TError,{data: DeleteSessionStudentsBody}, TContext>, axios?: AxiosRequestConfig}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteSessionStudents>>,
-        TError,
-        {data: DeleteSessionStudentsBody},
-        TContext
-      > => {
+export const useDeleteSessionStudents = <
+  TError = AxiosError<Error | Error | Error>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteSessionStudents>>,
+      TError,
+      { data: DeleteSessionStudentsBody },
+      TContext
+    >;
+    axios?: AxiosRequestConfig;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteSessionStudents>>,
+  TError,
+  { data: DeleteSessionStudentsBody },
+  TContext
+> => {
+  const mutationOptions = getDeleteSessionStudentsMutationOptions(options);
 
-      const mutationOptions = getDeleteSessionStudentsMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
+  return useMutation(mutationOptions, queryClient);
+};
+/**
  * Update the present status or notes for a session-student relationship
  * @summary Update session-student relationship
  */
 export const patchSessionStudents = (
-    updateSessionStudentInput: UpdateSessionStudentInput, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SessionStudent>> => {
-    
-    
-    return axios.patch(
-      `/session_students`,
-      updateSessionStudentInput,options
-    );
-  }
+  updateSessionStudentInput: UpdateSessionStudentInput,
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<SessionStudent>> => {
+  return axios.patch(`/session_students`, updateSessionStudentInput, options);
+};
 
+export const getPatchSessionStudentsMutationOptions = <
+  TError = AxiosError<Error | Error | Error>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof patchSessionStudents>>,
+    TError,
+    { data: UpdateSessionStudentInput },
+    TContext
+  >;
+  axios?: AxiosRequestConfig;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof patchSessionStudents>>,
+  TError,
+  { data: UpdateSessionStudentInput },
+  TContext
+> => {
+  const mutationKey = ["patchSessionStudents"];
+  const { mutation: mutationOptions, axios: axiosOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, axios: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof patchSessionStudents>>,
+    { data: UpdateSessionStudentInput }
+  > = (props) => {
+    const { data } = props ?? {};
 
-export const getPatchSessionStudentsMutationOptions = <TError = AxiosError<Error | Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchSessionStudents>>, TError,{data: UpdateSessionStudentInput}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof patchSessionStudents>>, TError,{data: UpdateSessionStudentInput}, TContext> => {
+    return patchSessionStudents(data, axiosOptions);
+  };
 
-const mutationKey = ['patchSessionStudents'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+  return { mutationFn, ...mutationOptions };
+};
 
-      
+export type PatchSessionStudentsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof patchSessionStudents>>
+>;
+export type PatchSessionStudentsMutationBody = UpdateSessionStudentInput;
+export type PatchSessionStudentsMutationError = AxiosError<
+  Error | Error | Error
+>;
 
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchSessionStudents>>, {data: UpdateSessionStudentInput}> = (props) => {
-          const {data} = props ?? {};
-
-          return  patchSessionStudents(data,axiosOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PatchSessionStudentsMutationResult = NonNullable<Awaited<ReturnType<typeof patchSessionStudents>>>
-    export type PatchSessionStudentsMutationBody = UpdateSessionStudentInput
-    export type PatchSessionStudentsMutationError = AxiosError<Error | Error | Error>
-
-    /**
+/**
  * @summary Update session-student relationship
  */
-export const usePatchSessionStudents = <TError = AxiosError<Error | Error | Error>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchSessionStudents>>, TError,{data: UpdateSessionStudentInput}, TContext>, axios?: AxiosRequestConfig}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof patchSessionStudents>>,
-        TError,
-        {data: UpdateSessionStudentInput},
-        TContext
-      > => {
+export const usePatchSessionStudents = <
+  TError = AxiosError<Error | Error | Error>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof patchSessionStudents>>,
+      TError,
+      { data: UpdateSessionStudentInput },
+      TContext
+    >;
+    axios?: AxiosRequestConfig;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof patchSessionStudents>>,
+  TError,
+  { data: UpdateSessionStudentInput },
+  TContext
+> => {
+  const mutationOptions = getPatchSessionStudentsMutationOptions(options);
 
-      const mutationOptions = getPatchSessionStudentsMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
+  return useMutation(mutationOptions, queryClient);
+};
