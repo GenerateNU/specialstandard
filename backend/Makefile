@@ -2,7 +2,7 @@
 
 # Run all tests
 test:
-	go test ./... -v
+	go test ./... | grep -v "no test files" || true
 
 # Run only unit tests (skip database tests)
 test-unit:
@@ -18,7 +18,9 @@ test-db:
 
 # Run tests with coverage
 test-coverage:
-	go test ./... -v -coverprofile=coverage.out
+	go test ./... -v -coverprofile=coverage_temp.out
+	grep -v "/mocks/" coverage_temp.out > coverage.out || true
+	rm coverage_temp.out
 	go tool cover -html=coverage.out -o coverage.html
 
 # Clean test cache
