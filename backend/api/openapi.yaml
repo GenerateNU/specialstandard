@@ -49,7 +49,7 @@ paths:
     post:
       summary: SignUp Feature
       description: Signs Up New User to the Platform as a Therapist
-      tags: [ Auth ]
+      tags: [Auth]
       requestBody:
         required: true
         content:
@@ -120,7 +120,7 @@ paths:
     post:
       summary: Login Feature
       description: Log into the Platform
-      tags: [ Auth ]
+      tags: [Auth]
       requestBody:
         required: true
         content:
@@ -656,14 +656,14 @@ paths:
             type: string
             example: "John"
       responses:
-        '200':
+        "200":
           description: Successful response with list of students
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Student'
+                  $ref: "#/components/schemas/Student"
               examples:
                 allStudents:
                   summary: All students (no filters)
@@ -688,12 +688,12 @@ paths:
                 emptyResults:
                   summary: No matching results
                   value: []
-        '400':
+        "400":
           description: Bad request - Invalid query parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
               examples:
                 invalidTherapistId:
                   summary: Invalid therapist_id format
@@ -708,12 +708,12 @@ paths:
                     message:
                       page: "Page must be greater than or equal to 1"
                       limit: "Limit must be greater than or equal to 1"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
     post:
       summary: Create a new student
       description: Create a new student record
@@ -1408,6 +1408,36 @@ paths:
             type: string
           required: false
           description: Filter resources by content/URL
+        - in: query
+          name: theme_name
+          schema:
+            type: string
+          required: false
+          description: Filter resources by theme name
+        - in: query
+          name: theme_month
+          schema:
+            type: integer
+          required: false
+          description: Filter resources by theme month
+        - in: query
+          name: theme_year
+          schema:
+            type: integer
+          required: false
+          description: Filter resources by theme year
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: List of resources
@@ -2284,6 +2314,36 @@ components:
           description: Year of the theme
           example: 2024
 
+    ThemeInfo:
+      type: object
+      required:
+        - theme_name
+        - month
+        - year
+      properties:
+        theme_name:
+          type: string
+          description: Name of the theme
+          example: "Jungle Adventure"
+        theme_month:
+          type: integer
+          description: Month of the theme (1-12)
+          example: 6
+        theme_year:
+          type: integer
+          description: Year of the theme
+          example: 2024
+        created_at:
+          type: string
+          format: date-time
+          description: When the theme was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the theme was last updated
+          example: "2024-01-15T10:35:00Z"
+
     CreateResourceBody:
       type: object
       required:
@@ -2359,7 +2419,7 @@ components:
           type: string
           nullable: true
           description: Title of the resource (optional)
-          example: "Coping with Anxiety"
+          example: "Reading Exercises: b vs d"
         category:
           type: string
           nullable: true
@@ -2369,6 +2429,9 @@ components:
           nullable: true
           description: Content/URL of the resource (optional)
           example: "https://example.com/resource"
+        theme:
+          $ref: "#/components/schemas/ThemeInfo"
+          description: The theme associated with the resource
 
     UpdateResourceBody:
       type: object

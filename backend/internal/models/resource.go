@@ -19,6 +19,11 @@ type Resource struct {
 	UpdatedAt  *time.Time `json:"updated_at"`
 }
 
+type ResourceWithTheme struct {
+	Resource
+	Theme ThemeInfo `json:"theme"`
+}
+
 type ResourceBody struct {
 	ThemeID    uuid.UUID  `json:"theme_id"`
 	GradeLevel *int       `json:"grade_level" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11 12"`

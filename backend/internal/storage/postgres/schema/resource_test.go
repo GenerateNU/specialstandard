@@ -51,13 +51,18 @@ func TestResourceRepository_GetResources(t *testing.T) {
     `, resourceID, themeID, 5, testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", nil, utils.NewPagination())
+	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
 
 	// Assert
 	assert.NoError(t, err)
+	print(len(resources))
 	if assert.NotEmpty(t, resources, "Expected at least 1 resource") {
 		assert.Equal(t, "Math Worksheet", *resources[0].Title)
 		assert.Equal(t, resourceID, resources[0].ID)
+		assert.Equal(t, themeID, resources[0].ThemeID)
+		assert.Equal(t, "Test Theme", resources[0].Theme.Name)
+		assert.Equal(t, 1, resources[0].Theme.Month)
+		assert.Equal(t, 2024, resources[0].Theme.Year)
 	}
 
 	// More Tests for Pagination Behaviour
@@ -69,11 +74,11 @@ func TestResourceRepository_GetResources(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", nil, utils.NewPagination())
+	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, resources, 10)
 
-	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", nil, utils.Pagination{
+	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.Pagination{
 		Page:  2,
 		Limit: 9,
 	})
@@ -120,6 +125,8 @@ func TestResourceRepository_GetResourceByID(t *testing.T) {
 	if resource != nil {
 		assert.Equal(t, "Science Video", *resource.Title)
 		assert.Equal(t, resourceID, resource.ID)
+		assert.Equal(t, themeID, resource.ThemeID)
+		assert.Equal(t, "Science Theme", resource.Theme.Name)
 	}
 }
 
