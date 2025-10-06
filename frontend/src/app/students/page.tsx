@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Loader2, Users } from 'lucide-react'
-import StudentCard from '@/components/studentCard'
+import StudentCard from '@/components/students/studentCard'
 import { useStudents } from '@/hooks/useStudents'
 
 export default function StudentsPage() {
