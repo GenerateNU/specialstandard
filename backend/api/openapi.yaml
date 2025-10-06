@@ -633,11 +633,13 @@ paths:
             example: 10
         - name: grade
           in: query
-          description: Filter students by grade level (exact match)
+          description: Filter students by grade level (exact match). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
           required: false
           schema:
-            type: string
-            example: "5th"
+            type: integer
+            minimum: -1
+            maximum: 12
+            example: 5
         - name: therapist_id
           in: query
           description: Filter students by therapist UUID
@@ -671,7 +673,7 @@ paths:
                       last_name: "Doe"
                       dob: "2010-05-15T00:00:00Z"
                       therapist_id: "9dad94d8-6534-4510-90d7-e4e97c175a65"
-                      grade: "5th"
+                      grade: 5
                       iep: "Active IEP with speech therapy goals"
                       created_at: "2025-09-18T14:14:11.66268Z"
                       updated_at: "2025-09-18T14:14:11.66268Z"
@@ -681,7 +683,7 @@ paths:
                     - id: "843d4807-1397-4227-9328-330adea56993"
                       first_name: "John"
                       last_name: "Doe"
-                      grade: "5th"
+                      grade: 5
                       therapist_id: "9dad94d8-6534-4510-90d7-e4e97c175a65"
                 emptyResults:
                   summary: No matching results
@@ -1370,9 +1372,11 @@ paths:
         - in: query
           name: grade_level
           schema:
-            type: string
+            type: integer
+            minimum: 0
+            maximum: 12
           required: false
-          description: Filter resources by grade level
+          description: Filter resources by grade level. 0 = kindergarten, 1-12 = grades 1-12
         - in: query
           name: date
           schema:
@@ -2102,10 +2106,12 @@ components:
           description: UUID of the assigned therapist
           example: "9dad94d8-6534-4510-90d7-e4e97c175a65"
         grade:
-          type: string
+          type: integer
           nullable: true
-          description: Student's current grade level
-          example: "5th"
+          description: Student's current grade level. -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
+          minimum: -1
+          maximum: 12
+          example: 5
         iep:
           type: string
           nullable: true
@@ -2155,10 +2161,12 @@ components:
           description: ID of the assigned therapist
           example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
         grade:
-          type: string
+          type: integer
           nullable: true
-          description: Student's current grade level (optional)
-          example: "5th Grade"
+          description: Student's current grade level (optional). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
+          minimum: -1
+          maximum: 12
+          example: 5
         iep:
           type: string
           nullable: true
@@ -2189,10 +2197,12 @@ components:
           description: ID of the assigned therapist
           example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
         grade:
-          type: string
+          type: integer
           nullable: true
-          description: Student's current grade level (can be set to null)
-          example: "6th Grade"
+          description: Student's current grade level (can be set to null). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
+          minimum: -1
+          maximum: 12
+          example: 6
         iep:
           type: string
           nullable: true
@@ -2285,9 +2295,11 @@ components:
           description: ID of the theme associated with the resource
           example: "123e4567-e89b-12d3-a456-426614174000"
         grade_level:
-          type: string
+          type: integer
           nullable: true
-          description: Grade level for the resource (optional)
+          description: Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
+          minimum: 0
+          maximum: 12
         date:
           type: string
           format: date
@@ -2327,10 +2339,12 @@ components:
           description: ID of the theme associated with the resource
           example: "123e4567-e89b-12d3-a456-426614174000"
         grade_level:
-          type: string
+          type: integer
           nullable: true
-          description: Grade level for the resource (optional)
-          example: "5th Grade"
+          description: Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
+          minimum: 0
+          maximum: 12
+          example: 5
         date:
           type: string
           format: date
@@ -2366,10 +2380,12 @@ components:
           description: ID of the theme associated with the resource (optional)
           example: "123e4567-e89b-12d3-a456-426614174000"
         grade_level:
-          type: string
+          type: integer
           nullable: true
-          description: Grade level for the resource (optional)
-          example: "5th Grade"
+          description: Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
+          minimum: 0
+          maximum: 12
+          example: 5
         date:
           type: string
           format: date
