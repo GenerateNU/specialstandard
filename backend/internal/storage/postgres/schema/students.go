@@ -210,18 +210,6 @@ func (r *StudentRepository) PromoteStudents(ctx context.Context, input models.Pr
 	if len(input.ExcludedStudentIDs) > 0 {
 		baseQuery += ` AND id != ALL($2)`
 		args = append(args, input.ExcludedStudentIDs)
-		//baseQuery += ` AND id NOT IN (`
-		//for i := range input.ExcludedStudentIDs {
-		//	baseQuery += fmt.Sprintf("$%d", i+2)
-		//	if i < len(input.ExcludedStudentIDs)-1 {
-		//		baseQuery += `, `
-		//	}
-		//}
-		//baseQuery += `)`
-
-		//for _, id := range input.ExcludedStudentIDs {
-		//	args = append(args, id)
-		//}
 	}
 
 	_, err := r.db.Exec(ctx, baseQuery, args...)

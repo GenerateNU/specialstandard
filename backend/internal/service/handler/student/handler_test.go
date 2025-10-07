@@ -983,3 +983,120 @@ func TestHandler_DeleteStudent(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_PromoteStudents(t *testing.T) {
+	therapistID := uuid.MustParse("e926bcfb-a164-4295-b261-ce394926f3cf")
+	excludedID := uuid.MustParse("56bf3e6a-6ce0-4ce6-a7a8-82c2696ce411")
+
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockStudentRepository)
+		expectedStatusCode int
+	}{
+		{
+			name: "Parsing Error",
+			payload: `{
+				"therapist_id": "e926bcfb-a164-4295-b261-ce394926f3cf",
+				"excluded_student_ids": ["56bf3e6a-6ce0-4ce6-a7a8-82c2696ce411"
+			}`,
+			mockSetup:          func(m *mocks.MockStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Missing Therapist ID",
+			payload: `{
+				"excluded_student_ids": ["56bf3e6a-6ce0-4ce6-a7a8-82c2696ce411]"
+			}`,
+			mockSetup:          func(m *mocks.MockStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "XValidator Dive Error with Excluded Student IDs",
+			payload: `{
+				"therapist_id": "e926bcfb-a164-4295-b261-ce394926f3cf",
+				"excluded_student_ids": ["I WILL BE PROMOTED AT ANY COST"]
+			}`,
+			mockSetup:          func(m *mocks.MockStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Invalid TherapistID",
+			payload: `{
+				"therapist_id": "e926bcfb-a164-4295-b261-ce394926f3cf",
+				"excluded_student_ids": ["56bf3e6a-6ce0-4ce6-a7a8-82c2696ce411"]
+			}`,
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				patch := models.PromoteStudentsInput{
+					TherapistID:        therapistID,
+					ExcludedStudentIDs: []uuid.UUID{excludedID},
+				}
+				m.On("PromoteStudents", mock.Anything, patch).Return(errors.New("foreign key"))
+			},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Invalid StudentID",
+			payload: `{
+				"therapist_id": "e926bcfb-a164-4295-b261-ce394926f3cf",
+				"excluded_student_ids": ["56bf3e6a-6ce0-4ce6-a7a8-82c2696ce411"]
+			}`,
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				patch := models.PromoteStudentsInput{
+					TherapistID:        therapistID,
+					ExcludedStudentIDs: []uuid.UUID{excludedID},
+				}
+				m.On("PromoteStudents", mock.Anything, patch).Return(errors.New("foreign key"))
+			},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Valid, with no Exclusion",
+			payload: `{
+				"therapist_id": "e926bcfb-a164-4295-b261-ce394926f3cf"
+			}`,
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				patch := models.PromoteStudentsInput{
+					TherapistID: therapistID,
+				}
+				m.On("PromoteStudents", mock.Anything, patch).Return(nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			name: "Extensive Valid Case",
+			payload: `{
+				"therapist_id": "e926bcfb-a164-4295-b261-ce394926f3cf",
+				"excluded_student_ids": ["56bf3e6a-6ce0-4ce6-a7a8-82c2696ce411"]
+			}`,
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				patch := models.PromoteStudentsInput{
+					TherapistID:        therapistID,
+					ExcludedStudentIDs: []uuid.UUID{excludedID},
+				}
+				m.On("PromoteStudents", mock.Anything, patch).Return(nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockStudentRepository)
+			tt.mockSetup(mockRepo)
+
+			handler := student.NewHandler(mockRepo)
+			app.Patch("/students/promote", handler.PromoteStudents)
+
+			req := httptest.NewRequest("PATCH", "/students/promote", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+
+			res, _ := app.Test(req, -1)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}

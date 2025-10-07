@@ -54,8 +54,5 @@ func (m *MockStudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID)
 
 func (m *MockStudentRepository) PromoteStudents(ctx context.Context, input models.PromoteStudentsInput) error {
 	args := m.Called(ctx, input)
-	if args.Get(0) == nil {
-		return args.Error(1)
-	}
-	return args.Error(1)
+	return args.Error(0)
 }

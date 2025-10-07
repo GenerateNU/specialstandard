@@ -2199,3 +2199,43 @@ func TestHandler_Login(t *testing.T) {
 		})
 	}
 }
+
+func TestEndpoint_PromoteStudents(t *testing.T) {
+	mockStudentRepo := new(mocks.MockStudentRepository)
+	studentID := uuid.New()
+	therapistID := uuid.New()
+
+	mockStudentRepo.On("PromoteStudents", mock.Anything, studentID).Return(models.Student{
+		ID:          studentID,
+		FirstName:   "Pupil",
+		LastName:    "Acolyte",
+		DOB:         ptrTime(time.Date(2004, 9, 24, 0, 0, 0, 0, time.UTC)),
+		TherapistID: therapistID,
+		Grade:       ptrInt(7),
+		IEP:         ptrString("Original IEP"),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	})
+
+	mockStudentRepo.On("PromoteStudents", mock.Anything, mock.AnythingOfType("models.PromoteStudentsInput")).Return(nil)
+
+	repo := &storage.Repository{
+		Student: mockStudentRepo,
+	}
+
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
+
+	body := fmt.Sprintf(`{
+		"therapist_id": "%v"
+	}`, therapistID)
+
+	req := httptest.NewRequest("PATCH", "/api/v1/students/promote", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
+}

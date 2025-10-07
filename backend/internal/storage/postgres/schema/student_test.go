@@ -719,3 +719,13 @@ func TestStudentRepository_DeleteStudent(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0, count)
 }
+
+func TestStudentRepository_PromoteStudents(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping Database Test in Short Mode")
+	}
+
+	// Two Foreign Key Violations
+	// Valid Case (No Exclusions)
+	// Do Exclude Students
+}
