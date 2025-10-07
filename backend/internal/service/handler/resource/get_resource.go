@@ -4,6 +4,7 @@ import (
 	"specialstandard/internal/errs"
 	"specialstandard/internal/utils"
 	"specialstandard/internal/xvalidator"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,6 +35,30 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 	title := c.Query("title")
 	category := c.Query("category")
 	content := c.Query("content")
+	themeName := c.Query("theme_name")
+
+	themeMonthStr := c.Query("theme_month")
+	themeYearStr := c.Query("theme_year")
+
+	var themeMonth, themeYear *int
+	if themeMonthStr != "" {
+		parsedMonth, err := strconv.Atoi(themeMonthStr)
+		if err == nil {
+			if parsedMonth < 1 || parsedMonth > 12 {
+				return errs.InvalidRequestData(map[string]string{"theme_month": "month must be between 1 and 12"})
+			}
+			themeMonth = &parsedMonth
+		}
+	}
+	if themeYearStr != "" {
+		parsedYear, err := strconv.Atoi(themeYearStr)
+		if err == nil {
+			if parsedYear < 1900 || parsedYear > 3000 {
+				return errs.InvalidRequestData(map[string]string{"theme_year": "year is invalid"})
+			}
+			themeYear = &parsedYear
+		}
+	}
 
 	pagination := utils.NewPagination()
 	if err := c.QueryParser(&pagination); err != nil {
@@ -44,12 +69,12 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	resources, err := h.resourceRepository.GetResources(c.Context(), themeId, gradeLevel, res_type, title, category, content, date, pagination)
+	resourcesWithThemes, err := h.resourceRepository.GetResources(c.Context(), themeId, gradeLevel, res_type, title, category, content, themeName, date, themeMonth, themeYear, pagination)
 	if err != nil {
 		return errs.InternalServerError(err.Error())
 	}
 
-	return c.JSON(resources)
+	return c.JSON(resourcesWithThemes)
 }
 
 func (h *Handler) GetResourceByID(c *fiber.Ctx) error {

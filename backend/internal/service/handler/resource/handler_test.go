@@ -83,10 +83,19 @@ func TestHandler_GetResource(t *testing.T) {
 			name:       "successful_get_resource",
 			resourceID: resourceID.String(),
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResourceByID", mock.Anything, resourceID).Return(&models.Resource{
-					ID:    resourceID,
-					Title: ptrString("Resource1"),
-					Type:  ptrString("doc"),
+				m.On("GetResourceByID", mock.Anything, resourceID).Return(&models.ResourceWithTheme{
+					Resource: models.Resource{
+						ID:    resourceID,
+						Title: ptrString("Resource1"),
+						Type:  ptrString("doc"),
+					},
+					Theme: models.ThemeInfo{
+						Name:      "Theme1",
+						Month:     6,
+						Year:      2025,
+						CreatedAt: nil,
+						UpdatedAt: nil,
+					},
 				}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
@@ -96,7 +105,7 @@ func TestHandler_GetResource(t *testing.T) {
 			name:       "repository_error",
 			resourceID: resourceID.String(),
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResourceByID", mock.Anything, resourceID).Return(&models.Resource{}, errors.New("database error"))
+				m.On("GetResourceByID", mock.Anything, resourceID).Return(&models.ResourceWithTheme{}, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -121,7 +130,7 @@ func TestHandler_GetResource(t *testing.T) {
 			if !tt.wantErr && resp.StatusCode == fiber.StatusOK {
 				body, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				var res models.Resource
+				var res models.ResourceWithTheme
 				err = json.Unmarshal(body, &res)
 				assert.NoError(t, err)
 				assert.Equal(t, resourceID, res.ID)
@@ -141,11 +150,12 @@ func TestHandler_GetResources(t *testing.T) {
 			name: "successful_get_resources with default pagination",
 			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				resources := []models.Resource{
-					{ID: uuid.New(), Title: ptrString("Resource1"), Type: ptrString("doc")},
+				resources := []models.ResourceWithTheme{
+					{Resource: models.Resource{ID: uuid.New(), Title: ptrString("Resource1"), Type: ptrString("doc")},
+						Theme: models.ThemeInfo{Name: "Spring", Month: 3, Year: 2024, CreatedAt: nil, UpdatedAt: nil}},
 				}
-				// Fix: Use mock.Anything for all parameters
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return(resources, nil)
+
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return(resources, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 		},
@@ -153,15 +163,29 @@ func TestHandler_GetResources(t *testing.T) {
 			name: "empty_resources_list",
 			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource{}, nil)
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.ResourceWithTheme{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name: "theme_params_filter",
+			url:  "?theme_name=Spring&theme_month=3&theme_year=2024",
+			mockSetup: func(m *mocks.MockResourceRepository) {
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.ResourceWithTheme{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name:           "invalid theme year filter",
+			url:            "?theme_year=50000",
+			mockSetup:      func(m *mocks.MockResourceRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
 		},
 		{
 			name: "repository_error",
 			url:  "",
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.Resource(nil), errors.New("database error"))
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, utils.NewPagination()).Return([]models.ResourceWithTheme(nil), errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 		},
@@ -176,7 +200,7 @@ func TestHandler_GetResources(t *testing.T) {
 			name:           "Bad Pagination Arguments",
 			url:            "?page=abc&limit=-1",
 			mockSetup:      func(m *mocks.MockResourceRepository) {},
-			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			expectedStatus: fiber.StatusBadRequest,
 		},
 		{
 			name: "Pagination Parameters",
@@ -186,7 +210,7 @@ func TestHandler_GetResources(t *testing.T) {
 					Page:  2,
 					Limit: 5,
 				}
-				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, pagination).Return([]models.Resource{}, nil)
+				m.On("GetResources", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, pagination).Return([]models.ResourceWithTheme{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 		},
@@ -263,7 +287,6 @@ func TestHandler_DeleteResource(t *testing.T) {
 			name:       "successful_delete_resource",
 			resourceID: resourceID.String(),
 			mockSetup: func(m *mocks.MockResourceRepository) {
-				// Fix: Use mock.Anything
 				m.On("DeleteResource", mock.Anything, mock.Anything).Return(nil)
 			},
 			expectedStatus: fiber.StatusNoContent,

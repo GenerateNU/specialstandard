@@ -27,6 +27,14 @@ type UpdateThemeInput struct {
 	Year  *int    `json:"year,omitempty" validate:"omitempty,gte=1900,lte=2100"`
 }
 
+type ThemeInfo struct {
+	Name      string     `json:"theme_name" db:"theme_name"`
+	Month     int        `json:"theme_month" db:"month"`
+	Year      int        `json:"theme_year" db:"year"`
+	CreatedAt *time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
+}
+
 type ThemeFilter struct {
 	Month  *int    `query:"month" validate:"omitempty,gte=1,lte=12"`
 	Year   *int    `query:"year" validate:"omitempty,gte=1900,lte=2100"`

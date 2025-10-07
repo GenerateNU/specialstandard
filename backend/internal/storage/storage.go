@@ -52,8 +52,8 @@ type TherapistRepository interface {
 }
 
 type ResourceRepository interface {
-	GetResources(ctx context.Context, theme_id uuid.UUID, gradeLevel, res_type, title, category, content string, date *time.Time, pagination utils.Pagination) ([]models.Resource, error)
-	GetResourceByID(ctx context.Context, id uuid.UUID) (*models.Resource, error)
+	GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error)
+	GetResourceByID(ctx context.Context, id uuid.UUID) (*models.ResourceWithTheme, error)
 	UpdateResource(ctx context.Context, id uuid.UUID, resourceBody models.UpdateResourceBody) (*models.Resource, error)
 	CreateResource(ctx context.Context, resourceBody models.ResourceBody) (*models.Resource, error)
 	DeleteResource(ctx context.Context, id uuid.UUID) error
