@@ -19,6 +19,8 @@ func ptrTime(t time.Time) *time.Time {
 	return &t
 }
 
+func PtrInt(i int) *int { return &i }
+
 func TestStudentRepository_GetStudents(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
@@ -757,7 +759,7 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 		"Stone", "Liu", doctorDoofenshmirtzID)
 	assert.NoError(t, err)
 
-	students, err := repo.GetStudents(ctx, 5, uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, PtrInt(5), uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 
 	patch := models.PromoteStudentsInput{
@@ -766,8 +768,7 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 	}
 	err = repo.PromoteStudents(ctx, patch)
 	assert.NoError(t, err)
-	// TODO (Note for Future-Harsh): Might need to change this test call, after merging branch and comment correction.
-	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 
 	for i := 0; i < len(students); i++ {
