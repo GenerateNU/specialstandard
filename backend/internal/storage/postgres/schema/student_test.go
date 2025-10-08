@@ -772,14 +772,16 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := 0; i < len(students); i++ {
-		switch {
-		case students[i].FirstName == "Michelle":
+		switch students[i].FirstName {
+		case "Michelle":
 			assert.Equal(t, *students[i].Grade, 1)
-		case students[i].FirstName == "Ally":
+		case "Ally":
 			assert.Equal(t, *students[i].Grade, 5)
-		case students[i].FirstName == "Luis" || students[i].FirstName == "Harsh":
+		case "Luis":
+			fallthrough
+		case "Harsh":
 			assert.Equal(t, *students[i].Grade, -1)
-		case students[i].FirstName == "Stone":
+		case "Stone":
 			assert.Equal(t, *students[i].Grade, 0)
 		}
 	}
