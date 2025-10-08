@@ -725,7 +725,61 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 		t.Skip("Skipping Database Test in Short Mode")
 	}
 
-	// Two Foreign Key Violations
-	// Valid Case (No Exclusions)
-	// Do Exclude Students
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	ctx := context.Background()
+	repo := schema.NewStudentRepository(testDB.Pool)
+
+	// Insert 2 Therapists
+	doctorWhoID := uuid.New()
+	doctorDoofenshmirtzID := uuid.New()
+	_, err := testDB.Pool.Exec(ctx, `
+		INSERT INTO therapist (id, first_name, last_name, email)
+		VALUES ($1, $2, $3, $4),
+		       ($5, $6, $7, $8);
+    `, doctorWhoID, "Doctor", "Who", "doc.who@guesswho.com",
+		doctorDoofenshmirtzID, "Heinz", "Doofenshmirtz", "doofy.balooney@gmail.com")
+	assert.NoError(t, err)
+
+	// Insert 5 Students
+	_, err = testDB.Pool.Exec(ctx, `
+		INSERT INTO student (first_name, last_name, dob, therapist_id, grade, iep, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW()),
+		       ($7, $8, $3, $4, $9, $6, NOW()),
+		       ($10, $11, $3, $4, $12, $6, NOW()),
+		       ($13, $14, $3, $4, $15, $6, NOW()),
+		       ($16, $17, $3, $18, $5, $6, NOW());
+    `, "Michelle", "Li", "2005-01-31", doctorWhoID, 0, "IEP Content",
+		"Ally", "Descoteaux", 5,
+		"Luis", "Enrique Sarmiento", 12,
+		"Harsh", "Singh", -1,
+		"Stone", "Liu", doctorDoofenshmirtzID)
+	assert.NoError(t, err)
+
+	students, err := repo.GetStudents(ctx, 5, uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+
+	patch := models.PromoteStudentsInput{
+		TherapistID:        doctorWhoID,
+		ExcludedStudentIDs: []uuid.UUID{students[0].ID},
+	}
+	err = repo.PromoteStudents(ctx, patch)
+	assert.NoError(t, err)
+	// TODO (Note for Future-Harsh): Might need to change this test call, after merging branch and comment correction.
+	students, err = repo.GetStudents(ctx, 0, uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+
+	for i := 0; i < len(students); i++ {
+		switch {
+		case students[i].FirstName == "Michelle":
+			assert.Equal(t, *students[i].Grade, 1)
+		case students[i].FirstName == "Ally":
+			assert.Equal(t, *students[i].Grade, 5)
+		case students[i].FirstName == "Luis" || students[i].FirstName == "Harsh":
+			assert.Equal(t, *students[i].Grade, -1)
+		case students[i].FirstName == "Stone":
+			assert.Equal(t, *students[i].Grade, 0)
+		}
+	}
 }
