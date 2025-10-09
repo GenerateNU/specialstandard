@@ -15,14 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrString(s string) *string {
-	return &s
-}
-
-func intPtr(i int) *int {
-	return &i
-}
-
 func TestSessionRepository_GetSessions(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
@@ -90,7 +82,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 
 	// Test filtering by year
 	yearFilter := &models.GetSessionRepositoryRequest{
-		Year: intPtr(startTime.Year()),
+		Year: ptrInt(startTime.Year()),
 	}
 	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), yearFilter)
 	assert.NoError(t, err)
@@ -98,17 +90,17 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 
 	// Test filtering by month and year
 	monthYearFilter := &models.GetSessionRepositoryRequest{
-		Month: intPtr(int(startTime.Month())),
-		Year:  intPtr(startTime.Year()),
+		Month: ptrInt(int(startTime.Month())),
+		Year:  ptrInt(startTime.Year()),
 	}
 	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), monthYearFilter)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, len(sessions))
 
-	// Test filtering by student IDs 
+	// Test filtering by student IDs
 	studentID1 := uuid.New()
 	studentID2 := uuid.New()
-	
+
 	// Insert student associations for one of the sessions
 	sessionWithStudents := sessions[0].ID
 	_, err = testDB.Pool.Exec(ctx, `
@@ -116,7 +108,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)
 	`, studentID1, "Student", "One", therapistID, studentID2, "Student", "Two", therapistID)
 	assert.NoError(t, err)
-	
+
 	_, err = testDB.Pool.Exec(ctx, `
 		INSERT INTO session_student (session_id, student_id, present)
 		VALUES ($1, $2, true), ($3, $4, true)

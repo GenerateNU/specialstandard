@@ -1,9 +1,9 @@
 package student
 
 import (
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
-	"strconv"
-	"strings"
+	"specialstandard/internal/xvalidator"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,59 +14,12 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 	var req models.CreateStudentInput
 
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid JSON format",
-		})
+		return errs.InvalidJSON("Invalid JSON format")
 	}
 
-	// Validate required fields
-	if req.FirstName == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "First name is required",
-		})
-	}
-	if req.LastName == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Last name is required",
-		})
-	}
-	if req.TherapistID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Therapist ID is required",
-		})
-	}
-
-	// Validate grade if provided (as suggested by reviewer)
-	if req.Grade != nil && *req.Grade != "" {
-		grade := strings.ToLower(strings.TrimSpace(*req.Grade))
-		var gradeNum int
-		var err error
-
-		// Handle kindergarten as special case
-		if grade == "k" || grade == "kindergarten" {
-			gradeNum = 0
-		} else {
-			// Remove ordinal suffixes (st, nd, rd, th)
-			if len(grade) >= 2 {
-				suffix := grade[len(grade)-2:]
-				if suffix == "st" || suffix == "nd" || suffix == "rd" || suffix == "th" {
-					grade = grade[:len(grade)-2]
-				}
-			}
-
-			gradeNum, err = strconv.Atoi(grade)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "Grade must be a valid grade (K, 1-12, or 1st-12th)",
-				})
-			}
-		}
-
-		if gradeNum < 0 || gradeNum > 12 {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Grade must be between K and 12",
-			})
-		}
+	// Validate using xvalidator
+	if validationErrors := xvalidator.Validator.Validate(req); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
 	// Parse therapist UUID
@@ -95,16 +48,14 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 		LastName:    req.LastName,
 		DOB:         dob,
 		TherapistID: therapistID,
-		Grade:       req.Grade, // Keep as *string since that's what Student expects
-		IEP:         req.IEP,   // Keep as *string since that's what Student expects
+		Grade:       req.Grade, // Now *int as expected by the model
+		IEP:         req.IEP,
 	}
 
 	createdStudent, err := h.studentRepository.AddStudent(c.Context(), student)
 	if err != nil {
 		// Database will catch invalid therapist_id foreign key violations
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Database error",
-		})
+		return errs.InternalServerError("Database error")
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(createdStudent)
