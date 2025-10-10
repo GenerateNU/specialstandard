@@ -113,7 +113,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			last_name VARCHAR(100) NOT NULL,
 			dob DATE,
 			therapist_id UUID NOT NULL REFERENCES therapist(id),
-			grade VARCHAR(50),
+			grade INTEGER CHECK (grade >= -1 AND grade <= 12),
 			iep TEXT,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -174,7 +174,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		CREATE TABLE resource (
    			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
    			theme_id UUID NOT NULL,
-   			grade_level VARCHAR(20),
+   			grade_level INTEGER CHECK (grade_level >= 0 AND grade_level <= 12),
    			date DATE,
    			type VARCHAR(50),
    			title VARCHAR(100),

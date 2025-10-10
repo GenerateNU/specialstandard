@@ -69,10 +69,17 @@ func (h *Handler) GetStudentSessions(c *fiber.Ctx) error {
 		}
 	}
 
+	// Validate that start date is before end date if both are provided
+	if repositoryFilter.StartDate != nil && repositoryFilter.EndDate != nil {
+		if repositoryFilter.StartDate.After(*repositoryFilter.EndDate) {
+			return errs.BadRequest("Start date must be before end date")
+		}
+	}
+
 	// Only pass filter if there are actual filter parameters
 	var finalFilter *models.GetStudentSessionsRepositoryRequest
-	if repositoryFilter.StartDate != nil || repositoryFilter.EndDate != nil || 
-	   repositoryFilter.Month != nil || repositoryFilter.Year != nil || repositoryFilter.Present != nil {
+	if repositoryFilter.StartDate != nil || repositoryFilter.EndDate != nil ||
+		repositoryFilter.Month != nil || repositoryFilter.Year != nil || repositoryFilter.Present != nil {
 		finalFilter = repositoryFilter
 	}
 

@@ -37,6 +37,10 @@ func ptrString(s string) *string {
 	return &s
 }
 
+func ptrInt(i int) *int {
+	return &i
+}
+
 // Health and Session Tests
 func TestHealthEndpoint(t *testing.T) {
 	// Setup
@@ -150,14 +154,14 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
-	mockStudentRepo.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
 		{
 			ID:          uuid.New(),
 			FirstName:   "Emma",
 			LastName:    "Johnson",
 			DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
-			Grade:       ptrString("4th"),
+			Grade:       ptrInt(4),
 			IEP:         ptrString("Reading comprehension support"),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
@@ -192,14 +196,14 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 			LastName:    "Doe",
 			DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
-			Grade:       ptrString("5th"),
+			Grade:       ptrInt(5),
 			IEP:         ptrString("Test IEP"),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, "5th", uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -209,7 +213,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 		TestMode: true,
 	}, repo)
 
-	req := httptest.NewRequest("GET", "/api/v1/students?grade=5th", nil)
+	req := httptest.NewRequest("GET", "/api/v1/students?grade=5", nil)
 	resp, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
@@ -219,7 +223,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 	err = json.NewDecoder(resp.Body).Decode(&students)
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
-	assert.Equal(t, "5th", *students[0].Grade)
+	assert.Equal(t, 5, *students[0].Grade)
 
 	mockStudentRepo.AssertExpectations(t)
 }
@@ -235,13 +239,13 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 			LastName:    "Smith",
 			DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 			TherapistID: therapistID,
-			Grade:       ptrString("4th"),
+			Grade:       ptrInt(4),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, "", therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -286,7 +290,7 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, "", uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -319,14 +323,14 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 			ID:          uuid.New(),
 			FirstName:   "John",
 			LastName:    "Doe",
-			Grade:       ptrString("5th"),
+			Grade:       ptrInt(5),
 			TherapistID: therapistID,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, "5th", therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -336,7 +340,7 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 		TestMode: true,
 	}, repo)
 
-	req := httptest.NewRequest("GET", "/api/v1/students?grade=5th&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5", nil)
+	req := httptest.NewRequest("GET", "/api/v1/students?grade=5&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5", nil)
 	resp, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
@@ -346,7 +350,7 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 	err = json.NewDecoder(resp.Body).Decode(&students)
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
-	assert.Equal(t, "5th", *students[0].Grade)
+	assert.Equal(t, 5, *students[0].Grade)
 	assert.Equal(t, therapistID, students[0].TherapistID)
 
 	mockStudentRepo.AssertExpectations(t)
@@ -387,7 +391,7 @@ func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
 	}
 
 	// Empty string filters should be treated as no filter
-	mockStudentRepo.On("GetStudents", mock.Anything, "", uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -417,7 +421,7 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 		LastName:    "Johnson",
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
-		Grade:       ptrString("4th"),
+		Grade:       ptrInt(4),
 		IEP:         ptrString("Reading comprehension support"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -446,7 +450,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		ID:          uuid.New(),
 		FirstName:   "John",
 		LastName:    "Doe",
-		Grade:       ptrString("5th"),
+		Grade:       ptrInt(5),
 		TherapistID: uuid.New(),
 		DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
 		IEP:         ptrString("Active IEP with speech therapy goals"),
@@ -469,7 +473,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		"last_name": "Doe",
 		"dob": "2010-05-15",
 		"therapist_id": "%s",
-		"grade": "5th",
+		"grade": 5,
 		"iep": "Active IEP with speech therapy goals"
 	}`, testTherapistID.String())
 
@@ -495,7 +499,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		LastName:    "Johnson",
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
-		Grade:       ptrString("4th"),
+		Grade:       ptrInt(4),
 		IEP:         ptrString("Original IEP"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -506,7 +510,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		ID:          studentID,
 		FirstName:   "Emma",
 		LastName:    "Johnson",
-		Grade:       ptrString("5th"), // updated grade
+		Grade:       ptrInt(5), // updated grade
 		TherapistID: uuid.New(),
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		IEP:         ptrString("Updated IEP with math accommodations"),
@@ -523,7 +527,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 	}, repo)
 
 	body := `{
-		"grade": "5th",
+		"grade": 5,
 		"iep": "Updated IEP with math accommodations"
 	}`
 
@@ -1663,7 +1667,7 @@ func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 		{
 			ID:         uuid.New(),
 			ThemeID:    uuid.New(),
-			GradeLevel: ptrString("5th Grade"),
+			GradeLevel: ptrInt(5),
 			Type:       ptrString("worksheet"),
 			Title:      ptrString("Math Worksheet"),
 			Category:   ptrString("math"),
@@ -1672,7 +1676,7 @@ func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 		{
 			ID:         uuid.New(),
 			ThemeID:    uuid.New(),
-			GradeLevel: ptrString("5th Grade"),
+			GradeLevel: ptrInt(5),
 			Type:       ptrString("activity"),
 			Title:      ptrString("Reading Activity"),
 			Category:   ptrString("language"),
@@ -2194,4 +2198,44 @@ func TestHandler_Login(t *testing.T) {
 			mockRepo.AssertExpectations(t)
 		})
 	}
+}
+
+func TestEndpoint_PromoteStudents(t *testing.T) {
+	mockStudentRepo := new(mocks.MockStudentRepository)
+	studentID := uuid.New()
+	therapistID := uuid.New()
+
+	mockStudentRepo.On("PromoteStudents", mock.Anything, studentID).Return(models.Student{
+		ID:          studentID,
+		FirstName:   "Pupil",
+		LastName:    "Acolyte",
+		DOB:         ptrTime(time.Date(2004, 9, 24, 0, 0, 0, 0, time.UTC)),
+		TherapistID: therapistID,
+		Grade:       ptrInt(7),
+		IEP:         ptrString("Original IEP"),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	})
+
+	mockStudentRepo.On("PromoteStudents", mock.Anything, mock.AnythingOfType("models.PromoteStudentsInput")).Return(nil)
+
+	repo := &storage.Repository{
+		Student: mockStudentRepo,
+	}
+
+	app := service.SetupApp(config.Config{
+		TestMode: true,
+	}, repo)
+
+	body := fmt.Sprintf(`{
+		"therapist_id": "%v"
+	}`, therapistID)
+
+	req := httptest.NewRequest("PATCH", "/api/v1/students/promote", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := app.Test(req, -1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
 }

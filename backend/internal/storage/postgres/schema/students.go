@@ -16,7 +16,7 @@ type StudentRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *StudentRepository) GetStudents(ctx context.Context, grade string, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
+func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
 	queryString := `
 	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
 	FROM student WHERE 1=1`
@@ -24,10 +24,10 @@ func (r *StudentRepository) GetStudents(ctx context.Context, grade string, thera
 	args := []interface{}{}
 	argNum := 1
 
-	// Add filters if provided
-	if grade != "" {
+	// Add filters if provided (nil means no grade filter)
+	if grade != nil {
 		queryString += fmt.Sprintf(" AND grade = $%d", argNum)
-		args = append(args, grade)
+		args = append(args, *grade)
 		argNum++
 	}
 
@@ -244,4 +244,28 @@ func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uu
 	}
 
 	return studentSessions, nil
+}
+
+func (r *StudentRepository) PromoteStudents(ctx context.Context, input models.PromoteStudentsInput) error {
+	baseQuery := `UPDATE student
+				  SET grade = CASE
+					WHEN grade BETWEEN 0 AND 11 THEN (grade + 1)
+					WHEN grade = 12 THEN -1
+					ELSE grade
+				  END
+				  WHERE therapist_id = $1
+						AND grade != -1`
+
+	args := []interface{}{input.TherapistID}
+	if len(input.ExcludedStudentIDs) > 0 {
+		baseQuery += ` AND id != ALL($2)`
+		args = append(args, input.ExcludedStudentIDs)
+	}
+
+	_, err := r.db.Exec(ctx, baseQuery, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

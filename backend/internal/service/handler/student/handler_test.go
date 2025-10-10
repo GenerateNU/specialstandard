@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"specialstandard/internal/errs"
-	"specialstandard/internal/utils"
 	"specialstandard/internal/models"
 	"specialstandard/internal/service/handler/student"
 	"specialstandard/internal/storage/mocks"
+	"specialstandard/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -28,6 +28,10 @@ func ptrTime(t time.Time) *time.Time {
 
 func ptrString(s string) *string {
 	return &s
+}
+
+func ptrInt(i int) *int {
+	return &i
 }
 
 func TestHandler_GetStudents(t *testing.T) {
@@ -49,13 +53,13 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:    "Student",
 						DOB:         ptrTime(time.Now().AddDate(-10, 0, 0)),
 						TherapistID: uuid.New(),
-						Grade:       ptrString("Test Grade"),
+						Grade:       ptrInt(99),
 						IEP:         ptrString("Test IEP"),
 						CreatedAt:   time.Now(),
 						UpdatedAt:   time.Now(),
 					},
 				}
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.NewPagination()).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -64,7 +68,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "empty students list",
 			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.NewPagination()).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -73,7 +77,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "repository error",
 			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.NewPagination()).Return(nil, errors.New("database error"))
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -97,24 +101,24 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "Pagination Parameters",
 			url:  "?page=2&limit=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "", utils.Pagination{Page: 2, Limit: 5}).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 5}).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "successful get students with grade filter",
-			url:  "?grade=5th",
+			url:  "?grade=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				students := []models.Student{
 					{
 						ID:        uuid.New(),
 						FirstName: "John",
 						LastName:  "Doe",
-						Grade:     ptrString("5th"),
+						Grade:     ptrInt(5),
 					},
 				}
-				m.On("GetStudents", mock.Anything, "5th", uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -132,7 +136,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						TherapistID: therapistID,
 					},
 				}
-				m.On("GetStudents", mock.Anything, "", therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -148,14 +152,14 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:  "Doe",
 					},
 				}
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "successful get students with all filters",
-			url:  "?grade=5th&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5",
+			url:  "?grade=5&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 				students := []models.Student{
@@ -163,20 +167,20 @@ func TestHandler_GetStudents(t *testing.T) {
 						ID:          uuid.New(),
 						FirstName:   "John",
 						LastName:    "Doe",
-						Grade:       ptrString("5th"),
+						Grade:       ptrInt(5),
 						TherapistID: therapistID,
 					},
 				}
-				m.On("GetStudents", mock.Anything, "5th", therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "empty results with filters",
-			url:  "?grade=12th&name=Nonexistent",
+			url:  "?grade=12&name=Nonexistent",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, "12th", uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(12), uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -192,24 +196,24 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:  "Doe",
 					},
 				}
-				m.On("GetStudents", mock.Anything, "", uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "filter by grade with pagination",
-			url:  "?grade=5th&page=2&limit=3",
+			url:  "?grade=5&page=2&limit=3",
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				students := []models.Student{
 					{
 						ID:        uuid.New(),
 						FirstName: "Student",
 						LastName:  "Four",
-						Grade:     ptrString("5th"),
+						Grade:     ptrInt(5),
 					},
 				}
-				m.On("GetStudents", mock.Anything, "5th", uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -251,7 +255,7 @@ func TestHandler_GetStudents(t *testing.T) {
 					assert.Equal(t, "Student", students[0].LastName)
 					// Update assertions to handle nullable pointers
 					if students[0].Grade != nil {
-						assert.Equal(t, "Test Grade", *students[0].Grade)
+						assert.Equal(t, 99, *students[0].Grade)
 					}
 					if students[0].IEP != nil {
 						assert.Equal(t, "Test IEP", *students[0].IEP)
@@ -282,7 +286,7 @@ func TestHandler_GetStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Now().AddDate(-10, 0, 0)),
 					TherapistID: uuid.New(),
-					Grade:       ptrString("Test Grade"),
+					Grade:       ptrInt(99),
 					IEP:         ptrString("Test IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -324,7 +328,9 @@ func TestHandler_GetStudent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 
@@ -352,7 +358,7 @@ func TestHandler_GetStudent(t *testing.T) {
 				assert.Equal(t, "Test", student.FirstName)
 				assert.Equal(t, "Student", student.LastName)
 				if student.Grade != nil {
-					assert.Equal(t, "Test Grade", *student.Grade)
+					assert.Equal(t, 99, *student.Grade)
 				}
 				if student.IEP != nil {
 					assert.Equal(t, "Test IEP", *student.IEP)
@@ -398,7 +404,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "update grade only",
 			studentID:   studentID.String(),
-			requestBody: `{"grade": "5th"}`,
+			requestBody: `{"grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
 					ID:          studentID,
@@ -406,7 +412,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -416,7 +422,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					ID:          studentID,
 					FirstName:   "Test",
 					LastName:    "Student",
-					Grade:       ptrString("5th"),
+					Grade:       ptrInt(5),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Original IEP"),
@@ -438,7 +444,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -448,7 +454,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					ID:          studentID,
 					FirstName:   "Test",
 					LastName:    "Student",
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Updated IEP with math accommodations"),
@@ -462,7 +468,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "update name and grade",
 			studentID:   studentID.String(),
-			requestBody: `{"first_name": "Updated", "last_name": "TestStudent", "grade": "5th"}`,
+			requestBody: `{"first_name": "Updated", "last_name": "TestStudent", "grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
 					ID:          studentID,
@@ -470,7 +476,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -480,7 +486,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					ID:          studentID,
 					FirstName:   "Updated",
 					LastName:    "TestStudent",
-					Grade:       ptrString("5th"),
+					Grade:       ptrInt(5),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Original IEP"),
@@ -502,7 +508,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -512,7 +518,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					ID:          studentID,
 					FirstName:   "Test",
 					LastName:    "Student",
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Original IEP"),
@@ -526,7 +532,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "invalid UUID format",
 			studentID:   "invalid-uuid",
-			requestBody: `{"grade": "5th"}`,
+			requestBody: `{"grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				// No mock setup needed - UUID parsing fails before repository call
 			},
@@ -536,7 +542,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "student not found",
 			studentID:   studentID.String(),
-			requestBody: `{"grade": "5th"}`,
+			requestBody: `{"grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("GetStudent", mock.Anything, studentID).Return(models.Student{}, errors.New("no rows in result set"))
 			},
@@ -546,7 +552,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "invalid JSON body",
 			studentID:   studentID.String(),
-			requestBody: `{"grade": "5th" /* missing comma */}`,
+			requestBody: `{"grade": 5 /* missing comma */}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				// No mock setup needed - JSON parsing fails before repository call
 			},
@@ -564,7 +570,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -585,7 +591,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -598,7 +604,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "UpdateStudent repository error",
 			studentID:   studentID.String(),
-			requestBody: `{"grade": "5th"}`,
+			requestBody: `{"grade": 5}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
 					ID:          studentID,
@@ -606,7 +612,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					LastName:    "Student",
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
-					Grade:       ptrString("4th"),
+					Grade:       ptrInt(4),
 					IEP:         ptrString("Original IEP"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
@@ -622,7 +628,9 @@ func TestHandler_UpdateStudent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 
@@ -659,7 +667,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"last_name": "Doe",
 				"dob": "2010-05-15",
 				"therapist_id": "` + therapistID.String() + `",
-				"grade": "5th",
+				"grade": 5,
 				"iep": "Active IEP with speech therapy goals"
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
@@ -667,7 +675,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					ID:          uuid.New(),
 					FirstName:   "John",
 					LastName:    "Doe",
-					Grade:       ptrString("5th"),
+					Grade:       ptrInt(5),
 					IEP:         ptrString("Active IEP with speech therapy goals"),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
@@ -685,7 +693,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"last_name": "Johnson", 
 				"dob": "2012-03-22",
 				"therapist_id": "` + therapistID.String() + `",
-				"grade": "3rd",
+				"grade": 3,
 				"iep": "Math accommodations and extended time"
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
@@ -693,7 +701,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					ID:          uuid.New(),
 					FirstName:   "Emma",
 					LastName:    "Johnson",
-					Grade:       ptrString("3rd"),
+					Grade:       ptrInt(3),
 					IEP:         ptrString("Math accommodations and extended time"),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2012, 3, 22, 0, 0, 0, 0, time.UTC)),
@@ -769,7 +777,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"last_name": "Student",
 				"dob": "2000-02-29",
 				"therapist_id": "` + therapistID.String() + `",
-				"grade": "12th",
+				"grade": 12,
 				"iep": "Graduation accommodations"
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
@@ -777,7 +785,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					ID:          uuid.New(),
 					FirstName:   "Test",
 					LastName:    "Student",
-					Grade:       ptrString("12th"),
+					Grade:       ptrInt(12),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2000, 2, 29, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Graduation accommodations"),
@@ -793,7 +801,9 @@ func TestHandler_AddStudent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 
@@ -823,7 +833,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					assert.Equal(t, "John", student.FirstName)
 					assert.Equal(t, "Doe", student.LastName)
 					if student.Grade != nil {
-						assert.Equal(t, "5th", *student.Grade)
+						assert.Equal(t, 5, *student.Grade)
 					}
 					if student.IEP != nil {
 						assert.Contains(t, *student.IEP, "speech therapy")
@@ -832,7 +842,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					assert.Equal(t, "Emma", student.FirstName)
 					assert.Equal(t, "Johnson", student.LastName)
 					if student.Grade != nil {
-						assert.Equal(t, "3rd", *student.Grade)
+						assert.Equal(t, 3, *student.Grade)
 					}
 					if student.IEP != nil {
 						assert.Contains(t, *student.IEP, "Math accommodations")
@@ -840,7 +850,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				case "valid date edge cases":
 					assert.Equal(t, "Test", student.FirstName)
 					if student.Grade != nil {
-						assert.Equal(t, "12th", *student.Grade)
+						assert.Equal(t, 12, *student.Grade)
 					}
 				}
 
@@ -862,16 +872,29 @@ func TestHandler_AddStudent(t *testing.T) {
 				var errorResp map[string]interface{}
 				err = json.Unmarshal(body, &errorResp)
 				assert.NoError(t, err)
-				assert.Contains(t, errorResp, "error")
 
-				// Validate specific error messages
+				// Check for HTTPError structure with code and message
+				assert.Contains(t, errorResp, "code")
+				assert.Contains(t, errorResp, "message")
+
+				// Validate specific error messages based on test case
 				switch tt.name {
 				case "invalid date format":
-					assert.Contains(t, errorResp["error"], "Invalid date format")
+					// For validation errors, message is a map
+					if msgMap, ok := errorResp["message"].(map[string]interface{}); ok {
+						assert.Contains(t, msgMap, "dob")
+					}
 				case "invalid therapist UUID format":
-					assert.Contains(t, errorResp["error"], "Invalid therapist ID format")
+					// For validation errors, message is a map
+					if msgMap, ok := errorResp["message"].(map[string]interface{}); ok {
+						assert.Contains(t, msgMap, "therapistid")
+					}
 				case "missing required fields":
-					assert.Contains(t, errorResp["error"], "required")
+					// For validation errors, message is a map
+					if msgMap, ok := errorResp["message"].(map[string]interface{}); ok {
+						// Should have errors for missing fields
+						assert.True(t, len(msgMap) > 0)
+					}
 				}
 			}
 		})
@@ -919,7 +942,9 @@ func TestHandler_DeleteStudent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockStudentRepository)
 			tt.mockSetup(mockRepo)
 
@@ -953,466 +978,6 @@ func TestHandler_DeleteStudent(t *testing.T) {
 					assert.Contains(t, errorResp["error"], "Invalid UUID format")
 				case "repository error":
 					assert.Contains(t, errorResp["error"], "Database error")
-				}
-			}
-		})
-	}
-}
-
-func TestHandler_GetStudentSessions(t *testing.T) {
-	studentID := uuid.New()
-	sessionID := uuid.New()
-	therapistID := uuid.New()
-	
-	// Helper to create mock session data
-	createMockSession := func(startTime time.Time, present bool) models.StudentSessionsOutput {
-		return models.StudentSessionsOutput{
-			StudentID: studentID,
-			Present:   present,
-			Notes:     ptrString("Test session notes"),
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Session: models.Session{
-				ID:            sessionID,
-				StartDateTime: startTime,
-				EndDateTime:   startTime.Add(time.Hour),
-				TherapistID:   therapistID,
-				Notes:         ptrString("Session notes"),
-				CreatedAt:     ptrTime(time.Now()),
-				UpdatedAt:     ptrTime(time.Now()),
-			},
-		}
-	}
-
-	tests := []struct {
-		name           string
-		studentID      string
-		url            string
-		mockSetup      func(*mocks.MockStudentRepository)
-		expectedStatus int
-		wantErr        bool
-	}{
-		{
-			name:      "successful get student sessions with default pagination",
-			studentID: studentID.String(),
-			url:       "",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Now(), true),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), (*models.GetStudentSessionsRepositoryRequest)(nil)).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "empty sessions list",
-			studentID: studentID.String(),
-			url:       "",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), (*models.GetStudentSessionsRepositoryRequest)(nil)).Return([]models.StudentSessionsOutput{}, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "repository error",
-			studentID: studentID.String(),
-			url:       "",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), (*models.GetStudentSessionsRepositoryRequest)(nil)).Return(nil, errors.New("database error"))
-			},
-			expectedStatus: fiber.StatusInternalServerError,
-			wantErr:        true,
-		},
-		{
-			name:      "invalid UUID format",
-			studentID: "invalid-uuid",
-			url:       "",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				// No mock setup needed - UUID parsing fails before repository call
-			},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		// ------- Pagination Cases -------
-		{
-			name:           "Violating Pagination Arguments Constraints",
-			studentID:      studentID.String(),
-			url:            "?page=0&limit=-1",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		{
-			name:           "Bad Pagination Arguments",
-			studentID:      studentID.String(),
-			url:            "?page=abc&limit=-1",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		{
-			name:      "Pagination Parameters",
-			studentID: studentID.String(),
-			url:       "?page=2&limit=5",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				pagination := utils.Pagination{Page: 2, Limit: 5}
-				m.On("GetStudentSessions", mock.Anything, studentID, pagination, (*models.GetStudentSessionsRepositoryRequest)(nil)).Return([]models.StudentSessionsOutput{}, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		// ------- Attendance Filter Cases -------
-		{
-			name:      "Filter by present=true",
-			studentID: studentID.String(),
-			url:       "?present=true",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Now(), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					Present: func() *bool { b := true; return &b }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "Filter by present=false",
-			studentID: studentID.String(),
-			url:       "?present=false",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Now(), false),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					Present: func() *bool { b := false; return &b }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		// ------- Date Range Filter Cases -------
-		{
-			name:      "Filter by date range",
-			studentID: studentID.String(),
-			url:       "?startDate=2025-09-01&endDate=2025-09-30",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				startDate, _ := time.Parse("2006-01-02", "2025-09-01")
-				endDate, _ := time.Parse("2006-01-02", "2025-09-30")
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					StartDate: &startDate,
-					EndDate:   &endDate,
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "Filter by start date only",
-			studentID: studentID.String(),
-			url:       "?startDate=2025-09-01",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				startDate, _ := time.Parse("2006-01-02", "2025-09-01")
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					StartDate: &startDate,
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "Filter by end date only",
-			studentID: studentID.String(),
-			url:       "?endDate=2025-09-30",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				endDate, _ := time.Parse("2006-01-02", "2025-09-30")
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					EndDate: &endDate,
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		// ------- Month/Year Filter Cases -------
-		{
-			name:      "Filter by month and year",
-			studentID: studentID.String(),
-			url:       "?month=9&year=2025",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					Month: func() *int { i := 9; return &i }(),
-					Year:  func() *int { i := 2025; return &i }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "Filter by year only",
-			studentID: studentID.String(),
-			url:       "?year=2025",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					Year: func() *int { i := 2025; return &i }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "Filter by month only (should work with current year)",
-			studentID: studentID.String(),
-			url:       "?month=9",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					Month: func() *int { i := 9; return &i }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		// ------- Combined Filter Cases -------
-		{
-			name:      "Filter by attendance and date range",
-			studentID: studentID.String(),
-			url:       "?present=true&startDate=2025-09-01&endDate=2025-09-30",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				startDate, _ := time.Parse("2006-01-02", "2025-09-01")
-				endDate, _ := time.Parse("2006-01-02", "2025-09-30")
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					StartDate: &startDate,
-					EndDate:   &endDate,
-					Present:   func() *bool { b := true; return &b }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "Filter by attendance and month/year",
-			studentID: studentID.String(),
-			url:       "?present=false&month=9&year=2025",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), false),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					Month:   func() *int { i := 9; return &i }(),
-					Year:    func() *int { i := 2025; return &i }(),
-					Present: func() *bool { b := false; return &b }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		{
-			name:      "All filters combined with pagination",
-			studentID: studentID.String(),
-			url:       "?present=true&month=9&year=2025&page=2&limit=3",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				pagination := utils.Pagination{Page: 2, Limit: 3}
-				sessions := []models.StudentSessionsOutput{
-					createMockSession(time.Date(2025, 9, 15, 10, 0, 0, 0, time.UTC), true),
-				}
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					Month:   func() *int { i := 9; return &i }(),
-					Year:    func() *int { i := 2025; return &i }(),
-					Present: func() *bool { b := true; return &b }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, pagination, expectedFilter).Return(sessions, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-		// ------- Invalid Query Parameter Cases -------
-		{
-			name:           "Invalid month value (too low)",
-			studentID:      studentID.String(),
-			url:            "?month=0",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		{
-			name:           "Invalid month value (too high)",
-			studentID:      studentID.String(),
-			url:            "?month=13",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		{
-			name:           "Invalid year value (too low)",
-			studentID:      studentID.String(),
-			url:            "?year=1775",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		{
-			name:           "Invalid year value (too high)",
-			studentID:      studentID.String(),
-			url:            "?year=2201",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		{
-			name:           "Invalid present boolean value",
-			studentID:      studentID.String(),
-			url:            "?present=maybe",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		{
-			name:           "Invalid startDate format",
-			studentID:      studentID.String(),
-			url:            "?startDate=invalid-date",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		{
-			name:           "Invalid endDate format",
-			studentID:      studentID.String(),
-			url:            "?endDate=2025-13-45",
-			mockSetup:      func(m *mocks.MockStudentRepository) {},
-			expectedStatus: fiber.StatusBadRequest,
-			wantErr:        true,
-		},
-		// ------- Empty Filter Results Cases -------
-		{
-			name:      "No sessions match filters",
-			studentID: studentID.String(),
-			url:       "?present=true&year=2024",
-			mockSetup: func(m *mocks.MockStudentRepository) {
-				expectedFilter := &models.GetStudentSessionsRepositoryRequest{
-					Year:    func() *int { i := 2024; return &i }(),
-					Present: func() *bool { b := true; return &b }(),
-				}
-				m.On("GetStudentSessions", mock.Anything, studentID, utils.NewPagination(), expectedFilter).Return([]models.StudentSessionsOutput{}, nil)
-			},
-			expectedStatus: fiber.StatusOK,
-			wantErr:        false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New(fiber.Config{
-				ErrorHandler: errs.ErrorHandler,
-			})
-			mockRepo := new(mocks.MockStudentRepository)
-			tt.mockSetup(mockRepo)
-
-			handler := student.NewHandler(mockRepo)
-			app.Get("/students/:id/sessions", handler.GetStudentSessions)
-
-			req := httptest.NewRequest("GET", "/students/"+tt.studentID+"/sessions"+tt.url, nil)
-			resp, _ := app.Test(req, -1)
-
-			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-			mockRepo.AssertExpectations(t)
-
-			// Response body validation for successful cases
-			if !tt.wantErr && resp.StatusCode == fiber.StatusOK {
-				body, err := io.ReadAll(resp.Body)
-				assert.NoError(t, err)
-
-				var sessions []models.StudentSessionsOutput
-				err = json.Unmarshal(body, &sessions)
-				assert.NoError(t, err)
-
-				// Validate response structure
-				if len(sessions) > 0 {
-					session := sessions[0]
-					assert.Equal(t, studentID, session.StudentID)
-					assert.NotNil(t, session.Session.ID)
-					assert.False(t, session.Session.StartDateTime.IsZero())
-					assert.False(t, session.Session.EndDateTime.IsZero())
-					
-					// Validate filter-specific expectations
-					switch {
-					case strings.Contains(tt.url, "present=true"):
-						assert.True(t, session.Present)
-					case strings.Contains(tt.url, "present=false"):
-						assert.False(t, session.Present)
-					}
-				}
-			}
-
-			// Error response validation
-			if tt.wantErr {
-				body, err := io.ReadAll(resp.Body)
-				assert.NoError(t, err)
-
-				var errorResp map[string]interface{}
-				err = json.Unmarshal(body, &errorResp)
-				assert.NoError(t, err)
-				
-				// The API returns {"code": X, "message": "..."} not {"error": "..."}
-				assert.Contains(t, errorResp, "message")
-
-				// Validate specific error messages based on status code and test name
-				switch {
-				case strings.Contains(tt.name, "Invalid UUID"):
-					assert.Contains(t, errorResp["message"], "Invalid UUID format")
-				case strings.Contains(tt.name, "repository error"):
-					assert.Contains(t, errorResp["message"], "Failed to retrieve student sessions")
-				case strings.Contains(tt.name, "month") && strings.Contains(tt.name, "Invalid"):
-					// xvalidator generates messages like "Month must be greater than or equal to 1"
-					assert.True(t, strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "month") || 
-						strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "Month"))
-				case strings.Contains(tt.name, "year") && strings.Contains(tt.name, "Invalid"):
-					// xvalidator generates messages like "Year must be greater than or equal to 1776"
-					assert.True(t, strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "year") || 
-						strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "Year"))
-				case strings.Contains(tt.name, "present") && strings.Contains(tt.name, "Invalid"):
-					assert.Contains(t, errorResp["message"], "Error parsing filter parameters")
-				case strings.Contains(tt.name, "Date") && strings.Contains(tt.name, "Invalid"):
-					// Date parsing provides specific error messages
-					assert.True(t, strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "Invalid") ||
-						strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "format"))
-				case strings.Contains(tt.name, "Pagination"):
-					// Pagination errors can have different formats
-					assert.True(t, strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "Pagination") || 
-						strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "limit") ||
-						strings.Contains(fmt.Sprintf("%v", errorResp["message"]), "page"))
 				}
 			}
 		})

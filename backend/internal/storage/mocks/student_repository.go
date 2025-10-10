@@ -13,7 +13,7 @@ type MockStudentRepository struct {
 	mock.Mock
 }
 
-func (m *MockStudentRepository) GetStudents(ctx context.Context, grade string, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
+func (m *MockStudentRepository) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
 	args := m.Called(ctx, grade, therapistID, name, pagination)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -49,5 +49,10 @@ func (m *MockStudentRepository) GetStudentSessions(ctx context.Context, studentI
 
 func (m *MockStudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockStudentRepository) PromoteStudents(ctx context.Context, input models.PromoteStudentsInput) error {
+	args := m.Called(ctx, input)
 	return args.Error(0)
 }
