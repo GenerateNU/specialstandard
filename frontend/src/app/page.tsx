@@ -44,9 +44,7 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-primary mb-2">
               More Features
             </h2>
-            <p className="text-secondary text-sm">
-              Coming soon...
-            </p>
+            <p className="text-secondary text-sm">Coming soon...</p>
           </div>
         </div>
       </main>

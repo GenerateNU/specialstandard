@@ -101,6 +101,9 @@ body {
 .text-accent {
   color: var(--accent);
 }
+.text-error {
+  color: var(--error);
+}
 
 .border-default {
   border-color: var(--border);
