@@ -78,8 +78,7 @@ func (h *Handler) GetStudentSessions(c *fiber.Ctx) error {
 
 	// Only pass filter if there are actual filter parameters
 	var finalFilter *models.GetStudentSessionsRepositoryRequest
-	if repositoryFilter.StartDate != nil || repositoryFilter.EndDate != nil ||
-		repositoryFilter.Month != nil || repositoryFilter.Year != nil || repositoryFilter.Present != nil {
+	if !isFilterEmpty(repositoryFilter) {
 		finalFilter = repositoryFilter
 	}
 
@@ -91,4 +90,13 @@ func (h *Handler) GetStudentSessions(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(sessions)
+}
+
+// isFilterEmpty checks if all filter fields are nil/empty
+func isFilterEmpty(filter *models.GetStudentSessionsRepositoryRequest) bool {
+	return filter.StartDate == nil &&
+		filter.EndDate == nil &&
+		filter.Month == nil &&
+		filter.Year == nil &&
+		filter.Present == nil
 }

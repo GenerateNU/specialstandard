@@ -3,7 +3,6 @@ package student_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http/httptest"
 	"strings"
