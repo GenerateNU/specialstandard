@@ -39,8 +39,8 @@ func (m *MockStudentRepository) UpdateStudent(ctx context.Context, student model
 	return args.Get(0).(models.Student), args.Error(1)
 }
 
-func (m *MockStudentRepository) GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination) ([]models.StudentSessionsOutput, error) {
-	args := m.Called(ctx, studentID, pagination)
+func (m *MockStudentRepository) GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination, filter *models.GetStudentSessionsRepositoryRequest) ([]models.StudentSessionsOutput, error) {
+	args := m.Called(ctx, studentID, pagination, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
