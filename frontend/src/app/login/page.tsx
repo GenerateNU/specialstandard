@@ -1,42 +1,44 @@
-"use client";
+'use client'
 
-import { AlertCircle, Loader2, LogIn } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/authContext";
-import { Button } from "@/components/ui/button";
+import { AlertCircle, Loader2, LogIn } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/contexts/authContext'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
-  const router = useRouter();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const { login, isAuthenticated } = useAuth()
+  const router = useRouter()
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/students");
+      router.push('/students')
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
 
     try {
-      await login({ email, password, remember_me: rememberMe });
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid email or password");
-    } finally {
-      setIsLoading(false);
+      await login({ email, password, remember_me: rememberMe })
     }
-  };
+    catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid email or password')
+    }
+    finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -77,7 +79,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
                 className="w-full px-4 py-2 border border-default rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-colors bg-background text-primary disabled:opacity-50 disabled:cursor-not-allowed"
@@ -96,7 +98,7 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
                 className="w-full px-4 py-2 border border-default rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-colors bg-background text-primary disabled:opacity-50 disabled:cursor-not-allowed"
@@ -109,7 +111,7 @@ export default function LoginPage() {
                 id="remember-me"
                 type="checkbox"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={e => setRememberMe(e.target.checked)}
                 disabled={isLoading}
                 className="w-4 h-4 text-accent border-default rounded focus:ring-2 focus:ring-accent disabled:opacity-50 cursor-pointer"
               />
@@ -121,24 +123,27 @@ export default function LoginPage() {
               </label>
             </div>
 
-            <Button type="submit" disabled={isLoading} size={"long"}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Signing in...</span>
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-5 h-5" />
-                  <span>Sign In</span>
-                </>
-              )}
+            <Button type="submit" disabled={isLoading} size="long">
+              {isLoading
+                ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Signing in...</span>
+                    </>
+                  )
+                : (
+                    <>
+                      <LogIn className="w-5 h-5" />
+                      <span>Sign In</span>
+                    </>
+                  )}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-secondary">
-              Don't have an account?{" "}
+              Don't have an account?
+              {' '}
               <Link href="/signup">
                 <Button variant="link" size="sm">
                   Sign up
@@ -149,5 +154,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
