@@ -1,52 +1,55 @@
-"use client";
+'use client'
 
-import { Loader2, LogIn } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/authContext";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import CustomAlert from "@/components/ui/CustomAlert";
+import { Loader2, LogIn } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import CustomAlert from '@/components/ui/CustomAlert'
+import { Input } from '@/components/ui/input'
+import { useAuth } from '@/contexts/authContext'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
-  const router = useRouter();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const { login, isAuthenticated } = useAuth()
+  const router = useRouter()
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/students");
+      router.push('/students')
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
 
     try {
-      await login({ email, password, remember_me: rememberMe });
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid email or password");
-    } finally {
-      setIsLoading(false);
+      await login({ email, password, remember_me: rememberMe })
     }
-  };
+    catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid email or password')
+    }
+    finally {
+      setIsLoading(false)
+    }
+  }
 
-  const [showError, setShowError] = useState(false);
+  const [showError, setShowError] = useState(false)
 
   useEffect(() => {
     // show the alert whenever `error` becomes non-null
-    if (error) setShowError(true);
-  }, [error]);
+    if (error)
+      setShowError(true)
+  }, [error])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -71,8 +74,8 @@ export default function LoginPage() {
               title="Login Failed"
               description={error}
               onClose={() => {
-                setShowError(false);
-                setError(null);
+                setShowError(false)
+                setError(null)
               }}
             />
           )}
@@ -89,7 +92,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
                 placeholder="therapist@example.com"
@@ -107,7 +110,7 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
                 placeholder="••••••••"
@@ -130,23 +133,26 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" disabled={isLoading} size="long">
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Signing in...</span>
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-5 h-5" />
-                  <span>Sign In</span>
-                </>
-              )}
+              {isLoading
+                ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Signing in...</span>
+                    </>
+                  )
+                : (
+                    <>
+                      <LogIn className="w-5 h-5" />
+                      <span>Sign In</span>
+                    </>
+                  )}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-secondary">
-              Don't have an account?{" "}
+              Don't have an account?
+              {' '}
               <Link href="/signup">
                 <Button variant="link" size="sm">
                   Sign up
@@ -157,5 +163,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
