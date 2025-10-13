@@ -8,7 +8,8 @@ import apiClient from './apiClient'
 
 export async function fetchStudents(): Promise<Student[]> {
   try {
-    const response = await apiClient.get<Student[]>('/api/v1/students')
+    // Use a high limit to get all students for now
+    const response = await apiClient.get<Student[]>('/api/v1/students?limit=100')
     return response.data
   }
   catch (error) {

@@ -4,6 +4,8 @@ import type { Student } from '@/types/student'
 import { Calendar, ChevronDown, ChevronUp, FileText, GraduationCap, User } from 'lucide-react'
 import { useState } from 'react'
 
+import { gradeToDisplay } from '@/lib/gradeUtils'
+
 interface StudentCardProps {
   student: Student
 }
@@ -56,13 +58,13 @@ export default function StudentCard({ student }: StudentCardProps) {
               {getFullName()}
             </h3>
             <div className="flex items-center space-x-2 text-sm text-secondary">
-              {student.grade && (
+              {student.grade !== null && student.grade !== undefined && (
                 <>
                   <GraduationCap className="w-4 h-4" />
                   <span>
                     Grade
                     {' '}
-                    {student.grade}
+                    {gradeToDisplay(student.grade)}
                   </span>
                 </>
               )}
@@ -124,7 +126,7 @@ export default function StudentCard({ student }: StudentCardProps) {
                 <div>
                   <p className="text-sm font-medium text-primary">Grade Level</p>
                   <p className="text-sm text-secondary">
-                    {student.grade || 'Not specified'}
+                    {gradeToDisplay(student.grade)}
                   </p>
                 </div>
               </div>
