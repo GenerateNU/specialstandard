@@ -4,584 +4,92 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-import { useMutation, useQuery } from "@tanstack/react-query";
-import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
-  MutationFunction,
-  QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseMutationOptions,
-  UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
-} from "@tanstack/react-query";
-
-import axios from "axios";
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-
 import type {
   CreateTherapistInput,
   DeleteTherapistsId200,
-  Error,
   GetTherapistsParams,
   Therapist,
   UpdateTherapistInput,
-} from "./api.schemas";
+} from "./theSpecialStandardAPI.schemas";
 
-/**
- * Retrieve all therapists from the database
- * @summary Get all therapists
- */
-export const getTherapists = (
-  params?: GetTherapistsParams,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<Therapist[]>> => {
-  return axios.get(`/therapists`, {
-    ...options,
-    params: { ...params, ...options?.params },
-  });
-};
+import { customAxios } from "./apiClient";
 
-export const getGetTherapistsQueryKey = (params?: GetTherapistsParams) => {
-  return [`/therapists`, ...(params ? [params] : [])] as const;
-};
-
-export const getGetTherapistsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTherapists>>,
-  TError = AxiosError<Error | Error>,
->(
-  params?: GetTherapistsParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTherapists>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetTherapistsQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTherapists>>> = ({
-    signal,
-  }) => getTherapists(params, { signal, ...axiosOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getTherapists>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetTherapistsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getTherapists>>
->;
-export type GetTherapistsQueryError = AxiosError<Error | Error>;
-
-export function useGetTherapists<
-  TData = Awaited<ReturnType<typeof getTherapists>>,
-  TError = AxiosError<Error | Error>,
->(
-  params: undefined | GetTherapistsParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTherapists>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTherapists>>,
-          TError,
-          Awaited<ReturnType<typeof getTherapists>>
-        >,
-        "initialData"
-      >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetTherapists<
-  TData = Awaited<ReturnType<typeof getTherapists>>,
-  TError = AxiosError<Error | Error>,
->(
-  params?: GetTherapistsParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTherapists>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTherapists>>,
-          TError,
-          Awaited<ReturnType<typeof getTherapists>>
-        >,
-        "initialData"
-      >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetTherapists<
-  TData = Awaited<ReturnType<typeof getTherapists>>,
-  TError = AxiosError<Error | Error>,
->(
-  params?: GetTherapistsParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTherapists>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-/**
- * @summary Get all therapists
- */
-
-export function useGetTherapists<
-  TData = Awaited<ReturnType<typeof getTherapists>>,
-  TError = AxiosError<Error | Error>,
->(
-  params?: GetTherapistsParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTherapists>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getGetTherapistsQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-/**
- * Create a new therapist for school districts
- * @summary Create a new therapist
- */
-export const postTherapists = (
-  createTherapistInput: CreateTherapistInput,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<Therapist>> => {
-  return axios.post(`/therapists`, createTherapistInput, options);
-};
-
-export const getPostTherapistsMutationOptions = <
-  TError = AxiosError<Error | Error>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postTherapists>>,
-    TError,
-    { data: CreateTherapistInput },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof postTherapists>>,
-  TError,
-  { data: CreateTherapistInput },
-  TContext
-> => {
-  const mutationKey = ["postTherapists"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof postTherapists>>,
-    { data: CreateTherapistInput }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return postTherapists(data, axiosOptions);
+export const getTherapists = () => {
+  /**
+   * Retrieve all therapists from the database
+   * @summary Get all therapists
+   */
+  const getTherapists = (params?: GetTherapistsParams) => {
+    return customAxios<Therapist[]>({
+      url: `/therapists`,
+      method: "GET",
+      params,
+    });
   };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type PostTherapistsMutationResult = NonNullable<
-  Awaited<ReturnType<typeof postTherapists>>
->;
-export type PostTherapistsMutationBody = CreateTherapistInput;
-export type PostTherapistsMutationError = AxiosError<Error | Error>;
-
-/**
- * @summary Create a new therapist
- */
-export const usePostTherapists = <
-  TError = AxiosError<Error | Error>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof postTherapists>>,
-      TError,
-      { data: CreateTherapistInput },
-      TContext
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof postTherapists>>,
-  TError,
-  { data: CreateTherapistInput },
-  TContext
-> => {
-  const mutationOptions = getPostTherapistsMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-/**
- * Retrieve a specific therapist from the database
- * @summary Get therapist by ID
- */
-export const getTherapistsId = (
-  id: string,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<Therapist>> => {
-  return axios.get(`/therapists/${id}`, options);
-};
-
-export const getGetTherapistsIdQueryKey = (id?: string) => {
-  return [`/therapists/${id}`] as const;
-};
-
-export const getGetTherapistsIdQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTherapistsId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTherapistsId>>,
-        TError,
-        TData
-      >
-    >;
-    axios?: AxiosRequestConfig;
-  },
-) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetTherapistsIdQueryKey(id);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTherapistsId>>> = ({
-    signal,
-  }) => getTherapistsId(id, { signal, ...axiosOptions });
-
+  /**
+   * Create a new therapist for school districts
+   * @summary Create a new therapist
+   */
+  const postTherapists = (createTherapistInput: CreateTherapistInput) => {
+    return customAxios<Therapist>({
+      url: `/therapists`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: createTherapistInput,
+    });
+  };
+  /**
+   * Retrieve a specific therapist from the database
+   * @summary Get therapist by ID
+   */
+  const getTherapistsId = (id: string) => {
+    return customAxios<Therapist>({ url: `/therapists/${id}`, method: "GET" });
+  };
+  /**
+   * Update a specific field within a therapist object in the database
+   * @summary Update therapist
+   */
+  const patchTherapistsId = (
+    id: string,
+    updateTherapistInput: UpdateTherapistInput,
+  ) => {
+    return customAxios<Therapist>({
+      url: `/therapists/${id}`,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      data: updateTherapistInput,
+    });
+  };
+  /**
+   * Get the specific therapist corresponding to the given ID and delete it
+   * @summary Delete therapist
+   */
+  const deleteTherapistsId = (id: string) => {
+    return customAxios<DeleteTherapistsId200>({
+      url: `/therapists/${id}`,
+      method: "DELETE",
+    });
+  };
   return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof getTherapistsId>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetTherapistsIdQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getTherapistsId>>
->;
-export type GetTherapistsIdQueryError = AxiosError<Error | Error | Error>;
-
-export function useGetTherapistsId<
-  TData = Awaited<ReturnType<typeof getTherapistsId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options: {
-    query: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTherapistsId>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTherapistsId>>,
-          TError,
-          Awaited<ReturnType<typeof getTherapistsId>>
-        >,
-        "initialData"
-      >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetTherapistsId<
-  TData = Awaited<ReturnType<typeof getTherapistsId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTherapistsId>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTherapistsId>>,
-          TError,
-          Awaited<ReturnType<typeof getTherapistsId>>
-        >,
-        "initialData"
-      >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetTherapistsId<
-  TData = Awaited<ReturnType<typeof getTherapistsId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTherapistsId>>,
-        TError,
-        TData
-      >
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-/**
- * @summary Get therapist by ID
- */
-
-export function useGetTherapistsId<
-  TData = Awaited<ReturnType<typeof getTherapistsId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTherapistsId>>,
-        TError,
-        TData
-      >
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getGetTherapistsIdQueryOptions(id, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-/**
- * Update a specific field within a therapist object in the database
- * @summary Update therapist
- */
-export const patchTherapistsId = (
-  id: string,
-  updateTherapistInput: UpdateTherapistInput,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<Therapist>> => {
-  return axios.patch(`/therapists/${id}`, updateTherapistInput, options);
-};
-
-export const getPatchTherapistsIdMutationOptions = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof patchTherapistsId>>,
-    TError,
-    { id: string; data: UpdateTherapistInput },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof patchTherapistsId>>,
-  TError,
-  { id: string; data: UpdateTherapistInput },
-  TContext
-> => {
-  const mutationKey = ["patchTherapistsId"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof patchTherapistsId>>,
-    { id: string; data: UpdateTherapistInput }
-  > = (props) => {
-    const { id, data } = props ?? {};
-
-    return patchTherapistsId(id, data, axiosOptions);
+    getTherapists,
+    postTherapists,
+    getTherapistsId,
+    patchTherapistsId,
+    deleteTherapistsId,
   };
-
-  return { mutationFn, ...mutationOptions };
 };
-
-export type PatchTherapistsIdMutationResult = NonNullable<
-  Awaited<ReturnType<typeof patchTherapistsId>>
+export type GetTherapistsResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["getTherapists"]>>
 >;
-export type PatchTherapistsIdMutationBody = UpdateTherapistInput;
-export type PatchTherapistsIdMutationError = AxiosError<Error | Error | Error>;
-
-/**
- * @summary Update therapist
- */
-export const usePatchTherapistsId = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof patchTherapistsId>>,
-      TError,
-      { id: string; data: UpdateTherapistInput },
-      TContext
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof patchTherapistsId>>,
-  TError,
-  { id: string; data: UpdateTherapistInput },
-  TContext
-> => {
-  const mutationOptions = getPatchTherapistsIdMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-/**
- * Get the specific therapist corresponding to the given ID and delete it
- * @summary Delete therapist
- */
-export const deleteTherapistsId = (
-  id: string,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<DeleteTherapistsId200>> => {
-  return axios.delete(`/therapists/${id}`, options);
-};
-
-export const getDeleteTherapistsIdMutationOptions = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteTherapistsId>>,
-    TError,
-    { id: string },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteTherapistsId>>,
-  TError,
-  { id: string },
-  TContext
-> => {
-  const mutationKey = ["deleteTherapistsId"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteTherapistsId>>,
-    { id: string }
-  > = (props) => {
-    const { id } = props ?? {};
-
-    return deleteTherapistsId(id, axiosOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type DeleteTherapistsIdMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteTherapistsId>>
+export type PostTherapistsResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["postTherapists"]>>
 >;
-
-export type DeleteTherapistsIdMutationError = AxiosError<Error | Error | Error>;
-
-/**
- * @summary Delete therapist
- */
-export const useDeleteTherapistsId = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof deleteTherapistsId>>,
-      TError,
-      { id: string },
-      TContext
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof deleteTherapistsId>>,
-  TError,
-  { id: string },
-  TContext
-> => {
-  const mutationOptions = getDeleteTherapistsIdMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
+export type GetTherapistsIdResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["getTherapistsId"]>>
+>;
+export type PatchTherapistsIdResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["patchTherapistsId"]>>
+>;
+export type DeleteTherapistsIdResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["deleteTherapistsId"]>>
+>;

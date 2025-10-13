@@ -4,18 +4,11 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-export type ErrorMessageAnyOf = { [key: string]: unknown };
-
-/**
- * Error message or validation errors
- */
-export type ErrorMessage = string | ErrorMessageAnyOf;
-
 export interface Error {
   /** HTTP status code */
   code: number;
   /** Error message or validation errors */
-  message: ErrorMessage;
+  message: string;
 }
 
 export interface Therapist {
@@ -99,10 +92,12 @@ export interface Student {
   /** UUID of the assigned therapist */
   therapist_id: string;
   /**
-   * Student's current grade level
+   * Student's current grade level. -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
+   * @minimum -1
+   * @maximum 12
    * @nullable
    */
-  grade?: string | null;
+  grade?: number | null;
   /**
    * Individualized Education Program details
    * @nullable
@@ -127,10 +122,12 @@ export interface CreateStudentInput {
   /** ID of the assigned therapist */
   therapist_id: string;
   /**
-   * Student's current grade level (optional)
+   * Student's current grade level (optional). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
+   * @minimum -1
+   * @maximum 12
    * @nullable
    */
-  grade?: string | null;
+  grade?: number | null;
   /**
    * Individualized Education Program details (optional)
    * @nullable
@@ -154,10 +151,12 @@ export interface UpdateStudentInput {
   /** ID of the assigned therapist */
   therapist_id?: string;
   /**
-   * Student's current grade level (can be set to null)
+   * Student's current grade level (can be set to null). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
+   * @minimum -1
+   * @maximum 12
    * @nullable
    */
-  grade?: string | null;
+  grade?: number | null;
   /**
    * Updated IEP details (can be set to null)
    * @nullable
@@ -218,10 +217,12 @@ export interface CreateResourceBody {
   /** ID of the theme associated with the resource */
   theme_id: string;
   /**
-   * Grade level for the resource (optional)
+   * Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
+   * @minimum 0
+   * @maximum 12
    * @nullable
    */
-  grade_level?: string | null;
+  grade_level?: number | null;
   /**
    * Date associated with the resource (optional)
    * @nullable
@@ -255,10 +256,12 @@ export interface Resource {
   /** ID of the theme associated with the resource */
   theme_id: string;
   /**
-   * Grade level for the resource (optional)
+   * Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
+   * @minimum 0
+   * @maximum 12
    * @nullable
    */
-  grade_level?: string | null;
+  grade_level?: number | null;
   /**
    * Date associated with the resource (optional)
    * @nullable
@@ -295,10 +298,12 @@ export interface UpdateResourceBody {
    */
   theme_id?: string | null;
   /**
-   * Grade level for the resource (optional)
+   * Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
+   * @minimum 0
+   * @maximum 12
    * @nullable
    */
-  grade_level?: string | null;
+  grade_level?: number | null;
   /**
    * Date associated with the resource (optional)
    * @nullable
@@ -418,6 +423,13 @@ export interface ModifySessionResource {
   resource_id: string;
 }
 
+export interface PromoteStudentsInput {
+  /** ID of Therapist */
+  therapist_id: string;
+  /** List of Students this Therapist will not be promoting... */
+  excluded_student_ids?: string[];
+}
+
 export type PostAuthSignupBody = {
   /** Email ID of the User/Therapist */
   email: string;
@@ -466,40 +478,40 @@ export type PostAuthLogin200 = {
 };
 
 export type GetSessionsParams = {
-/**
- * Page Number of pagination
- * @minimum 1
- */
-page?: number;
-/**
- * Number of Items per page in pagination
- * @minimum 1
- */
-limit?: number;
-/**
- * Filter sessions starting on or after this datetime
- */
-startdate?: string;
-/**
- * Filter sessions starting on or before this datetime
- */
-enddate?: string;
-/**
- * Filter sessions by month (1-12)
- * @minimum 1
- * @maximum 12
- */
-month?: number;
-/**
- * Filter sessions by year
- * @minimum 1776
- * @maximum 2200
- */
-year?: number;
-/**
- * Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
- */
-id?: string[];
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
+  /**
+   * Filter sessions starting on or after this datetime
+   */
+  startdate?: string;
+  /**
+   * Filter sessions starting on or before this datetime
+   */
+  enddate?: string;
+  /**
+   * Filter sessions by month (1-12)
+   * @minimum 1
+   * @maximum 12
+   */
+  month?: number;
+  /**
+   * Filter sessions by year
+   * @minimum 1776
+   * @maximum 2200
+   */
+  year?: number;
+  /**
+   * Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
+   */
+  id?: string[];
 };
 
 export type PostSessionsBody = {
@@ -518,84 +530,90 @@ export type DeleteSessionsId200 = {
 };
 
 export type GetSessionsIdResourcesParams = {
-/**
- * Page Number of pagination
- * @minimum 1
- */
-page?: number;
-/**
- * Number of Items per page in pagination
- * @minimum 1
- */
-limit?: number;
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
 };
 
 export type GetSessionsSessionIdStudentsParams = {
-/**
- * Filter students by attendance status
- */
-present?: boolean;
-/**
- * Page Number of pagination
- * @minimum 1
- */
-page?: number;
-/**
- * Number of Items per page in pagination
- * @minimum 1
- */
-limit?: number;
+  /**
+   * Filter students by attendance status
+   */
+  present?: boolean;
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
 };
 
 export type GetStudentsParams = {
-/**
- * Page number for pagination (starts at 1)
- * @minimum 1
- */
-page?: number;
-/**
- * Number of students per page
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-/**
- * Filter students by grade level (exact match)
- */
-grade?: string;
-/**
- * Filter students by therapist UUID
- */
-therapist_id?: string;
-/**
- * Search students by name (case-insensitive, matches first or last name)
- */
-name?: string;
+  /**
+   * Page number for pagination (starts at 1)
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of students per page
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * Filter students by grade level (exact match). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
+   * @minimum -1
+   * @maximum 12
+   */
+  grade?: number;
+  /**
+   * Filter students by therapist UUID
+   */
+  therapist_id?: string;
+  /**
+   * Search students by name (case-insensitive, matches first or last name)
+   */
+  name?: string;
 };
 
 export type GetStudentsStudentIdSessionsParams = {
-/**
- * Filter sessions starting after this date
- */
-start_date?: string;
-/**
- * Filter sessions ending before this date
- */
-end_date?: string;
-/**
- * Filter sessions by student's attendance status
- */
-present?: boolean;
-/**
- * Page Number of pagination
- * @minimum 1
- */
-page?: number;
-/**
- * Number of Items per page in pagination
- * @minimum 1
- */
-limit?: number;
+  /**
+   * Filter sessions starting after this date
+   */
+  start_date?: string;
+  /**
+   * Filter sessions ending before this date
+   */
+  end_date?: string;
+  /**
+   * Filter sessions by student's attendance status
+   */
+  present?: boolean;
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
+};
+
+export type PatchStudentsPromote200 = {
+  message?: string;
 };
 
 export type DeleteSessionStudentsBody = {
@@ -606,16 +624,16 @@ export type DeleteSessionStudentsBody = {
 };
 
 export type GetTherapistsParams = {
-/**
- * Page Number of pagination
- * @minimum 1
- */
-page?: number;
-/**
- * Number of Items per page in pagination
- * @minimum 1
- */
-limit?: number;
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
 };
 
 export type DeleteTherapistsId200 = {
@@ -623,89 +641,90 @@ export type DeleteTherapistsId200 = {
 };
 
 export type GetResourcesParams = {
-/**
- * Filter resources by theme ID
- */
-theme_id?: string;
-/**
- * Filter resources by grade level
- */
-grade_level?: string;
-/**
- * Filter resources by date
- */
-date?: string;
-/**
- * Filter resources by type
- */
-type?: string;
-/**
- * Filter resources by title
- */
-title?: string;
-/**
- * Filter resources by category
- */
-category?: string;
-/**
- * Filter resources by content/URL
- */
-content?: string;
-/**
- * Filter resources by theme name
- */
-theme_name?: string;
-/**
- * Filter resources by theme month
- */
-theme_month?: number;
-/**
- * Filter resources by theme year
- */
-theme_year?: number;
-/**
- * Page Number of pagination
- * @minimum 1
- */
-page?: number;
-/**
- * Number of Items per page in pagination
- * @minimum 1
- */
-limit?: number;
+  /**
+   * Filter resources by theme ID
+   */
+  theme_id?: string;
+  /**
+   * Filter resources by grade level. 0 = kindergarten, 1-12 = grades 1-12
+   * @minimum 0
+   * @maximum 12
+   */
+  grade_level?: number;
+  /**
+   * Filter resources by date
+   */
+  date?: string;
+  /**
+   * Filter resources by type
+   */
+  type?: string;
+  /**
+   * Filter resources by title
+   */
+  title?: string;
+  /**
+   * Filter resources by category
+   */
+  category?: string;
+  /**
+   * Filter resources by content/URL
+   */
+  content?: string;
+  /**
+   * Filter resources by theme name
+   */
+  theme_name?: string;
+  /**
+   * Filter resources by theme month
+   */
+  theme_month?: number;
+  /**
+   * Filter resources by theme year
+   */
+  theme_year?: number;
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
 };
 
 export type GetThemesParams = {
-/**
- * Page Number of pagination
- * @minimum 1
- */
-page?: number;
-/**
- * Number of Items per page in pagination
- * @minimum 1
- */
-limit?: number;
-/**
- * Filter themes by month (1-12)
- * @minimum 1
- * @maximum 12
- */
-month?: number;
-/**
- * Filter themes by year
- * @minimum 1900
- * @maximum 2100
- */
-year?: number;
-/**
- * Search themes by name (case-insensitive, partial matching)
- * @maxLength 255
- */
-search?: string;
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
+  /**
+   * Filter themes by month (1-12)
+   * @minimum 1
+   * @maximum 12
+   */
+  month?: number;
+  /**
+   * Filter themes by year
+   * @minimum 1900
+   * @maximum 2100
+   */
+  year?: number;
+  /**
+   * Search themes by name (case-insensitive, partial matching)
+   * @maxLength 255
+   */
+  search?: string;
 };
 
 export type DeleteThemesId200 = {
   message?: string;
 };
-

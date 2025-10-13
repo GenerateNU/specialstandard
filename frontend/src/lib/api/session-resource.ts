@@ -4,191 +4,51 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-import { useMutation } from "@tanstack/react-query";
 import type {
-  MutationFunction,
-  QueryClient,
-  UseMutationOptions,
-  UseMutationResult,
-} from "@tanstack/react-query";
-
-import axios from "axios";
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-
-import type {
-  Error,
   ModifySessionResource,
   SessionResource,
-} from "./api.schemas";
+} from "./theSpecialStandardAPI.schemas";
 
-/**
- * Create a new association between each session and a utilized resource
- * @summary Create a session-resource link
- */
-export const postSessionResource = (
-  modifySessionResource: ModifySessionResource,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<SessionResource>> => {
-  return axios.post(`/session-resource`, modifySessionResource, options);
-};
+import { customAxios } from "./apiClient";
 
-export const getPostSessionResourceMutationOptions = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postSessionResource>>,
-    TError,
-    { data: ModifySessionResource },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof postSessionResource>>,
-  TError,
-  { data: ModifySessionResource },
-  TContext
-> => {
-  const mutationKey = ["postSessionResource"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof postSessionResource>>,
-    { data: ModifySessionResource }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return postSessionResource(data, axiosOptions);
+export const getSessionResource = () => {
+  /**
+   * Create a new association between each session and a utilized resource
+   * @summary Create a session-resource link
+   */
+  const postSessionResource = (
+    modifySessionResource: ModifySessionResource,
+  ) => {
+    return customAxios<SessionResource>({
+      url: `/session-resource`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: modifySessionResource,
+    });
   };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type PostSessionResourceMutationResult = NonNullable<
-  Awaited<ReturnType<typeof postSessionResource>>
->;
-export type PostSessionResourceMutationBody = ModifySessionResource;
-export type PostSessionResourceMutationError = AxiosError<
-  Error | Error | Error
->;
-
-/**
- * @summary Create a session-resource link
- */
-export const usePostSessionResource = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof postSessionResource>>,
-      TError,
-      { data: ModifySessionResource },
-      TContext
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof postSessionResource>>,
-  TError,
-  { data: ModifySessionResource },
-  TContext
-> => {
-  const mutationOptions = getPostSessionResourceMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-/**
- * Delete an existing association between a session and a resource
- * @summary Delete a session-resource link
- */
-export const deleteSessionResource = (
-  modifySessionResource: ModifySessionResource,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<void>> => {
-  return axios.delete(`/session-resource`, {
-    data: modifySessionResource,
-    ...options,
-  });
-};
-
-export const getDeleteSessionResourceMutationOptions = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteSessionResource>>,
-    TError,
-    { data: ModifySessionResource },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteSessionResource>>,
-  TError,
-  { data: ModifySessionResource },
-  TContext
-> => {
-  const mutationKey = ["deleteSessionResource"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteSessionResource>>,
-    { data: ModifySessionResource }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return deleteSessionResource(data, axiosOptions);
+  /**
+   * Delete an existing association between a session and a resource
+   * @summary Delete a session-resource link
+   */
+  const deleteSessionResource = (
+    modifySessionResource: ModifySessionResource,
+  ) => {
+    return customAxios<void>({
+      url: `/session-resource`,
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      data: modifySessionResource,
+    });
   };
-
-  return { mutationFn, ...mutationOptions };
+  return { postSessionResource, deleteSessionResource };
 };
-
-export type DeleteSessionResourceMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteSessionResource>>
+export type PostSessionResourceResult = NonNullable<
+  Awaited<
+    ReturnType<ReturnType<typeof getSessionResource>["postSessionResource"]>
+  >
 >;
-export type DeleteSessionResourceMutationBody = ModifySessionResource;
-export type DeleteSessionResourceMutationError = AxiosError<
-  Error | Error | Error
+export type DeleteSessionResourceResult = NonNullable<
+  Awaited<
+    ReturnType<ReturnType<typeof getSessionResource>["deleteSessionResource"]>
+  >
 >;
-
-/**
- * @summary Delete a session-resource link
- */
-export const useDeleteSessionResource = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof deleteSessionResource>>,
-      TError,
-      { data: ModifySessionResource },
-      TContext
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof deleteSessionResource>>,
-  TError,
-  { data: ModifySessionResource },
-  TContext
-> => {
-  const mutationOptions = getDeleteSessionResourceMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};

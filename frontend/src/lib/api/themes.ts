@@ -4,564 +4,79 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-import { useMutation, useQuery } from "@tanstack/react-query";
-import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
-  MutationFunction,
-  QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseMutationOptions,
-  UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
-} from "@tanstack/react-query";
-
-import axios from "axios";
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-
 import type {
   CreateThemeInput,
   DeleteThemesId200,
-  Error,
   GetThemesParams,
   Theme,
   UpdateThemeInput,
-} from "./api.schemas";
+} from "./theSpecialStandardAPI.schemas";
 
-/**
- * Retrieve all themes from the database with optional filtering by month, year, and name search
- * @summary Get all themes
- */
-export const getThemes = (
-  params?: GetThemesParams,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<Theme[]>> => {
-  return axios.get(`/themes`, {
-    ...options,
-    params: { ...params, ...options?.params },
-  });
-};
+import { customAxios } from "./apiClient";
 
-export const getGetThemesQueryKey = (params?: GetThemesParams) => {
-  return [`/themes`, ...(params ? [params] : [])] as const;
-};
-
-export const getGetThemesQueryOptions = <
-  TData = Awaited<ReturnType<typeof getThemes>>,
-  TError = AxiosError<Error | Error>,
->(
-  params?: GetThemesParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemes>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetThemesQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getThemes>>> = ({
-    signal,
-  }) => getThemes(params, { signal, ...axiosOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getThemes>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetThemesQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getThemes>>
->;
-export type GetThemesQueryError = AxiosError<Error | Error>;
-
-export function useGetThemes<
-  TData = Awaited<ReturnType<typeof getThemes>>,
-  TError = AxiosError<Error | Error>,
->(
-  params: undefined | GetThemesParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemes>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getThemes>>,
-          TError,
-          Awaited<ReturnType<typeof getThemes>>
-        >,
-        "initialData"
-      >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetThemes<
-  TData = Awaited<ReturnType<typeof getThemes>>,
-  TError = AxiosError<Error | Error>,
->(
-  params?: GetThemesParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemes>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getThemes>>,
-          TError,
-          Awaited<ReturnType<typeof getThemes>>
-        >,
-        "initialData"
-      >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetThemes<
-  TData = Awaited<ReturnType<typeof getThemes>>,
-  TError = AxiosError<Error | Error>,
->(
-  params?: GetThemesParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemes>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-/**
- * @summary Get all themes
- */
-
-export function useGetThemes<
-  TData = Awaited<ReturnType<typeof getThemes>>,
-  TError = AxiosError<Error | Error>,
->(
-  params?: GetThemesParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemes>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getGetThemesQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-/**
- * Create a new theme for therapy sessions
- * @summary Create a new theme
- */
-export const postThemes = (
-  createThemeInput: CreateThemeInput,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<Theme>> => {
-  return axios.post(`/themes`, createThemeInput, options);
-};
-
-export const getPostThemesMutationOptions = <
-  TError = AxiosError<Error | Error>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postThemes>>,
-    TError,
-    { data: CreateThemeInput },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof postThemes>>,
-  TError,
-  { data: CreateThemeInput },
-  TContext
-> => {
-  const mutationKey = ["postThemes"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof postThemes>>,
-    { data: CreateThemeInput }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return postThemes(data, axiosOptions);
+export const getThemes = () => {
+  /**
+   * Retrieve all themes from the database with optional filtering by month, year, and name search
+   * @summary Get all themes
+   */
+  const getThemes = (params?: GetThemesParams) => {
+    return customAxios<Theme[]>({ url: `/themes`, method: "GET", params });
   };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type PostThemesMutationResult = NonNullable<
-  Awaited<ReturnType<typeof postThemes>>
->;
-export type PostThemesMutationBody = CreateThemeInput;
-export type PostThemesMutationError = AxiosError<Error | Error>;
-
-/**
- * @summary Create a new theme
- */
-export const usePostThemes = <
-  TError = AxiosError<Error | Error>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof postThemes>>,
-      TError,
-      { data: CreateThemeInput },
-      TContext
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof postThemes>>,
-  TError,
-  { data: CreateThemeInput },
-  TContext
-> => {
-  const mutationOptions = getPostThemesMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-/**
- * Retrieve a specific theme by its UUID
- * @summary Get theme by ID
- */
-export const getThemesId = (
-  id: string,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<Theme>> => {
-  return axios.get(`/themes/${id}`, options);
-};
-
-export const getGetThemesIdQueryKey = (id?: string) => {
-  return [`/themes/${id}`] as const;
-};
-
-export const getGetThemesIdQueryOptions = <
-  TData = Awaited<ReturnType<typeof getThemesId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemesId>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetThemesIdQueryKey(id);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getThemesId>>> = ({
-    signal,
-  }) => getThemesId(id, { signal, ...axiosOptions });
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof getThemesId>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetThemesIdQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getThemesId>>
->;
-export type GetThemesIdQueryError = AxiosError<Error | Error | Error>;
-
-export function useGetThemesId<
-  TData = Awaited<ReturnType<typeof getThemesId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemesId>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getThemesId>>,
-          TError,
-          Awaited<ReturnType<typeof getThemesId>>
-        >,
-        "initialData"
-      >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetThemesId<
-  TData = Awaited<ReturnType<typeof getThemesId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemesId>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getThemesId>>,
-          TError,
-          Awaited<ReturnType<typeof getThemesId>>
-        >,
-        "initialData"
-      >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetThemesId<
-  TData = Awaited<ReturnType<typeof getThemesId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemesId>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-/**
- * @summary Get theme by ID
- */
-
-export function useGetThemesId<
-  TData = Awaited<ReturnType<typeof getThemesId>>,
-  TError = AxiosError<Error | Error | Error>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getThemesId>>, TError, TData>
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getGetThemesIdQueryOptions(id, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-/**
- * Update an existing theme (partial update)
- * @summary Update theme
- */
-export const patchThemesId = (
-  id: string,
-  updateThemeInput: UpdateThemeInput,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<Theme>> => {
-  return axios.patch(`/themes/${id}`, updateThemeInput, options);
-};
-
-export const getPatchThemesIdMutationOptions = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof patchThemesId>>,
-    TError,
-    { id: string; data: UpdateThemeInput },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof patchThemesId>>,
-  TError,
-  { id: string; data: UpdateThemeInput },
-  TContext
-> => {
-  const mutationKey = ["patchThemesId"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof patchThemesId>>,
-    { id: string; data: UpdateThemeInput }
-  > = (props) => {
-    const { id, data } = props ?? {};
-
-    return patchThemesId(id, data, axiosOptions);
+  /**
+   * Create a new theme for therapy sessions
+   * @summary Create a new theme
+   */
+  const postThemes = (createThemeInput: CreateThemeInput) => {
+    return customAxios<Theme>({
+      url: `/themes`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: createThemeInput,
+    });
   };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type PatchThemesIdMutationResult = NonNullable<
-  Awaited<ReturnType<typeof patchThemesId>>
->;
-export type PatchThemesIdMutationBody = UpdateThemeInput;
-export type PatchThemesIdMutationError = AxiosError<Error | Error | Error>;
-
-/**
- * @summary Update theme
- */
-export const usePatchThemesId = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof patchThemesId>>,
-      TError,
-      { id: string; data: UpdateThemeInput },
-      TContext
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof patchThemesId>>,
-  TError,
-  { id: string; data: UpdateThemeInput },
-  TContext
-> => {
-  const mutationOptions = getPatchThemesIdMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-/**
- * Delete a theme from the database
- * @summary Delete theme
- */
-export const deleteThemesId = (
-  id: string,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<DeleteThemesId200>> => {
-  return axios.delete(`/themes/${id}`, options);
-};
-
-export const getDeleteThemesIdMutationOptions = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteThemesId>>,
-    TError,
-    { id: string },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteThemesId>>,
-  TError,
-  { id: string },
-  TContext
-> => {
-  const mutationKey = ["deleteThemesId"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteThemesId>>,
-    { id: string }
-  > = (props) => {
-    const { id } = props ?? {};
-
-    return deleteThemesId(id, axiosOptions);
+  /**
+   * Retrieve a specific theme by its UUID
+   * @summary Get theme by ID
+   */
+  const getThemesId = (id: string) => {
+    return customAxios<Theme>({ url: `/themes/${id}`, method: "GET" });
   };
-
-  return { mutationFn, ...mutationOptions };
+  /**
+   * Update an existing theme (partial update)
+   * @summary Update theme
+   */
+  const patchThemesId = (id: string, updateThemeInput: UpdateThemeInput) => {
+    return customAxios<Theme>({
+      url: `/themes/${id}`,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      data: updateThemeInput,
+    });
+  };
+  /**
+   * Delete a theme from the database
+   * @summary Delete theme
+   */
+  const deleteThemesId = (id: string) => {
+    return customAxios<DeleteThemesId200>({
+      url: `/themes/${id}`,
+      method: "DELETE",
+    });
+  };
+  return { getThemes, postThemes, getThemesId, patchThemesId, deleteThemesId };
 };
-
-export type DeleteThemesIdMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteThemesId>>
+export type GetThemesResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getThemes>["getThemes"]>>
 >;
-
-export type DeleteThemesIdMutationError = AxiosError<Error | Error | Error>;
-
-/**
- * @summary Delete theme
- */
-export const useDeleteThemesId = <
-  TError = AxiosError<Error | Error | Error>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof deleteThemesId>>,
-      TError,
-      { id: string },
-      TContext
-    >;
-    axios?: AxiosRequestConfig;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof deleteThemesId>>,
-  TError,
-  { id: string },
-  TContext
-> => {
-  const mutationOptions = getDeleteThemesIdMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
+export type PostThemesResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getThemes>["postThemes"]>>
+>;
+export type GetThemesIdResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getThemes>["getThemesId"]>>
+>;
+export type PatchThemesIdResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getThemes>["patchThemesId"]>>
+>;
+export type DeleteThemesIdResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getThemes>["deleteThemesId"]>>
+>;
