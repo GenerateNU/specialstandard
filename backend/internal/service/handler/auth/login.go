@@ -21,7 +21,13 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	signInResponse, err := auth.SupabaseLogin(&h.config, cred.Email, cred.Password)
 	if err != nil {
 		slog.Error("Supabase Login Error: ", "err", err.Error())
-		return errs.Unauthorized("Failed to login: ", err.Error())
+		
+		// Extract the actual message from HTTPError
+		if httpErr, ok := err.(errs.HTTPError); ok {
+			return errs.Unauthorized(httpErr.Message.(string))
+		}
+		
+		return errs.Unauthorized("Invalid credentials")
 	}
 
 	fmt.Println(cred.RememberMe)
