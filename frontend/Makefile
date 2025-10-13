@@ -8,7 +8,7 @@ install:
 dev:
 	npm run dev
 
-# Build for production
+# Build for production (need this before start)
 build:
 	npm run build
 
