@@ -1,16 +1,25 @@
-'use client'
+"use client";
 
-import { ArrowRight, Edit, LogOut, Plus, Settings, Trash, User, Users } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { useState } from 'react'
+import {
+  ArrowRight,
+  Edit,
+  LogOut,
+  Plus,
+  Settings,
+  Trash,
+  User,
+  Users,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
-import { useForm } from 'react-hook-form'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useForm } from "react-hook-form";
 // Import all components
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,10 +27,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 // New components
-import { Checkbox } from '@/components/ui/checkbox'
-import CustomAlert from '@/components/ui/CustomAlert'
+import { Checkbox } from "@/components/ui/checkbox";
+import CustomAlert from "@/components/ui/CustomAlert";
 import {
   Dialog,
   DialogContent,
@@ -30,8 +39,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Dropdown } from '@/components/ui/dropdown'
+} from "@/components/ui/dialog";
+import { Dropdown } from "@/components/ui/dropdown";
 
 import {
   Form,
@@ -41,32 +50,32 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { Textarea } from '@/components/ui/textarea'
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ComponentShowcase() {
-  const [showAlert, setShowAlert] = useState(true)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState('')
-  const [selectedAction, setSelectedAction] = useState('')
-  const [checkboxChecked, setCheckboxChecked] = useState(false)
+  const [showAlert, setShowAlert] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedAction, setSelectedAction] = useState("");
+  const [checkboxChecked, setCheckboxChecked] = useState(false);
 
   // Form setup
   const form = useForm({
     defaultValues: {
-      username: '',
-      email: '',
-      message: '',
+      username: "",
+      email: "",
+      message: "",
       terms: false,
     },
-  })
+  });
 
   const onSubmit = (data: any) => {
-    console.warn('Form submitted:', data)
-  }
+    console.warn("Form submitted:", data);
+  };
 
   return (
     <div className="font-sans min-h-screen p-8 pb-20 sm:p-20">
@@ -84,7 +93,8 @@ export default function ComponentShowcase() {
           Component Showcase
         </h1>
         <p className="text-secondary">
-          A comprehensive display of all UI components with the custom styling system
+          A comprehensive display of all UI components with the custom styling
+          system
         </p>
       </header>
 
@@ -95,7 +105,9 @@ export default function ComponentShowcase() {
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium mb-3 text-secondary">Variants</h3>
+              <h3 className="text-lg font-medium mb-3 text-secondary">
+                Variants
+              </h3>
               <div className="flex flex-wrap gap-3">
                 <Button>Default</Button>
                 <Button variant="destructive">Destructive</Button>
@@ -112,29 +124,45 @@ export default function ComponentShowcase() {
                 <Button size="sm">Small</Button>
                 <Button>Default</Button>
                 <Button size="lg">Large</Button>
-                <Button size="icon"><Plus className="h-4 w-4" /></Button>
+                <Button size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3 text-secondary">States</h3>
+              <h3 className="text-lg font-medium mb-3 text-secondary">
+                States
+              </h3>
               <div className="flex flex-wrap gap-3">
                 <Button disabled>Disabled</Button>
-                <Button variant="outline" disabled>Disabled Outline</Button>
+                <Button variant="outline" disabled>
+                  Disabled Outline
+                </Button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3 text-secondary">Tab Buttons</h3>
+              <h3 className="text-lg font-medium mb-3 text-secondary">
+                Tab Buttons
+              </h3>
               <div className="flex gap-0">
-                <Button variant="tab" active={true}>Active Tab</Button>
-                <Button variant="tab" active={false}>Inactive Tab</Button>
-                <Button variant="tab" active={false}>Another Tab</Button>
+                <Button variant="tab" active={true}>
+                  Active Tab
+                </Button>
+                <Button variant="tab" active={false}>
+                  Inactive Tab
+                </Button>
+                <Button variant="tab" active={false}>
+                  Another Tab
+                </Button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3 text-secondary">Full Width</h3>
+              <h3 className="text-lg font-medium mb-3 text-secondary">
+                Full Width
+              </h3>
               <Button size="long">Full Width Button</Button>
             </div>
           </div>
@@ -142,7 +170,9 @@ export default function ComponentShowcase() {
 
         {/* Form Controls Section */}
         <section>
-          <h2 className="text-2xl font-semibold mb-6 text-primary">Form Controls</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-primary">
+            Form Controls
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
@@ -153,12 +183,20 @@ export default function ComponentShowcase() {
 
               <div>
                 <Label htmlFor="email-example">Email Input</Label>
-                <Input id="email-example" type="email" placeholder="email@example.com" />
+                <Input
+                  id="email-example"
+                  type="email"
+                  placeholder="email@example.com"
+                />
               </div>
 
               <div>
                 <Label htmlFor="disabled-input">Disabled Input</Label>
-                <Input id="disabled-input" placeholder="Cannot edit this" disabled />
+                <Input
+                  id="disabled-input"
+                  placeholder="Cannot edit this"
+                  disabled
+                />
               </div>
             </div>
 
@@ -185,9 +223,7 @@ export default function ComponentShowcase() {
                   checked={checkboxChecked}
                   onCheckedChange={setCheckboxChecked}
                 />
-                <Label htmlFor="terms">
-                  Accept terms and conditions
-                </Label>
+                <Label htmlFor="terms">Accept terms and conditions</Label>
               </div>
             </div>
           </div>
@@ -195,14 +231,19 @@ export default function ComponentShowcase() {
 
         {/* React Hook Form Section */}
         <section>
-          <h2 className="text-2xl font-semibold mb-6 text-primary">Form with Validation</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-primary">
+            Form with Validation
+          </h2>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-md">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6 max-w-md"
+            >
               <FormField
                 control={form.control}
                 name="username"
-                rules={{ required: 'Username is required' }}
+                rules={{ required: "Username is required" }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Username</FormLabel>
@@ -221,17 +262,21 @@ export default function ComponentShowcase() {
                 control={form.control}
                 name="email"
                 rules={{
-                  required: 'Email is required',
+                  required: "Email is required",
                   pattern: {
                     value: /^\S[^\s@]*@\S+$/,
-                    message: 'Invalid email address',
+                    message: "Invalid email address",
                   },
                 }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="john@example.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="john@example.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -280,7 +325,9 @@ export default function ComponentShowcase() {
 
         {/* Dropdown Section - Updated */}
         <section>
-          <h2 className="text-2xl font-semibold mb-6 text-primary">Dropdown (with value tracking)</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-primary">
+            Dropdown (with value tracking)
+          </h2>
 
           <div className="space-y-6">
             <div className="flex gap-4">
@@ -291,18 +338,18 @@ export default function ComponentShowcase() {
                 align="left"
                 items={[
                   {
-                    label: 'My Profile',
-                    value: 'profile',
+                    label: "My Profile",
+                    value: "profile",
                     icon: <User />,
                   },
                   {
-                    label: 'Settings',
-                    value: 'settings',
+                    label: "Settings",
+                    value: "settings",
                     icon: <Settings />,
                   },
                   {
-                    label: 'Logout',
-                    value: 'logout',
+                    label: "Logout",
+                    value: "logout",
                     icon: <LogOut />,
                   },
                 ]}
@@ -315,13 +362,13 @@ export default function ComponentShowcase() {
                 align="right"
                 items={[
                   {
-                    label: 'Edit',
-                    value: 'edit',
+                    label: "Edit",
+                    value: "edit",
                     icon: <Edit />,
                   },
                   {
-                    label: 'Delete',
-                    value: 'delete',
+                    label: "Delete",
+                    value: "delete",
                     icon: <Trash />,
                     disabled: true,
                   },
@@ -331,11 +378,8 @@ export default function ComponentShowcase() {
 
             {(selectedUser || selectedAction) && (
               <div className="text-sm text-muted">
-                Selected values: User = "
-                {selectedUser || 'none'}
-                ", Action = "
-                {selectedAction || 'none'}
-                "
+                Selected values: User = "{selectedUser || "none"}
+                ", Action = "{selectedAction || "none"}"
               </div>
             )}
           </div>
@@ -367,7 +411,8 @@ export default function ComponentShowcase() {
               <DialogHeader>
                 <DialogTitle>Edit Profile</DialogTitle>
                 <DialogDescription>
-                  Make changes to your profile here. Click save when you're done.
+                  Make changes to your profile here. Click save when you're
+                  done.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -445,7 +490,9 @@ export default function ComponentShowcase() {
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2">
-                <Button variant="outline" size="sm">View Profile</Button>
+                <Button variant="outline" size="sm">
+                  View Profile
+                </Button>
                 <Button size="sm">Message</Button>
               </CardFooter>
             </Card>
@@ -453,5 +500,5 @@ export default function ComponentShowcase() {
         </section>
       </main>
     </div>
-  )
+  );
 }
