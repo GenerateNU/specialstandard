@@ -8,6 +8,13 @@ import { useStudents } from '@/hooks/useStudents'
 export default function StudentsPage() {
   const { students, isLoading, error, refetch } = useStudents()
 
+  // useEffect(() => {
+  //   console.log("Students:", students);
+  //   console.log("Resources:", resources);
+  //   console.log("Sessions:", sessions);
+  //   console.log("Themes:", themes);
+  // }, [students, resources, sessions, themes]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -29,7 +36,7 @@ export default function StudentsPage() {
           </h2>
           <p className="text-secondary mb-4">{error}</p>
           <button
-            onClick={refetch}
+            onClick={() => refetch()}
             className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
           >
             Try Again
@@ -46,9 +53,7 @@ export default function StudentsPage() {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
               <Users className="w-8 h-8 text-accent" />
-              <h1 className="text-3xl font-bold text-primary">
-                Students
-              </h1>
+              <h1 className="text-3xl font-bold text-primary">Students</h1>
             </div>
             <AddStudentModal />
           </div>
@@ -65,7 +70,8 @@ export default function StudentsPage() {
                   No Students Found
                 </h2>
                 <p className="text-secondary mb-6">
-                  There are no students in the system yet. Get started by adding your first student.
+                  There are no students in the system yet. Get started by adding
+                  your first student.
                 </p>
                 <AddStudentModal
                   trigger={(

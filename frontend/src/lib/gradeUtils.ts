@@ -1,8 +1,8 @@
 // Utility functions to handle grade conversion between display (K-12) and storage (0-12)
 
-export function gradeToDisplay(grade?: string | number): string {
+export function gradeToDisplay(grade?: string | number | null): string {
   if (grade === null || grade === undefined)
-    return 'Not specified'
+    return 'not specified'
   const numGrade = typeof grade === 'string' ? Number.parseInt(grade) : grade
   if (numGrade === 0)
     return 'K'

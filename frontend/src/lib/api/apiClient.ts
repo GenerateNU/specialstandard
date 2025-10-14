@@ -1,9 +1,10 @@
 // src/lib/api/apiClient.ts
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import axios from 'axios'
 
 const apiClient = axios.create({
   // eslint-disable-next-line node/prefer-global/process
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -90,4 +91,13 @@ apiClient.interceptors.response.use(
   },
 )
 
-export default apiClient
+apiClient.interceptors.response.use(
+  response => response,
+  (error) => {
+    return Promise.reject(error)
+  },
+)
+
+export function customAxios<T>(config: AxiosRequestConfig): Promise<T> {
+  return apiClient(config).then((response: AxiosResponse<T>) => response.data)
+}

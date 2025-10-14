@@ -1,6 +1,9 @@
 'use client'
 
-import type { CreateStudentInput } from '@/types/student'
+import type {
+  CreateStudentInput,
+} from '@/lib/api/theSpecialStandardAPI.schemas'
+
 import { Calendar, FileText, GraduationCap, User } from 'lucide-react'
 import { useState } from 'react'
 
@@ -40,7 +43,11 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
   const [open, setOpen] = useState(false)
   const { addStudent } = useStudents()
 
-  const form = useForm<CreateStudentInput>({
+  type CreateStudentFormInput = Omit<CreateStudentInput, 'grade'> & {
+    grade?: string
+  }
+
+  const form = useForm<CreateStudentFormInput>({
     defaultValues: {
       first_name: '',
       last_name: '',
@@ -51,7 +58,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
     },
   })
 
-  const onSubmit = async (data: CreateStudentInput) => {
+  const onSubmit = async (data: CreateStudentFormInput) => {
     try {
       // Convert frontend data format to backend-expected format
       const backendData = {
@@ -59,7 +66,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
         last_name: data.last_name,
         dob: data.dob || undefined,
         therapist_id: HARDCODED_THERAPIST_ID, // Use the proper UUID
-        grade: gradeToStorage(data.grade || ''), // Convert K to 0, numbers to numbers
+        grade: data.grade, // Convert K to 0, numbers to numbers
         iep: data.iep || undefined,
       }
 
@@ -92,7 +99,8 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
             Add New Student
           </DialogTitle>
           <DialogDescription>
-            Add a new student to your roster. All fields marked with * are required.
+            Add a new student to your roster. All fields marked with * are
+            required.
           </DialogDescription>
         </DialogHeader>
 
@@ -140,7 +148,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                     Date of Birth
                   </FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -159,7 +167,9 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                   <FormControl>
                     <Dropdown
                       value={field.value || ''}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(gradeToStorage(value))
+                      }}
                       placeholder="Select grade level..."
                       items={gradeOptions}
                       className="w-full justify-between"
@@ -184,6 +194,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                       placeholder="Any relevant IEP information or special notes..."
                       rows={3}
                       {...field}
+                      value={field.value ?? ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -202,9 +213,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                Add Student
-              </Button>
+              <Button type="submit">Add Student</Button>
             </DialogFooter>
           </form>
         </Form>

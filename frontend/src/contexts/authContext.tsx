@@ -1,35 +1,30 @@
 'use client'
 
-import type { LoginCredentials, SignupCredentials } from '@/lib/api/auth'
+import type {
+  PostAuthLoginBody,
+  PostAuthSignupBody,
+} from '@/lib/api/theSpecialStandardAPI.schemas'
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useState } from 'react'
-import {
-  login as apiLogin,
-  logout as apiLogout,
-  signup as apiSignup,
-} from '@/lib/api/auth'
-
-interface User {
-  id: string
-  email?: string
-}
+import { useAuth } from '@/hooks/useAuth'
 
 interface AuthContextType {
-  user: User | null
+  userId: string | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (credentials: LoginCredentials) => Promise<void>
-  signup: (credentials: SignupCredentials) => Promise<void>
+  login: (credentials: PostAuthLoginBody) => Promise<void>
+  signup: (credentials: PostAuthSignupBody) => Promise<void>
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
+  const { userLogin, userLogout, userSignup } = useAuth()
   // Check if user is authenticated on mount (by checking cookies)
   useEffect(() => {
     const checkAuth = () => {
@@ -40,10 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (jwtCookie && userIdCookie) {
         const userId = userIdCookie.split('=')[1]
-        setUser({ id: userId })
+        setUserId(userId)
       }
       else {
-        setUser(null)
+        setUserId(null)
       }
 
       setIsLoading(false)
@@ -52,10 +47,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth()
   }, [])
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (credentials: PostAuthLoginBody) => {
     try {
-      const response = await apiLogin(credentials)
-      setUser({ id: response.user.id, email: response.user.email })
+      const response = await userLogin(credentials)
+      setUserId(response.user.id ?? null)
       router.push('/students')
     }
     catch (error) {
@@ -64,10 +59,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signup = async (credentials: SignupCredentials) => {
+  const signup = async (credentials: PostAuthSignupBody) => {
     try {
-      const response = await apiSignup(credentials)
-      setUser({ id: response.user.id, email: response.user.email })
+      const response = await userSignup(credentials)
+      setUserId(response.user.id ?? null)
       router.push('/students')
     }
     catch (error) {
@@ -77,16 +72,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = () => {
-    apiLogout()
-    setUser(null)
+    userLogout()
+    setUserId(null)
     router.push('/login')
   }
 
   return (
     <AuthContext.Provider
       value={{
-        user,
-        isAuthenticated: !!user,
+        userId,
+        isAuthenticated: !!userId,
         isLoading,
         login,
         signup,
@@ -98,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function useAuth() {
+export function useAuthContext() {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
