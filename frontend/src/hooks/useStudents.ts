@@ -28,7 +28,7 @@ export function useStudents() {
     refetch,
   } = useQuery({
     queryKey: ["students"],
-    queryFn: () => api.getStudents(),
+    queryFn: () => api.getStudents({ limit: 100 }),
   });
 
   const addStudentMutation = useMutation({
