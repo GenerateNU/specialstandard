@@ -12,6 +12,8 @@ import {
 
 import { useState } from 'react'
 
+import { gradeToDisplay } from '@/lib/gradeUtils'
+
 interface StudentCardProps {
   student: StudentBody
 }
