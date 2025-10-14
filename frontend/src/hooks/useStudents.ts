@@ -6,9 +6,14 @@ import type {
 } from "@/lib/api/theSpecialStandardAPI.schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getStudents } from "@/lib/api/students";
+import { gradeToDisplay, gradeToStorage } from "@/lib/gradeUtils";
+
+export type StudentBody = Omit<Student, "grade"> & {
+  grade: string;
+};
 
 interface UseStudentsReturn {
-  students: Student[];
+  students: StudentBody[];
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<QueryObserverResult<Student[], Error>>;
@@ -22,7 +27,7 @@ export function useStudents() {
   const api = getStudents();
 
   const {
-    data: students = [],
+    data: studentsData = [],
     isLoading,
     error,
     refetch,
@@ -30,6 +35,11 @@ export function useStudents() {
     queryKey: ["students"],
     queryFn: () => api.getStudents({ limit: 100 }),
   });
+
+  const students = studentsData.map((student) => ({
+    ...student,
+    grade: gradeToDisplay(student.grade),
+  }));
 
   const addStudentMutation = useMutation({
     mutationFn: (input: CreateStudentInput) => api.postStudents(input),

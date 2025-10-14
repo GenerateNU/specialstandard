@@ -4,6 +4,8 @@ import { AlertCircle, Loader2, Plus, Users } from "lucide-react";
 import AddStudentModal from "@/components/students/AddStudentModal";
 import StudentCard from "@/components/students/studentCard";
 import { useStudents } from "@/hooks/useStudents";
+import { useEffect } from "react";
+import { gradeToDisplay } from "@/lib/gradeUtils";
 
 export default function StudentsPage() {
   const { students, isLoading, error, refetch } = useStudents();
