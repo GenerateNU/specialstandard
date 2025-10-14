@@ -25,7 +25,8 @@
   },
   "optionalDependencies": {
     "@next/swc-linux-x64-gnu": "latest",
-    "lightningcss": "^1.28.2"
+    "lightningcss": "^1.28.2",
+    "lightningcss-linux-x64-gnu": "^1.28.2"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.1",
