@@ -24,3 +24,11 @@ test-coverage:
 # Clean test cache
 test-clean:
 	go clean -testcache
+
+# Lint all code
+lint:
+	golangci-lint run
+
+# Fix auto-fixable linting issues
+lint-fix:
+	golangci-lint run --fix

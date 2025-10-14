@@ -18,6 +18,33 @@ The Special Standard revolutionizes speech-language therapy in educational setti
 - **Multi-Platform Support**: Web-based platform accessible on any device
 - **Secure Data Management**: FERPA and HIPAA compliant data handling
 
+Here's a modular section you can drop into your README:
+
+## 🛠️ Development
+
+### Quick Start
+
+Start all services with Docker and hot reload:
+
+```bash
+make dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+### Common Commands
+
+| Command            | Description                        |
+| ------------------ | ---------------------------------- |
+| `make dev`         | Start all services with hot reload |
+| `make test`        | Run all tests                      |
+| `make lint`        | Check code quality                 |
+| `make lint-fix`    | Auto-fix linting issues            |
+| `make docker-down` | Stop all services                  |
+| `make docker-logs` | View service logs                  |
+
+Run `make help` to see all available commands.
+
 ## 📁 File Structure
 
 ```bash
@@ -33,3 +60,4 @@ The Special Standard revolutionizes speech-language therapy in educational setti
 ├── CONTRIBUTING.md            # Contribution guidelines
 ├── LICENSE                    # Project license
 └── README.md                  # This file
+```
