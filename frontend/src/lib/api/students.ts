@@ -50,7 +50,7 @@ export const getStudents = () => {
    */
   const patchStudentsId = (
     id: string,
-    updateStudentInput: UpdateStudentInput
+    updateStudentInput: UpdateStudentInput,
   ) => {
     return customAxios<Student>({
       url: `/students/${id}`,
@@ -84,7 +84,7 @@ All filters can be combined: `?month=9&year=2025&present=true`
  */
   const getStudentsStudentIdSessions = (
     studentId: string,
-    params?: GetStudentsStudentIdSessionsParams
+    params?: GetStudentsStudentIdSessionsParams,
   ) => {
     return customAxios<SessionWithStudentInfo[]>({
       url: `/students/${studentId}/sessions`,

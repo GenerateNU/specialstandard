@@ -455,8 +455,8 @@ export type PostAuthSignup201User = {
 
 export type PostAuthSignup201 = {
   /** The JWT Access Token issued for this User */
-  access_token?: string;
-  user?: PostAuthSignup201User;
+  access_token: string;
+  user: PostAuthSignup201User;
 };
 
 export type PostAuthLoginBody = {
@@ -464,6 +464,8 @@ export type PostAuthLoginBody = {
   email: string;
   /** Password of the User/Therapist (meets strong password requirements) */
   password: string;
+  /** Whether to remember the user for a longer session duration */
+  remember_me: boolean;
 };
 
 export type PostAuthLogin200User = {
@@ -473,14 +475,14 @@ export type PostAuthLogin200User = {
 
 export type PostAuthLogin200 = {
   /** The JWT Access Token issued for this User */
-  access_token?: string;
+  access_token: string;
   /** Describes the type of JWT Token designated to this User */
-  token_type?: string;
+  token_type: string;
   /** The Amount of Time it will take for this token to expire */
-  expires_in?: unknown;
+  expires_in: unknown;
   /** Used to get a new access token after the current one expires... */
-  refresh_token?: string;
-  user?: PostAuthLogin200User;
+  refresh_token: string;
+  user: PostAuthLogin200User;
   error?: unknown;
 };
 

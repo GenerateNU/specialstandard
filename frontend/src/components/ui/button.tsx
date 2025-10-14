@@ -5,17 +5,15 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer',
   {
     variants: {
       variant: {
         default: 'bg-accent text-foreground shadow hover:bg-accent-hover',
-        destructive:
-          'bg-error text-white shadow-sm hover:bg-error/90',
+        destructive: 'bg-error text-white shadow-sm hover:bg-error/90',
         outline:
           'border border-border bg-background shadow-sm hover:bg-card-hover hover:text-primary',
-        secondary:
-          'bg-card text-primary shadow-sm hover:bg-card-hover',
+        secondary: 'bg-card text-primary shadow-sm hover:bg-card-hover',
         ghost: 'text-primary hover:bg-card hover:text-primary',
         link: 'text-accent underline-offset-4 hover:underline',
         tab: 'px-8 py-2 text-secondary hover:text-primary transition-colors rounded-none',
