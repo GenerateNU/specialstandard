@@ -25,24 +25,53 @@ apiClient.interceptors.request.use(
   },
 )
 
+let isRetrying = false
+
 apiClient.interceptors.response.use(
   response => response,
-  (error) => {
+  async (error) => {
     const status = error.response?.status
+    const config = error.config
 
     if (status === 401) {
-      // Handle unauthorized access
-      console.error('Unauthorized access')
+      // Retry once if this is the first 401 and we haven't retried yet
+      if (!isRetrying && !config._retry) {
+        isRetrying = true
+        config._retry = true
 
-      // Clear cookies and redirect to homepage after a delay
-      setTimeout(() => {
+        // Wait a moment for cookies to settle
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        try {
+          const result = await apiClient.request(config)
+          isRetrying = false
+          return result
+        }
+        catch (retryError) {
+          isRetrying = false
+          // If retry fails, then redirect
+          console.error('Unauthorized access - redirecting to login')
+          document.cookie.split(';').forEach((cookie) => {
+            const eqPos = cookie.indexOf('=')
+            const name
+              = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+          })
+          window.location.href = '/login'
+          return Promise.reject(retryError)
+        }
+      }
+      else {
+        // Second 401 or already retrying - redirect immediately
+        console.error('Unauthorized access - redirecting to login')
         document.cookie.split(';').forEach((cookie) => {
           const eqPos = cookie.indexOf('=')
-          const name = eqPos > -1 ? cookie.substring(0, eqPos) : cookie
+          const name
+            = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
           document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
         })
-        window.location.href = '/'
-      }, 2000)
+        window.location.href = '/login'
+      }
     }
     else if (status === 403) {
       console.error('Forbidden access')

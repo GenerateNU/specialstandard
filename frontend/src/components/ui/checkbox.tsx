@@ -34,9 +34,7 @@ const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
         )}
         {...props}
       >
-        {checked && (
-          <Check className="h-3 w-3 mx-auto" />
-        )}
+        {checked && <Check className="h-3 w-3 mx-auto" />}
       </button>
     )
   },
