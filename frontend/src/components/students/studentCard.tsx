@@ -12,8 +12,6 @@ import {
 
 import { useState } from 'react'
 
-import { gradeToDisplay } from '@/lib/gradeUtils'
-
 interface StudentCardProps {
   student: StudentBody
 }
@@ -126,7 +124,7 @@ export default function StudentCard({ student }: StudentCardProps) {
                   <p className="text-sm font-medium text-primary">
                     Therapist ID
                   </p>
-                  <p className="text-sm text-secondary font-mono text-xs">
+                  <p className="text-sm text-secondary font-mono">
                     {student.therapist_id}
                   </p>
                 </div>
