@@ -4,11 +4,18 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
+export type ErrorMessageAnyOf = { [key: string]: unknown };
+
+/**
+ * Error message or validation errors
+ */
+export type ErrorMessage = string | ErrorMessageAnyOf;
+
 export interface Error {
   /** HTTP status code */
   code: number;
   /** Error message or validation errors */
-  message: string;
+  message: ErrorMessage;
 }
 
 export interface Therapist {
@@ -589,13 +596,25 @@ export type GetStudentsParams = {
 
 export type GetStudentsStudentIdSessionsParams = {
   /**
-   * Filter sessions starting after this date
+   * Filter sessions starting after this date (YYYY-MM-DD format)
    */
-  start_date?: string;
+  startDate?: string;
   /**
-   * Filter sessions ending before this date
+   * Filter sessions ending before this date (YYYY-MM-DD format)
    */
-  end_date?: string;
+  endDate?: string;
+  /**
+   * Filter sessions by month (1-12). Can be combined with year parameter.
+   * @minimum 1
+   * @maximum 12
+   */
+  month?: number;
+  /**
+   * Filter sessions by year. Can be combined with month parameter or used alone.
+   * @minimum 1776
+   * @maximum 2200
+   */
+  year?: number;
   /**
    * Filter sessions by student's attendance status
    */

@@ -17,7 +17,6 @@ interface UseStudentsReturn {
   deleteStudent: (id: string) => void;
 }
 
-// Write your own clean hooks
 export function useStudents() {
   const queryClient = useQueryClient();
   const api = getStudents();

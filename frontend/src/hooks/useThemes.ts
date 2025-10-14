@@ -27,7 +27,8 @@ export function useThemes(): UseThemesReturn {
     queryKey: ["themes"],
     queryFn: () => api.getThemes(),
   });
-  const themes = themesResponse? || [];
+
+  const themes = themesResponse ?? [];
 
   const addThemeMutation = useMutation({
     mutationFn: (input: CreateThemeInput) => api.postThemes(input),

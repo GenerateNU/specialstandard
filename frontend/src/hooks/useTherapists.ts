@@ -30,7 +30,8 @@ export function useTherapists(): UseTherapistsReturn {
     queryKey: ["therapists"],
     queryFn: () => api.getTherapists(),
   });
-  const therapists = therapistsResponse?.data || [];
+
+  const therapists = therapistsResponse ?? [];
 
   const addTherapistMutation = useMutation({
     mutationFn: (input: CreateTherapistInput) => api.postTherapists(input),

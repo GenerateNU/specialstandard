@@ -30,7 +30,8 @@ export function useSessions(): UseSessionsReturn {
     queryKey: ["sessions"],
     queryFn: () => api.getSessions(),
   });
-  const sessions = sessionsResponse?.data || [];
+
+  const sessions = sessionsResponse ?? [];
 
   const addSessionMutation = useMutation({
     mutationFn: (input: PostSessionsBody) => api.postSessions(input),
