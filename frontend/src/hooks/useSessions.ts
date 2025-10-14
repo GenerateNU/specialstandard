@@ -1,25 +1,25 @@
-import type { QueryObserverResult } from "@tanstack/react-query";
+import type { QueryObserverResult } from '@tanstack/react-query'
 import type {
-  Session,
   PostSessionsBody,
+  Session,
   UpdateSessionInput,
-} from "@/lib/api/theSpecialStandardAPI.schemas";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSessions as getSessionsApi } from "@/lib/api/sessions";
+} from '@/lib/api/theSpecialStandardAPI.schemas'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getSessions as getSessionsApi } from '@/lib/api/sessions'
 
 interface UseSessionsReturn {
-  sessions: Session[];
-  isLoading: boolean;
-  error: string | null;
-  refetch: () => Promise<QueryObserverResult<Session[], Error>>;
-  addSession: (session: PostSessionsBody) => void;
-  updateSession: (id: string, updatedSession: UpdateSessionInput) => void;
-  deleteSession: (id: string) => void;
+  sessions: Session[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<QueryObserverResult<Session[], Error>>
+  addSession: (session: PostSessionsBody) => void
+  updateSession: (id: string, updatedSession: UpdateSessionInput) => void
+  deleteSession: (id: string) => void
 }
 
 export function useSessions(): UseSessionsReturn {
-  const queryClient = useQueryClient();
-  const api = getSessionsApi();
+  const queryClient = useQueryClient()
+  const api = getSessionsApi()
 
   const {
     data: sessionsResponse,
@@ -27,33 +27,33 @@ export function useSessions(): UseSessionsReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["sessions"],
+    queryKey: ['sessions'],
     queryFn: () => api.getSessions(),
-  });
+  })
 
-  const sessions = sessionsResponse ?? [];
+  const sessions = sessionsResponse ?? []
 
   const addSessionMutation = useMutation({
     mutationFn: (input: PostSessionsBody) => api.postSessions(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
-  });
+  })
 
   const updateSessionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateSessionInput }) =>
+    mutationFn: ({ id, data }: { id: string, data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ssions"] });
+      queryClient.invalidateQueries({ queryKey: ['ssions'] })
     },
-  });
+  })
 
   const deleteSessionMutation = useMutation({
     mutationFn: (id: string) => api.deleteSessionsId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
-  });
+  })
 
   return {
     sessions,
@@ -65,5 +65,5 @@ export function useSessions(): UseSessionsReturn {
     updateSession: (id: string, data: UpdateSessionInput) =>
       updateSessionMutation.mutate({ id, data }),
     deleteSession: (id: string) => deleteSessionMutation.mutate(id),
-  };
+  }
 }

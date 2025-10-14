@@ -1,29 +1,30 @@
+import type { QueryObserverResult } from '@tanstack/react-query'
 import type {
   CreateResourceBody,
   Resource,
   UpdateResourceBody,
-} from "@/lib/api/theSpecialStandardAPI.schemas";
+} from '@/lib/api/theSpecialStandardAPI.schemas'
 import {
+
   useMutation,
   useQuery,
   useQueryClient,
-  type QueryObserverResult,
-} from "@tanstack/react-query";
-import { getResources as getResourcesApi } from "@/lib/api/resources";
+} from '@tanstack/react-query'
+import { getResources as getResourcesApi } from '@/lib/api/resources'
 
 interface UseResourcesReturn {
-  resources: Resource[];
-  isLoading: boolean;
-  error: string | null;
-  refetch: () => Promise<QueryObserverResult<Resource[], Error>>;
-  addResource: (resource: CreateResourceBody) => void;
-  updateResource: (id: string, updatedResource: UpdateResourceBody) => void;
-  deleteResource: (id: string) => void;
+  resources: Resource[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<QueryObserverResult<Resource[], Error>>
+  addResource: (resource: CreateResourceBody) => void
+  updateResource: (id: string, updatedResource: UpdateResourceBody) => void
+  deleteResource: (id: string) => void
 }
 
 export function useResources(): UseResourcesReturn {
-  const queryClient = useQueryClient();
-  const api = getResourcesApi();
+  const queryClient = useQueryClient()
+  const api = getResourcesApi()
 
   const {
     data: resources = [],
@@ -31,31 +32,31 @@ export function useResources(): UseResourcesReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["resources"],
+    queryKey: ['resources'],
     queryFn: () => api.getResources(),
-  });
+  })
 
   const addResourceMutation = useMutation({
     mutationFn: (input: CreateResourceBody) => api.postResources(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      queryClient.invalidateQueries({ queryKey: ['resources'] })
     },
-  });
+  })
 
   const updateResourceMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateResourceBody }) =>
+    mutationFn: ({ id, data }: { id: string, data: UpdateResourceBody }) =>
       api.patchResourcesId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      queryClient.invalidateQueries({ queryKey: ['resources'] })
     },
-  });
+  })
 
   const deleteResourceMutation = useMutation({
     mutationFn: (id: string) => api.deleteResourcesId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      queryClient.invalidateQueries({ queryKey: ['resources'] })
     },
-  });
+  })
 
   return {
     resources,
@@ -67,5 +68,5 @@ export function useResources(): UseResourcesReturn {
     updateResource: (id: string, data: UpdateResourceBody) =>
       updateResourceMutation.mutate({ id, data }),
     deleteResource: (id: string) => deleteResourceMutation.mutate(id),
-  };
+  }
 }

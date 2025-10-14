@@ -7,11 +7,11 @@
 import type {
   ModifySessionResource,
   SessionResource,
-} from "./theSpecialStandardAPI.schemas";
+} from './theSpecialStandardAPI.schemas'
 
-import { customAxios } from "./apiClient";
+import { customAxios } from './apiClient'
 
-export const getSessionResource = () => {
+export function getSessionResource() {
   /**
    * Create a new association between each session and a utilized resource
    * @summary Create a session-resource link
@@ -21,11 +21,11 @@ export const getSessionResource = () => {
   ) => {
     return customAxios<SessionResource>({
       url: `/session-resource`,
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       data: modifySessionResource,
-    });
-  };
+    })
+  }
   /**
    * Delete an existing association between a session and a resource
    * @summary Delete a session-resource link
@@ -35,20 +35,20 @@ export const getSessionResource = () => {
   ) => {
     return customAxios<void>({
       url: `/session-resource`,
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
       data: modifySessionResource,
-    });
-  };
-  return { postSessionResource, deleteSessionResource };
-};
+    })
+  }
+  return { postSessionResource, deleteSessionResource }
+}
 export type PostSessionResourceResult = NonNullable<
   Awaited<
-    ReturnType<ReturnType<typeof getSessionResource>["postSessionResource"]>
+    ReturnType<ReturnType<typeof getSessionResource>['postSessionResource']>
   >
->;
+>
 export type DeleteSessionResourceResult = NonNullable<
   Awaited<
-    ReturnType<ReturnType<typeof getSessionResource>["deleteSessionResource"]>
+    ReturnType<ReturnType<typeof getSessionResource>['deleteSessionResource']>
   >
->;
+>

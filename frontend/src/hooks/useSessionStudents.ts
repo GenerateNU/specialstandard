@@ -1,35 +1,35 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSessionStudents as getSessionStudentsApi } from "@/lib/api/session-students";
 import type {
   CreateSessionStudentInput,
   DeleteSessionStudentsBody,
-} from "@/lib/api/theSpecialStandardAPI.schemas";
+} from '@/lib/api/theSpecialStandardAPI.schemas'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { getSessionStudents as getSessionStudentsApi } from '@/lib/api/session-students'
 
 export function useSessionStudents() {
-  const queryClient = useQueryClient();
-  const api = getSessionStudentsApi();
+  const queryClient = useQueryClient()
+  const api = getSessionStudentsApi()
 
   const addStudentToSessionMutation = useMutation({
     mutationFn: (input: CreateSessionStudentInput) =>
       api.postSessionStudents(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["sessions", variables.session_id, "students"],
-      });
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+        queryKey: ['sessions', variables.session_id, 'students'],
+      })
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
-  });
+  })
 
   const removeStudentFromSessionMutation = useMutation({
     mutationFn: (input: DeleteSessionStudentsBody) =>
       api.deleteSessionStudents(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["sessions", variables.session_id, "students"],
-      });
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+        queryKey: ['sessions', variables.session_id, 'students'],
+      })
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
-  });
+  })
 
   return {
     addStudentToSession: (input: CreateSessionStudentInput) =>
@@ -40,5 +40,5 @@ export function useSessionStudents() {
     isRemoving: removeStudentFromSessionMutation.isPending,
     addError: addStudentToSessionMutation.error?.message || null,
     removeError: removeStudentFromSessionMutation.error?.message || null,
-  };
+  }
 }

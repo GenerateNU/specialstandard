@@ -1,14 +1,12 @@
-"use client";
+'use client'
 
-import { AlertCircle, Loader2, Plus, Users } from "lucide-react";
-import AddStudentModal from "@/components/students/AddStudentModal";
-import StudentCard from "@/components/students/studentCard";
-import { useStudents } from "@/hooks/useStudents";
-import { useEffect } from "react";
-import { gradeToDisplay } from "@/lib/gradeUtils";
+import { AlertCircle, Loader2, Plus, Users } from 'lucide-react'
+import AddStudentModal from '@/components/students/AddStudentModal'
+import StudentCard from '@/components/students/studentCard'
+import { useStudents } from '@/hooks/useStudents'
 
 export default function StudentsPage() {
-  const { students, isLoading, error, refetch } = useStudents();
+  const { students, isLoading, error, refetch } = useStudents()
 
   // useEffect(() => {
   //   console.log("Students:", students);
@@ -25,7 +23,7 @@ export default function StudentsPage() {
           <p className="text-secondary">Loading students...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -45,7 +43,7 @@ export default function StudentsPage() {
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -64,41 +62,47 @@ export default function StudentsPage() {
           </p>
         </header>
 
-        {students.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="w-16 h-16 text-muted mx-auto mb-4 opacity-30" />
-            <h2 className="text-xl font-semibold text-primary mb-2">
-              No Students Found
-            </h2>
-            <p className="text-secondary mb-6">
-              There are no students in the system yet. Get started by adding
-              your first student.
-            </p>
-            <AddStudentModal
-              trigger={
-                <button className="px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors flex items-center gap-2 mx-auto">
-                  <Plus className="w-4 h-4" />
-                  Add Your First Student
-                </button>
-              }
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-secondary">
-                Showing {students.length} student
-                {students.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-            <div className="grid gap-4">
-              {students.map((student) => (
-                <StudentCard key={student.id} student={student} />
-              ))}
-            </div>
-          </div>
-        )}
+        {students.length === 0
+          ? (
+              <div className="text-center py-12">
+                <Users className="w-16 h-16 text-muted mx-auto mb-4 opacity-30" />
+                <h2 className="text-xl font-semibold text-primary mb-2">
+                  No Students Found
+                </h2>
+                <p className="text-secondary mb-6">
+                  There are no students in the system yet. Get started by adding
+                  your first student.
+                </p>
+                <AddStudentModal
+                  trigger={(
+                    <button className="px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors flex items-center gap-2 mx-auto">
+                      <Plus className="w-4 h-4" />
+                      Add Your First Student
+                    </button>
+                  )}
+                />
+              </div>
+            )
+          : (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm text-secondary">
+                    Showing
+                    {' '}
+                    {students.length}
+                    {' '}
+                    student
+                    {students.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <div className="grid gap-4">
+                  {students.map(student => (
+                    <StudentCard key={student.id} student={student} />
+                  ))}
+                </div>
+              </div>
+            )}
       </div>
     </div>
-  );
+  )
 }

@@ -1,15 +1,16 @@
 // src/lib/api/apiClient.ts
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios from 'axios'
 
 const apiClient = axios.create({
   // eslint-disable-next-line node/prefer-global/process
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   timeout: 10000,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   withCredentials: true,
-});
+})
 
 apiClient.interceptors.request.use(
   (config) => {
@@ -18,79 +19,85 @@ apiClient.interceptors.request.use(
     // if (token) {
     //   config.headers.Authorization = `Bearer ${token}`;
     // }
-    return config;
+    return config
   },
   (error) => {
-    return Promise.reject(error);
-  }
-);
+    return Promise.reject(error)
+  },
+)
 
-let isRetrying = false;
+let isRetrying = false
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  response => response,
   async (error) => {
-    const status = error.response?.status;
-    const config = error.config;
+    const status = error.response?.status
+    const config = error.config
 
     if (status === 401) {
       // Retry once if this is the first 401 and we haven't retried yet
       if (!isRetrying && !config._retry) {
-        isRetrying = true;
-        config._retry = true;
+        isRetrying = true
+        config._retry = true
 
         // Wait a moment for cookies to settle
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 100))
 
         try {
-          const result = await apiClient.request(config);
-          isRetrying = false;
-          return result;
-        } catch (retryError) {
-          isRetrying = false;
-          // If retry fails, then redirect
-          console.error("Unauthorized access - redirecting to login");
-          document.cookie.split(";").forEach((cookie) => {
-            const eqPos = cookie.indexOf("=");
-            const name =
-              eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-          });
-          window.location.href = "/login";
-          return Promise.reject(retryError);
+          const result = await apiClient.request(config)
+          isRetrying = false
+          return result
         }
-      } else {
-        // Second 401 or already retrying - redirect immediately
-        console.error("Unauthorized access - redirecting to login");
-        document.cookie.split(";").forEach((cookie) => {
-          const eqPos = cookie.indexOf("=");
-          const name =
-            eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        });
-        window.location.href = "/login";
+        catch (retryError) {
+          isRetrying = false
+          // If retry fails, then redirect
+          console.error('Unauthorized access - redirecting to login')
+          document.cookie.split(';').forEach((cookie) => {
+            const eqPos = cookie.indexOf('=')
+            const name
+              = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+          })
+          window.location.href = '/login'
+          return Promise.reject(retryError)
+        }
       }
-    } else if (status === 403) {
-      console.error("Forbidden access");
-    } else if (status === 404) {
-      console.error("Resource not found");
-    } else if (status >= 500) {
-      console.error("Server error occurred");
-    } else {
-      console.error("An error occurred:", error.message);
+      else {
+        // Second 401 or already retrying - redirect immediately
+        console.error('Unauthorized access - redirecting to login')
+        document.cookie.split(';').forEach((cookie) => {
+          const eqPos = cookie.indexOf('=')
+          const name
+            = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+        })
+        window.location.href = '/login'
+      }
+    }
+    else if (status === 403) {
+      console.error('Forbidden access')
+    }
+    else if (status === 404) {
+      console.error('Resource not found')
+    }
+    else if (status >= 500) {
+      console.error('Server error occurred')
+    }
+    else {
+      console.error('An error occurred:', error.message)
     }
 
-    return Promise.reject(error);
-  }
-);
+    return Promise.reject(error)
+  },
+)
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  response => response,
   (error) => {
-    return Promise.reject(error);
-  }
-);
+    return Promise.reject(error)
+  },
+)
 
-export const customAxios = <T>(config: AxiosRequestConfig): Promise<T> => {
-  return apiClient(config).then((response: AxiosResponse<T>) => response.data);
-};
+export function customAxios<T>(config: AxiosRequestConfig): Promise<T> {
+  return apiClient(config).then((response: AxiosResponse<T>) => response.data)
+}
