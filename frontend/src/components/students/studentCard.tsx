@@ -3,11 +3,27 @@
 import type { Student } from '@/types/student'
 import { Calendar, ChevronDown, ChevronUp, FileText, GraduationCap, User } from 'lucide-react'
 import { useState } from 'react'
+import { Avatar } from '@/components/ui/avatar'
 
 import { gradeToDisplay } from '@/lib/gradeUtils'
 
 interface StudentCardProps {
   student: Student
+}
+
+// Function to deterministically select avatar variant based on student ID
+function getAvatarVariant(id: string): 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big-smile' | 'personas' {
+  // Note: DiceBear expects lowercase with hyphens
+  const variants = ['avataaars', 'lorelei', 'micah', 'miniavs', 'big-smile', 'personas'] as const
+
+  // Simple hash function to get consistent index
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash) + id.charCodeAt(i)
+    hash = hash & hash // Convert to 32-bit integer
+  }
+
+  return variants[Math.abs(hash) % variants.length]
 }
 
 export default function StudentCard({ student }: StudentCardProps) {
@@ -41,18 +57,24 @@ export default function StudentCard({ student }: StudentCardProps) {
     return age
   }
 
+  // Get avatar variant based on student ID for variety
+  const avatarVariant = getAvatarVariant(student.id)
+
   return (
     <div className="bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-default">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-card-hover rounded-lg transition-colors"
-        aria-expanded={isExpanded ? 'true' : 'false'}
+        aria-expanded={isExpanded}
         aria-controls={`student-details-${student.id}`}
       >
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-accent-light rounded-full flex items-center justify-center">
-            <User className="w-6 h-6 text-accent" />
-          </div>
+          {/* Replace the icon div with auto-generating Avatar */}
+          <Avatar
+            name={getFullName()}
+            variant={avatarVariant}
+            className="w-12 h-12 ring-2 ring-accent-light"
+          />
           <div>
             <h3 className="font-semibold text-lg text-primary">
               {getFullName()}
