@@ -24,6 +24,13 @@ apiClient.interceptors.request.use(
     // if (token) {
     //   config.headers.Authorization = `Bearer ${token}`;
     // }
+    console.warn('Request:', {
+      url: config.url,
+      fullURL: config.baseURL + config.url,
+      withCredentials: config.withCredentials,
+      headers: config.headers,
+      cookies: document.cookie,
+    })
     return config
   },
   (error) => {
@@ -95,7 +102,12 @@ apiClient.interceptors.response.use(
 )
 
 export function customAxios<T>(config: AxiosRequestConfig): Promise<T> {
-  return Promise.resolve(apiClient(config)).then((response: AxiosResponse<T>) => response.data)
+  return Promise.resolve(
+    apiClient({
+      ...config,
+      withCredentials: true, // Force this to always be true
+    }),
+  ).then((response: AxiosResponse<T>) => response.data)
 }
 
 export default apiClient
