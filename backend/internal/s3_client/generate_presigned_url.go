@@ -2,6 +2,7 @@ package s3_client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,6 +13,10 @@ import (
 func (c *Client) GeneratePresignedURL(ctx context.Context, key string,
 	expiry time.Duration) (string, error) {
 	psClient := s3.NewPresignClient(c.S3)
+
+	if key == "" {
+		return "", errors.New("key cannot be empty")
+	}
 
 	req := &s3.GetObjectInput{
 		Bucket: aws.String(c.Bucket),

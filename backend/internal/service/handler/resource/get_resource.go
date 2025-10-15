@@ -1,7 +1,9 @@
 package resource
 
 import (
+	"log/slog"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
 	"specialstandard/internal/xvalidator"
 	"strconv"
@@ -74,7 +76,29 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 		return errs.InternalServerError(err.Error())
 	}
 
-	return c.JSON(resourcesWithThemes)
+	var resources []models.ResourceResponseWithURL
+	for _, res := range resourcesWithThemes {
+		key := strings.TrimPrefix(*res.Content, "/")
+		presignedURL := ""
+
+		if key != "" {
+			url, err := h.s3Client.GeneratePresignedURL(c.Context(), key, 15*time.Minute)
+			if err != nil {
+				slog.Warn("Failed to generate presigned URL for resource",
+					"key", key,
+					"error", err,
+				)
+			} else {
+				presignedURL = url
+			}
+		}
+		resources = append(resources, models.ResourceResponseWithURL{
+			ResourceWithTheme: res,
+			PresignedURL:      presignedURL,
+		})
+	}
+
+	return c.JSON(resources)
 }
 
 func (h *Handler) GetResourceByID(c *fiber.Ctx) error {
@@ -92,5 +116,24 @@ func (h *Handler) GetResourceByID(c *fiber.Ctx) error {
 		return errs.InternalServerError()
 	}
 
-	return c.Status(fiber.StatusOK).JSON(resource)
+	key := strings.TrimPrefix(*resource.Content, "/")
+	presignedURL := ""
+
+	if key != "" {
+		url, err := h.s3Client.GeneratePresignedURL(c.Context(), key, 15*time.Minute)
+		if err != nil {
+			slog.Warn("Failed to generate presigned URL for resource,",
+				"key", key,
+				"error", err)
+		} else {
+			presignedURL = url
+		}
+	}
+
+	response := models.ResourceResponseWithURL{
+		ResourceWithTheme: *resource,
+		PresignedURL:      presignedURL,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
 }
