@@ -12,9 +12,9 @@ interface StudentCardProps {
 }
 
 // Function to deterministically select avatar variant based on student ID
-function getAvatarVariant(id: string): 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big-smile' | 'personas' {
+function getAvatarVariant(id: string): 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'Big Smile' | 'Personas' {
   // Note: DiceBear expects lowercase with hyphens
-  const variants = ['avataaars', 'lorelei', 'micah', 'miniavs', 'big-smile', 'personas'] as const
+  const variants = ['avataaars', 'lorelei', 'micah', 'miniavs', 'Big Smile', 'Personas'] as const
 
   // Simple hash function to get consistent index
   let hash = 0
@@ -71,7 +71,7 @@ export default function StudentCard({ student }: StudentCardProps) {
         <div className="flex items-center space-x-4">
           {/* Replace the icon div with auto-generating Avatar */}
           <Avatar
-            name={getFullName()}
+            name={getFullName() + student.id} // Ensure uniqueness
             variant={avatarVariant}
             className="w-12 h-12 ring-2 ring-accent-light"
           />
