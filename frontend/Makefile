@@ -38,3 +38,7 @@ docker-run:
 # Clean
 clean:
 	rm -rf node_modules .next out
+
+# Orval
+orval:
+	npx orval
