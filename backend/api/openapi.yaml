@@ -1528,7 +1528,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Resource"
+                  $ref: "#/components/schemas/ResourceWithPresignURL"
         "500":
           description: Internal server error
           content:
@@ -1593,7 +1593,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Resource"
+                $ref: "#/components/schemas/ResourceWithPresignURL"
         "400":
           description: Bad request (e.g., invalid UUID format)
           content:
@@ -2514,6 +2514,62 @@ components:
         theme:
           $ref: "#/components/schemas/ThemeInfo"
           description: The theme associated with the resource
+
+    ResourceWithPresignURL:
+      type: object
+      required:
+        - id
+        - theme_id
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the resource
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        theme_id:
+          type: string
+          format: uuid
+          description: ID of the theme associated with the resource
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        grade_level:
+          type: integer
+          nullable: true
+          description: Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
+          minimum: 0
+          maximum: 12
+          example: 5
+        date:
+          type: string
+          format: date
+          nullable: true
+          description: Date associated with the resource (optional)
+          example: "2024-01-15"
+        type:
+          type: string
+          nullable: true
+          description: Type of resource (optional)
+        title:
+          type: string
+          nullable: true
+          description: Title of the resource (optional)
+          example: "Reading Exercises: b vs d"
+        category:
+          type: string
+          nullable: true
+          description: Category of the resource (optional)
+        content:
+          type: string
+          nullable: true
+          description: Content/URL of the resource (optional)
+          example: "https://example.com/resource"
+        theme:
+          $ref: "#/components/schemas/ThemeInfo"
+          description: Content/URL of the resource (optional)
+        presigned_url:
+          type: string
+          format: url
+          description: The Presigned URL to access the resource
+          example: "https://some-bucket.s3.us-west.cloudprovider.org/bucket/year/month/somefile.pdf?X-Tmz-Algorithm=LOG4-HMAC-SHA256&X-Tmz-Checksum-Mode=ENABLED&X-Tmz-Credential=AKIAEXAMPLE%2F20251016%2Fus-west%2Fs3%2Faws4_request&X-Tmz-Date=20251016T000000Z&X-Tmz-Expires=900&X-Tmz-SignedHeaders=host&x-id=GetObject&X-Amz-Signature=EXAMPLESIGNATURE1234567890abcdef"
 
     UpdateResourceBody:
       type: object
