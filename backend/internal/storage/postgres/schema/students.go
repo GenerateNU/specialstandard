@@ -19,7 +19,7 @@ type StudentRepository struct {
 func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
 	queryString := `
 	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
-	FROM student WHERE 1=1`
+	FROM student WHERE 1 = 1`
 
 	args := []interface{}{}
 	argNum := 1
@@ -29,6 +29,8 @@ func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapi
 		queryString += fmt.Sprintf(" AND grade = $%d", argNum)
 		args = append(args, *grade)
 		argNum++
+	} else {
+		queryString += " AND grade != -1" // Exclude graduated students by default
 	}
 
 	if therapistID != uuid.Nil {

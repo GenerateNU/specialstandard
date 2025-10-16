@@ -17,17 +17,23 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [showError, setShowError] = useState(false)
+
   const { login, isAuthenticated } = useAuthContext()
   const router = useRouter()
 
-  // Redirect if already authenticated
+  // All useEffect hooks here
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       router.push('/students')
     }
   }, [isAuthenticated, isLoading, router])
 
-  // Show loading state while checking authentication
+  useEffect(() => {
+    if (error)
+      setShowError(true)
+  }, [error])
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -36,7 +42,6 @@ export default function LoginPage() {
     )
   }
 
-  // If authenticated after loading completes, return null (will redirect)
   if (isAuthenticated) {
     return null
   }
@@ -56,14 +61,6 @@ export default function LoginPage() {
       setIsLoading(false)
     }
   }
-
-  const [showError, setShowError] = useState(false)
-
-  useEffect(() => {
-    // show the alert whenever `error` becomes non-null
-    if (error)
-      setShowError(true)
-  }, [error])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">

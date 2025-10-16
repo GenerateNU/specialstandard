@@ -2,7 +2,6 @@
 import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import axios from 'axios'
 
-// Extend the config type to include your custom property
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean
 }

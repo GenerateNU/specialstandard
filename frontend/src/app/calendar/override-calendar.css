@@ -1,0 +1,45 @@
+/* Remove today highlight completely, it was ugly af */
+.rbc-today {
+  background-color: inherit !important;
+}
+
+/* Calendar toolbar button styling that respects dark/light mode */
+.rbc-toolbar button {
+  color: var(--text-primary) !important;
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+/* Hover state */
+.rbc-toolbar button:hover {
+  background-color: var(--card-hover) !important;
+  border-color: var(--border-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Active/selected state */
+.rbc-toolbar button.rbc-active {
+  background-color: var(--accent) !important;
+  color: var(--background) !important;
+  border-color: var(--accent) !important;
+}
+
+/* Focus state */
+.rbc-toolbar button:focus {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+}
+
+/* Navigation buttons styling */
+.rbc-btn-group button {
+  margin: 0 2px;
+}
+
+/* Calendar header text */
+.rbc-toolbar-label {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}

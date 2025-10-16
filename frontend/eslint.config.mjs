@@ -1,6 +1,5 @@
 import antfu from '@antfu/eslint-config'
 
-// I had to set this because my build kept failing??
 export default antfu({
   formatters: true,
   // stylistic: {
