@@ -53,26 +53,25 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 		}
 
 		if filter.StudentIDs != nil && len(*filter.StudentIDs) > 0 {
-		// For each student ID, add a condition that checks if that specific student exists in the session
-		for _, studentID := range *filter.StudentIDs {
-			conditions = append(conditions, fmt.Sprintf(
-				"EXISTS (SELECT 1 FROM session_student WHERE session_id = session.id AND student_id = $%d)",
-				argCount,
-			))
-			args = append(args, studentID)
-			argCount++
+			// For each student ID, add a condition that checks if that specific student exists in the session
+			for _, studentID := range *filter.StudentIDs {
+				conditions = append(conditions, fmt.Sprintf(
+					"EXISTS (SELECT 1 FROM session_student WHERE session_id = session.id AND student_id = $%d)",
+					argCount,
+				))
+				args = append(args, studentID)
+				argCount++
+			}
 		}
 	}
-	}
 
-	if(len(conditions) > 0) {
+	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
 	query += fmt.Sprintf(` ORDER BY start_datetime DESC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
 
 	args = append(args, pagination.Limit, pagination.GettOffset())
-
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -182,6 +181,7 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
 	FROM session_student ss
 	JOIN student s ON ss.student_id = s.id
 	WHERE ss.session_id = $1
+	AND s.grade != -1
 	LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
