@@ -42,12 +42,6 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	// Check if running in production
 	isProduction := os.Getenv("ENV") == "production"
 
-	// Determine SameSite based on environment
-	sameSite := "Lax"
-	if isProduction {
-		sameSite = "None" // Required for cross-origin cookies
-	}
-
 	c.Cookie(&fiber.Cookie{
 		Name:     "userID",
 		Value:    signInResponse.User.ID.String(),
