@@ -53,7 +53,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		Value:    signInResponse.User.ID.String(),
 		Expires:  cookieExp,
 		Secure:   isProduction,
-		SameSite: sameSite,
+		SameSite: "None",
 		Path:     "/",
 		Domain:   "",
 	})
@@ -63,8 +63,8 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		Value:    signInResponse.AccessToken,
 		Expires:  cookieExp,
 		Secure:   isProduction,
-		HTTPOnly: true,     // Recommended for JWT security
-		SameSite: sameSite, // Changed from "Lax" to "None" for cross-origin
+		HTTPOnly: true,   // Recommended for JWT security
+		SameSite: "None", // Changed from "Lax" to "None" for cross-origin
 		Path:     "/",
 		Domain:   "", // Leave empty or set to specific domain
 	})
