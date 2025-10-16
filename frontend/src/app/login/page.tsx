@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import CustomAlert from '@/components/ui/CustomAlert'
 import { Input } from '@/components/ui/input'
-import { useAuth } from '@/contexts/authContext'
+import { useAuthContext } from '@/contexts/authContext'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const { login, isAuthenticated } = useAuth()
+  const { login, isAuthenticated } = useAuthContext()
   const router = useRouter()
 
   // Redirect if already authenticated

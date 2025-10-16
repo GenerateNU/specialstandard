@@ -1,14 +1,20 @@
 'use client'
 
-import type { Student } from '@/types/student'
-import { Calendar, ChevronDown, ChevronUp, FileText, GraduationCap, User } from 'lucide-react'
+import type { StudentBody } from '@/hooks/useStudents'
+import {
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  GraduationCap,
+  User,
+} from 'lucide-react'
+
 import { useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 
-import { gradeToDisplay } from '@/lib/gradeUtils'
-
 interface StudentCardProps {
-  student: Student
+  student: StudentBody
 }
 
 // Function to deterministically select avatar variant based on student ID
@@ -50,7 +56,10 @@ export default function StudentCard({ student }: StudentCardProps) {
     let age = today.getFullYear() - birthDate.getFullYear()
     const monthDiff = today.getMonth() - birthDate.getMonth()
 
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0
+      || (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--
     }
 
@@ -85,8 +94,7 @@ export default function StudentCard({ student }: StudentCardProps) {
                   <GraduationCap className="w-4 h-4" />
                   <span>
                     Grade
-                    {' '}
-                    {gradeToDisplay(student.grade)}
+                    {student.grade}
                   </span>
                 </>
               )}
@@ -95,7 +103,6 @@ export default function StudentCard({ student }: StudentCardProps) {
                   <span className="mx-1">•</span>
                   <span>
                     Age
-                    {' '}
                     {getAge()}
                   </span>
                 </>
@@ -124,7 +131,9 @@ export default function StudentCard({ student }: StudentCardProps) {
               <div className="flex items-start space-x-3">
                 <Calendar className="w-5 h-5 text-accent mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-primary">Date of Birth</p>
+                  <p className="text-sm font-medium text-primary">
+                    Date of Birth
+                  </p>
                   <p className="text-sm text-secondary">
                     {formatDate(student.dob)}
                   </p>
@@ -134,8 +143,10 @@ export default function StudentCard({ student }: StudentCardProps) {
               <div className="flex items-start space-x-3">
                 <User className="w-5 h-5 text-accent mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-primary">Therapist ID</p>
-                  <p className="text-sm text-secondary font-mono text-xs">
+                  <p className="text-sm font-medium text-primary">
+                    Therapist ID
+                  </p>
+                  <p className="text-sm text-secondary font-mono">
                     {student.therapist_id}
                   </p>
                 </div>
@@ -146,10 +157,10 @@ export default function StudentCard({ student }: StudentCardProps) {
               <div className="flex items-start space-x-3">
                 <GraduationCap className="w-5 h-5 text-accent mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-primary">Grade Level</p>
-                  <p className="text-sm text-secondary">
-                    {gradeToDisplay(student.grade)}
+                  <p className="text-sm font-medium text-primary">
+                    Grade Level
                   </p>
+                  <p className="text-sm text-secondary">{student.grade}</p>
                 </div>
               </div>
 
@@ -158,9 +169,7 @@ export default function StudentCard({ student }: StudentCardProps) {
                   <FileText className="w-5 h-5 text-accent mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-primary">IEP</p>
-                    <p className="text-sm text-secondary">
-                      {student.iep}
-                    </p>
+                    <p className="text-sm text-secondary">{student.iep}</p>
                   </div>
                 </div>
               )}
@@ -171,12 +180,10 @@ export default function StudentCard({ student }: StudentCardProps) {
             <div className="flex justify-between text-xs text-muted">
               <span>
                 Created:
-                {' '}
                 {formatDate(student.created_at)}
               </span>
               <span>
                 Updated:
-                {' '}
                 {formatDate(student.updated_at)}
               </span>
             </div>

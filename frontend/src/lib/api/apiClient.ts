@@ -1,9 +1,15 @@
 // src/lib/api/apiClient.ts
+import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import axios from 'axios'
+
+// Extend the config type to include your custom property
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean
+}
 
 const apiClient = axios.create({
   // eslint-disable-next-line node/prefer-global/process
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -31,7 +37,7 @@ apiClient.interceptors.response.use(
   response => response,
   async (error) => {
     const status = error.response?.status
-    const config = error.config
+    const config = error.config as CustomAxiosRequestConfig
 
     if (status === 401) {
       // Retry once if this is the first 401 and we haven't retried yet
@@ -53,8 +59,7 @@ apiClient.interceptors.response.use(
           console.error('Unauthorized access - redirecting to login')
           document.cookie.split(';').forEach((cookie) => {
             const eqPos = cookie.indexOf('=')
-            const name
-              = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
+            const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
             document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
           })
           window.location.href = '/login'
@@ -66,8 +71,7 @@ apiClient.interceptors.response.use(
         console.error('Unauthorized access - redirecting to login')
         document.cookie.split(';').forEach((cookie) => {
           const eqPos = cookie.indexOf('=')
-          const name
-            = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
+          const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
           document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
         })
         window.location.href = '/login'
@@ -89,5 +93,9 @@ apiClient.interceptors.response.use(
     return Promise.reject(error)
   },
 )
+
+export function customAxios<T>(config: AxiosRequestConfig): Promise<T> {
+  return Promise.resolve(apiClient(config)).then((response: AxiosResponse<T>) => response.data)
+}
 
 export default apiClient

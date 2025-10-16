@@ -21,12 +21,12 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	signInResponse, err := auth.SupabaseLogin(&h.config, cred.Email, cred.Password)
 	if err != nil {
 		slog.Error("Supabase Login Error: ", "err", err.Error())
-		
+
 		// Extract the actual message from HTTPError
 		if httpErr, ok := err.(errs.HTTPError); ok {
 			return errs.Unauthorized(httpErr.Message.(string))
 		}
-		
+
 		return errs.Unauthorized("Invalid credentials")
 	}
 
@@ -42,13 +42,20 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	// Check if running in production
 	isProduction := os.Getenv("ENV") == "production"
 
+	// Determine SameSite based on environment
+	sameSite := "Lax"
+	if isProduction {
+		sameSite = "None" // Required for cross-origin cookies
+	}
+
 	c.Cookie(&fiber.Cookie{
 		Name:     "userID",
 		Value:    signInResponse.User.ID.String(),
 		Expires:  cookieExp,
 		Secure:   isProduction,
-		SameSite: "Lax",
+		SameSite: sameSite,
 		Path:     "/",
+		Domain:   "",
 	})
 
 	c.Cookie(&fiber.Cookie{
@@ -56,9 +63,10 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		Value:    signInResponse.AccessToken,
 		Expires:  cookieExp,
 		Secure:   isProduction,
-		HTTPOnly: true, // Recommended for JWT security
-		SameSite: "Lax",
+		HTTPOnly: true,     // Recommended for JWT security
+		SameSite: sameSite, // Changed from "Lax" to "None" for cross-origin
 		Path:     "/",
+		Domain:   "", // Leave empty or set to specific domain
 	})
 
 	return c.Status(fiber.StatusOK).JSON(signInResponse)
