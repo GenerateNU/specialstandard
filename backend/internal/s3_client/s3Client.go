@@ -16,7 +16,6 @@ type Client struct {
 	Bucket string
 }
 
-// func NewClient(region, bucket, accessKey, secretKey string) (*Client, error) {
 func NewClient(bucket s3_config.S3) (*Client, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(bucket.Region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(bucket.AccessKey,
