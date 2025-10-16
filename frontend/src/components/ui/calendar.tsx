@@ -4,5 +4,5 @@ export default function calendar() {
       <h1>Calendar</h1>
       {/* Your calendar content */}
     </div>
-  );
+  )
 }

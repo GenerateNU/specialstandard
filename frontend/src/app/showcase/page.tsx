@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import {
   ArrowLeft,
@@ -10,17 +10,17 @@ import {
   Trash,
   User,
   Users,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
+} from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { useForm } from "react-hook-form";
+import { useForm } from 'react-hook-form'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 // Import all components
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -28,10 +28,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card'
 // New components
-import { Checkbox } from "@/components/ui/checkbox";
-import CustomAlert from "@/components/ui/CustomAlert";
+import { Checkbox } from '@/components/ui/checkbox'
+import CustomAlert from '@/components/ui/CustomAlert'
 import {
   Dialog,
   DialogContent,
@@ -40,8 +40,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Dropdown } from "@/components/ui/dropdown";
+} from '@/components/ui/dialog'
+import { Dropdown } from '@/components/ui/dropdown'
 
 import {
   Form,
@@ -51,32 +51,32 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
 
 export default function ComponentShowcase() {
-  const [showAlert, setShowAlert] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState("");
-  const [selectedAction, setSelectedAction] = useState("");
-  const [checkboxChecked, setCheckboxChecked] = useState(false);
+  const [showAlert, setShowAlert] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState('')
+  const [selectedAction, setSelectedAction] = useState('')
+  const [checkboxChecked, setCheckboxChecked] = useState(false)
 
   // Form setup
   const form = useForm({
     defaultValues: {
-      username: "",
-      email: "",
-      message: "",
+      username: '',
+      email: '',
+      message: '',
       terms: false,
     },
-  });
+  })
 
   const onSubmit = (data: any) => {
-    console.warn("Form submitted:", data);
-  };
+    console.warn('Form submitted:', data)
+  }
 
   return (
     <div className="font-sans min-h-screen p-8 pb-20 sm:p-20">
@@ -253,7 +253,7 @@ export default function ComponentShowcase() {
               <FormField
                 control={form.control}
                 name="username"
-                rules={{ required: "Username is required" }}
+                rules={{ required: 'Username is required' }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Username</FormLabel>
@@ -272,10 +272,10 @@ export default function ComponentShowcase() {
                 control={form.control}
                 name="email"
                 rules={{
-                  required: "Email is required",
+                  required: 'Email is required',
                   pattern: {
                     value: /^\S[^\s@]*@\S+$/,
-                    message: "Invalid email address",
+                    message: 'Invalid email address',
                   },
                 }}
                 render={({ field }) => (
@@ -348,18 +348,18 @@ export default function ComponentShowcase() {
                 align="left"
                 items={[
                   {
-                    label: "My Profile",
-                    value: "profile",
+                    label: 'My Profile',
+                    value: 'profile',
                     icon: <User />,
                   },
                   {
-                    label: "Settings",
-                    value: "settings",
+                    label: 'Settings',
+                    value: 'settings',
                     icon: <Settings />,
                   },
                   {
-                    label: "Logout",
-                    value: "logout",
+                    label: 'Logout',
+                    value: 'logout',
                     icon: <LogOut />,
                   },
                 ]}
@@ -372,13 +372,13 @@ export default function ComponentShowcase() {
                 align="right"
                 items={[
                   {
-                    label: "Edit",
-                    value: "edit",
+                    label: 'Edit',
+                    value: 'edit',
                     icon: <Edit />,
                   },
                   {
-                    label: "Delete",
-                    value: "delete",
+                    label: 'Delete',
+                    value: 'delete',
                     icon: <Trash />,
                     disabled: true,
                   },
@@ -388,8 +388,11 @@ export default function ComponentShowcase() {
 
             {(selectedUser || selectedAction) && (
               <div className="text-sm text-muted">
-                Selected values: User = "{selectedUser || "none"}
-                ", Action = "{selectedAction || "none"}"
+                Selected values: User = "
+                {selectedUser || 'none'}
+                ", Action = "
+                {selectedAction || 'none'}
+                "
               </div>
             )}
           </div>
@@ -510,5 +513,5 @@ export default function ComponentShowcase() {
         </section>
       </main>
     </div>
-  );
+  )
 }
