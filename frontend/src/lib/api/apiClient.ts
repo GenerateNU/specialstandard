@@ -21,9 +21,7 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('jwt')
     if (token) {
-      if (!config.headers) {
-        config.headers = {}
-      }
+      // Don't check or create headers - they always exist in InternalAxiosRequestConfig
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
