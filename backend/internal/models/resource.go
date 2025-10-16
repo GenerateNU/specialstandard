@@ -44,3 +44,8 @@ type UpdateResourceBody struct {
 	Content    *string    `json:"content"`
 	UpdatedAt  *time.Time `json:"updated_at"`
 }
+
+type ResourceResponseWithURL struct {
+	ResourceWithTheme
+	PresignedURL string `json:"presigned_url"`
+}

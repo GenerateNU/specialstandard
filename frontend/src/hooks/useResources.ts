@@ -1,7 +1,7 @@
 import type { QueryObserverResult } from '@tanstack/react-query'
 import type {
   CreateResourceBody,
-  Resource,
+  ResourceWithPresignURL,
   UpdateResourceBody,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import {
@@ -13,10 +13,10 @@ import {
 import { getResources as getResourcesApi } from '@/lib/api/resources'
 
 interface UseResourcesReturn {
-  resources: Resource[]
+  resources: ResourceWithPresignURL[]
   isLoading: boolean
   error: string | null
-  refetch: () => Promise<QueryObserverResult<Resource[], Error>>
+  refetch: () => Promise<QueryObserverResult<ResourceWithPresignURL[], Error>>
   addResource: (resource: CreateResourceBody) => void
   updateResource: (id: string, updatedResource: UpdateResourceBody) => void
   deleteResource: (id: string) => void

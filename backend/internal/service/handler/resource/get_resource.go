@@ -1,7 +1,9 @@
 package resource
 
 import (
+	"log/slog"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
 	"specialstandard/internal/xvalidator"
 	"strconv"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 )
 
 func (h *Handler) GetResources(c *fiber.Ctx) error {
@@ -74,7 +77,43 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 		return errs.InternalServerError(err.Error())
 	}
 
-	return c.JSON(resourcesWithThemes)
+	resources := make([]models.ResourceResponseWithURL, len(resourcesWithThemes))
+	g, ctx := errgroup.WithContext(c.Context())
+
+	for i, res := range resourcesWithThemes {
+		i, res := i, res
+		g.Go(func() error {
+			presignedURL := ""
+			key := ""
+			if res.Content != nil {
+				key = strings.TrimPrefix(*res.Content, "/")
+			}
+
+			if key != "" {
+				url, err := h.s3Client.GeneratePresignedURL(ctx, key, time.Hour)
+				if err != nil {
+					slog.Warn("Failed to generate presigned URL for resource",
+						"key", key,
+						"error", err,
+					)
+				} else {
+					presignedURL = url
+				}
+			}
+
+			resources[i] = models.ResourceResponseWithURL{
+				ResourceWithTheme: res,
+				PresignedURL:      presignedURL,
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return errs.InternalServerError(err.Error())
+	}
+
+	return c.JSON(resources)
 }
 
 func (h *Handler) GetResourceByID(c *fiber.Ctx) error {
@@ -92,5 +131,27 @@ func (h *Handler) GetResourceByID(c *fiber.Ctx) error {
 		return errs.InternalServerError()
 	}
 
-	return c.Status(fiber.StatusOK).JSON(resource)
+	key := ""
+	if resource.Content != nil {
+		key = strings.TrimPrefix(*resource.Content, "/")
+	}
+	presignedURL := ""
+
+	if key != "" {
+		url, err := h.s3Client.GeneratePresignedURL(c.Context(), key, time.Hour)
+		if err != nil {
+			slog.Warn("Failed to generate presigned URL for resource,",
+				"key", key,
+				"error", err)
+		} else {
+			presignedURL = url
+		}
+	}
+
+	response := models.ResourceResponseWithURL{
+		ResourceWithTheme: *resource,
+		PresignedURL:      presignedURL,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
 }
