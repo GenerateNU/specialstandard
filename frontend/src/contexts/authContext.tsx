@@ -1,5 +1,4 @@
 'use client'
-
 import type {
   PostAuthLoginBody,
   PostAuthSignupBody,
@@ -23,34 +22,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-
   const { userLogin, userLogout, userSignup } = useAuth()
-  // Check if user is authenticated on mount (by checking cookies)
+
+  // Check if user is authenticated on mount (check localStorage instead of cookies)
   useEffect(() => {
     const checkAuth = () => {
-      // Check if jwt cookie exists
-      const cookies = document.cookie.split(';')
-      const jwtCookie = cookies.find(c => c.trim().startsWith('jwt='))
-      const userIdCookie = cookies.find(c => c.trim().startsWith('userID='))
+      // Check localStorage for auth data
+      const storedUserId = localStorage.getItem('userId')
+      const storedJwt = localStorage.getItem('jwt')
 
-      if (jwtCookie && userIdCookie) {
-        const userId = userIdCookie.split('=')[1]
-        setUserId(userId)
+      if (storedJwt && storedUserId) {
+        setUserId(storedUserId)
       }
       else {
         setUserId(null)
       }
-
       setIsLoading(false)
     }
-
     checkAuth()
   }, [])
 
   const login = async (credentials: PostAuthLoginBody) => {
     try {
       const response = await userLogin(credentials)
-      setUserId(response.user.id ?? null)
+      console.warn('Login response:', response)
+
+      // Store auth data in localStorage
+      if (response.access_token) {
+        localStorage.setItem('jwt', response.access_token)
+      }
+      if (response.user?.id) {
+        localStorage.setItem('userId', response.user.id)
+        setUserId(response.user.id)
+      }
+
       router.push('/students')
     }
     catch (error) {
@@ -62,7 +67,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (credentials: PostAuthSignupBody) => {
     try {
       const response = await userSignup(credentials)
-      setUserId(response.user.id ?? null)
+
+      // Store auth data in localStorage
+      if (response.access_token) {
+        localStorage.setItem('jwt', response.access_token)
+      }
+      if (response.user?.id) {
+        localStorage.setItem('userId', response.user.id)
+        setUserId(response.user.id)
+      }
+
       router.push('/students')
     }
     catch (error) {
@@ -72,6 +86,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = () => {
+    // Clear localStorage
+    localStorage.removeItem('jwt')
+    localStorage.removeItem('userId')
+
+    // Clear any remaining cookies (for backwards compatibility)
+    document.cookie.split(';').forEach((cookie) => {
+      const eqPos = cookie.indexOf('=')
+      const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+    })
+
     userLogout()
     setUserId(null)
     router.push('/login')
