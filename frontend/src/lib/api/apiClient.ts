@@ -24,13 +24,6 @@ apiClient.interceptors.request.use(
     // if (token) {
     //   config.headers.Authorization = `Bearer ${token}`;
     // }
-    console.warn('Request:', {
-      url: config.url,
-      fullURL: config.baseURL + config.url,
-      withCredentials: config.withCredentials,
-      headers: config.headers,
-      cookies: document.cookie,
-    })
     return config
   },
   (error) => {
