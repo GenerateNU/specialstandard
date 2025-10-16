@@ -1,6 +1,16 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Edit, LogOut, Plus, Settings, Trash, User, Users } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Edit,
+  LogOut,
+  Plus,
+  Settings,
+  Trash,
+  User,
+  Users,
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
@@ -93,7 +103,8 @@ export default function ComponentShowcase() {
           Component Showcase
         </h1>
         <p className="text-secondary">
-          A comprehensive display of all UI components with the custom styling system
+          A comprehensive display of all UI components with the custom styling
+          system
         </p>
       </header>
 
@@ -104,7 +115,9 @@ export default function ComponentShowcase() {
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium mb-3 text-secondary">Variants</h3>
+              <h3 className="text-lg font-medium mb-3 text-secondary">
+                Variants
+              </h3>
               <div className="flex flex-wrap gap-3">
                 <Button>Default</Button>
                 <Button variant="destructive">Destructive</Button>
@@ -121,29 +134,45 @@ export default function ComponentShowcase() {
                 <Button size="sm">Small</Button>
                 <Button>Default</Button>
                 <Button size="lg">Large</Button>
-                <Button size="icon"><Plus className="h-4 w-4" /></Button>
+                <Button size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3 text-secondary">States</h3>
+              <h3 className="text-lg font-medium mb-3 text-secondary">
+                States
+              </h3>
               <div className="flex flex-wrap gap-3">
                 <Button disabled>Disabled</Button>
-                <Button variant="outline" disabled>Disabled Outline</Button>
+                <Button variant="outline" disabled>
+                  Disabled Outline
+                </Button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3 text-secondary">Tab Buttons</h3>
+              <h3 className="text-lg font-medium mb-3 text-secondary">
+                Tab Buttons
+              </h3>
               <div className="flex gap-0">
-                <Button variant="tab" active={true}>Active Tab</Button>
-                <Button variant="tab" active={false}>Inactive Tab</Button>
-                <Button variant="tab" active={false}>Another Tab</Button>
+                <Button variant="tab" active={true}>
+                  Active Tab
+                </Button>
+                <Button variant="tab" active={false}>
+                  Inactive Tab
+                </Button>
+                <Button variant="tab" active={false}>
+                  Another Tab
+                </Button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3 text-secondary">Full Width</h3>
+              <h3 className="text-lg font-medium mb-3 text-secondary">
+                Full Width
+              </h3>
               <Button size="long">Full Width Button</Button>
             </div>
           </div>
@@ -151,7 +180,9 @@ export default function ComponentShowcase() {
 
         {/* Form Controls Section */}
         <section>
-          <h2 className="text-2xl font-semibold mb-6 text-primary">Form Controls</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-primary">
+            Form Controls
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
@@ -162,12 +193,20 @@ export default function ComponentShowcase() {
 
               <div>
                 <Label htmlFor="email-example">Email Input</Label>
-                <Input id="email-example" type="email" placeholder="email@example.com" />
+                <Input
+                  id="email-example"
+                  type="email"
+                  placeholder="email@example.com"
+                />
               </div>
 
               <div>
                 <Label htmlFor="disabled-input">Disabled Input</Label>
-                <Input id="disabled-input" placeholder="Cannot edit this" disabled />
+                <Input
+                  id="disabled-input"
+                  placeholder="Cannot edit this"
+                  disabled
+                />
               </div>
             </div>
 
@@ -194,9 +233,7 @@ export default function ComponentShowcase() {
                   checked={checkboxChecked}
                   onCheckedChange={setCheckboxChecked}
                 />
-                <Label htmlFor="terms">
-                  Accept terms and conditions
-                </Label>
+                <Label htmlFor="terms">Accept terms and conditions</Label>
               </div>
             </div>
           </div>
@@ -204,10 +241,15 @@ export default function ComponentShowcase() {
 
         {/* React Hook Form Section */}
         <section>
-          <h2 className="text-2xl font-semibold mb-6 text-primary">Form with Validation</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-primary">
+            Form with Validation
+          </h2>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-md">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6 max-w-md"
+            >
               <FormField
                 control={form.control}
                 name="username"
@@ -240,7 +282,11 @@ export default function ComponentShowcase() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="john@example.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="john@example.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -289,7 +335,9 @@ export default function ComponentShowcase() {
 
         {/* Dropdown Section - Updated */}
         <section>
-          <h2 className="text-2xl font-semibold mb-6 text-primary">Dropdown (with value tracking)</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-primary">
+            Dropdown (with value tracking)
+          </h2>
 
           <div className="space-y-6">
             <div className="flex gap-4">
@@ -376,7 +424,8 @@ export default function ComponentShowcase() {
               <DialogHeader>
                 <DialogTitle>Edit Profile</DialogTitle>
                 <DialogDescription>
-                  Make changes to your profile here. Click save when you're done.
+                  Make changes to your profile here. Click save when you're
+                  done.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -454,7 +503,9 @@ export default function ComponentShowcase() {
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2">
-                <Button variant="outline" size="sm">View Profile</Button>
+                <Button variant="outline" size="sm">
+                  View Profile
+                </Button>
                 <Button size="sm">Message</Button>
               </CardFooter>
             </Card>
