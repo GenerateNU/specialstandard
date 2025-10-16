@@ -40,7 +40,7 @@ type App struct {
 func InitApp(config config.Config) *App {
 	ctx := context.Background()
 	repo := postgres.NewRepository(ctx, config.DB)
-	bucket, err := s3_client.New(config.S3Bucket.Bucket)
+	bucket, err := s3_client.NewClient(config.S3Bucket)
 	if err != nil {
 		slog.Error("bucket cannot be configured")
 	}

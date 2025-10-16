@@ -78,8 +78,11 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 
 	var resources []models.ResourceResponseWithURL
 	for _, res := range resourcesWithThemes {
-		key := strings.TrimPrefix(*res.Content, "/")
 		presignedURL := ""
+		key := ""
+		if res.Content != nil {
+			key = strings.TrimPrefix(*res.Content, "/")
+		}
 
 		if key != "" {
 			url, err := h.s3Client.GeneratePresignedURL(c.Context(), key, 15*time.Minute)
@@ -116,7 +119,10 @@ func (h *Handler) GetResourceByID(c *fiber.Ctx) error {
 		return errs.InternalServerError()
 	}
 
-	key := strings.TrimPrefix(*resource.Content, "/")
+	key := ""
+	if resource.Content != nil {
+		key = strings.TrimPrefix(*resource.Content, "/")
+	}
 	presignedURL := ""
 
 	if key != "" {
