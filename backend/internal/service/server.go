@@ -73,7 +73,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 
 	// Use CORS middleware to configure CORS and handle preflight/OPTIONS requests.
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:8080, http://127.0.0.1:8080,http://127.0.0.1:3000, https://clownfish-app-wq7as.ondigitalocean.app",
+		AllowOrigins:     "http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:3000,https://clownfish-app-wq7as.ondigitalocean.app,https://king-prawn-app-n5vk6.ondigitalocean.app",
 		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS", // Using these methods.
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true, // Allow cookies

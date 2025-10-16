@@ -84,6 +84,9 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - access_token
+                  - user
                 properties:
                   access_token:
                     type: string
@@ -130,6 +133,7 @@ paths:
               required:
                 - email
                 - password
+                - remember_me
               properties:
                 email:
                   type: string
@@ -140,13 +144,23 @@ paths:
                   type: string
                   description: Password of the User/Therapist (meets strong password requirements)
                   example: "IlikeMYanimalsLITTLE@34"
+                remember_me:
+                  type: boolean
+                  description: Whether to remember the user for a longer session duration
+                  example: true
       responses:
         "200":
-          description: User/Therapist created successfully!
+          description: User logged in successfully.
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - access_token
+                  - token_type
+                  - expires_in
+                  - refresh_token
+                  - user
                 properties:
                   access_token:
                     type: string
@@ -925,15 +939,15 @@ paths:
       summary: Get all sessions for a student
       description: |
         Retrieve all sessions associated with a specific student, including bridge table information.
-        
+
         **Date Filtering Options:**
         - Use `startDate` and `endDate` for date range filtering: `?startDate=2025-09-01&endDate=2025-09-30`
         - Use `month` and `year` for monthly filtering: `?month=9&year=2025`  
         - Use `year` alone for yearly filtering: `?year=2025`
-        
+
         **Attendance Filtering:**
         - Use `present` to filter by attendance: `?present=true` or `?present=false`
-        
+
         **Combining Filters:**
         All filters can be combined: `?month=9&year=2025&present=true`
       tags: [Students]
