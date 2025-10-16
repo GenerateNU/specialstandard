@@ -29,6 +29,10 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      // Clear localStorage (important for your auth setup!)
+      localStorage.removeItem('jwt')
+      localStorage.removeItem('userId')
+
       // This can be an API call if you have a logout endpoint
       // For cookie-based auth, clearing cookies client-side is common
       document.cookie.split(';').forEach((cookie) => {

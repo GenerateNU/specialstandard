@@ -19,11 +19,11 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    // Add any auth headers or other request modifications here
-    // const token = getAuthToken();
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = localStorage.getItem('jwt')
+    if (token) {
+      // Don't check or create headers - they always exist in InternalAxiosRequestConfig
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {
@@ -56,12 +56,20 @@ apiClient.interceptors.response.use(
         catch (retryError) {
           isRetrying = false
           // If retry fails, then redirect
+          // In the 401 error handler
           console.error('Unauthorized access - redirecting to login')
+
+          // Clear localStorage
+          localStorage.removeItem('jwt')
+          localStorage.removeItem('userId')
+
+          // Clear cookies for backwards compatibility
           document.cookie.split(';').forEach((cookie) => {
             const eqPos = cookie.indexOf('=')
             const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
             document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
           })
+
           window.location.href = '/login'
           return Promise.reject(retryError)
         }
@@ -95,7 +103,12 @@ apiClient.interceptors.response.use(
 )
 
 export function customAxios<T>(config: AxiosRequestConfig): Promise<T> {
-  return Promise.resolve(apiClient(config)).then((response: AxiosResponse<T>) => response.data)
+  return Promise.resolve(
+    apiClient({
+      ...config,
+      withCredentials: true, // Force this to always be true
+    }),
+  ).then((response: AxiosResponse<T>) => response.data)
 }
 
 export default apiClient
