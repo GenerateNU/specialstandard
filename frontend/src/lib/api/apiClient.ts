@@ -1,7 +1,6 @@
 // src/lib/api/apiClient.ts
 import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import axios from 'axios'
-import Router from 'next/router'// Extend the config type to include your custom property
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean
@@ -70,7 +69,7 @@ apiClient.interceptors.response.use(
             document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
           })
 
-          Router.push('/login')
+          window.location.href = '/login'
           return Promise.reject(retryError)
         }
       }
@@ -82,7 +81,7 @@ apiClient.interceptors.response.use(
           const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
           document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
         })
-        Router.push('/login')
+        window.location.href = '/login'
       }
     }
     else if (status === 403) {
