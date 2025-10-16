@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   ArrowRight,
   Edit,
   LogOut,
@@ -79,6 +80,15 @@ export default function ComponentShowcase() {
 
   return (
     <div className="font-sans min-h-screen p-8 pb-20 sm:p-20">
+      {/* Back button */}
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-4 transition-colors group"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span className="text-sm font-medium">Back to Home</span>
+      </Link>
+
       {/* Header */}
       <header className="mb-12">
         <Image

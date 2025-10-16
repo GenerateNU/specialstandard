@@ -64,10 +64,25 @@ func SupabaseLogin(cfg *config.Supabase, email string, password string) (SignInR
 	}
 
 	if res.StatusCode != http.StatusOK {
-		errorMsg := fmt.Sprintf("Failed to login %d, %s", res.StatusCode, body)
-		fmt.Print(errorMsg)
-		return SignInResponse{}, errs.BadRequest(errorMsg)
-	}
+    // Try to parse the error response
+    var errorResp struct {
+        Message string `json:"msg"`
+        Error   string `json:"error"`
+    }
+    
+    if err := json.Unmarshal(body, &errorResp); err == nil {
+        // Use the parsed message if available
+        if errorResp.Message != "" {
+            return SignInResponse{}, errs.BadRequest(errorResp.Message)
+        }
+        if errorResp.Error != "" {
+            return SignInResponse{}, errs.BadRequest(errorResp.Error)
+        }
+    }
+    
+    // Fallback to generic message if parsing fails
+    return SignInResponse{}, errs.BadRequest("Invalid credentials")
+}
 
 	var signInResponse SignInResponse
 	err = json.Unmarshal(body, &signInResponse)
