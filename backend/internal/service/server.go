@@ -1,8 +1,10 @@
 package service
 
 import (
+	"log/slog"
 	"specialstandard/internal/config"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/s3_client"
 	"specialstandard/internal/service/handler/auth"
 	"specialstandard/internal/service/handler/resource"
 	"specialstandard/internal/service/handler/session"
@@ -29,25 +31,31 @@ import (
 )
 
 type App struct {
-	Server *fiber.App
-	Repo   *storage.Repository
+	Server   *fiber.App
+	Repo     *storage.Repository
+	S3Bucket *s3_client.Client
 }
 
 // Initialize the App union type containing a fiber app, a repository, and a climatiq client.
 func InitApp(config config.Config) *App {
 	ctx := context.Background()
 	repo := postgres.NewRepository(ctx, config.DB)
+	bucket, err := s3_client.New(config.S3Bucket.Bucket)
+	if err != nil {
+		slog.Error("bucket cannot be configured")
+	}
 
-	app := SetupApp(config, repo)
+	app := SetupApp(config, repo, bucket)
 
 	return &App{
-		Server: app,
-		Repo:   repo,
+		Server:   app,
+		Repo:     repo,
+		S3Bucket: bucket,
 	}
 }
 
 // Setup the fiber app with the specified configuration, database, and climatiq client.
-func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
+func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.Client) *fiber.App {
 	app := fiber.New(fiber.Config{
 		JSONEncoder:  go_json.Marshal,
 		JSONDecoder:  go_json.Unmarshal,
@@ -135,7 +143,7 @@ func SetupApp(config config.Config, repo *storage.Repository) *fiber.App {
 		r.Patch("/:id", therapistHandler.PatchTherapist)
 	})
 
-	resourceHandler := resource.NewHandler(repo.Resource)
+	resourceHandler := resource.NewHandler(repo.Resource, bucket)
 	apiV1.Route("/resources", func(r fiber.Router) {
 		r.Post("/", resourceHandler.PostResource)
 		r.Get("/", resourceHandler.GetResources)

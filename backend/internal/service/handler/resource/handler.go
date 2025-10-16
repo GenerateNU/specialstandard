@@ -9,13 +9,13 @@ import (
 type Handler struct {
 	resourceRepository storage.ResourceRepository
 	validator          *xvalidator.XValidator
-	s3Client           *s3_client.Client
+	s3Client           s3_client.Client
 }
 
 func NewHandler(resourceRepository storage.ResourceRepository, s3Client *s3_client.Client) *Handler {
 	return &Handler{
 		resourceRepository: resourceRepository,
 		validator:          xvalidator.Validator,
-		s3Client:           s3Client,
+		s3Client:           *s3Client,
 	}
 }

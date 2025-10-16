@@ -9,7 +9,7 @@ import (
 )
 
 type Client struct {
-	S3     *s3.Client
+	S3     s3.Client
 	Bucket string
 }
 
@@ -22,7 +22,16 @@ func New(bucketName string) (*Client, error) {
 	s3Client := s3.NewFromConfig(cfg)
 
 	return &Client{
-		S3:     s3Client,
+		S3:     *s3Client,
 		Bucket: bucketName,
 	}, nil
 }
+
+// TODO: Access Keys: How will other people know the ENV variables?
+// TODO: Server Bucket Initialization --> S3 Client, ENV, Models, etc.
+
+// TODO: Merge 3 Branches
+// TODO: Frontend Hooks
+// TODO: Manual Testing
+// TODO: OpenAPI
+// TODO: Actual Testing
