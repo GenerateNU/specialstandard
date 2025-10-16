@@ -1,0 +1,18 @@
+/* Remove today highlight completely, it was ugly af */
+.rbc-today {
+  background-color: inherit !important;
+}
+
+/* Ugly ass calendar button font */
+.rbc-toolbar button {
+  color: white !important;
+}
+
+/* Remove the ugly ahh focus and hover styling on buttons */
+.rbc-toolbar button,
+.rbc-toolbar button:hover,
+.rbc-toolbar button:focus,
+.rbc-toolbar button:active,
+.rbc-toolbar button.rbc-active {
+  background-color: transparent !important;
+}
