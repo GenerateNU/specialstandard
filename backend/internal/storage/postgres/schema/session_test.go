@@ -376,3 +376,56 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	assert.Equal(t, patchedSession.TherapistID, therapistID)
 	assert.Equal(t, patchedSession.Notes, notes)
 }
+
+func TestGetSessionStudents(t *testing.T) {
+	// Setup
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionRepository(testDB.Pool)
+	ctx := context.Background()
+
+	// Create a test therapist first (required for foreign key)
+	therapistID := uuid.New()
+	_, err := testDB.Pool.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, "John", "Doe", "john.doe@example.com")
+	assert.NoError(t, err)
+
+	// Insert test session data using new schema
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx, `
+        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, startTime, endTime, "Test session")
+	assert.NoError(t, err)
+
+	// Test filtering by student IDs
+	studentID1 := uuid.New()
+	studentID3 := uuid.New() // graduated
+
+	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
+	assert.NoError(t, err)
+	assert.Len(t, sessions, 1)
+
+	// Insert student associations for one of the sessions
+	sessionWithStudents := sessions[0].ID
+	_, err = testDB.Pool.Exec(ctx, `
+		INSERT INTO student (id, first_name, last_name, therapist_id, grade)
+		VALUES ($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10)
+	`, studentID1, "Student", "One", therapistID, 3, studentID3, "Student", "Three", therapistID, -1)
+	assert.NoError(t, err)
+
+	_, err = testDB.Pool.Exec(ctx, `
+		INSERT INTO session_student (session_id, student_id, present)
+		VALUES ($1, $2, true), ($3, $4, true)
+	`, sessionWithStudents, studentID1, sessionWithStudents, studentID3)
+	assert.NoError(t, err)
+
+	students, err := repo.GetSessionStudents(ctx, sessionWithStudents, utils.NewPagination())
+
+	assert.NoError(t, err)
+	assert.Len(t, students, 1) // returns the one student that has not graduated.
+}

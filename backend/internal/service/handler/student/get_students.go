@@ -34,8 +34,6 @@ func (h *Handler) GetStudents(c *fiber.Ctx) error {
 		query.Limit = 10
 	}
 
-	// Handle empty string query parameters - treat them as not provided
-	// When ?grade= is present but empty, Fiber may parse it as a zero value
 	if c.Query("grade") == "" {
 		query.Grade = nil
 	}
