@@ -63,12 +63,20 @@ apiClient.interceptors.response.use(
         catch (retryError) {
           isRetrying = false
           // If retry fails, then redirect
+          // In the 401 error handler
           console.error('Unauthorized access - redirecting to login')
+
+          // Clear localStorage
+          localStorage.removeItem('jwt')
+          localStorage.removeItem('userId')
+
+          // Clear cookies for backwards compatibility
           document.cookie.split(';').forEach((cookie) => {
             const eqPos = cookie.indexOf('=')
             const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
             document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
           })
+
           window.location.href = '/login'
           return Promise.reject(retryError)
         }
