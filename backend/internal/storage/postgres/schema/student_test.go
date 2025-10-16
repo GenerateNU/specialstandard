@@ -174,14 +174,31 @@ func TestStudentRepository_GetStudents_FilterByGrade(t *testing.T) {
     `, uuid.New(), "Mike", "Johnson", testDOB, therapistID, 5, "IEP Goals", time.Now(), time.Now())
 	assert.NoError(t, err)
 
+	// Add a graduated student
+	_, err = testDB.Pool.Exec(ctx, ` 
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "Jack", "Douglas", testDOB, therapistID, -1, "IEP Goals", time.Now(), time.Now())
+	assert.NoError(t, err)
+
+	students, err := repo.GetStudents(ctx, nil, uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 3) // doesnt include graduated student
+
 	// Test: Filter by grade 5
-	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
 
 	assert.NoError(t, err)
 	assert.Len(t, students, 2) // Should only return John and Mike
 	for _, student := range students {
 		assert.Equal(t, 5, *student.Grade)
 	}
+
+	students, err = repo.GetStudents(ctx, ptrInt(-1), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 1) // Should only return Jack
+	assert.Equal(t, -1, *students[0].Grade)
+
 }
 
 func TestStudentRepository_GetStudents_FilterByTherapist(t *testing.T) {
