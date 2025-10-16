@@ -19,11 +19,13 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    // Add any auth headers or other request modifications here
-    // const token = getAuthToken();
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = localStorage.getItem('jwt')
+    if (token) {
+      if (!config.headers) {
+        config.headers = {}
+      }
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {

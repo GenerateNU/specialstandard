@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (credentials: PostAuthLoginBody) => {
     try {
       const response = await userLogin(credentials)
+      console.warn('Login response:', response)
 
       // Store auth data in localStorage
       if (response.access_token) {
