@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/s3_client"
 	"specialstandard/internal/utils"
 	"strings"
 	"testing"
@@ -58,7 +59,7 @@ func TestHandler_PostResource(t *testing.T) {
 			mockRepo := new(mocks.MockResourceRepository)
 			tt.mockSetup(mockRepo)
 
-			handler := resource.NewHandler(mockRepo)
+			handler := resource.NewHandler(mockRepo, &s3_client.Client{})
 			app.Post("/resources", handler.PostResource)
 
 			req := httptest.NewRequest("POST", "/resources", strings.NewReader(tt.requestBody))
@@ -70,6 +71,7 @@ func TestHandler_PostResource(t *testing.T) {
 		})
 	}
 }
+
 func TestHandler_GetResource(t *testing.T) {
 	resourceID := uuid.New()
 	tests := []struct {
@@ -118,7 +120,7 @@ func TestHandler_GetResource(t *testing.T) {
 			mockRepo := new(mocks.MockResourceRepository)
 			tt.mockSetup(mockRepo)
 
-			handler := resource.NewHandler(mockRepo)
+			handler := resource.NewHandler(mockRepo, &s3_client.Client{})
 			app.Get("/resources/:id", handler.GetResourceByID)
 
 			req := httptest.NewRequest("GET", "/resources/"+tt.resourceID, nil)
@@ -224,7 +226,7 @@ func TestHandler_GetResources(t *testing.T) {
 			mockRepo := new(mocks.MockResourceRepository)
 			tt.mockSetup(mockRepo)
 
-			handler := resource.NewHandler(mockRepo)
+			handler := resource.NewHandler(mockRepo, &s3_client.Client{})
 			app.Get("/resources", handler.GetResources)
 
 			req := httptest.NewRequest("GET", "/resources"+tt.url, nil)
@@ -262,7 +264,7 @@ func TestHandler_PatchResource(t *testing.T) {
 			mockRepo := new(mocks.MockResourceRepository)
 			tt.mockSetup(mockRepo)
 
-			handler := resource.NewHandler(mockRepo)
+			handler := resource.NewHandler(mockRepo, &s3_client.Client{})
 			app.Patch("/resources/:id", handler.UpdateResource)
 
 			req := httptest.NewRequest("PATCH", "/resources/"+tt.resourceID, strings.NewReader(tt.requestBody))
@@ -307,7 +309,7 @@ func TestHandler_DeleteResource(t *testing.T) {
 			mockRepo := new(mocks.MockResourceRepository)
 			tt.mockSetup(mockRepo)
 
-			handler := resource.NewHandler(mockRepo)
+			handler := resource.NewHandler(mockRepo, &s3_client.Client{})
 			app.Delete("/resources/:id", handler.DeleteResource)
 
 			req := httptest.NewRequest("DELETE", "/resources/"+tt.resourceID, nil)

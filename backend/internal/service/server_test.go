@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
+	"specialstandard/internal/s3_client"
 	"specialstandard/internal/service/handler/auth"
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/utils"
@@ -51,7 +52,7 @@ func TestHealthEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	// Test
 	req := httptest.NewRequest("GET", "/api/v1/health", nil)
@@ -138,7 +139,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 			}
 			app := service.SetupApp(config.Config{
 				TestMode: true,
-			}, repo)
+			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("GET", "/api/v1/sessions"+tt.url, nil)
 			res, _ := app.Test(req, -1)
@@ -174,7 +175,7 @@ func TestGetStudentsEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	// Test
 	req := httptest.NewRequest("GET", "/api/v1/students", nil)
@@ -211,7 +212,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=5", nil)
 	resp, err := app.Test(req, -1)
@@ -253,7 +254,7 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/students?therapist_id=123e4567-e89b-12d3-a456-426614174000", nil)
 	resp, err := app.Test(req, -1)
@@ -298,7 +299,7 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/students?name=John", nil)
 	resp, err := app.Test(req, -1)
@@ -338,7 +339,7 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=5&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5", nil)
 	resp, err := app.Test(req, -1)
@@ -365,7 +366,7 @@ func TestGetStudentsEndpoint_InvalidTherapistID(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/students?therapist_id=invalid-uuid", nil)
 	resp, err := app.Test(req, -1)
@@ -399,7 +400,7 @@ func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/students?grade=&name=&therapist_id=", nil)
 	resp, err := app.Test(req, -1)
@@ -433,7 +434,7 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	// Test
 	req := httptest.NewRequest("GET", "/api/v1/students/"+studentID.String(), nil)
@@ -464,7 +465,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	testTherapistID := uuid.New()
 
@@ -524,7 +525,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := `{
 		"grade": 5,
@@ -553,7 +554,7 @@ func TestDeleteStudentEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	// Test
 	req := httptest.NewRequest("DELETE", "/api/v1/students/"+studentID.String(), nil)
@@ -611,7 +612,7 @@ func TestGetSessionByIDEndpoint(t *testing.T) {
 
 			app := service.SetupApp(config.Config{
 				TestMode: true,
-			}, repo)
+			}, repo, &s3_client.Client{})
 
 			// Test
 			req := httptest.NewRequest("GET", "/api/v1/sessions/"+tt.sessionID, nil)
@@ -667,7 +668,7 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 			}
 			app := service.SetupApp(config.Config{
 				TestMode: true,
-			}, repo)
+			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("DELETE", "/api/v1/sessions/"+tt.sessionID.String(), nil)
 			res, err := app.Test(req, -1)
@@ -779,7 +780,7 @@ func TestHandler_PostSessions(t *testing.T) {
 			}
 			app := service.SetupApp(config.Config{
 				TestMode: true,
-			}, repo)
+			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("POST", "/api/v1/sessions", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
@@ -998,7 +999,7 @@ func TestGetTherapistByIDEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	// Test
 	req := httptest.NewRequest("GET", "/api/v1/therapists/9dad94d8-6534-4510-90d7-e4e97c175a65", nil)
@@ -1085,7 +1086,7 @@ func TestGetTherapistsEndpoint(t *testing.T) {
 			}
 			app := service.SetupApp(config.Config{
 				TestMode: true,
-			}, repo)
+			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("GET", "/api/v1/therapists"+tt.url, nil)
 			res, err := app.Test(req, -1)
@@ -1116,7 +1117,7 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := fmt.Sprintf(`{
 		"id": "%s",
@@ -1146,7 +1147,7 @@ func TestDeleteTherapistEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	// Test
 	req := httptest.NewRequest("DELETE", "/api/v1/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112", nil)
@@ -1176,7 +1177,7 @@ func TestPatchTherapistEndpoint(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := `{
 		"first_name": "Kevin",
@@ -1206,7 +1207,7 @@ func TestCreateResourceEndpoint(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := `{"title": "Resource1", "type": "doc"}`
 	req := httptest.NewRequest("POST", "/api/v1/resources", strings.NewReader(body))
@@ -1242,7 +1243,7 @@ func TestGetResourcesEndpoint(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1275,7 +1276,7 @@ func TestGetResourceByIDEndpoint(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/resources/"+resourceID.String(), nil)
 	resp, err := app.Test(req, -1)
@@ -1299,7 +1300,7 @@ func TestUpdateResourceEndpoint(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := `{"title": "Updated Resource"}`
 	req := httptest.NewRequest("PATCH", "/api/v1/resources/"+resourceID.String(), strings.NewReader(body))
@@ -1321,7 +1322,7 @@ func TestDeleteResourceEndpoint(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("DELETE", "/api/v1/resources/"+resourceID.String(), nil)
 	resp, err := app.Test(req, -1)
@@ -1341,7 +1342,7 @@ func TestGetResourceByIDEndpoint_NotFound(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/resources/"+resourceID.String(), nil)
 	resp, err := app.Test(req, -1)
@@ -1361,7 +1362,7 @@ func TestUpdateResourceEndpoint_NotFound(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := `{"title": "Updated Resource"}`
 	req := httptest.NewRequest("PATCH", "/api/v1/resources/"+resourceID.String(), strings.NewReader(body))
@@ -1383,7 +1384,7 @@ func TestDeleteResourceEndpoint_NotFound(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("DELETE", "/api/v1/resources/"+resourceID.String(), nil)
 	resp, err := app.Test(req, -1)
@@ -1466,7 +1467,7 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 			}
 			app := service.SetupApp(config.Config{
 				TestMode: true,
-			}, repo)
+			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("POST", "/api/v1/session_students", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
@@ -1537,7 +1538,7 @@ func TestDeleteSessionStudentEndpoint(t *testing.T) {
 			}
 			app := service.SetupApp(config.Config{
 				TestMode: true,
-			}, repo)
+			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("DELETE", "/api/v1/session_students", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
@@ -1646,7 +1647,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 			}
 			app := service.SetupApp(config.Config{
 				TestMode: true,
-			}, repo)
+			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("PATCH", "/api/v1/session_students", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
@@ -1691,7 +1692,7 @@ func TestGetResourcesBySessionIDEndpoint_Success(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1718,7 +1719,7 @@ func TestGetResourcesBySessionIDEndpoint_EmptyArray(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1742,7 +1743,7 @@ func TestGetResourcesBySessionIDEndpoint_InvalidUUID(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/sessions/invalid-uuid/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1764,7 +1765,7 @@ func TestGetResourcesBySessionIDEndpoint_InternalError(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("GET", "/api/v1/sessions/"+sessionID.String()+"/resources", nil)
 	resp, err := app.Test(req, -1)
@@ -1799,7 +1800,7 @@ func TestPostSessionResourceEndpoint_Success(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1838,7 +1839,7 @@ func TestPostSessionResourceEndpoint_SessionNotFound(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1871,7 +1872,7 @@ func TestPostSessionResourceEndpoint_ResourceNotFound(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1892,7 +1893,7 @@ func TestPostSessionResourceEndpoint_InvalidBody(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader([]byte(`{"invalid": "json"`)))
 	req.Header.Set("Content-Type", "application/json")
@@ -1912,7 +1913,7 @@ func TestPostSessionResourceEndpoint_MissingFields(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := `{"session_id": ""}`
 	req := httptest.NewRequest("POST", "/api/v1/session-resource", bytes.NewReader([]byte(body)))
@@ -1942,7 +1943,7 @@ func TestDeleteSessionResourceEndpoint_Success(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body, _ := json.Marshal(deleteReq)
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1971,7 +1972,7 @@ func TestDeleteSessionResourceEndpoint_NotFound(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body, _ := json.Marshal(deleteReq)
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
@@ -1992,7 +1993,7 @@ func TestDeleteSessionResourceEndpoint_InvalidBody(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader([]byte(`{"invalid": "json"`)))
 	req.Header.Set("Content-Type", "application/json")
@@ -2012,7 +2013,7 @@ func TestDeleteSessionResourceEndpoint_MissingFields(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := `{"session_id": ""}`
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader([]byte(body)))
@@ -2040,7 +2041,7 @@ func TestDeleteSessionResourceEndpoint_InternalError(t *testing.T) {
 	}
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body, _ := json.Marshal(deleteReq)
 	req := httptest.NewRequest("DELETE", "/api/v1/session-resource", bytes.NewReader(body))
@@ -2225,7 +2226,7 @@ func TestEndpoint_PromoteStudents(t *testing.T) {
 
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo)
+	}, repo, &s3_client.Client{})
 
 	body := fmt.Sprintf(`{
 		"therapist_id": "%v"
