@@ -52,6 +52,22 @@ export default function Home() {
             </p>
           </Link>
 
+          <Link
+            href="/curriculum"
+            className="group p-6 bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-default hover:bg-card-hover hover:border-hover"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <Users className="w-10 h-10 text-accent" />
+              <ArrowRight className="w-5 h-5 text-muted group-hover:translate-x-1 transition-transform group-hover:text-accent" />
+            </div>
+            <h2 className="text-xl font-semibold text-primary mb-2">
+              Curriculum
+            </h2>
+            <p className="text-secondary text-sm">
+              Browse the roadmap
+            </p>
+          </Link>
+
           <div className="p-6 bg-accent-light rounded-xl border border-default opacity-60 cursor-not-allowed">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 bg-card-hover rounded-lg"></div>
