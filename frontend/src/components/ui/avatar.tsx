@@ -6,7 +6,7 @@ const Avatar = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
     name?: string
-    variant?: 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'Big Smile' | 'Personas'
+    variant?: 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big-smile' | 'personas'
   }
 >(({ className, name, variant = 'avataaars', children, ...props }, ref) => {
   // If no children and name is provided, auto-generate avatar

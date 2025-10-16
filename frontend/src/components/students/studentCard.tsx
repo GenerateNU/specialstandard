@@ -18,9 +18,9 @@ interface StudentCardProps {
 }
 
 // Function to deterministically select avatar variant based on student ID
-function getAvatarVariant(id: string): 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'Big Smile' | 'Personas' {
-  // Note: DiceBear expects lowercase with hyphens
-  const variants = ['avataaars', 'lorelei', 'micah', 'miniavs', 'Big Smile', 'Personas'] as const
+function getAvatarVariant(id: string): 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big-smile' | 'personas' {
+  // DiceBear expects lowercase with hyphens
+  const variants = ['avataaars', 'lorelei', 'micah', 'miniavs', 'big-smile', 'personas'] as const
 
   // Simple hash function to get consistent index
   let hash = 0
