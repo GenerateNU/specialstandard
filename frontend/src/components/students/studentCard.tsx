@@ -78,7 +78,6 @@ export default function StudentCard({ student }: StudentCardProps) {
         aria-controls={`student-details-${student.id}`}
       >
         <div className="flex items-center space-x-4">
-          {/* Replace the icon div with auto-generating Avatar */}
           <Avatar
             name={getFullName() + student.id} // Ensure uniqueness
             variant={avatarVariant}
@@ -94,6 +93,7 @@ export default function StudentCard({ student }: StudentCardProps) {
                   <GraduationCap className="w-4 h-4" />
                   <span>
                     Grade
+                    {' '}
                     {student.grade}
                   </span>
                 </>
@@ -103,6 +103,7 @@ export default function StudentCard({ student }: StudentCardProps) {
                   <span className="mx-1">•</span>
                   <span>
                     Age
+                    {' '}
                     {getAge()}
                   </span>
                 </>
