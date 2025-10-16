@@ -54,7 +54,7 @@ func InitApp(config config.Config) *App {
 	}
 }
 
-// Setup the fiber app with the specified configuration, database, and climatiq client.
+// Setup the fiber app with the specified configuration, database, and S3 client.
 func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.Client) *fiber.App {
 	app := fiber.New(fiber.Config{
 		JSONEncoder:  go_json.Marshal,
