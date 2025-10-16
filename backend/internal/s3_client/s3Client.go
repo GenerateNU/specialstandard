@@ -29,15 +29,3 @@ func NewClient(bucket s3_config.S3) (*Client, error) {
 		Bucket: bucket.Bucket,
 	}, nil
 }
-
-// TODO: Access Keys: How will other people know the ENV variables?
-// TODO: Server Bucket Initialization --> S3 Client, ENV, Models, etc.
-
-// TODO: Manual Testing
-// TODO: - Supabase will need to make Content a compulsory field and it won't be editable?
-// TODO: - Update my own Frontend File?
-
-// TODO: OpenAPI
-// TODO: Actual Testing
-
-// NewClient(region,
