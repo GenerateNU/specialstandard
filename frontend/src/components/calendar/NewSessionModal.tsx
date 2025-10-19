@@ -113,19 +113,17 @@ export function CreateSessionDialog({
         end_datetime: endDateTime.toISOString(),
         therapist_id: therapistId,
         notes: data.notes || undefined,
+        studentIds: data.student_ids,
       }
 
       if (onSubmit) {
         await onSubmit(postBody)
       }
-
-      // Reset form and close dialog on success
       form.reset()
       setOpen(false)
     }
     catch (error) {
       console.error('Error creating session:', error)
-      // Handle error - you might want to show a toast notification here
     }
   }
 

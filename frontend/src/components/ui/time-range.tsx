@@ -54,7 +54,6 @@ const TimeRange = React.forwardRef<HTMLDivElement, TimeRangeProps>(
               type="time"
               value={value?.startTime || '09:00'}
               onChange={handleStartTimeChange}
-              className="text-white"
             />
           </div>
 
@@ -65,7 +64,6 @@ const TimeRange = React.forwardRef<HTMLDivElement, TimeRangeProps>(
               type="time"
               value={value?.endTime || '10:00'}
               onChange={handleEndTimeChange}
-              // className="[&::-webkit-calendar-picker-indicator]:hidden"
               min={value?.startTime || '09:00'}
             />
           </div>

@@ -112,7 +112,7 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
               {getDisplayText()}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="max-h-44 text-black bg-foreground overflow-y-auto">
+          <SelectContent className="max-h-44 bg-background overflow-y-auto">
             {options.map((option) => {
               const isSelected = internalValue.includes(option.value)
               const isDisabled = !!(option.disabled
