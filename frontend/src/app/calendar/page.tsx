@@ -1,18 +1,20 @@
 'use client'
 
-import type { View } from 'react-big-calendar'
+import type { SlotInfo, View } from 'react-big-calendar'
 import { ArrowLeft } from 'lucide-react'
 import moment from 'moment'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
+import { CreateSessionDialog } from '@/components/calendar/NewSessionModal'
+import { Button } from '@/components/ui/button'
 import { useSessions } from '@/hooks/useSessions'
+import { useStudents } from '@/hooks/useStudents'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import './override-calendar.css'
 
 const localizer = momentLocalizer(moment)
 
-// Here, we are defining a calendar event type
 interface CalendarEvent {
   id: string
   title: string
@@ -20,10 +22,16 @@ interface CalendarEvent {
   end: Date
 }
 
+// Hard coded therapist ID as requested (using existing therapist from database)
+const HARDCODED_THERAPIST_ID = '9dad94d8-6534-4510-90d7-e4e97c175a65' // John Doe
+
 export default function MyCalendar() {
-  const { sessions, isLoading, error } = useSessions()
+  const { sessions, isLoading, error, addSession } = useSessions()
+  const { students } = useStudents()
   const [date, setDate] = useState(new Date())
   const [view, setView] = useState<View>('week')
+  const [newSessionOpen, setNewSessionOpen] = useState(false)
+  const [selectedSlot, setSelectedSlot] = useState<{ start: Date, end: Date } | null>(null)
 
   // Transform sessions into calendar events
   const events: CalendarEvent[] = sessions.map(session => ({
@@ -32,6 +40,19 @@ export default function MyCalendar() {
     start: new Date(session.start_datetime),
     end: new Date(session.end_datetime),
   }))
+
+  const handleSelectSlot = (slotInfo: SlotInfo) => {
+    setSelectedSlot({
+      start: slotInfo.slots[0] as Date,
+      end: slotInfo.slots[1] as Date,
+    })
+    setNewSessionOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setNewSessionOpen(false)
+    setSelectedSlot(null)
+  }
 
   if (isLoading) {
     return (
@@ -63,8 +84,20 @@ export default function MyCalendar() {
         <span className="text-sm font-medium">Back to Home</span>
       </Link>
 
-      <div className="flex items-center justify-center h-screen">
+      <Button variant="default" onClick={() => setNewSessionOpen(true)}>
+        + New Session
+      </Button>
 
+      <CreateSessionDialog
+        open={newSessionOpen}
+        therapistId={HARDCODED_THERAPIST_ID}
+        students={students}
+        setOpen={handleCloseModal}
+        onSubmit={async data => addSession(data)}
+        initialDateTime={selectedSlot ?? undefined}
+      />
+
+      <div className="flex items-center justify-center h-screen">
         <Calendar
           localizer={localizer}
           events={events}
@@ -76,6 +109,8 @@ export default function MyCalendar() {
           onNavigate={setDate}
           onView={setView}
           views={['week', 'day', 'month']}
+          selectable
+          onSelectSlot={handleSelectSlot}
         />
       </div>
     </div>
