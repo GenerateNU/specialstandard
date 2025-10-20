@@ -88,6 +88,9 @@ body {
 .bg-accent-light {
   background-color: var(--accent-light);
 }
+.bg-border {
+  background-color: var(--border);
+}
 
 .text-primary {
   color: var(--text-primary);
