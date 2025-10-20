@@ -2,7 +2,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Grid3x3, Home, PanelLeft, Users } from 'lucide-react'
+import { Calendar, Component, GraduationCap, Home, PanelLeft, Users } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -22,7 +22,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/students', label: 'Students', icon: Users },
-  { href: '/showcase', label: 'Components', icon: Grid3x3 },
+  { href: '/showcase', label: 'Components', icon: Component },
+  { href: '/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/curriculum', label: 'Curriculum', icon: GraduationCap },
 ]
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -50,7 +52,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   }, [])
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen bg-background">
       {/* Mobile backdrop overlay */}
       {isSidebarOpen && (
         <div
@@ -82,8 +84,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
           transition-all duration-300 ease-in-out
           
           /* Mobile: Fixed overlay modal */
-          fixed lg:relative
-          h-full lg:h-auto
+          fixed lg:sticky
+          top-0
+          h-full lg:h-screen
           z-50 lg:z-auto
           
           /* Mobile: slide in/out from left */
@@ -94,23 +97,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
         `}
       >
         <div className="flex flex-col h-full">
-          <div className="flex flex-row items-center justify-end gap-4 p-2">
-            <div className="font-bold text-xl h-1/2 flex items-center overflow-hidden ">
-              <span className={`whitespace-nowrap transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100 ' : 'opacity-0 lg:opacity-0'}`}>
+          <div className="flex flex-row items-center justify-between p-2">
+            <div className="font-bold text-xl flex items-center overflow-hidden">
+              <span className={`whitespace-nowrap ml-2 transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
                 The Special Standard
               </span>
             </div>
-            <div className="flex items-center justify-end">
-              <Button
-                onClick={toggleSidebar}
-                variant="secondary"
-                size="icon"
-                aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-                className="w-10 h-10 flex-shrink-0"
-              >
-                <PanelLeft className="w-5 h-5 transition-transform duration-300" />
-              </Button>
-            </div>
+            <Button
+              onClick={toggleSidebar}
+              variant="secondary"
+              size="icon"
+              aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+              className="w-10 h-10 flex-shrink-0 p-0"
+            >
+              <PanelLeft className="w-5 h-5 transition-transform duration-300" />
+            </Button>
           </div>
 
           <Separator />
