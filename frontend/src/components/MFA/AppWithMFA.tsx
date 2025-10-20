@@ -1,10 +1,15 @@
+"use client"
+import { useAuthContext } from "@/contexts/authContext";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthMFA } from "./AuthMFA";
-import { supabase } from "./EnrollMFA";
+import { EnrollMFA, supabase } from "./EnrollMFA";
 
 export function AppWithMFA({ children }: { children: React.ReactNode }) {
   const [readyToShow, setReadyToShow] = useState(false);
   const [showMFAScreen, setShowMFAScreen] = useState(false);
+  const { showMFAEnroll, setShowMFAEnroll } = useAuthContext();
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -25,6 +30,21 @@ export function AppWithMFA({ children }: { children: React.ReactNode }) {
       }
     })();
   }, []);
+
+  if (showMFAEnroll) {
+    return (
+      <EnrollMFA
+        onEnrolled={() => {
+          setShowMFAEnroll(false);
+          router.push('/students');
+        }}
+        onCancelled={() => {
+          setShowMFAEnroll(false);
+          router.push('/students');
+        }}
+      />
+    );
+  }
 
   if (readyToShow) {
     if (showMFAScreen) {

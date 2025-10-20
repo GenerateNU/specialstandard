@@ -1,14 +1,18 @@
 // src/lib/api/apiClient.ts
-import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import axios from 'axios'
+import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean
 }
 
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1';
+console.log('API Client - Base URL:', baseURL);
+console.log('All env vars:', process.env);
+
 const apiClient = axios.create({
   // eslint-disable-next-line node/prefer-global/process
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
+  baseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -18,6 +22,8 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
+    console.log('Making request to:', config.url);
+    console.log('Full URL:', baseURL + config.url);
     const token = localStorage.getItem('jwt')
     if (token) {
       // Don't check or create headers - they always exist in InternalAxiosRequestConfig
