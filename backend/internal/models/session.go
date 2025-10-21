@@ -16,11 +16,19 @@ type Session struct {
 	UpdatedAt     *time.Time `json:"updated_at" db:"updated_at"`
 }
 
+type Repetition struct {
+	RecurStart  time.Time `json:"recur_start" validate:"required"`
+	RecurEnd    time.Time `json:"recur_end" validate:"required,gtfield=RecurStart"`
+	EveryNWeeks int       `json:"every_n_weeks" validate:"required,gte=1"`
+}
+
 type PostSessionInput struct {
-	StartTime   time.Time `json:"start_datetime" validate:"required"`
-	EndTime     time.Time `json:"end_datetime" validate:"required"`
-	TherapistID uuid.UUID `json:"therapist_id" validate:"required"`
-	Notes       *string   `json:"notes"`
+	StartTime   time.Time    `json:"start_datetime" validate:"required"`
+	EndTime     time.Time    `json:"end_datetime" validate:"required"`
+	TherapistID uuid.UUID    `json:"therapist_id" validate:"required"`
+	Notes       *string      `json:"notes"`
+	Repetition  *Repetition  `json:"repetition" validate:"omitempty,dive"`
+	StudentIDs  *[]uuid.UUID `json:"student_ids"`
 }
 
 type PatchSessionInput struct {
@@ -31,20 +39,20 @@ type PatchSessionInput struct {
 }
 
 type GetSessionRequest struct {
-	StartTime   *time.Time `query:"startdate" validate:"omitempty"`
-	EndTime     *time.Time `query:"enddate" validate:"omitempty"`
-	Month 		*int	   `query:"month" validate:"omitempty,gte=1,lte=12"`
-	Year 		*int       `query:"year" validate:"omitempty,gte=1776,lte=2200"`
-	StudentIDs 	*[]string `query:"id" validate:"omitempty"`
+	StartTime  *time.Time `query:"startdate" validate:"omitempty"`
+	EndTime    *time.Time `query:"enddate" validate:"omitempty"`
+	Month      *int       `query:"month" validate:"omitempty,gte=1,lte=12"`
+	Year       *int       `query:"year" validate:"omitempty,gte=1776,lte=2200"`
+	StudentIDs *[]string  `query:"id" validate:"omitempty"`
 }
 
 // This is what repository uses
 type GetSessionRepositoryRequest struct {
-	StartTime   *time.Time   `validate:"omitempty"`
-	EndTime     *time.Time   `validate:"omitempty"`
-	Month       *int         `validate:"omitempty,gte=1,lte=12"`
-	Year        *int         `validate:"omitempty,gte=1776,lte=2200"`
-	StudentIDs  *[]uuid.UUID `validate:"omitempty"`
+	StartTime  *time.Time   `validate:"omitempty"`
+	EndTime    *time.Time   `validate:"omitempty"`
+	Month      *int         `validate:"omitempty,gte=1,lte=12"`
+	Year       *int         `validate:"omitempty,gte=1776,lte=2200"`
+	StudentIDs *[]uuid.UUID `validate:"omitempty"`
 }
 
 type GetStudentSessionsRequest struct {
