@@ -95,32 +95,35 @@ export default function SignupPage() {
       })
       // AuthContext will handle redirect to /students
     }
-    catch (err: any) {
+    catch (err: unknown) {
       console.error('Signup error:', err)
-      
+
+      // Type guard for axios error
+      const errorData = (err as any)?.response?.data
+
       // Check for "user already exists" error
-      const errorData = err.response?.data
       if (errorData?.error_code === 'user_already_exists' || errorData?.msg?.includes('already registered')) {
         setError('This email is already registered. Please try logging in instead.')
-        return
       }
-
       // Handle various error response formats
-      if (errorData?.message) {
+      else if (errorData?.message) {
         const message = errorData.message
         // If message is an object (validation errors), extract a meaningful error
-        if (typeof message === 'object') {
-          const errorMessages = Object.values(message).join(', ')
-          setError(errorMessages)
+        if (typeof message === 'object' && message !== null) {
+          const errorMessages = Object.values(message).filter(v => typeof v === 'string').join(', ')
+          setError(errorMessages || 'Validation error occurred')
+        }
+        else if (typeof message === 'string') {
+          setError(message)
         }
         else {
-          setError(message)
+          setError('An error occurred during signup. Please try again.')
         }
       }
       else if (errorData?.msg) {
         setError(errorData.msg)
       }
-      else if (err.message) {
+      else if (err instanceof Error && err.message) {
         setError(err.message)
       }
       else {
