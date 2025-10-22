@@ -132,9 +132,9 @@ func (r *SessionRepository) PostSession(ctx context.Context, input *models.PostS
 		endTime := addNWeeks(input.EndTime, rp.EveryNWeeks)
 
 		for startTime.Before(rp.RecurEnd) {
-			query += fmt.Sprintf(`, ($%d, $%d, $3, $4)`, argCount, argCount+1)
-			argCount += 2
-			args = append(args, startTime, endTime)
+			query += fmt.Sprintf(`, ($%d, $%d, $%d, $%d)`, argCount, argCount+1, argCount+2, argCount+3)
+			argCount += 4
+			args = append(args, startTime, endTime, input.TherapistID, input.Notes)
 
 			startTime = addNWeeks(startTime, rp.EveryNWeeks)
 			endTime = addNWeeks(endTime, rp.EveryNWeeks)

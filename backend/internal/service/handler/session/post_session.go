@@ -22,6 +22,7 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
+	// TODO: If the Student-IDs are given, then you want to call PostSessionStudents
 	newSessions, err := h.sessionRepository.PostSession(c.Context(), &session)
 	if err != nil {
 		slog.Error("Failed to post session", "err", err)
