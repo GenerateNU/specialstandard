@@ -49,8 +49,8 @@ export default function SignupPage() {
     if (!/\d/.test(pwd)) {
       return 'Password must include at least one digit'
     }
-    if (!/[!@#~$%^&*()+|_.,;<>?/{}\-]/.test(pwd)) {
-      return 'Password must include at least one special character (!@#~$%^&*()+|_.,;<>?/{}-)'
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?/~`]/.test(pwd)) {
+      return 'Password must include at least one special character (!@#$%^&*()_+-=[]{};:\'",.<>?/~`|)'
     }
     return null
   }
