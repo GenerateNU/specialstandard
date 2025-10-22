@@ -90,8 +90,8 @@ export default function SignupPage() {
       await signup({
         email,
         password,
-        first_name: firstName || undefined,
-        last_name: lastName || undefined,
+        ...(firstName && { first_name: firstName }),
+        ...(lastName && { last_name: lastName }),
       })
       // AuthContext will handle redirect to /students
     }
