@@ -37,12 +37,12 @@ func (m *MockSessionRepository) DeleteSession(ctx context.Context, id uuid.UUID)
 	return args.Error(1)
 }
 
-func (m *MockSessionRepository) PostSession(ctx context.Context, session *models.PostSessionInput) (*models.Session, error) {
+func (m *MockSessionRepository) PostSession(ctx context.Context, session *models.PostSessionInput) (*[]models.Session, error) {
 	args := m.Called(ctx, session)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*models.Session), args.Error(1)
+	return args.Get(0).(*[]models.Session), args.Error(1)
 }
 
 func (m *MockSessionRepository) PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error) {

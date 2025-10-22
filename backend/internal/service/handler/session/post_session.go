@@ -22,7 +22,7 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	newSession, err := h.sessionRepository.PostSession(c.Context(), &session)
+	newSessions, err := h.sessionRepository.PostSession(c.Context(), &session)
 	if err != nil {
 		slog.Error("Failed to post session", "err", err)
 		errStr := err.Error()
@@ -38,5 +38,5 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(newSession)
+	return c.Status(fiber.StatusCreated).JSON(newSessions)
 }
