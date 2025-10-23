@@ -8,11 +8,13 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func (h *Handler) PostSessions(c *fiber.Ctx) error {
 	var session models.PostSessionInput
 
+	// Parsing Session Inputs
 	if err := c.BodyParser(&session); err != nil {
 		return errs.InvalidJSON("Failed to parse PostSessionInput data")
 	}
@@ -22,7 +24,27 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	// TODO: If the Student-IDs are given, then you want to call PostSessionStudents
+	var sessionIDs []uuid.UUID
+	postSessionStudent := models.CreateSessionStudentInput{
+		SessionIDs: sessionIDs,
+		StudentIDs: *session.StudentIDs,
+		Present:    true,
+		Notes:      nil,
+	}
+
+	if validationErrors := h.validator.Validate(postSessionStudent); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
+	}
+
+	hasStudents := session.StudentIDs != nil && len(*session.StudentIDs) > 0
+	if hasStudents {
+		for _, id := range *session.StudentIDs {
+			if id == uuid.Nil {
+				return errs.BadRequest("Student IDs must not contain empty UUIDs")
+			}
+		}
+	}
+
 	newSessions, err := h.sessionRepository.PostSession(c.Context(), &session)
 	if err != nil {
 		slog.Error("Failed to post session", "err", err)
@@ -37,6 +59,23 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		default:
 			return errs.InternalServerError("Failed to Create Session")
 		}
+	}
+
+	for _, newSession := range *newSessions {
+		sessionIDs = append(sessionIDs, newSession.ID)
+	}
+	postSessionStudent.SessionIDs = sessionIDs
+
+	_, err = h.sessionStudentRepository.CreateSessionStudent(c.Context(), &postSessionStudent)
+	if err != nil {
+		if strings.Contains(err.Error(), "unique_violation") || strings.Contains(err.Error(), "duplicate key") {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+				"error": "Student is already in this session",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create session student",
+		})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(newSessions)
