@@ -27,7 +27,7 @@ type PostSessionInput struct {
 	EndTime     time.Time    `json:"end_datetime" validate:"required"`
 	TherapistID uuid.UUID    `json:"therapist_id" validate:"required"`
 	Notes       *string      `json:"notes"`
-	Repetition  *Repetition  `json:"repetition" validate:"omitempty,dive"`
+	Repetition  *Repetition  `json:"repetition" validate:"omitempty"`
 	StudentIDs  *[]uuid.UUID `json:"student_ids"`
 }
 

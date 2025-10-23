@@ -32,10 +32,6 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		Notes:      nil,
 	}
 
-	if validationErrors := h.validator.Validate(postSessionStudent); len(validationErrors) > 0 {
-		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
-	}
-
 	hasStudents := session.StudentIDs != nil && len(*session.StudentIDs) > 0
 	if hasStudents {
 		for _, id := range *session.StudentIDs {
@@ -71,6 +67,10 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		sessionIDs = append(sessionIDs, newSession.ID)
 	}
 	postSessionStudent.SessionIDs = sessionIDs
+
+	if validationErrors := h.validator.Validate(postSessionStudent); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
+	}
 
 	_, err = h.sessionStudentRepository.CreateSessionStudent(c.Context(), tx, &postSessionStudent)
 	if err != nil {
