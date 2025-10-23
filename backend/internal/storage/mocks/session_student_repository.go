@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/storage/dbinterface"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -11,8 +12,8 @@ type MockSessionStudentRepository struct {
 	mock.Mock
 }
 
-func (m *MockSessionStudentRepository) CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error) {
-	args := m.Called(ctx, input)
+func (m *MockSessionStudentRepository) CreateSessionStudent(ctx context.Context, q dbinterface.Queryable, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error) {
+	args := m.Called(ctx, q, input)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

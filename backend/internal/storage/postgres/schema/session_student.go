@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"specialstandard/internal/models"
+	"specialstandard/internal/storage/dbinterface"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,11 +14,15 @@ type SessionStudentRepository struct {
 	db *pgxpool.Pool
 }
 
+func (r *SessionStudentRepository) GetDB() *pgxpool.Pool {
+	return r.db
+}
+
 func NewSessionStudentRepository(db *pgxpool.Pool) *SessionStudentRepository {
 	return &SessionStudentRepository{db: db}
 }
 
-func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error) {
+func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, q dbinterface.Queryable, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error) {
 	query := `INSERT INTO session_student (session_id, student_id, present, notes)
               VALUES `
 	args := []interface{}{}
@@ -35,7 +40,7 @@ func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, inp
 	query = query[:len(query)-2]
 	query += ` RETURNING *`
 
-	rows, err := r.db.Query(ctx, query, args...)
+	rows, err := q.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

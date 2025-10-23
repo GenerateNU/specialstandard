@@ -224,7 +224,8 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		TherapistID: therapistID,
 		Notes:       notes,
 	}
-	postedSession, err := repo.PostSession(ctx, postSession)
+	db := repo.GetDB()
+	postedSession, err := repo.PostSession(ctx, db, postSession)
 	assert.Error(t, err)
 	assert.Nil(t, postedSession)
 
@@ -245,7 +246,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		TherapistID: therapistID,
 		Notes:       notes,
 	}
-	postedSession, err = repo.PostSession(ctx, postSession)
+	postedSession, err = repo.PostSession(ctx, db, postSession)
 	assert.Error(t, err)
 	assert.Nil(t, postedSession)
 	assert.False(t, endTime.After(startTime))
@@ -259,7 +260,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		TherapistID: therapistID,
 		Notes:       notes,
 	}
-	postedSession, err = repo.PostSession(ctx, postSession)
+	postedSession, err = repo.PostSession(ctx, db, postSession)
 	assert.NoError(t, err)
 	assert.NotNil(t, postedSession)
 	assert.Equal(t, postedSession.TherapistID, therapistID)

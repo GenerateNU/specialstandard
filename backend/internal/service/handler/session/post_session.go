@@ -45,7 +45,13 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		}
 	}
 
-	newSessions, err := h.sessionRepository.PostSession(c.Context(), &session)
+	// Beginning Transaction
+	tx, err := h.sessionRepository.GetDB().Begin(c.Context())
+	if err != nil {
+		return errs.InternalServerError("Failed to start transaction")
+	}
+
+	newSessions, err := h.sessionRepository.PostSession(c.Context(), tx, &session)
 	if err != nil {
 		slog.Error("Failed to post session", "err", err)
 		errStr := err.Error()
@@ -66,8 +72,13 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 	}
 	postSessionStudent.SessionIDs = sessionIDs
 
-	_, err = h.sessionStudentRepository.CreateSessionStudent(c.Context(), &postSessionStudent)
+	_, err = h.sessionStudentRepository.CreateSessionStudent(c.Context(), tx, &postSessionStudent)
 	if err != nil {
+		rollbackErr := tx.Rollback(c.Context())
+		if rollbackErr != nil {
+			slog.Error("Rollback was not successful", "err", rollbackErr)
+		}
+
 		if strings.Contains(err.Error(), "unique_violation") || strings.Contains(err.Error(), "duplicate key") {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 				"error": "Student is already in this session",
@@ -76,6 +87,11 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create session student",
 		})
+	}
+
+	err = tx.Commit(c.Context())
+	if err != nil {
+		return errs.InternalServerError("Failed to commit transaction")
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(newSessions)

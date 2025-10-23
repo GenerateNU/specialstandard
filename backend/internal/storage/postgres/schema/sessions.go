@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"specialstandard/internal/models"
+	"specialstandard/internal/storage/dbinterface"
 	"specialstandard/internal/utils"
 	"strings"
 	"time"
@@ -15,6 +16,10 @@ import (
 
 type SessionRepository struct {
 	db *pgxpool.Pool
+}
+
+func (r *SessionRepository) GetDB() *pgxpool.Pool {
+	return r.db
 }
 
 func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error) {
@@ -119,7 +124,7 @@ func addNWeeks(timestamp time.Time, nWeeks int) time.Time {
 	return timestamp.Add(time.Duration(24*7*nWeeks) * time.Hour)
 }
 
-func (r *SessionRepository) PostSession(ctx context.Context, input *models.PostSessionInput) (*[]models.Session, error) {
+func (r *SessionRepository) PostSession(ctx context.Context, q dbinterface.Queryable, input *models.PostSessionInput) (*[]models.Session, error) {
 	query := `INSERT INTO session (start_datetime, end_datetime, therapist_id, notes)
               VALUES ($1, $2, $3, $4)`
 	args := []interface{}{}
@@ -143,7 +148,7 @@ func (r *SessionRepository) PostSession(ctx context.Context, input *models.PostS
 
 	query += ` RETURNING *`
 
-	rows, err := r.db.Query(ctx, query, args...)
+	rows, err := q.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

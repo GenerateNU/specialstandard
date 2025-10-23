@@ -3,9 +3,11 @@ package mocks
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/storage/dbinterface"
 	"specialstandard/internal/utils"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -37,8 +39,8 @@ func (m *MockSessionRepository) DeleteSession(ctx context.Context, id uuid.UUID)
 	return args.Error(1)
 }
 
-func (m *MockSessionRepository) PostSession(ctx context.Context, session *models.PostSessionInput) (*[]models.Session, error) {
-	args := m.Called(ctx, session)
+func (m *MockSessionRepository) PostSession(ctx context.Context, q dbinterface.Queryable, session *models.PostSessionInput) (*[]models.Session, error) {
+	args := m.Called(ctx, q, session)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -59,4 +61,8 @@ func (m *MockSessionRepository) GetSessionStudents(ctx context.Context, sessionI
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]models.SessionStudentsOutput), args.Error(1)
+}
+
+func (m *MockSessionRepository) GetDB() *pgxpool.Pool {
+	return nil
 }

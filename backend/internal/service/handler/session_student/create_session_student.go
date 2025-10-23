@@ -35,7 +35,8 @@ func (h *Handler) CreateSessionStudent(c *fiber.Ctx) error {
 		}
 	}
 
-	sessionStudents, err := h.sessionStudentRepository.CreateSessionStudent(c.Context(), &req)
+	db := h.sessionStudentRepository.GetDB()
+	sessionStudents, err := h.sessionStudentRepository.CreateSessionStudent(c.Context(), db, &req)
 	if err != nil {
 		if strings.Contains(err.Error(), "unique_violation") || strings.Contains(err.Error(), "duplicate key") {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
