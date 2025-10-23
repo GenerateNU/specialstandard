@@ -575,6 +575,7 @@ export interface PostSessionsBody {
   therapist_id: string
   /** Optional notes about the session */
   notes?: string
+  studentIds?: string[]
 }
 
 export interface DeleteSessionsId200 {
