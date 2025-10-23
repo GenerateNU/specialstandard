@@ -77,11 +77,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
       )}
 
-      {/* Sidebar */}
+      {/* Actual Sidebar */}
       <aside
         className={`
           bg-card border-r border-default
           transition-all duration-300 ease-in-out
+          shadow-md
           
           /* Mobile: Fixed overlay modal */
           fixed lg:sticky
