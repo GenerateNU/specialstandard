@@ -11,12 +11,12 @@ type MockSessionStudentRepository struct {
 	mock.Mock
 }
 
-func (m *MockSessionStudentRepository) CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*models.SessionStudent, error) {
+func (m *MockSessionStudentRepository) CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error) {
 	args := m.Called(ctx, input)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*models.SessionStudent), args.Error(1)
+	return args.Get(0).(*[]models.SessionStudent), args.Error(1)
 }
 
 func (m *MockSessionStudentRepository) DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error {

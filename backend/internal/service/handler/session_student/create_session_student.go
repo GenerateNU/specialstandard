@@ -19,18 +19,23 @@ func (h *Handler) CreateSessionStudent(c *fiber.Ctx) error {
 	}
 
 	// Validate required fields
-	if req.SessionID == (uuid.UUID{}) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Session ID is required",
-		})
-	}
-	if req.StudentID == (uuid.UUID{}) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Student ID is required",
-		})
+	for _, id := range req.SessionIDs {
+		if id == (uuid.UUID{}) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Session ID is required",
+			})
+		}
 	}
 
-	sessionStudent, err := h.sessionStudentRepository.CreateSessionStudent(c.Context(), &req)
+	for _, id := range req.StudentIDs {
+		if id == (uuid.UUID{}) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Student ID is required",
+			})
+		}
+	}
+
+	sessionStudents, err := h.sessionStudentRepository.CreateSessionStudent(c.Context(), &req)
 	if err != nil {
 		if strings.Contains(err.Error(), "unique_violation") || strings.Contains(err.Error(), "duplicate key") {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
@@ -42,5 +47,5 @@ func (h *Handler) CreateSessionStudent(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(sessionStudent)
+	return c.Status(fiber.StatusCreated).JSON(sessionStudents)
 }

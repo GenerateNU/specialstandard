@@ -21,7 +21,7 @@ type SessionRepository interface {
 }
 
 type SessionStudentRepository interface {
-	CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*models.SessionStudent, error)
+	CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error)
 	DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error
 	PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error)
 }

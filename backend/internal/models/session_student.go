@@ -34,10 +34,10 @@ type StudentSessionsOutput struct {
 }
 
 type CreateSessionStudentInput struct {
-	SessionID uuid.UUID `json:"session_id" validate:"required,uuid"`
-	StudentID uuid.UUID `json:"student_id" validate:"required,uuid"`
-	Present   bool      `json:"present" validate:"required"`
-	Notes     *string   `json:"notes,omitempty"`
+	SessionIDs []uuid.UUID `json:"session_ids" validate:"required,min=1,dive,uuid"`
+	StudentIDs []uuid.UUID `json:"student_ids" validate:"required,min=1,dive,uuid"`
+	Present    bool        `json:"present" validate:"required"`
+	Notes      *string     `json:"notes,omitempty"`
 }
 
 type PatchSessionStudentInput struct {
