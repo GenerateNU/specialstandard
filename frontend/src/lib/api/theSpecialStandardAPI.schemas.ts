@@ -497,6 +497,7 @@ export interface PostAuthSignup201User {
 }
 
 export interface PostAuthSignup201 {
+  refresh_token: string
   /** The JWT Access Token issued for this User */
   access_token: string
   user: PostAuthSignup201User

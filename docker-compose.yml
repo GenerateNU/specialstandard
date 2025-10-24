@@ -6,7 +6,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8080/api/v1
+        NEXT_PUBLIC_SUPABASE_URL: https://zvxatxmclijgdkvxdmbc.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2eGF0eG1jbGlqZ2RrdnhkbWJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0MTM2NDEsImV4cCI6MjA3MTk4OTY0MX0.EHymLjsYov9pankPWHbyrEdwPcz__yf2SMBvMbhP3Eo
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+      - NEXT_PUBLIC_SUPABASE_URL=https://zvxatxmclijgdkvxdmbc.supabase.co
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2eGF0eG1jbGlqZ2RrdnhkbWJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0MTM2NDEsImV4cCI6MjA3MTk4OTY0MX0.EHymLjsYov9pankPWHbyrEdwPcz__yf2SMBvMbhP3Eo
     ports:
       - "3000:3000"
     depends_on:
