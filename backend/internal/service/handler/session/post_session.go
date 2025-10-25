@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) PostSessions(c *fiber.Ctx) error {
@@ -45,9 +46,14 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 	}
 
 	// Beginning Transaction
-	tx, err := h.sessionRepository.GetDB().Begin(c.Context())
-	if err != nil {
-		return errs.InternalServerError("Failed to start transaction")
+	var tx pgx.Tx
+	db := h.sessionRepository.GetDB()
+	if db != nil {
+		tx, err := db.Begin(c.Context())
+		if err != nil {
+			return errs.InternalServerError("Failed to start transaction")
+		}
+		defer tx.Rollback(c.Context())
 	}
 
 	newSessions, err := h.sessionRepository.PostSession(c.Context(), tx, &session)
@@ -75,26 +81,37 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	_, err = h.sessionStudentRepository.CreateSessionStudent(c.Context(), tx, &postSessionStudent)
-	if err != nil {
-		rollbackErr := tx.Rollback(c.Context())
-		if rollbackErr != nil {
-			slog.Error("Rollback was not successful", "err", rollbackErr)
-		}
+	if session.StudentIDs != nil {
+		_, err = h.sessionStudentRepository.CreateSessionStudent(c.Context(), tx, &postSessionStudent)
+		if err != nil {
+			rollbackErr := tx.Rollback(c.Context())
+			if rollbackErr != nil {
+				slog.Error("Rollback was not successful", "err", rollbackErr)
+			}
 
-		if strings.Contains(err.Error(), "unique_violation") || strings.Contains(err.Error(), "duplicate key") {
-			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-				"error": "Student is already in this session",
+			if strings.Contains(err.Error(), "unique_violation") || strings.Contains(err.Error(), "duplicate key") {
+				return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+					"error": "Student is already in this session",
+				})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to create session student",
 			})
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to create session student",
-		})
 	}
 
-	err = tx.Commit(c.Context())
-	if err != nil {
-		return errs.InternalServerError("Failed to commit transaction")
+	if tx != nil {
+		err = tx.Commit(c.Context())
+		if err != nil {
+			return errs.InternalServerError("Failed to commit transaction")
+		}
+	}
+
+	if db != nil {
+		err = tx.Commit(c.Context())
+		if err != nil {
+			return errs.InternalServerError("Failed to commit transaction")
+		}
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(newSessions)

@@ -28,7 +28,7 @@ type PostSessionInput struct {
 	TherapistID uuid.UUID    `json:"therapist_id" validate:"required"`
 	Notes       *string      `json:"notes"`
 	Repetition  *Repetition  `json:"repetition" validate:"omitempty"`
-	StudentIDs  *[]uuid.UUID `json:"student_ids"`
+	StudentIDs  *[]uuid.UUID `json:"student_ids" validate:"omitempty,dive,uuid"`
 }
 
 type PatchSessionInput struct {

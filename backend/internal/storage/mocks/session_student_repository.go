@@ -35,5 +35,5 @@ func (m *MockSessionStudentRepository) PatchSessionStudent(ctx context.Context, 
 }
 
 func (m *MockSessionStudentRepository) GetDB() *pgxpool.Pool {
-	return &pgxpool.Pool{}
+	return nil
 }

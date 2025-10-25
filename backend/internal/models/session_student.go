@@ -35,7 +35,7 @@ type StudentSessionsOutput struct {
 
 type CreateSessionStudentInput struct {
 	SessionIDs []uuid.UUID `json:"session_ids" validate:"required,min=1,dive,uuid"`
-	StudentIDs []uuid.UUID `json:"student_ids" validate:"required,min=1,dive,uuid"`
+	StudentIDs []uuid.UUID `json:"student_ids" validate:"omitempty,min=1,dive,uuid"`
 	Present    bool        `json:"present" validate:"required"`
 	Notes      *string     `json:"notes,omitempty"`
 }

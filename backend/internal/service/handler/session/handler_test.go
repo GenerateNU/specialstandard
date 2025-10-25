@@ -17,7 +17,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -230,9 +229,7 @@ func TestHandler_PostSessions(t *testing.T) {
 					TherapistID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 					Notes:       ptrString("Test FK"),
 				}
-
-				m.On("GetDB").Return(&pgxpool.Pool{})
-				m.On("PostSession", mock.Anything, mock.AnythingOfType("pgx.Tx"), postSession).Return(nil, errors.New("foreign key violation"))
+				m.On("PostSession", mock.Anything, mock.Anything, postSession).Return(nil, errors.New("foreign key violation"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -254,7 +251,7 @@ func TestHandler_PostSessions(t *testing.T) {
 					TherapistID: uuid.MustParse("28eedfdc-81e1-44e5-a42c-022dc4c3b64d"),
 					Notes:       ptrString("Check violation"),
 				}
-				m.On("PostSession", mock.Anything, session).Return(nil, errors.New("check constraint"))
+				m.On("PostSession", mock.Anything, mock.Anything, session).Return(nil, errors.New("check constraint"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -280,7 +277,8 @@ func TestHandler_PostSessions(t *testing.T) {
 					Notes:       notes,
 				}
 
-				session := &models.Session{
+				var sessions []models.Session
+				session := models.Session{
 					ID:            uuid.New(),
 					StartDateTime: startTime,
 					EndDateTime:   endTime,
@@ -289,7 +287,9 @@ func TestHandler_PostSessions(t *testing.T) {
 					CreatedAt:     &now,
 					UpdatedAt:     &now,
 				}
-				m.On("PostSession", mock.Anything, postSession).Return(session, nil)
+				sessions = append(sessions, session)
+
+				m.On("PostSession", mock.Anything, mock.Anything, postSession).Return(&sessions, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 		},
