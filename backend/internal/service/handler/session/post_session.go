@@ -27,9 +27,12 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 	var sessionIDs []uuid.UUID
 	postSessionStudent := models.CreateSessionStudentInput{
 		SessionIDs: sessionIDs,
-		StudentIDs: *session.StudentIDs,
+		StudentIDs: nil,
 		Present:    true,
 		Notes:      nil,
+	}
+	if session.StudentIDs != nil {
+		postSessionStudent.StudentIDs = *session.StudentIDs
 	}
 
 	hasStudents := session.StudentIDs != nil && len(*session.StudentIDs) > 0

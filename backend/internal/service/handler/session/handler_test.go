@@ -17,6 +17,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -105,7 +106,8 @@ func TestHandler_GetSessions(t *testing.T) {
 			mockRepo := new(mocks.MockSessionRepository)
 			tt.mockSetup(mockRepo)
 
-			handler := session.NewHandler(mockRepo)
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
 			app.Get("/sessions", handler.GetSessions)
 
 			req := httptest.NewRequest("GET", "/sessions"+tt.url, nil)
@@ -150,8 +152,9 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			ErrorHandler: errs.ErrorHandler,
 		})
 		mockRepo := new(mocks.MockSessionRepository)
+		mockRepoSSR := new(mocks.MockSessionStudentRepository)
 
-		handler := session.NewHandler(mockRepo)
+		handler := session.NewHandler(mockRepo, mockRepoSSR)
 		app.Delete("/sessions/:id", handler.DeleteSessions)
 
 		req := httptest.NewRequest("DELETE", "/sessions/1234", nil)
@@ -168,8 +171,9 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			})
 			mockRepo := new(mocks.MockSessionRepository)
 			tt.mockSetup(mockRepo, tt.id)
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
 
-			handler := session.NewHandler(mockRepo)
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
 			app.Delete("/sessions/:id", handler.DeleteSessions)
 
 			req := httptest.NewRequest("DELETE", fmt.Sprintf("/sessions/%s", tt.id.String()), nil)
@@ -185,7 +189,7 @@ func TestHandler_PostSessions(t *testing.T) {
 	tests := []struct {
 		name               string
 		payload            string
-		mockSetup          func(*mocks.MockSessionRepository)
+		mockSetup          func(*mocks.MockSessionRepository, *mocks.MockSessionStudentRepository)
 		expectedStatusCode int
 	}{
 		{
@@ -194,7 +198,7 @@ func TestHandler_PostSessions(t *testing.T) {
 				"start_datetime": "2025-09-14T10:00:00Z",
 				"end_datetime": "2025-09-14T11:00:00Z"
 			}`,
-			mockSetup:          func(m *mocks.MockSessionRepository) {},
+			mockSetup:          func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
 		{
@@ -205,7 +209,7 @@ func TestHandler_PostSessions(t *testing.T) {
 				"therapist_id": "00000000-0000-0000-0000-000000000000",
 				"notes": ""
 			}`,
-			mockSetup:          func(m *mocks.MockSessionRepository) {},
+			mockSetup:          func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
 		{
@@ -216,17 +220,19 @@ func TestHandler_PostSessions(t *testing.T) {
 				"therapist_id": "00000000-0000-0000-0000-000000000001",
 				"notes": "Test FK"
 			}`,
-			mockSetup: func(m *mocks.MockSessionRepository) {
+			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T10:00:00Z")
 				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T11:00:00Z")
 
-				session := &models.PostSessionInput{
+				postSession := &models.PostSessionInput{
 					StartTime:   startTime,
 					EndTime:     endTime,
 					TherapistID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 					Notes:       ptrString("Test FK"),
 				}
-				m.On("PostSession", mock.Anything, session).Return(nil, errors.New("foreign key violation"))
+
+				m.On("GetDB").Return(&pgxpool.Pool{})
+				m.On("PostSession", mock.Anything, mock.AnythingOfType("pgx.Tx"), postSession).Return(nil, errors.New("foreign key violation"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
@@ -238,7 +244,7 @@ func TestHandler_PostSessions(t *testing.T) {
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d",
 				"notes": "Check violation"
 			}`,
-			mockSetup: func(m *mocks.MockSessionRepository) {
+			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T11:00:00Z")
 				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T10:00:00Z")
 
@@ -260,7 +266,7 @@ func TestHandler_PostSessions(t *testing.T) {
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d",
 				"notes": "Test Session"
 			}`,
-			mockSetup: func(m *mocks.MockSessionRepository) {
+			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T10:00:00Z")
 				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T11:00:00Z")
 				sessionUUID := uuid.MustParse("28eedfdc-81e1-44e5-a42c-022dc4c3b64d")
@@ -295,9 +301,10 @@ func TestHandler_PostSessions(t *testing.T) {
 				ErrorHandler: errs.ErrorHandler,
 			})
 			mockRepo := new(mocks.MockSessionRepository)
-			tt.mockSetup(mockRepo)
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
+			tt.mockSetup(mockRepo, mockRepoSSR)
 
-			handler := session.NewHandler(mockRepo)
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
 			app.Post("/sessions", handler.PostSessions)
 
 			req := httptest.NewRequest("POST", "/sessions", strings.NewReader(tt.payload))
@@ -463,8 +470,9 @@ func TestHandler_PatchSessions(t *testing.T) {
 			ErrorHandler: errs.ErrorHandler,
 		})
 		mockRepo := new(mocks.MockSessionRepository)
+		mockRepoSSR := new(mocks.MockSessionStudentRepository)
 
-		handler := session.NewHandler(mockRepo)
+		handler := session.NewHandler(mockRepo, mockRepoSSR)
 		app.Patch("/sessions/:id", handler.PatchSessions)
 
 		req := httptest.NewRequest("PATCH", "/sessions/0345", nil)
@@ -483,7 +491,8 @@ func TestHandler_PatchSessions(t *testing.T) {
 			mockRepo := new(mocks.MockSessionRepository)
 			tt.mockSetup(mockRepo, tt.id)
 
-			handler := session.NewHandler(mockRepo)
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
 			app.Patch("/sessions/:id", handler.PatchSessions)
 
 			req := httptest.NewRequest("PATCH", "/sessions/"+tt.id.String(), strings.NewReader(tt.payload))

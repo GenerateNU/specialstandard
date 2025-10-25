@@ -64,5 +64,5 @@ func (m *MockSessionRepository) GetSessionStudents(ctx context.Context, sessionI
 }
 
 func (m *MockSessionRepository) GetDB() *pgxpool.Pool {
-	return nil
+	return &pgxpool.Pool{}
 }

@@ -5,6 +5,7 @@ import (
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/dbinterface"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -31,4 +32,8 @@ func (m *MockSessionStudentRepository) PatchSessionStudent(ctx context.Context, 
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.SessionStudent), args.Error(1)
+}
+
+func (m *MockSessionStudentRepository) GetDB() *pgxpool.Pool {
+	return &pgxpool.Pool{}
 }
