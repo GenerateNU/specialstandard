@@ -26,7 +26,7 @@ export default function SignupPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push('/students')
+      router.push('/')
     }
   }, [isAuthenticated, isLoading, router])
 
@@ -93,7 +93,7 @@ export default function SignupPage() {
         ...(firstName && { first_name: firstName }),
         ...(lastName && { last_name: lastName }),
       })
-      // AuthContext will handle redirect to /students
+      // AuthContext will handle redirect to /
     }
     catch (err: unknown) {
       console.error('Signup error:', err)

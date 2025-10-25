@@ -25,7 +25,7 @@ export default function LoginPage() {
   // All useEffect hooks here
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push('/students')
+      router.push('/')
     }
   }, [isAuthenticated, isLoading, router])
 
