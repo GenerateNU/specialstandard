@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuth = () => {
       // Dev mode bypass - auto-authenticate with mock data
       // eslint-disable-next-line node/prefer-global/process
-      const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
+      const isDevMode = process.env.NODE_ENV === 'development'
 
       if (isDevMode) {
         const mockUserId = 'dev-user-123'
