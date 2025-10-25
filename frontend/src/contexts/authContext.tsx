@@ -27,6 +27,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if user is authenticated on mount (check localStorage instead of cookies)
   useEffect(() => {
     const checkAuth = () => {
+      // Dev mode bypass - auto-authenticate with mock data
+      // eslint-disable-next-line node/prefer-global/process
+      const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
+
+      if (isDevMode) {
+        const mockUserId = 'dev-user-123'
+        const mockToken = 'dev-mock-token'
+
+        // Only set if not already set
+        if (!localStorage.getItem('userId')) {
+          localStorage.setItem('userId', mockUserId)
+          localStorage.setItem('jwt', mockToken)
+        }
+
+        setUserId(localStorage.getItem('userId'))
+        setIsLoading(false)
+        return
+      }
+
       // Check localStorage for auth data
       const storedUserId = localStorage.getItem('userId')
       const storedJwt = localStorage.getItem('jwt')
@@ -56,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserId(response.user.id)
       }
 
-      router.push('/students')
+      router.push('/')
     }
     catch (error) {
       console.error('Login failed:', error)
@@ -77,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserId(response.user.id)
       }
 
-      router.push('/students')
+      router.push('/')
     }
     catch (error) {
       console.error('Signup failed:', error)

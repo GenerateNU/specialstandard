@@ -1,10 +1,36 @@
-import { ArrowRight, Users } from 'lucide-react'
-import Image from 'next/image'
+'use client'
 
+import { ArrowRight, Loader2, Users } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import AppLayout from '@/components/AppLayout'
+import { useAuthContext } from '@/contexts/authContext'
 
 export default function Home() {
+  const { isAuthenticated, isLoading } = useAuthContext()
+  const router = useRouter()
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login')
+    }
+  }, [isAuthenticated, isLoading, router])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
+
   return (
     <AppLayout>
       <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
