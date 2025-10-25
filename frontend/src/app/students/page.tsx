@@ -107,7 +107,9 @@ export default function StudentsPage() {
                 </div>
                 <div className="grid gap-4">
                   {students.map(student => (
-                    <StudentCard key={student.id} student={student} />
+                    <Link key={student.id} href={`/student/${student.id}`}>
+                      <StudentCard student={student} />
+                    </Link>
                   ))}
                 </div>
               </div>
