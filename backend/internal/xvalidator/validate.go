@@ -2,6 +2,7 @@ package xvalidator
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -58,6 +59,7 @@ func ConvertToMessages(errors []ErrorResponse) map[string]string {
 		field := strings.ToLower(err.FailedField)
 		message := getErrorMessage(err)
 		errorMap[field] = message
+		slog.Error(message)
 	}
 
 	return errorMap

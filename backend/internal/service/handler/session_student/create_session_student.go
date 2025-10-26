@@ -1,7 +1,9 @@
 package sessionstudent
 
 import (
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/xvalidator"
 
 	"strings"
 
@@ -16,6 +18,10 @@ func (h *Handler) CreateSessionStudent(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid JSON format",
 		})
+	}
+
+	if validationErrors := h.validator.Validate(req); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
 	// Validate required fields
