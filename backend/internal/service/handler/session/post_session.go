@@ -27,19 +27,15 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 	var sessionIDs []uuid.UUID
 	postSessionStudent := models.CreateSessionStudentInput{
 		SessionIDs: sessionIDs,
-		StudentIDs: nil,
+		StudentIDs: []uuid.UUID{},
 		Present:    true,
 		Notes:      nil,
 	}
-	if session.StudentIDs != nil {
-		postSessionStudent.StudentIDs = *session.StudentIDs
-	}
 
-	hasStudents := session.StudentIDs != nil && len(*session.StudentIDs) > 0
-	if hasStudents {
+	if session.StudentIDs != nil && len(*session.StudentIDs) > 0 {
 		for _, id := range *session.StudentIDs {
-			if id == uuid.Nil {
-				return errs.BadRequest("Student IDs must not contain empty UUIDs")
+			if id != uuid.Nil {
+				postSessionStudent.StudentIDs = append(postSessionStudent.StudentIDs, id)
 			}
 		}
 	}

@@ -38,7 +38,7 @@ func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, q d
 
 	// Removing the Trailing Comma + Space
 	query = query[:len(query)-2]
-	query += ` RETURNING *`
+	query += ` RETURNING session_id, student_id, present, notes, created_at, updated_at`
 
 	rows, err := q.Query(ctx, query, args...)
 	if err != nil {

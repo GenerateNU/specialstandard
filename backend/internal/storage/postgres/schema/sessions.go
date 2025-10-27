@@ -151,7 +151,7 @@ func (r *SessionRepository) PostSession(ctx context.Context, q dbinterface.Query
 		}
 	}
 
-	query += ` RETURNING *`
+	query += ` RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
 
 	rows, err := q.Query(ctx, query, args...)
 	if err != nil {
