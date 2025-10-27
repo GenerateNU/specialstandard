@@ -1336,8 +1336,8 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 		{
 			name: "Successful creation",
 			payload: `{
-				"session_id": "123e4567-e89b-12d3-a456-426614174000",
-				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"session_ids": ["123e4567-e89b-12d3-a456-426614174000"],
+				"student_ids": ["987fcdeb-51a2-43d1-9c4f-123456789abc"],
 				"present": true,
 				"notes": "Student participated well in group activities"
 			}`,
@@ -1345,13 +1345,15 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
 
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&models.SessionStudent{
-					SessionID: sessionID,
-					StudentID: studentID,
-					Present:   true,
-					Notes:     ptrString("Student participated well in group activities"),
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+					{
+						SessionID: sessionID,
+						StudentID: studentID,
+						Present:   true,
+						Notes:     ptrString("Student participated well in group activities"),
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
 				}, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
@@ -1377,13 +1379,13 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 		{
 			name: "Duplicate relationship",
 			payload: `{
-				"session_id": "123e4567-e89b-12d3-a456-426614174000",
-				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"session_ids": ["123e4567-e89b-12d3-a456-426614174000"],
+				"student_ids": ["987fcdeb-51a2-43d1-9c4f-123456789abc"],
 				"present": true,
 				"notes": "Duplicate entry"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
 			},
 			expectedStatusCode: fiber.StatusConflict,
 		},

@@ -260,12 +260,14 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		TherapistID: therapistID,
 		Notes:       notes,
 	}
-	postedSession, err = repo.PostSession(ctx, db, postSession)
+	postedSessions, err := repo.PostSession(ctx, db, postSession)
 	assert.NoError(t, err)
-	assert.NotNil(t, postedSession)
-	assert.Equal(t, postedSession.TherapistID, therapistID)
-	assert.Equal(t, postedSession.Notes, notes)
-	assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
+	assert.NotNil(t, postedSessions)
+	for _, postedSession := range *postedSessions {
+		assert.Equal(t, postedSession.TherapistID, therapistID)
+		assert.Equal(t, postedSession.Notes, notes)
+		assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
+	}
 }
 
 func TestSessionRepository_PatchSessions(t *testing.T) {
