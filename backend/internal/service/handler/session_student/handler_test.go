@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http/httptest"
+	"specialstandard/internal/errs"
 	"strings"
 	"testing"
 	"time"
@@ -21,6 +22,7 @@ import (
 
 func TestHandler_CreateSessionStudent(t *testing.T) {
 	sessionID := uuid.New()
+	sessionID2 := uuid.New()
 	studentID := uuid.New()
 
 	tests := []struct {
@@ -33,19 +35,21 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		{
 			name: "successful_create_session_student",
 			requestBody: `{
-				"session_id": "` + sessionID.String() + `",
-				"student_id": "` + studentID.String() + `",
+				"session_ids": ["` + sessionID.String() + `"],
+				"student_ids": ["` + studentID.String() + `"],
 				"present": true,
 				"notes": "Student participated well in group activities"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&models.SessionStudent{
-					SessionID: sessionID,
-					StudentID: studentID,
-					Present:   true,
-					Notes:     stringPtr("Student participated well in group activities"),
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+					{
+						SessionID: sessionID,
+						StudentID: studentID,
+						Present:   true,
+						Notes:     stringPtr("Student participated well in group activities"),
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
 				}, nil)
 			},
 			expectedStatus: fiber.StatusCreated,
@@ -54,18 +58,20 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		{
 			name: "successful_create_session_student_minimal_data",
 			requestBody: `{
-				"session_id": "` + sessionID.String() + `",
-				"student_id": "` + studentID.String() + `",
+				"session_ids": ["` + sessionID.String() + `"],
+				"student_ids": ["` + studentID.String() + `"],
 				"present": false
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&models.SessionStudent{
-					SessionID: sessionID,
-					StudentID: studentID,
-					Present:   false,
-					Notes:     nil,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+					{
+						SessionID: sessionID,
+						StudentID: studentID,
+						Present:   false,
+						Notes:     nil,
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
 				}, nil)
 			},
 			expectedStatus: fiber.StatusCreated,
@@ -73,7 +79,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		},
 		{
 			name:        "invalid_JSON_body",
-			requestBody: `{"session_id": "` + sessionID.String() + `", "student_id": /* missing comma */}`,
+			requestBody: `{"session_ids": ["` + sessionID.String() + `"], "student_ids": /* missing comma */}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
 				// No mock setup needed - JSON parsing fails before repository call
 			},
@@ -82,7 +88,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		},
 		{
 			name:        "missing_session_id",
-			requestBody: `{"student_id": "` + studentID.String() + `", "present": true}`,
+			requestBody: `{"student_ids": ["` + studentID.String() + `"], "present": true}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
 				// No mock setup needed - validation fails before repository call
 			},
@@ -91,7 +97,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		},
 		{
 			name:        "missing_student_id",
-			requestBody: `{"session_id": "` + sessionID.String() + `", "present": true}`,
+			requestBody: `{"session_ids": ["` + sessionID.String() + `"], "present": true}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
 				// No mock setup needed - validation fails before repository call
 			},
@@ -100,7 +106,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		},
 		{
 			name:        "invalid_session_id_format",
-			requestBody: `{"student_id": "` + studentID.String() + `", "present": true, "session_id": "not-a-uuid"}`,
+			requestBody: `{"student_ids": ["` + studentID.String() + `"], "present": true, "session_ids": "not-a-uuid"}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
 				// No mock setup needed - JSON parsing should succeed but UUID validation should fail
 			},
@@ -109,7 +115,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		},
 		{
 			name:        "invalid_student_id_format",
-			requestBody: `{"session_id": "` + sessionID.String() + `", "present": true, "student_id": "not-a-uuid"}`,
+			requestBody: `{"session_ids": ["` + sessionID.String() + `"], "present": true, "student_ids": "not-a-uuid"}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
 				// No mock setup needed - JSON parsing should succeed but UUID validation should fail
 			},
@@ -119,8 +125,8 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		{
 			name: "empty_session_id_nil_uuid",
 			requestBody: `{
-				"session_id": "00000000-0000-0000-0000-000000000000",
-				"student_id": "` + studentID.String() + `",
+				"session_ids": ["00000000-0000-0000-0000-000000000000"],
+				"student_ids": ["` + studentID.String() + `"],
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
@@ -134,14 +140,14 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		{
 			name: "empty_student_id_nil_uuid",
 			requestBody: `{
-				"session_id": "` + sessionID.String() + `",
-				"student_id": "00000000-0000-0000-0000-000000000000",
+				"session_ids": ["` + sessionID.String() + `"],
+				"student_ids": ["00000000-0000-0000-0000-000000000000"],
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
 				// The nil UUID should be caught by validation before repository call
 				// But add .Maybe() in case validation logic changes
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("invalid student")).Maybe()
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("invalid student")).Maybe()
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -149,13 +155,13 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		{
 			name: "duplicate_session_student_relationship",
 			requestBody: `{
-				"session_id": "` + sessionID.String() + `",
-				"student_id": "` + studentID.String() + `",
+				"session_ids": ["` + sessionID.String() + `"],
+				"student_ids": ["` + studentID.String() + `"],
 				"present": true,
 				"notes": "Duplicate entry"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
 			},
 			expectedStatus: fiber.StatusConflict,
 			wantErr:        true,
@@ -163,21 +169,74 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 		{
 			name: "repository_save_error",
 			requestBody: `{
-				"session_id": "` + sessionID.String() + `",
-				"student_id": "` + studentID.String() + `",
+				"session_ids": ["` + sessionID.String() + `"],
+				"student_ids": ["` + studentID.String() + `"],
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("database connection failed"))
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("database connection failed"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
+		},
+		{
+			name:        "empty_JSON_body",
+			requestBody: ``,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				// No repo call expected
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name: "unique_violation_conflict_error",
+			requestBody: `{
+				"session_ids": ["` + sessionID.String() + `"],
+				"student_ids": ["` + studentID.String() + `"],
+				"present": true
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).
+					Return(nil, errors.New("pq: unique_violation: duplicate student in session"))
+			},
+			expectedStatus: fiber.StatusConflict,
+			wantErr:        true,
+		},
+		{
+			name: "successful_multiple_session_ids",
+			requestBody: `{
+				"session_ids": ["` + sessionID.String() + `", "` + sessionID2.String() + `"],
+				"student_ids": ["` + studentID.String() + `"],
+				"present": true
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+					{
+						SessionID: sessionID,
+						StudentID: studentID,
+						Present:   true,
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
+					{
+						SessionID: sessionID2,
+						StudentID: studentID,
+						Present:   true,
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
+				}, nil)
+			},
+			expectedStatus: fiber.StatusCreated,
+			wantErr:        false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New()
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
 			mockRepo := new(mocks.MockSessionStudentRepository)
 			tt.mockSetup(mockRepo)
 
@@ -196,57 +255,32 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				body, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
 
-				var sessionStudent models.SessionStudent
-				err = json.Unmarshal(body, &sessionStudent)
+				var sessionStudents []models.SessionStudent
+
+				err = json.Unmarshal(body, &sessionStudents)
 				assert.NoError(t, err)
 
-				// Validate response data
-				assert.Equal(t, sessionID, sessionStudent.SessionID)
-				assert.Equal(t, studentID, sessionStudent.StudentID)
-				assert.False(t, sessionStudent.CreatedAt.IsZero())
-				assert.False(t, sessionStudent.UpdatedAt.IsZero())
-
-				switch tt.name {
-				case "successful_create_session_student":
-					assert.True(t, sessionStudent.Present)
-					assert.NotNil(t, sessionStudent.Notes)
-					assert.Contains(t, *sessionStudent.Notes, "participated well")
-				case "successful_create_session_student_minimal_data":
-					assert.False(t, sessionStudent.Present)
-					assert.Nil(t, sessionStudent.Notes)
+				var allSessionIDs []uuid.UUID
+				for _, sessionStudent := range sessionStudents {
+					allSessionIDs = append(allSessionIDs, sessionStudent.SessionID)
 				}
-			}
 
-			if tt.wantErr {
-				// Error cases - validate error response structure
-				body, err := io.ReadAll(resp.Body)
-				assert.NoError(t, err)
+				for _, sessionStudent := range sessionStudents {
+					// Validate response data
+					assert.Contains(t, allSessionIDs, sessionStudent.SessionID)
+					assert.Equal(t, studentID, sessionStudent.StudentID)
+					assert.False(t, sessionStudent.CreatedAt.IsZero())
+					assert.False(t, sessionStudent.UpdatedAt.IsZero())
 
-				var errorResp map[string]interface{}
-				err = json.Unmarshal(body, &errorResp)
-				assert.NoError(t, err)
-				assert.Contains(t, errorResp, "error")
-
-				// Validate specific error messages
-				switch tt.name {
-				case "invalid_JSON_body":
-					assert.Contains(t, errorResp["error"], "Invalid JSON format")
-				case "missing_session_id", "empty_session_id_nil_uuid":
-					assert.Contains(t, errorResp["error"], "Session ID is required")
-				case "missing_student_id", "empty_student_id_nil_uuid":
-					assert.Contains(t, errorResp["error"], "Student ID is required")
-				case "invalid_session_id_format":
-					// This might be caught by JSON parsing or UUID validation
-					errorMsg := errorResp["error"].(string)
-					assert.True(t, strings.Contains(errorMsg, "Invalid JSON format") || strings.Contains(errorMsg, "Invalid") || strings.Contains(errorMsg, "Session ID"))
-				case "invalid_student_id_format":
-					// This might be caught by JSON parsing or UUID validation
-					errorMsg := errorResp["error"].(string)
-					assert.True(t, strings.Contains(errorMsg, "Invalid JSON format") || strings.Contains(errorMsg, "Invalid") || strings.Contains(errorMsg, "Student ID"))
-				case "duplicate_session_student_relationship":
-					assert.Contains(t, errorResp["error"], "Student is already in this session")
-				case "repository_save_error":
-					assert.Contains(t, errorResp["error"], "Failed to create session student")
+					switch tt.name {
+					case "successful_create_session_student":
+						assert.True(t, sessionStudent.Present)
+						assert.NotNil(t, sessionStudent.Notes)
+						assert.Contains(t, *sessionStudent.Notes, "participated well")
+					case "successful_create_session_student_minimal_data":
+						assert.False(t, sessionStudent.Present)
+						assert.Nil(t, sessionStudent.Notes)
+					}
 				}
 			}
 		})

@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"specialstandard/internal/models"
+	"specialstandard/internal/storage/dbinterface"
 	"specialstandard/internal/storage/postgres/schema"
 	"specialstandard/internal/utils"
 	"time"
@@ -15,15 +16,19 @@ type SessionRepository interface {
 	GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error)
 	GetSessionByID(ctx context.Context, id string) (*models.Session, error)
 	DeleteSession(ctx context.Context, id uuid.UUID) error
-	PostSession(ctx context.Context, session *models.PostSessionInput) (*models.Session, error)
+	PostSession(ctx context.Context, q dbinterface.Queryable, session *models.PostSessionInput) (*[]models.Session, error)
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
 	GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error)
+
+	GetDB() *pgxpool.Pool
 }
 
 type SessionStudentRepository interface {
-	CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*models.SessionStudent, error)
+	CreateSessionStudent(ctx context.Context, q dbinterface.Queryable, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error)
 	DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error
 	PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error)
+
+	GetDB() *pgxpool.Pool
 }
 
 type StudentRepository interface {
