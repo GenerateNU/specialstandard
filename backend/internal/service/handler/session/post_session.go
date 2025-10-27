@@ -9,7 +9,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) PostSessions(c *fiber.Ctx) error {
@@ -45,18 +44,15 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		}
 	}
 
-	// Beginning Transaction
-	var tx pgx.Tx
 	db := h.sessionRepository.GetDB()
-	if db != nil {
-		tx, err := db.Begin(c.Context())
-		if err != nil {
-			return errs.InternalServerError("Failed to start transaction")
-		}
-		err = tx.Rollback(c.Context())
-		if err != nil {
-			return errs.InternalServerError("Unable to rollback transaction")
-		}
+	if db == nil {
+		return errs.InternalServerError("Failed to GetDB")
+	}
+
+	// Beginning Transaction
+	tx, err := db.Begin(c.Context())
+	if err != nil {
+		return errs.InternalServerError("Failed to start transaction")
 	}
 
 	newSessions, err := h.sessionRepository.PostSession(c.Context(), tx, &session)
@@ -103,18 +99,9 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		}
 	}
 
-	if db != nil {
-		err = tx.Commit(c.Context())
-		if err != nil {
-			return errs.InternalServerError("Failed to commit transaction")
-		}
-	}
-
-	if db != nil {
-		err = tx.Commit(c.Context())
-		if err != nil {
-			return errs.InternalServerError("Failed to commit transaction")
-		}
+	err = tx.Commit(c.Context())
+	if err != nil {
+		return errs.InternalServerError("Failed to commit transaction")
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(newSessions)
