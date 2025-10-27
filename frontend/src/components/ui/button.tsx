@@ -13,7 +13,7 @@ const buttonVariants = cva(
         destructive: 'bg-error text-white shadow-sm hover:bg-error/90',
         outline:
           'border border-border bg-background shadow-sm hover:bg-card-hover hover:text-primary',
-        secondary: 'bg-card text-primary shadow-sm hover:bg-card-hover',
+        secondary: 'bg-card text-primary hover:-translate-y-0.5 hover:shadow-md transition-all',
         ghost: 'text-primary hover:bg-card hover:text-primary',
         link: 'text-accent underline-offset-4 hover:underline',
         tab: 'px-8 py-2 text-secondary hover:text-primary transition-colors rounded-none',
