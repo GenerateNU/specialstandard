@@ -6,13 +6,15 @@ import (
 )
 
 type Handler struct {
-	sessionRepository storage.SessionRepository
-	validator         *xvalidator.XValidator
+	sessionRepository        storage.SessionRepository
+	sessionStudentRepository storage.SessionStudentRepository
+	validator                *xvalidator.XValidator
 }
 
-func NewHandler(sessionRepository storage.SessionRepository) *Handler {
+func NewHandler(sessionRepository storage.SessionRepository, sessionStudentRepository storage.SessionStudentRepository) *Handler {
 	return &Handler{
-		sessionRepository: sessionRepository,
-		validator:         xvalidator.Validator,
+		sessionRepository:        sessionRepository,
+		sessionStudentRepository: sessionStudentRepository,
+		validator:                xvalidator.Validator,
 	}
 }

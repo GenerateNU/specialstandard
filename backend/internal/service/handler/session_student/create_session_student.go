@@ -1,7 +1,9 @@
 package sessionstudent
 
 import (
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
+	"specialstandard/internal/xvalidator"
 
 	"strings"
 
@@ -18,19 +20,29 @@ func (h *Handler) CreateSessionStudent(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate required fields
-	if req.SessionID == (uuid.UUID{}) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Session ID is required",
-		})
-	}
-	if req.StudentID == (uuid.UUID{}) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Student ID is required",
-		})
+	if validationErrors := h.validator.Validate(req); len(validationErrors) > 0 {
+		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	sessionStudent, err := h.sessionStudentRepository.CreateSessionStudent(c.Context(), &req)
+	// Validate required fields
+	for _, id := range req.SessionIDs {
+		if id == (uuid.UUID{}) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Session ID is required",
+			})
+		}
+	}
+
+	for _, id := range req.StudentIDs {
+		if id == (uuid.UUID{}) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Student ID is required",
+			})
+		}
+	}
+
+	db := h.sessionStudentRepository.GetDB()
+	sessionStudents, err := h.sessionStudentRepository.CreateSessionStudent(c.Context(), db, &req)
 	if err != nil {
 		if strings.Contains(err.Error(), "unique_violation") || strings.Contains(err.Error(), "duplicate key") {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
@@ -42,5 +54,5 @@ func (h *Handler) CreateSessionStudent(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(sessionStudent)
+	return c.Status(fiber.StatusCreated).JSON(sessionStudents)
 }
