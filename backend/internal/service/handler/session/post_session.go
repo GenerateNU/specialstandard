@@ -77,11 +77,11 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 	}
 	postSessionStudent.SessionIDs = sessionIDs
 
-	if validationErrors := h.validator.Validate(postSessionStudent); len(validationErrors) > 0 {
-		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
-	}
-
 	if session.StudentIDs != nil {
+		if validationErrors := h.validator.Validate(postSessionStudent); len(validationErrors) > 0 {
+			return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
+		}
+
 		_, err = h.sessionStudentRepository.CreateSessionStudent(c.Context(), tx, &postSessionStudent)
 		if err != nil {
 			rollbackErr := tx.Rollback(c.Context())
@@ -100,7 +100,7 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		}
 	}
 
-	if tx != nil {
+	if db != nil {
 		err = tx.Commit(c.Context())
 		if err != nil {
 			return errs.InternalServerError("Failed to commit transaction")
