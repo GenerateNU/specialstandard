@@ -293,6 +293,39 @@ func TestHandler_PostSessions(t *testing.T) {
 			},
 			expectedStatusCode: fiber.StatusCreated,
 		},
+		{
+			name: "Database Connection Refused",
+			payload: `{
+				"start_datetime": "2025-09-14T10:00:00Z",
+				"end_datetime": "2025-09-14T11:00:00Z",
+				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d",
+				"notes": "DB connection test"
+			}`,
+			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
+				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T10:00:00Z")
+				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T11:00:00Z")
+				postSession := &models.PostSessionInput{
+					StartTime:   startTime,
+					EndTime:     endTime,
+					TherapistID: uuid.MustParse("28eedfdc-81e1-44e5-a42c-022dc4c3b64d"),
+					Notes:       ptrString("DB connection test"),
+				}
+				m.On("PostSession", mock.Anything, mock.Anything, postSession).
+					Return(nil, errors.New("connection refused"))
+			},
+			expectedStatusCode: fiber.StatusInternalServerError,
+		},
+		{
+			name: "StudentIDs contain empty UUID",
+			payload: `{
+				"start_datetime": "2025-09-14T10:00:00Z",
+				"end_datetime": "2025-09-14T11:00:00Z",
+				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d",
+				"student_ids": ["00000000-0000-0000-0000-000000000000"]
+			}`,
+			mockSetup:          func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
 	}
 
 	for _, tt := range tests {

@@ -133,6 +133,11 @@ func (r *SessionRepository) PostSession(ctx context.Context, q dbinterface.Query
 
 	if input.Repetition != nil {
 		rp := input.Repetition
+		if rp.RecurEnd.Before(rp.RecurStart) {
+			return nil, fmt.Errorf("invalid repetition range: recur_end (%s) is before recur_start (%s)",
+				rp.RecurEnd.Format(time.RFC3339), rp.RecurStart.Format(time.RFC3339))
+		}
+
 		startTime := addNWeeks(input.StartTime, rp.EveryNWeeks)
 		endTime := addNWeeks(input.EndTime, rp.EveryNWeeks)
 

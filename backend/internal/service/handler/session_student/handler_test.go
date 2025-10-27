@@ -22,6 +22,7 @@ import (
 
 func TestHandler_CreateSessionStudent(t *testing.T) {
 	sessionID := uuid.New()
+	sessionID2 := uuid.New()
 	studentID := uuid.New()
 
 	tests := []struct {
@@ -178,6 +179,57 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
 		},
+		{
+			name:        "empty_JSON_body",
+			requestBody: ``,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				// No repo call expected
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name: "unique_violation_conflict_error",
+			requestBody: `{
+				"session_ids": ["` + sessionID.String() + `"],
+				"student_ids": ["` + studentID.String() + `"],
+				"present": true
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).
+					Return(nil, errors.New("pq: unique_violation: duplicate student in session"))
+			},
+			expectedStatus: fiber.StatusConflict,
+			wantErr:        true,
+		},
+		{
+			name: "successful_multiple_session_ids",
+			requestBody: `{
+				"session_ids": ["` + sessionID.String() + `", "` + sessionID2.String() + `"],
+				"student_ids": ["` + studentID.String() + `"],
+				"present": true
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+					{
+						SessionID: sessionID,
+						StudentID: studentID,
+						Present:   true,
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
+					{
+						SessionID: sessionID2,
+						StudentID: studentID,
+						Present:   true,
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
+				}, nil)
+			},
+			expectedStatus: fiber.StatusCreated,
+			wantErr:        false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -208,9 +260,14 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				err = json.Unmarshal(body, &sessionStudents)
 				assert.NoError(t, err)
 
+				var allSessionIDs []uuid.UUID
+				for _, sessionStudent := range sessionStudents {
+					allSessionIDs = append(allSessionIDs, sessionStudent.SessionID)
+				}
+
 				for _, sessionStudent := range sessionStudents {
 					// Validate response data
-					assert.Equal(t, sessionID, sessionStudent.SessionID)
+					assert.Contains(t, allSessionIDs, sessionStudent.SessionID)
 					assert.Equal(t, studentID, sessionStudent.StudentID)
 					assert.False(t, sessionStudent.CreatedAt.IsZero())
 					assert.False(t, sessionStudent.UpdatedAt.IsZero())

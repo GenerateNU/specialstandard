@@ -268,6 +268,44 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		assert.Equal(t, postedSession.Notes, notes)
 		assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
 	}
+
+	recurEnd := startTime.AddDate(0, 0, 21) // 3 weeks later
+	postSession = &models.PostSessionInput{
+		StartTime:   startTime,
+		EndTime:     endTime,
+		TherapistID: therapistID,
+		Notes:       ptrString("recurring sessions"),
+		Repetition: &models.Repetition{
+			EveryNWeeks: 1,
+			RecurEnd:    recurEnd,
+		},
+	}
+
+	repeatedSessions, err := repo.PostSession(ctx, db, postSession)
+	assert.NoError(t, err)
+	assert.NotNil(t, repeatedSessions)
+	assert.Equal(t, len(*repeatedSessions), 4)
+
+	for _, s := range *repeatedSessions {
+		assert.Equal(t, s.TherapistID, therapistID)
+		assert.Contains(t, *s.Notes, "recurring")
+	}
+
+	postSession = &models.PostSessionInput{
+		StartTime:   startTime,
+		EndTime:     endTime,
+		TherapistID: therapistID,
+		Notes:       ptrString("invalid repetition end"),
+		Repetition: &models.Repetition{
+			EveryNWeeks: 1,
+			RecurStart:  startTime,
+			RecurEnd:    startTime.AddDate(0, 0, -7), // 1 week before start
+		},
+	}
+
+	invalidRepeatSessions, err := repo.PostSession(ctx, db, postSession)
+	assert.Error(t, err)
+	assert.Nil(t, invalidRepeatSessions)
 }
 
 func TestSessionRepository_PatchSessions(t *testing.T) {
