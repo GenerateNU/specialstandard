@@ -1,17 +1,19 @@
+import { useAuthContext } from '@/contexts/authContext'
+import { getSessionResource as getSessionResourceApi } from '@/lib/api/session-resource'
 import type { ModifySessionResource } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { getSessionResource as getSessionResourceApi } from '@/lib/api/session-resource'
 
 export function useSessionResource() {
   const queryClient = useQueryClient()
   const api = getSessionResourceApi()
+  const { userId: therapistId } = useAuthContext()
 
   const addResourceToSessionMutation = useMutation({
     mutationFn: (input: ModifySessionResource) =>
       api.postSessionResource(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['sessions', variables.session_id, 'resources'],
+        queryKey: ['sessions', variables.session_id, 'resources', therapistId],
       })
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
@@ -22,7 +24,7 @@ export function useSessionResource() {
       api.deleteSessionResource(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['sessions', variables.session_id, 'resources'],
+        queryKey: ['sessions', variables.session_id, 'resources', therapistId],
       })
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },

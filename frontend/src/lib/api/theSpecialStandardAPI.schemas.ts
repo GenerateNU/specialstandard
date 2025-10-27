@@ -698,6 +698,11 @@ export interface GetTherapistsParams {
    * @minimum 1
    */
   limit?: number
+  /**
+   * TherapistID of current therapist logged in, 
+   * purposefully not optional because ticket wanted us to pass in ID by default
+   */
+  therapistId: string
 }
 
 export interface DeleteTherapistsId200 {

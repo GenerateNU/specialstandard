@@ -1,11 +1,12 @@
+import { useAuthContext } from '@/contexts/authContext'
+import { getStudents } from '@/lib/api/students'
 import type {
   CreateStudentInput,
   Student,
   UpdateStudentInput,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getStudents } from '@/lib/api/students'
 import { gradeToDisplay } from '@/lib/gradeUtils'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export type StudentBody = Omit<Student, 'grade'> & {
   grade: string
@@ -24,6 +25,7 @@ export type StudentBody = Omit<Student, 'grade'> & {
 export function useStudents() {
   const queryClient = useQueryClient()
   const api = getStudents()
+  const { userId: therapistId } = useAuthContext()
 
   const {
     data: studentsData = [],
@@ -31,8 +33,10 @@ export function useStudents() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['students'],
-    queryFn: () => api.getStudents({ limit: 100 }),
+    queryKey: ['students', therapistId],
+    queryFn: () => api.getStudents({ limit: 100, therapist_id: therapistId! }),
+    // we technically dont need this line but it is just defensive programming!!  
+    enabled: !!therapistId,
   })
 
   const students = studentsData.map(student => ({
@@ -43,7 +47,7 @@ export function useStudents() {
   const addStudentMutation = useMutation({
     mutationFn: (input: CreateStudentInput) => api.postStudents(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] })
+      queryClient.invalidateQueries({ queryKey: ['students', therapistId] })
     },
   })
 
@@ -51,14 +55,14 @@ export function useStudents() {
     mutationFn: ({ id, data }: { id: string, data: UpdateStudentInput }) =>
       api.patchStudentsId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] })
+      queryClient.invalidateQueries({ queryKey: ['students', therapistId] })
     },
   })
 
   const deleteStudentMutation = useMutation({
     mutationFn: (id: string) => api.deleteStudentsId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] })
+      queryClient.invalidateQueries({ queryKey: ['students', therapistId] })
     },
   })
 

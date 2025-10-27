@@ -1,11 +1,11 @@
 'use client'
+import { useAuth } from '@/hooks/useAuth'
 import type {
   PostAuthLoginBody,
   PostAuthSignupBody,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useState } from 'react'
-import { useAuth } from '@/hooks/useAuth'
 
 interface AuthContextType {
   userId: string | null

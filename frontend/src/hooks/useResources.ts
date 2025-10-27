@@ -1,16 +1,16 @@
-import type { QueryObserverResult } from '@tanstack/react-query'
+import { useAuthContext } from '@/contexts/authContext'
+import { getResources as getResourcesApi } from '@/lib/api/resources'
 import type {
   CreateResourceBody,
   ResourceWithPresignURL,
   UpdateResourceBody,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
+import type { QueryObserverResult } from '@tanstack/react-query'
 import {
-
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { getResources as getResourcesApi } from '@/lib/api/resources'
 
 interface UseResourcesReturn {
   resources: ResourceWithPresignURL[]
@@ -25,6 +25,7 @@ interface UseResourcesReturn {
 export function useResources(): UseResourcesReturn {
   const queryClient = useQueryClient()
   const api = getResourcesApi()
+  const { userId: therapistId } = useAuthContext()
 
   const {
     data: resources = [],
@@ -32,14 +33,14 @@ export function useResources(): UseResourcesReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['resources'],
+    queryKey: ['resources', therapistId],
     queryFn: () => api.getResources(),
   })
 
   const addResourceMutation = useMutation({
     mutationFn: (input: CreateResourceBody) => api.postResources(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['resources'] })
+      queryClient.invalidateQueries({ queryKey: ['resources', therapistId] })
     },
   })
 
@@ -47,14 +48,14 @@ export function useResources(): UseResourcesReturn {
     mutationFn: ({ id, data }: { id: string, data: UpdateResourceBody }) =>
       api.patchResourcesId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['resources'] })
+      queryClient.invalidateQueries({ queryKey: ['resources', therapistId] })
     },
   })
 
   const deleteResourceMutation = useMutation({
     mutationFn: (id: string) => api.deleteResourcesId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['resources'] })
+      queryClient.invalidateQueries({ queryKey: ['resources', therapistId] })
     },
   })
 

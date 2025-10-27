@@ -1,20 +1,22 @@
+import { useAuthContext } from '@/contexts/authContext'
+import { getSessionStudents as getSessionStudentsApi } from '@/lib/api/session-students'
 import type {
   CreateSessionStudentInput,
   DeleteSessionStudentsBody,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { getSessionStudents as getSessionStudentsApi } from '@/lib/api/session-students'
 
 export function useSessionStudents() {
   const queryClient = useQueryClient()
   const api = getSessionStudentsApi()
+  const { userId: therapistId } = useAuthContext()
 
   const addStudentToSessionMutation = useMutation({
     mutationFn: (input: CreateSessionStudentInput) =>
       api.postSessionStudents(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['sessions', variables.session_id, 'students'],
+        queryKey: ['sessions', variables.session_id, 'students', therapistId],
       })
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
@@ -25,7 +27,7 @@ export function useSessionStudents() {
       api.deleteSessionStudents(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['sessions', variables.session_id, 'students'],
+        queryKey: ['sessions', variables.session_id, 'students', therapistId],
       })
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },

@@ -1,11 +1,12 @@
-import type { QueryObserverResult } from '@tanstack/react-query'
+import { useAuthContext } from '@/contexts/authContext'
+import { getSessions as getSessionsApi } from '@/lib/api/sessions'
 import type {
   PostSessionsBody,
   Session,
   UpdateSessionInput,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
+import type { QueryObserverResult } from '@tanstack/react-query'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getSessions as getSessionsApi } from '@/lib/api/sessions'
 
 interface UseSessionsReturn {
   sessions: Session[]
@@ -20,6 +21,7 @@ interface UseSessionsReturn {
 export function useSessions(): UseSessionsReturn {
   const queryClient = useQueryClient()
   const api = getSessionsApi()
+  const { userId: therapistId } = useAuthContext()
 
   const {
     data: sessionsResponse,
@@ -27,8 +29,10 @@ export function useSessions(): UseSessionsReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['sessions'],
+    queryKey: ['sessions', therapistId],
     queryFn: () => api.getSessions(),
+    // we technically dont need this line but it is just defensive programming!!  
+    enabled: !!therapistId, 
   })
 
   const sessions = sessionsResponse ?? []
@@ -36,7 +40,7 @@ export function useSessions(): UseSessionsReturn {
   const addSessionMutation = useMutation({
     mutationFn: (input: PostSessionsBody) => api.postSessions(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      queryClient.invalidateQueries({ queryKey: ['sessions', therapistId] })
     },
   })
 
@@ -44,14 +48,14 @@ export function useSessions(): UseSessionsReturn {
     mutationFn: ({ id, data }: { id: string, data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ssions'] })
+      queryClient.invalidateQueries({ queryKey: ['sessions', therapistId] })
     },
   })
 
   const deleteSessionMutation = useMutation({
     mutationFn: (id: string) => api.deleteSessionsId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      queryClient.invalidateQueries({ queryKey: ['sessions', therapistId] })
     },
   })
 

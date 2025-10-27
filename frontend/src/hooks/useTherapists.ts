@@ -1,11 +1,12 @@
-import type { QueryObserverResult } from '@tanstack/react-query'
+import { useAuthContext } from '@/contexts/authContext'
+import { getTherapists as getTherapistsApi } from '@/lib/api/therapists'
 import type {
   CreateTherapistInput,
   Therapist,
   UpdateTherapistInput,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
+import type { QueryObserverResult } from '@tanstack/react-query'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getTherapists as getTherapistsApi } from '@/lib/api/therapists'
 
 interface UseTherapistsReturn {
   therapists: Therapist[]
@@ -20,6 +21,7 @@ interface UseTherapistsReturn {
 export function useTherapists(): UseTherapistsReturn {
   const queryClient = useQueryClient()
   const api = getTherapistsApi()
+  const { userId: therapistId } = useAuthContext()
 
   const {
     data: therapistsResponse,
@@ -27,8 +29,10 @@ export function useTherapists(): UseTherapistsReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['therapists'],
-    queryFn: () => api.getTherapists(),
+    queryKey: ['therapists', therapistId],
+    queryFn: () => api.getTherapists({ therapistId: therapistId! }),
+    // we technically dont need this line but it is just defensive programming!!  
+    enabled: !!therapistId, 
   })
 
   const therapists = therapistsResponse ?? []
@@ -36,7 +40,7 @@ export function useTherapists(): UseTherapistsReturn {
   const addTherapistMutation = useMutation({
     mutationFn: (input: CreateTherapistInput) => api.postTherapists(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['therapists'] })
+      queryClient.invalidateQueries({ queryKey: ['therapists', therapistId] })
     },
   })
 
@@ -44,14 +48,14 @@ export function useTherapists(): UseTherapistsReturn {
     mutationFn: ({ id, data }: { id: string, data: UpdateTherapistInput }) =>
       api.patchTherapistsId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['therapists'] })
+      queryClient.invalidateQueries({ queryKey: ['therapists', therapistId] })
     },
   })
 
   const deleteTherapistMutation = useMutation({
     mutationFn: (id: string) => api.deleteTherapistsId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['therapists'] })
+      queryClient.invalidateQueries({ queryKey: ['therapists', therapistId] })
     },
   })
 
