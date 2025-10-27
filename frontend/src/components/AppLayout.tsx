@@ -2,20 +2,13 @@
 'use client'
 
 import type { ReactNode } from 'react'
-<<<<<<< HEAD
 import { Calendar, Component, GraduationCap, Home, LogOut, PanelLeft, Users } from 'lucide-react'
-=======
-import { Calendar, Component, GraduationCap, Home, PanelLeft, Users } from 'lucide-react'
->>>>>>> 7f95046 (feat: starter student profile page)
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-<<<<<<< HEAD
 import { useAuthContext } from '@/contexts/authContext'
-=======
->>>>>>> 7f95046 (feat: starter student profile page)
 
 interface AppLayoutProps {
   children: ReactNode
@@ -38,10 +31,7 @@ const navItems: NavItem[] = [
 export default function AppLayout({ children }: AppLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const pathname = usePathname()
-<<<<<<< HEAD
   const { logout } = useAuthContext()
-=======
->>>>>>> 7f95046 (feat: starter student profile page)
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
