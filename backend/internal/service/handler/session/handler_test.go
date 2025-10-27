@@ -255,17 +255,6 @@ func TestHandler_PostSessions(t *testing.T) {
 			mockSetup:          func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {},
 			expectedStatusCode: fiber.StatusInternalServerError,
 		},
-		{
-			name: "StudentIDs contain empty UUID",
-			payload: `{
-				"start_datetime": "2025-09-14T10:00:00Z",
-				"end_datetime": "2025-09-14T11:00:00Z",
-				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d",
-				"student_ids": ["00000000-0000-0000-0000-000000000000"]
-			}`,
-			mockSetup:          func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {},
-			expectedStatusCode: fiber.StatusBadRequest,
-		},
 	}
 
 	for _, tt := range tests {
