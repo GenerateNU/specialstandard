@@ -53,7 +53,10 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 		if err != nil {
 			return errs.InternalServerError("Failed to start transaction")
 		}
-		defer tx.Rollback(c.Context())
+		err = tx.Rollback(c.Context())
+		if err != nil {
+			return errs.InternalServerError("Unable to rollback transaction")
+		}
 	}
 
 	newSessions, err := h.sessionRepository.PostSession(c.Context(), tx, &session)

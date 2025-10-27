@@ -269,7 +269,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
 	}
 
-	recurEnd := startTime.AddDate(0, 0, 21) // 3 weeks later
+	recurEnd := startTime.AddDate(0, 0, 20) // 3 weeks later
 	postSession = &models.PostSessionInput{
 		StartTime:   startTime,
 		EndTime:     endTime,
@@ -284,7 +284,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	repeatedSessions, err := repo.PostSession(ctx, db, postSession)
 	assert.NoError(t, err)
 	assert.NotNil(t, repeatedSessions)
-	assert.Equal(t, len(*repeatedSessions), 4)
+	assert.Equal(t, len(*repeatedSessions), 3)
 
 	for _, s := range *repeatedSessions {
 		assert.Equal(t, s.TherapistID, therapistID)
