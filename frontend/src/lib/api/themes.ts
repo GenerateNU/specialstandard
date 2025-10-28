@@ -10,18 +10,18 @@ import type {
   GetThemesParams,
   Theme,
   UpdateThemeInput,
-} from "./theSpecialStandardAPI.schemas";
+} from './theSpecialStandardAPI.schemas'
 
-import { customAxios } from "./apiClient";
+import { customAxios } from './apiClient'
 
-export const getThemes = () => {
+export function getThemes() {
   /**
    * Retrieve all themes from the database with optional filtering by month, year, and name search
    * @summary Get all themes
    */
   const getThemes = (params?: GetThemesParams) => {
-    return customAxios<Theme[]>({ url: `/themes`, method: "GET", params });
-  };
+    return customAxios<Theme[]>({ url: `/themes`, method: 'GET', params })
+  }
   /**
    * Create a new theme for therapy sessions
    * @summary Create a new theme
@@ -29,18 +29,18 @@ export const getThemes = () => {
   const postThemes = (createThemeInput: CreateThemeInput) => {
     return customAxios<Theme>({
       url: `/themes`,
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       data: createThemeInput,
-    });
-  };
+    })
+  }
   /**
    * Retrieve a specific theme by its UUID
    * @summary Get theme by ID
    */
   const getThemesId = (id: string) => {
-    return customAxios<Theme>({ url: `/themes/${id}`, method: "GET" });
-  };
+    return customAxios<Theme>({ url: `/themes/${id}`, method: 'GET' })
+  }
   /**
    * Update an existing theme (partial update)
    * @summary Update theme
@@ -48,11 +48,11 @@ export const getThemes = () => {
   const patchThemesId = (id: string, updateThemeInput: UpdateThemeInput) => {
     return customAxios<Theme>({
       url: `/themes/${id}`,
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
       data: updateThemeInput,
-    });
-  };
+    })
+  }
   /**
    * Delete a theme from the database
    * @summary Delete theme
@@ -60,23 +60,23 @@ export const getThemes = () => {
   const deleteThemesId = (id: string) => {
     return customAxios<DeleteThemesId200>({
       url: `/themes/${id}`,
-      method: "DELETE",
-    });
-  };
-  return { getThemes, postThemes, getThemesId, patchThemesId, deleteThemesId };
-};
+      method: 'DELETE',
+    })
+  }
+  return { getThemes, postThemes, getThemesId, patchThemesId, deleteThemesId }
+}
 export type GetThemesResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getThemes>["getThemes"]>>
->;
+  Awaited<ReturnType<ReturnType<typeof getThemes>['getThemes']>>
+>
 export type PostThemesResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getThemes>["postThemes"]>>
->;
+  Awaited<ReturnType<ReturnType<typeof getThemes>['postThemes']>>
+>
 export type GetThemesIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getThemes>["getThemesId"]>>
->;
+  Awaited<ReturnType<ReturnType<typeof getThemes>['getThemesId']>>
+>
 export type PatchThemesIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getThemes>["patchThemesId"]>>
->;
+  Awaited<ReturnType<ReturnType<typeof getThemes>['patchThemesId']>>
+>
 export type DeleteThemesIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getThemes>["deleteThemesId"]>>
->;
+  Awaited<ReturnType<ReturnType<typeof getThemes>['deleteThemesId']>>
+>

@@ -9,11 +9,11 @@ import type {
   DeleteSessionStudentsBody,
   SessionStudent,
   UpdateSessionStudentInput,
-} from "./theSpecialStandardAPI.schemas";
+} from './theSpecialStandardAPI.schemas'
 
-import { customAxios } from "./apiClient";
+import { customAxios } from './apiClient'
 
-export const getSessionStudents = () => {
+export function getSessionStudents() {
   /**
    * Associate each given student with each given session, creating an entry in the bridge table
    * @summary Create session-student relationship
@@ -23,11 +23,11 @@ export const getSessionStudents = () => {
   ) => {
     return customAxios<SessionStudent[]>({
       url: `/session_students`,
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       data: createSessionStudentInput,
-    });
-  };
+    })
+  }
   /**
    * Remove the association between a student and a session
    * @summary Delete session-student relationship
@@ -37,11 +37,11 @@ export const getSessionStudents = () => {
   ) => {
     return customAxios<void>({
       url: `/session_students`,
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
       data: deleteSessionStudentsBody,
-    });
-  };
+    })
+  }
   /**
    * Update the present status or notes for a session-student relationship
    * @summary Update session-student relationship
@@ -51,25 +51,25 @@ export const getSessionStudents = () => {
   ) => {
     return customAxios<SessionStudent>({
       url: `/session_students`,
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
       data: updateSessionStudentInput,
-    });
-  };
-  return { postSessionStudents, deleteSessionStudents, patchSessionStudents };
-};
+    })
+  }
+  return { postSessionStudents, deleteSessionStudents, patchSessionStudents }
+}
 export type PostSessionStudentsResult = NonNullable<
   Awaited<
-    ReturnType<ReturnType<typeof getSessionStudents>["postSessionStudents"]>
+    ReturnType<ReturnType<typeof getSessionStudents>['postSessionStudents']>
   >
->;
+>
 export type DeleteSessionStudentsResult = NonNullable<
   Awaited<
-    ReturnType<ReturnType<typeof getSessionStudents>["deleteSessionStudents"]>
+    ReturnType<ReturnType<typeof getSessionStudents>['deleteSessionStudents']>
   >
->;
+>
 export type PatchSessionStudentsResult = NonNullable<
   Awaited<
-    ReturnType<ReturnType<typeof getSessionStudents>["patchSessionStudents"]>
+    ReturnType<ReturnType<typeof getSessionStudents>['patchSessionStudents']>
   >
->;
+>
