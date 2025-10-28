@@ -14,37 +14,37 @@ import type {
   Session,
   StudentWithSessionInfo,
   UpdateSessionInput,
-} from './theSpecialStandardAPI.schemas'
+} from "./theSpecialStandardAPI.schemas";
 
-import { customAxios } from './apiClient'
+import { customAxios } from "./apiClient";
 
-export function getSessions() {
+export const getSessions = () => {
   /**
    * Retrieve all therapy sessions from the database with optional filtering
    * @summary Get all sessions
    */
   const getSessions = (params?: GetSessionsParams) => {
-    return customAxios<Session[]>({ url: `/sessions`, method: 'GET', params })
-  }
+    return customAxios<Session[]>({ url: `/sessions`, method: "GET", params });
+  };
   /**
    * Create a new therapy session
    * @summary Create a new session
    */
   const postSessions = (postSessionsBody: PostSessionsBody) => {
-    return customAxios<Session>({
+    return customAxios<Session[]>({
       url: `/sessions`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       data: postSessionsBody,
-    })
-  }
+    });
+  };
   /**
    * Retrieve a specific therapy session by its UUID
    * @summary Get session by ID
    */
   const getSessionsId = (id: string) => {
-    return customAxios<Session>({ url: `/sessions/${id}`, method: 'GET' })
-  }
+    return customAxios<Session>({ url: `/sessions/${id}`, method: "GET" });
+  };
   /**
    * Update an existing session (partial update)
    * @summary Update session
@@ -55,11 +55,11 @@ export function getSessions() {
   ) => {
     return customAxios<Session>({
       url: `/sessions/${id}`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       data: updateSessionInput,
-    })
-  }
+    });
+  };
   /**
    * Delete a session from the database
    * @summary Delete session
@@ -67,9 +67,9 @@ export function getSessions() {
   const deleteSessionsId = (id: string) => {
     return customAxios<DeleteSessionsId200>({
       url: `/sessions/${id}`,
-      method: 'DELETE',
-    })
-  }
+      method: "DELETE",
+    });
+  };
   /**
    * Retrieve all resources associated with a specific session
    * @summary Get resources for a session
@@ -80,10 +80,10 @@ export function getSessions() {
   ) => {
     return customAxios<Resource[]>({
       url: `/sessions/${id}/resources`,
-      method: 'GET',
+      method: "GET",
       params,
-    })
-  }
+    });
+  };
   /**
    * Retrieve all students associated with a specific session, including bridge table information
    * @summary Get all students for a session
@@ -94,10 +94,10 @@ export function getSessions() {
   ) => {
     return customAxios<StudentWithSessionInfo[]>({
       url: `/sessions/${sessionId}/students`,
-      method: 'GET',
+      method: "GET",
       params,
-    })
-  }
+    });
+  };
   return {
     getSessions,
     postSessions,
@@ -106,28 +106,28 @@ export function getSessions() {
     deleteSessionsId,
     getSessionsIdResources,
     getSessionsSessionIdStudents,
-  }
-}
+  };
+};
 export type GetSessionsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getSessions>['getSessions']>>
->
+  Awaited<ReturnType<ReturnType<typeof getSessions>["getSessions"]>>
+>;
 export type PostSessionsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getSessions>['postSessions']>>
->
+  Awaited<ReturnType<ReturnType<typeof getSessions>["postSessions"]>>
+>;
 export type GetSessionsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getSessions>['getSessionsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getSessions>["getSessionsId"]>>
+>;
 export type PatchSessionsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getSessions>['patchSessionsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getSessions>["patchSessionsId"]>>
+>;
 export type DeleteSessionsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getSessions>['deleteSessionsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getSessions>["deleteSessionsId"]>>
+>;
 export type GetSessionsIdResourcesResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getSessions>['getSessionsIdResources']>>
->
+  Awaited<ReturnType<ReturnType<typeof getSessions>["getSessionsIdResources"]>>
+>;
 export type GetSessionsSessionIdStudentsResult = NonNullable<
   Awaited<
-    ReturnType<ReturnType<typeof getSessions>['getSessionsSessionIdStudents']>
+    ReturnType<ReturnType<typeof getSessions>["getSessionsSessionIdStudents"]>
   >
->
+>;

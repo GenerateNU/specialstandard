@@ -4,18 +4,18 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-import { customAxios } from './apiClient'
+import { customAxios } from "./apiClient";
 
-export function getHealth() {
+export const getHealth = () => {
   /**
    * Check if the API is running and healthy
    * @summary Health check
    */
   const getHealth = () => {
-    return customAxios<void>({ url: `/health`, method: 'GET' })
-  }
-  return { getHealth }
-}
+    return customAxios<void>({ url: `/health`, method: "GET" });
+  };
+  return { getHealth };
+};
 export type GetHealthResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getHealth>['getHealth']>>
->
+  Awaited<ReturnType<ReturnType<typeof getHealth>["getHealth"]>>
+>;
