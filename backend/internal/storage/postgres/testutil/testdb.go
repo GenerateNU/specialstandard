@@ -201,4 +201,19 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	_, err = pool.Exec(ctx, `
+		CREATE TYPE category AS ENUM ('visual_cue', 'verbal_cue', 'gestural_cue', 'engagement');
+		CREATE TYPE response_level AS ENUM ('minimal', 'moderate', 'maximal', 'low', 'high');
+
+		CREATE TABLE IF NOT EXISTS session_ratings (
+			id SERIAL PRIMARY KEY,
+			session_student_id INT REFERENCES session_student(id),
+			category category,
+			level response_level,
+			description TEXT
+		);`)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

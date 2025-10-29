@@ -37,3 +37,11 @@ func (m *MockSessionStudentRepository) PatchSessionStudent(ctx context.Context, 
 func (m *MockSessionStudentRepository) GetDB() *pgxpool.Pool {
 	return nil
 }
+
+func (m *MockSessionStudentRepository) RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []*models.SessionRating, error) {
+	args := m.Called(ctx, input)
+	if args.Get(0) == nil {
+		return nil, nil, args.Error(2)
+	}
+	return args.Get(0).(*models.SessionStudent), args.Get(1).([]*models.SessionRating), args.Error(2)
+}

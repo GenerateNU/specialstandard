@@ -157,6 +157,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Post("/", sessionStudentHandler.CreateSessionStudent)
 		r.Delete("/", sessionStudentHandler.DeleteSessionStudent)
 		r.Patch("/", sessionStudentHandler.PatchSessionStudent)
+		r.Patch("/rate", sessionStudentHandler.PatchStudentSessionRatings)
 	})
 
 	sessionResourceHandler := session_resource.NewHandler(repo.SessionResource)

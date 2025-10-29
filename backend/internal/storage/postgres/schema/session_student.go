@@ -68,11 +68,12 @@ func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, inpu
 					present = COALESCE($1, present),
 					notes = COALESCE($2, notes)
 				WHERE session_id = $3 AND student_id = $4
-				RETURNING session_id, student_id, present, notes, created_at, updated_at`
+				RETURNING id, session_id, student_id, present, notes, created_at, updated_at`
 
 	row := r.db.QueryRow(ctx, query, input.Present, input.Notes, input.SessionID, input.StudentID)
 
 	if err := row.Scan(
+		&sessionStudent.ID,
 		&sessionStudent.SessionID,
 		&sessionStudent.StudentID,
 		&sessionStudent.Present,
@@ -84,4 +85,31 @@ func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, inpu
 	}
 
 	return sessionStudent, nil
+}
+
+func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []*models.SessionRating, error) {
+	sessionStudent, err := r.PatchSessionStudent(ctx, &input.PatchSessionStudentInput)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var ratings []*models.SessionRating
+	for _, rating := range input.Ratings {
+		query := `INSERT INTO session_ratings (session_student_id, category, level, description)
+          VALUES ($1, $2, $3, $4) 
+          ON CONFLICT (session_student_id, category) 
+          DO UPDATE SET 
+              level = EXCLUDED.level,
+              description = EXCLUDED.description,
+              updated_at = NOW()
+          RETURNING category, level, description`
+
+		row := r.db.QueryRow(ctx, query, sessionStudent.ID, rating.Category, rating.Level, rating.Description)
+		var insertedRating models.SessionRating
+		if err := row.Scan(&insertedRating.Category, &insertedRating.Level, &insertedRating.Description); err != nil {
+			return nil, nil, err
+		}
+		ratings = append(ratings, &insertedRating)
+	}
+	return sessionStudent, ratings, nil
 }

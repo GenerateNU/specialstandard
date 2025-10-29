@@ -27,7 +27,7 @@ type SessionStudentRepository interface {
 	CreateSessionStudent(ctx context.Context, q dbinterface.Queryable, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error)
 	DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error
 	PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error)
-
+	RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []*models.SessionRating, error)
 	GetDB() *pgxpool.Pool
 }
 
