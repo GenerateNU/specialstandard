@@ -15,7 +15,7 @@ export function useSessionStudents() {
     onSuccess: (_, variables) => {
       if (variables.session_ids) {
         variables.session_ids.forEach((id: string) => {
-          queryClient.invalidQueries({
+          queryClient.invalidateQueries({
             queryKey: ['sessions', id, 'students'],
           })
         })
