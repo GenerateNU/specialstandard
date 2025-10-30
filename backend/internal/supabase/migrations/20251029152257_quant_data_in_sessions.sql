@@ -5,7 +5,7 @@ ALTER TABLE session_student
 DROP CONSTRAINT "session_student_pkey",
 ADD COLUMN id SERIAL PRIMARY KEY;
 
-CREATE TABLE session_ratings (
+CREATE TABLE session_rating (
   id SERIAL PRIMARY KEY,
   session_student_id INT REFERENCES session_student(id),
   category category,
@@ -15,6 +15,6 @@ CREATE TABLE session_ratings (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-ALTER TABLE session_ratings 
+ALTER TABLE session_rating
 ADD CONSTRAINT unique_session_student_category 
 UNIQUE (session_student_id, category);

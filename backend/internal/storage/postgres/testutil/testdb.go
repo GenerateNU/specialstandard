@@ -206,7 +206,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		CREATE TYPE category AS ENUM ('visual_cue', 'verbal_cue', 'gestural_cue', 'engagement');
 		CREATE TYPE response_level AS ENUM ('minimal', 'moderate', 'maximal', 'low', 'high');
 
-		CREATE TABLE IF NOT EXISTS session_ratings (
+		CREATE TABLE IF NOT EXISTS session_rating (
 			id SERIAL PRIMARY KEY,
 			session_student_id INT REFERENCES session_student(id),
 			category category,

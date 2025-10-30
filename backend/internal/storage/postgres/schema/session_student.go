@@ -95,7 +95,7 @@ func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input
 
 	var ratings []*models.SessionRating
 	for _, rating := range input.Ratings {
-		query := `INSERT INTO session_ratings (session_student_id, category, level, description)
+		query := `INSERT INTO session_rating (session_student_id, category, level, description)
           VALUES ($1, $2, $3, $4) 
           ON CONFLICT (session_student_id, category) 
           DO UPDATE SET 
