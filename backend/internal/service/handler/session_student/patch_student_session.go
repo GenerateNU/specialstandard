@@ -67,10 +67,10 @@ func (h *Handler) PatchStudentSessionRatings(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"sessionId":       student_session.SessionID,
-		"studentId":       student_session.StudentID,
-		"present":         student_session.Present,
-		"notes":           student_session.Notes,
-		"session_ratings": ratings,
+		"sessionId": student_session.SessionID,
+		"studentId": student_session.StudentID,
+		"present":   student_session.Present,
+		"notes":     student_session.Notes,
+		"ratings":   ratings,
 	})
 }

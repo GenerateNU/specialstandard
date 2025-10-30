@@ -18,3 +18,5 @@ CREATE TABLE session_rating (
 ALTER TABLE session_rating
 ADD CONSTRAINT unique_session_student_category 
 UNIQUE (session_student_id, category);
+
+CREATE INDEX idx_session_rating_session_student_id ON session_rating (session_student_id);
