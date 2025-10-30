@@ -290,7 +290,6 @@ func (r *StudentRepository) GetStudentRatings(ctx context.Context, studentID uui
 			argCount++
 		}
 
-		// Attendance filtering (though not directly relevant, included for consistency)
 		if filter.Present != nil {
 			conditions = append(conditions, fmt.Sprintf("ss.present = $%d", argCount))
 			args = append(args, *filter.Present)
