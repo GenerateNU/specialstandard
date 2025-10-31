@@ -2,8 +2,11 @@ package schema
 
 import (
 	"context"
+	"fmt"
 	"specialstandard/internal/models"
+	"specialstandard/internal/storage/dbinterface"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -11,23 +14,44 @@ type SessionStudentRepository struct {
 	db *pgxpool.Pool
 }
 
+func (r *SessionStudentRepository) GetDB() *pgxpool.Pool {
+	return r.db
+}
+
 func NewSessionStudentRepository(db *pgxpool.Pool) *SessionStudentRepository {
 	return &SessionStudentRepository{db: db}
 }
 
-func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, input *models.CreateSessionStudentInput) (*models.SessionStudent, error) {
-	query := `
-	INSERT INTO session_student (session_id, student_id, present, notes)
-	VALUES ($1, $2, $3, $4)
-	RETURNING session_id, student_id, present, notes, created_at, updated_at`
+func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, q dbinterface.Queryable, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error) {
+	query := `INSERT INTO session_student (session_id, student_id, present, notes)
+              VALUES `
+	args := []interface{}{}
+	argCount := 1
 
-	row := r.db.QueryRow(ctx, query, input.SessionID, input.StudentID, input.Present, input.Notes)
-	sessionStudent := &models.SessionStudent{}
-	err := row.Scan(&sessionStudent.SessionID, &sessionStudent.StudentID, &sessionStudent.Present, &sessionStudent.Notes, &sessionStudent.CreatedAt, &sessionStudent.UpdatedAt)
+	for _, sessionID := range input.SessionIDs {
+		for _, studentID := range input.StudentIDs {
+			query += fmt.Sprintf(`($%d, $%d, $%d, $%d), `, argCount, argCount+1, argCount+2, argCount+3)
+			args = append(args, sessionID, studentID, input.Present, input.Notes)
+			argCount += 4
+		}
+	}
+
+	// Removing the Trailing Comma + Space
+	query = query[:len(query)-2]
+	query += ` RETURNING session_id, student_id, present, notes, created_at, updated_at`
+
+	rows, err := q.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
-	return sessionStudent, nil
+	defer rows.Close()
+
+	sessionStudents, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.SessionStudent])
+	if err != nil {
+		return nil, err
+	}
+
+	return &sessionStudents, nil
 }
 
 func (r *SessionStudentRepository) DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error {

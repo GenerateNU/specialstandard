@@ -52,45 +52,48 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 
 	// Test successful creation
 	input := &models.CreateSessionStudentInput{
-		SessionID: sessionID,
-		StudentID: studentID,
-		Present:   true,
-		Notes:     ptrString("Student participated actively in today's session"),
+		SessionIDs: []uuid.UUID{sessionID},
+		StudentIDs: []uuid.UUID{studentID},
+		Present:    true,
+		Notes:      ptrString("Student participated actively in today's session"),
 	}
 
-	result, err := repo.CreateSessionStudent(ctx, input)
+	db := repo.GetDB()
+	results, err := repo.CreateSessionStudent(ctx, db, input)
 	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, sessionID, result.SessionID)
-	assert.Equal(t, studentID, result.StudentID)
-	assert.True(t, result.Present)
-	assert.NotNil(t, result.Notes)
-	assert.Equal(t, "Student participated actively in today's session", *result.Notes)
-	assert.False(t, result.CreatedAt.IsZero())
-	assert.False(t, result.UpdatedAt.IsZero())
+	assert.NotNil(t, results)
+	for _, result := range *results {
+		assert.Equal(t, sessionID, result.SessionID)
+		assert.Equal(t, studentID, result.StudentID)
+		assert.True(t, result.Present)
+		assert.NotNil(t, result.Notes)
+		assert.Equal(t, "Student participated actively in today's session", *result.Notes)
+		assert.False(t, result.CreatedAt.IsZero())
+		assert.False(t, result.UpdatedAt.IsZero())
+	}
 
 	// Test duplicate creation (should fail due to unique constraint)
 	duplicateInput := &models.CreateSessionStudentInput{
-		SessionID: sessionID,
-		StudentID: studentID,
-		Present:   false,
-		Notes:     ptrString("Duplicate entry"),
+		SessionIDs: []uuid.UUID{sessionID},
+		StudentIDs: []uuid.UUID{studentID},
+		Present:    false,
+		Notes:      ptrString("Duplicate entry"),
 	}
 
-	duplicateResult, err := repo.CreateSessionStudent(ctx, duplicateInput)
+	duplicateResult, err := repo.CreateSessionStudent(ctx, db, duplicateInput)
 	assert.Error(t, err)
 	assert.Nil(t, duplicateResult)
 
 	// Test with invalid session ID (foreign key violation)
 	invalidSessionID := uuid.New()
 	invalidInput := &models.CreateSessionStudentInput{
-		SessionID: invalidSessionID,
-		StudentID: studentID,
-		Present:   true,
-		Notes:     nil,
+		SessionIDs: []uuid.UUID{invalidSessionID},
+		StudentIDs: []uuid.UUID{studentID},
+		Present:    true,
+		Notes:      nil,
 	}
 
-	invalidResult, err := repo.CreateSessionStudent(ctx, invalidInput)
+	invalidResult, err := repo.CreateSessionStudent(ctx, db, invalidInput)
 	assert.Error(t, err)
 	assert.Nil(t, invalidResult)
 }

@@ -113,7 +113,7 @@ export function CreateSessionDialog({
         end_datetime: endDateTime.toISOString(),
         therapist_id: therapistId,
         notes: data.notes || undefined,
-        studentIds: data.student_ids,
+        student_ids: data.student_ids,
       }
 
       if (onSubmit) {
