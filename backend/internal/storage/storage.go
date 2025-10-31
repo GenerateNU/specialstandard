@@ -72,9 +72,12 @@ type SessionResourceRepository interface {
 }
 
 type GameContentRepository interface {
+	GetGameContents(ctx context.Context, req models.GetGameContentRequest) ([]models.GameContent, error)
 }
 
 type GameResultRepository interface {
+	GetGameResults(ctx context.Context, query models.GetGameResultQuery, pagination utils.Pagination) ([]models.GameResult, error)
+	PostGameResult(ctx context.Context, input models.PostGameResult) (*models.GameResult, error)
 }
 
 type Repository struct {
