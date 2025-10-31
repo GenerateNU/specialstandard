@@ -21,8 +21,8 @@ CREATE TABLE game_result (
     student_id UUID NOT NULL,
     content_id UUID NOT NULL,
     time_taken INTEGER NOT NULL CHECK ( time_taken >= 0 ),
-    completed BOOLEAN NOT NULL DEFAULT FALSE,
-    incorrect_tries INTEGER NOT NULL DEFAULT 0 CHECK ( incorrect_tries >= 0 ),
+    completed BOOLEAN DEFAULT FALSE,
+    incorrect_tries INTEGER DEFAULT 0 CHECK ( incorrect_tries >= 0 ),
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
 

@@ -18,11 +18,16 @@ type GameResult struct {
 	UpdatedAt      *time.Time `json:"updated_at" db:"updated_at"`
 }
 
+type GetGameResultQuery struct {
+	SessionID *uuid.UUID `query:"session_id" validate:"omitempty,uuid"`
+	StudentID *uuid.UUID `query:"student_id" validate:"omitempty,uuid"`
+}
+
 type PostGameResult struct {
 	SessionID      uuid.UUID `json:"session_id" validate:"required,uuid"`
 	StudentID      uuid.UUID `json:"student_id" validate:"required,uuid"`
 	ContentID      uuid.UUID `json:"content_id" validate:"required,uuid"`
 	TimeTaken      int       `json:"time_taken" validate:"required,gte=0"`
-	Completed      bool      `json:"completed" validate:"required"`
-	IncorrectTries int       `json:"incorrect_tries" validate:"required,gte=0"`
+	Completed      *bool     `json:"completed,omitempty"`
+	IncorrectTries *int      `json:"incorrect_tries,omitempty" validate:"omitempty,gte=0"`
 }
