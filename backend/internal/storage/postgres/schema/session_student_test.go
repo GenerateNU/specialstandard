@@ -12,6 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func ptrBool(b bool) *bool {
+	return &b
+}
+
 func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
@@ -62,7 +66,8 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	results, err := repo.CreateSessionStudent(ctx, db, input)
 	assert.NoError(t, err)
 	assert.NotNil(t, results)
-	for _, result := range *results {
+	for idx, result := range *results {
+		assert.Equal(t, idx+1, result.ID)
 		assert.Equal(t, sessionID, result.SessionID)
 		assert.Equal(t, studentID, result.StudentID)
 		assert.True(t, result.Present)
@@ -89,7 +94,7 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	invalidInput := &models.CreateSessionStudentInput{
 		SessionIDs: []uuid.UUID{invalidSessionID},
 		StudentIDs: []uuid.UUID{studentID},
-		Present:    true,
+		Present:    *ptrBool(false),
 		Notes:      nil,
 	}
 

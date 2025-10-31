@@ -47,6 +47,14 @@ func (m *MockStudentRepository) GetStudentSessions(ctx context.Context, studentI
 	return args.Get(0).([]models.StudentSessionsOutput), args.Error(1)
 }
 
+func (m *MockStudentRepository) GetStudentRatings(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination, filter *models.GetStudentSessionsRatingsRequest) ([]models.StudentSessionsWithRatingsOutput, error) {
+	args := m.Called(ctx, studentID, pagination, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.StudentSessionsWithRatingsOutput), args.Error(1)
+}
+
 func (m *MockStudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)

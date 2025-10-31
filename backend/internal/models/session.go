@@ -69,3 +69,8 @@ type GetStudentSessionsRepositoryRequest struct {
 	Year      *int       `validate:"omitempty,gte=1776,lte=2200"`
 	Present   *bool      `validate:"omitempty"`
 }
+
+type GetStudentSessionsRatingsRequest struct {
+	GetStudentSessionsRepositoryRequest
+	Category *[]string `query:"category" validate:"omitempty,dive,oneof=visual_cue verbal_cue gestural_cue engagement"`
+}

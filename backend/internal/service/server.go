@@ -123,6 +123,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Patch("/promote", studentHandler.PromoteStudents)
 		r.Patch("/:id", studentHandler.UpdateStudent)
 		r.Get("/:id/sessions", studentHandler.GetStudentSessions)
+		r.Get("/:id/ratings", studentHandler.GetStudentRatings)
 	})
 
 	themeHandler := theme.NewHandler(repo.Theme)
@@ -157,6 +158,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Post("/", sessionStudentHandler.CreateSessionStudent)
 		r.Delete("/", sessionStudentHandler.DeleteSessionStudent)
 		r.Patch("/", sessionStudentHandler.PatchSessionStudent)
+		r.Patch("/rate", sessionStudentHandler.PatchStudentSessionRatings)
 	})
 
 	sessionResourceHandler := session_resource.NewHandler(repo.SessionResource)
