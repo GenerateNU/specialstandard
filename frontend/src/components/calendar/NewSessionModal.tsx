@@ -1,3 +1,4 @@
+import type { RepetitionConfig } from './repetition-selector'
 import type { StudentBody } from '@/hooks/useStudents'
 import type { PostSessionsBody } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { Calendar, Clock, FileText, User } from 'lucide-react'
@@ -23,7 +24,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { TimeRange } from '@/components/ui/time-range'
+import { useSessions } from '@/hooks/useSessions'
 import { MultiSelect } from '../ui/multiselect'
+import { RepetitionSelector } from './repetition-selector'
 
 // Main Component
 interface CreateSessionDialogProps {
@@ -49,6 +52,7 @@ export function CreateSessionDialog({
     timeRange: [string, string]
     duration: number
     notes?: string
+    repetition?: RepetitionConfig
   }>({
     defaultValues: {
       student_ids: [],
@@ -60,6 +64,8 @@ export function CreateSessionDialog({
   })
 
   const watchTimeRange = form.watch('timeRange')
+  const [repetitionConfig, setRepetitionConfig] = React.useState<RepetitionConfig | undefined>()
+  const { refetch } = useSessions()
 
   useEffect(() => {
     if (watchTimeRange) {
@@ -75,13 +81,26 @@ export function CreateSessionDialog({
 
   useEffect(() => {
     if (open && initialDateTime) {
-      const startTime = initialDateTime.start.toTimeString().split(' ')[0].slice(0, 5)
-      const endTime = initialDateTime.end.toTimeString().split(' ')[0].slice(0, 5)
+      const startDate = new Date(initialDateTime.start)
+      const endDate = new Date(initialDateTime.end)
+
+      // Get hours and minutes directly from the Date objects
+      const startHours = startDate.getHours().toString().padStart(2, '0')
+      const startMinutes = startDate.getMinutes().toString().padStart(2, '0')
+      const endHours = endDate.getHours().toString().padStart(2, '0')
+      const endMinutes = endDate.getMinutes().toString().padStart(2, '0')
+
+      const startTime = `${startHours}:${startMinutes}`
+      const endTime = `${endHours}:${endMinutes}`
+
+      const sessionDate = startDate.toISOString().split('T')[0]
+      const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60))
+
       form.reset({
         student_ids: [],
-        sessionDate: initialDateTime.start.toISOString().split('T')[0],
+        sessionDate,
         timeRange: [startTime, endTime],
-        duration: 60,
+        duration,
         notes: '',
       })
     }
@@ -99,14 +118,22 @@ export function CreateSessionDialog({
   const handleSubmit = async (data: any) => {
     try {
       const sessionDate = new Date(data.sessionDate)
-
-      const [startHour, startMin] = data.startTime.split(':')
+      const [startTime, endTime] = data.timeRange
+      const [startHour, startMin] = startTime.split(':')
       const startDateTime = new Date(sessionDate)
       startDateTime.setHours(Number.parseInt(startHour), Number.parseInt(startMin), 0, 0)
 
-      const [endHour, endMin] = data.endTime.split(':')
+      const [endHour, endMin] = endTime.split(':')
       const endDateTime = new Date(sessionDate)
       endDateTime.setHours(Number.parseInt(endHour), Number.parseInt(endMin), 0, 0)
+
+      if (data.student_ids.length === 0) {
+        form.setError('student_ids', {
+          type: 'manual',
+          message: 'Please select at least one student for the session.',
+        })
+        return
+      }
 
       const postBody: PostSessionsBody = {
         start_datetime: startDateTime.toISOString(),
@@ -114,19 +141,20 @@ export function CreateSessionDialog({
         therapist_id: therapistId,
         notes: data.notes || undefined,
         student_ids: data.student_ids,
+        repetition: repetitionConfig,
       }
 
       if (onSubmit) {
         await onSubmit(postBody)
       }
       form.reset()
+      refetch()
       setOpen(false)
     }
     catch (error) {
       console.error('Error creating session:', error)
     }
   }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[500px]">
@@ -177,6 +205,23 @@ export function CreateSessionDialog({
                       onChange={(value) => {
                         form.setValue('timeRange', [value.startTime, value.endTime])
                       }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="repetition"
+              render={() => (
+                <FormItem>
+                  <FormControl>
+                    <RepetitionSelector
+                      value={repetitionConfig}
+                      onChange={setRepetitionConfig}
+                      sessionDate={form.watch('sessionDate')}
+                      sessionTime={form.watch('timeRange')[0]}
                     />
                   </FormControl>
                 </FormItem>

@@ -26,12 +26,22 @@ interface CalendarEvent {
 const HARDCODED_THERAPIST_ID = '9dad94d8-6534-4510-90d7-e4e97c175a65' // John Doe
 
 export default function MyCalendar() {
-  const { sessions, isLoading, error, addSession } = useSessions()
   const { students } = useStudents()
   const [date, setDate] = useState(new Date())
   const [view, setView] = useState<View>('week')
   const [newSessionOpen, setNewSessionOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date, end: Date } | null>(null)
+  const getViewRange = () => {
+    const startOfView = moment(date).startOf(view === 'day' ? 'day' : view === 'week' ? 'week' : 'month').toDate()
+    const endOfView = moment(date).endOf(view === 'day' ? 'day' : view === 'week' ? 'week' : 'month').toDate()
+    return { startdate: startOfView, enddate: endOfView }
+  }
+
+  const viewRange = getViewRange()
+  const { sessions, isLoading, error, addSession } = useSessions({
+    startdate: viewRange.startdate.toISOString(),
+    enddate: viewRange.enddate.toISOString(),
+  })
 
   // Transform sessions into calendar events
   const events: CalendarEvent[] = sessions.map(session => ({
@@ -43,8 +53,8 @@ export default function MyCalendar() {
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
     setSelectedSlot({
-      start: slotInfo.slots[0] as Date,
-      end: slotInfo.slots[1] as Date,
+      start: slotInfo.start as Date,
+      end: slotInfo.end as Date,
     })
     setNewSessionOpen(true)
   }

@@ -17,7 +17,13 @@ interface UseSessionsReturn {
   deleteSession: (id: string) => void
 }
 
-export function useSessions(): UseSessionsReturn {
+interface UseSessionsParams {
+  startdate?: string
+  enddate?: string
+  limit?: number
+}
+
+export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
   const queryClient = useQueryClient()
   const api = getSessionsApi()
 
@@ -27,8 +33,12 @@ export function useSessions(): UseSessionsReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['sessions'],
-    queryFn: () => api.getSessions(),
+    queryKey: ['sessions', params],
+    queryFn: () => api.getSessions({
+      limit: params?.limit ?? 100,
+      startdate: params?.startdate,
+      enddate: params?.enddate,
+    }),
   })
 
   const sessions = sessionsResponse ?? []
