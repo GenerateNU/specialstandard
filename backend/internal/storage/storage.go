@@ -71,6 +71,12 @@ type SessionResourceRepository interface {
 	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error)
 }
 
+type GameContentRepository interface {
+}
+
+type GameResultRepository interface {
+}
+
 type Repository struct {
 	Resource        ResourceRepository
 	db              *pgxpool.Pool
@@ -80,6 +86,8 @@ type Repository struct {
 	Therapist       TherapistRepository
 	SessionStudent  SessionStudentRepository
 	SessionResource SessionResourceRepository
+	GameContent     GameContentRepository
+	GameResult      GameResultRepository
 }
 
 func (r *Repository) Close() error {
@@ -101,5 +109,7 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		Therapist:       schema.NewTherapistRepository(db),
 		SessionStudent:  schema.NewSessionStudentRepository(db),
 		SessionResource: schema.NewSessionResourceRepository(db),
+		GameContent:     schema.NewGameContentRepository(db),
+		GameResult:      schema.NewGameResultRepository(db),
 	}
 }
