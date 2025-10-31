@@ -15,13 +15,13 @@ import { customAxios } from './apiClient'
 
 export function getSessionStudents() {
   /**
-   * Associate a student with a session, creating an entry in the bridge table
+   * Associate each given student with each given session, creating an entry in the bridge table
    * @summary Create session-student relationship
    */
   const postSessionStudents = (
     createSessionStudentInput: CreateSessionStudentInput,
   ) => {
-    return customAxios<SessionStudent>({
+    return customAxios<SessionStudent[]>({
       url: `/session_students`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

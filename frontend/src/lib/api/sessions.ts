@@ -31,7 +31,7 @@ export function getSessions() {
    * @summary Create a new session
    */
   const postSessions = (postSessionsBody: PostSessionsBody) => {
-    return customAxios<Session>({
+    return customAxios<Session[]>({
       url: `/sessions`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

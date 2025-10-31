@@ -400,10 +400,10 @@ export interface SessionStudent {
 }
 
 export interface CreateSessionStudentInput {
-  /** UUID of the session */
-  session_id: string
-  /** UUID of the student */
-  student_id: string
+  /** List of all Sessions' UUIDs */
+  session_ids: string[]
+  /** List of all Students' UUIDs */
+  student_ids: string[]
   /** Whether the student was present (defaults to true if not specified) */
   present?: boolean
   /**
@@ -566,6 +566,15 @@ export interface GetSessionsParams {
   id?: string[]
 }
 
+export interface PostSessionsBodyRepetition {
+  /** Starting Date of Recurring Session */
+  recur_start: string
+  /** Ending Date of Recurring Session */
+  recur_end: string
+  /** Recurring Session will happen every "N" weeks */
+  every_n_weeks: unknown
+}
+
 export interface PostSessionsBody {
   /** Start date and time of the session */
   start_datetime: string
@@ -575,6 +584,9 @@ export interface PostSessionsBody {
   therapist_id: string
   /** Optional notes about the session */
   notes?: string
+  repetition?: PostSessionsBodyRepetition
+  /** List of Student IDs of the students that are being added to this Session. */
+  student_ids?: string[]
 }
 
 export interface DeleteSessionsId200 {
