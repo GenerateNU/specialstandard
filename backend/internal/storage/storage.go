@@ -76,7 +76,7 @@ type GameContentRepository interface {
 }
 
 type GameResultRepository interface {
-	GetGameResults(ctx context.Context, query models.GetGameResultQuery, pagination utils.Pagination) ([]models.GameResult, error)
+	GetGameResults(ctx context.Context, inputQuery *models.GetGameResultQuery, pagination utils.Pagination) ([]models.GameResult, error)
 	PostGameResult(ctx context.Context, input models.PostGameResult) (*models.GameResult, error)
 }
 
