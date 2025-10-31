@@ -68,14 +68,18 @@ export function getStudents() {
   }
   /**
    * Retrieve all sessions associated with a specific student, including bridge table information.
-   *Date Filtering Options:**
-- Use `startDate` and `endDate` for date range filtering: `?startDate=2025-09-01&endDate=2025-09-30`
-- Use `month` and `year` for monthly filtering: `?month=9&year=2025`
-- Use `year` alone for yearly filtering: `?year=2025`
-   *Attendance Filtering:**
-- Use `present` to filter by attendance: `?present=true` or `?present=false`
-   *Combining Filters:**
-  All filters can be combined: `?month=9&year=2025&present=true`
+   *
+   * Date Filtering Options:**
+   * - Use `startDate` and `endDate` for date range filtering: `?startDate=2025-09-01&endDate=2025-09-30`
+   * - Use `month` and `year` for monthly filtering: `?month=9&year=2025`
+   * - Use `year` alone for yearly filtering: `?year=2025`
+   *
+   * Attendance Filtering:**
+   * - Use `present` to filter by attendance: `?present=true` or `?present=false`
+   *
+   * Combining Filters:**
+   * All filters can be combined: `?month=9&year=2025&present=true`
+   *
    * @summary Get all sessions for a student
    */
   const getStudentsStudentIdSessions = (

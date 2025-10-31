@@ -1,12 +1,14 @@
 'use client'
 
 import type { SlotInfo, View } from 'react-big-calendar'
+import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { ArrowLeft } from 'lucide-react'
 import moment from 'moment'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import { CreateSessionDialog } from '@/components/calendar/NewSessionModal'
+import SessionPreviewModal from '@/components/SessionPreviewModal'
 import { Button } from '@/components/ui/button'
 import { useSessions } from '@/hooks/useSessions'
 import { useStudents } from '@/hooks/useStudents'
@@ -20,6 +22,7 @@ interface CalendarEvent {
   title: string
   start: Date
   end: Date
+  resource: Session
 }
 
 // Hard coded therapist ID as requested (using existing therapist from database)
@@ -31,6 +34,9 @@ export default function MyCalendar() {
   const [view, setView] = useState<View>('week')
   const [newSessionOpen, setNewSessionOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date, end: Date } | null>(null)
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
+  const [modalPosition, setModalPosition] = useState<{ x: number, y: number } | null>(null)
+
   const getViewRange = () => {
     const startOfView = moment(date).startOf(view === 'day' ? 'day' : view === 'week' ? 'week' : 'month').toDate()
     const endOfView = moment(date).endOf(view === 'day' ? 'day' : view === 'week' ? 'week' : 'month').toDate()
@@ -49,6 +55,7 @@ export default function MyCalendar() {
     title: 'session',
     start: new Date(session.start_datetime),
     end: new Date(session.end_datetime),
+    resource: session,
   }))
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
@@ -62,6 +69,18 @@ export default function MyCalendar() {
   const handleCloseModal = () => {
     setNewSessionOpen(false)
     setSelectedSlot(null)
+  }
+
+  const handleSelectEvent = (event: CalendarEvent, e: React.SyntheticEvent) => {
+    const target = e.target as HTMLElement
+    const rect = target.getBoundingClientRect()
+    
+    // Position modal to the right of the clicked event
+    setModalPosition({
+      x: rect.right + 10,
+      y: rect.top,
+    })
+    setSelectedSession(event.resource)
   }
 
   if (isLoading) {
@@ -118,12 +137,24 @@ export default function MyCalendar() {
           view={view}
           onNavigate={setDate}
           onView={setView}
+          onSelectEvent={handleSelectEvent}
           views={['week', 'day', 'month']}
           selectable
           onSelectSlot={handleSelectSlot}
         />
       </div>
-    </div>
 
+      {/* Session preview modal */}
+      {selectedSession && modalPosition && (
+        <SessionPreviewModal
+          session={selectedSession}
+          position={modalPosition}
+          onClose={() => {
+            setSelectedSession(null)
+            setModalPosition(null)
+          }}
+        />
+      )}
+    </div>
   )
 }

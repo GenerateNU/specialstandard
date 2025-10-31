@@ -11,5 +11,5 @@ type DB struct {
 }
 
 func (db *DB) Connection() string {
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require", db.Host, db.User, db.Password, db.Name, db.Port)
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require statement_cache_mode=describe", db.Host, db.User, db.Password, db.Name, db.Port)
 }
