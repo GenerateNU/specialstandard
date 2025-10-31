@@ -341,9 +341,9 @@ func (r *StudentRepository) GetStudentRatings(ctx context.Context, studentID uui
 		}
 
 		sessionMap[sessionID].Ratings = append(sessionMap[sessionID].Ratings, models.SessionRating{
-			Level:       *level,
-			Category:    *category,
-			Description: *description,
+			Level:       level,
+			Category:    category,
+			Description: description,
 		})
 	}
 

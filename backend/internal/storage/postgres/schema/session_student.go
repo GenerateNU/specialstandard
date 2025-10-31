@@ -38,7 +38,7 @@ func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, q d
 
 	// Removing the Trailing Comma + Space
 	query = query[:len(query)-2]
-	query += ` RETURNING session_id, student_id, present, notes, created_at, updated_at`
+	query += ` RETURNING id, session_id, student_id, present, notes, created_at, updated_at`
 
 	rows, err := q.Query(ctx, query, args...)
 	if err != nil {
@@ -48,6 +48,7 @@ func (r *SessionStudentRepository) CreateSessionStudent(ctx context.Context, q d
 
 	sessionStudents, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.SessionStudent])
 	if err != nil {
+		fmt.Printf("Error collecting rows: %v\n", err)
 		return nil, err
 	}
 

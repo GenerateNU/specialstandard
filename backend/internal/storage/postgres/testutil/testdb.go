@@ -155,16 +155,17 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 	// Create SessionStudent junction table
 	_, err = pool.Exec(ctx, `
     CREATE TABLE IF NOT EXISTS session_student (
+		id SERIAL PRIMARY KEY,
         session_id UUID,
         student_id UUID,
         present BOOLEAN DEFAULT TRUE,
         notes TEXT,
         created_at TIMESTAMPTZ DEFAULT now(),
         updated_at TIMESTAMPTZ DEFAULT now(),
-        PRIMARY KEY (session_id, student_id),
-        FOREIGN KEY (session_id) REFERENCES session(id) ON DELETE CASCADE,
-        FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
-    )`)
+		FOREIGN KEY (session_id) REFERENCES session(id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
+		UNIQUE (session_id, student_id)
+    );`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -205,6 +206,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 	_, err = pool.Exec(ctx, `
 		CREATE TYPE category AS ENUM ('visual_cue', 'verbal_cue', 'gestural_cue', 'engagement');
 		CREATE TYPE response_level AS ENUM ('minimal', 'moderate', 'maximal', 'low', 'high');
+
 
 		CREATE TABLE IF NOT EXISTS session_rating (
 			id SERIAL PRIMARY KEY,

@@ -67,7 +67,11 @@ type RateInput struct {
 	Description string `json:"description" validate:"required"`
 }
 
-type SessionRating = RateInput
+type SessionRating struct {
+	Category    *string `json:"category" validate:"oneof=visual_cue verbal_cue gestural_cue engagement"`
+	Level       *string `json:"level" validate:"oneof=minimal moderate maximal low high"`
+	Description *string `json:"description"`
+}
 
 type RateStudentSessionInput struct {
 	PatchSessionStudentInput

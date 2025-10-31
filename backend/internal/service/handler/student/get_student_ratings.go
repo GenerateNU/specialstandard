@@ -58,5 +58,9 @@ func (h *Handler) GetStudentRatings(c *fiber.Ctx) error {
 		return errs.InternalServerError("Failed to retrieve student sessions")
 	}
 
+	if sessions == nil {
+		sessions = []models.StudentSessionsWithRatingsOutput{}
+	}
+
 	return c.Status(fiber.StatusOK).JSON(sessions)
 }
