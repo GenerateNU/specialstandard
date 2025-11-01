@@ -4,7 +4,6 @@ import (
 	"context"
 	"specialstandard/internal/models"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,29 +17,23 @@ func NewGameContentRepository(db *pgxpool.Pool) *GameContentRepository {
 	}
 }
 
-func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.GetGameContentRequest) (*models.GameContent, error) {
-	query := `SELECT id, 
-       				 category, 
-       				 level, 
+func (r *GameContentRepository) GetGameContent(ctx context.Context, req models.GetGameContentRequest) (*models.GameContent, error) {
+	query := `SELECT id, category, level, 
        		  		 (SELECT array_agg(opt) FROM 
        		  				 (SELECT opt FROM unnest(gc.options) AS opt ORDER BY random() LIMIT $3) AS sampled)
        		  		     	 AS options, 
-       		  answer, 
-       		  created_at, 
-       		  updated_at 
+       		  answer, created_at, updated_at 
 			  FROM game_content gc
 			  WHERE category = $1 AND level = $2;`
 
-	rows, err := r.db.Query(ctx, query, req.Category, req.Level, req.Count-1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+	row := r.db.QueryRow(ctx, query, req.Category, req.Level, req.Count-1)
 
-	gameContents, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.GameContent])
-	if err != nil {
+	var gc models.GameContent
+	if err := row.Scan(
+		&gc.ID, &gc.Category, &gc.Level, &gc.Options, &gc.Answer, &gc.CreatedAt, &gc.UpdatedAt,
+	); err != nil {
 		return nil, err
 	}
 
-	return gameContents, nil
+	return &gc, nil
 }

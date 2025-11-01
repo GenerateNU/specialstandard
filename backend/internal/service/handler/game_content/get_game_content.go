@@ -21,7 +21,7 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	gameContent, err := h.gameContentRepository.GetGameContents(c.Context(), getGameContentReq)
+	gameContent, err := h.gameContentRepository.GetGameContent(c.Context(), getGameContentReq)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return errs.NotFound("Game Contents not found")
