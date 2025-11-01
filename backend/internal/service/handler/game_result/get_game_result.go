@@ -11,7 +11,7 @@ import (
 )
 
 func (h *Handler) GetGameResults(c *fiber.Ctx) error {
-	var gameResultsReq models.GetGameResultQuery
+	var gameResultsReq *models.GetGameResultQuery
 	if err := c.QueryParser(&gameResultsReq); err != nil {
 		return errs.BadRequest("GameResults Query-Parameters Parsing Error")
 	}

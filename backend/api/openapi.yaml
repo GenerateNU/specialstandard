@@ -2086,6 +2086,87 @@ paths:
             minimum: 2
       responses:
         "200":
+          description: The Game Content (corresponding category and level)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameContent'
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad Request"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                message: "Internal Server Error"
+
+  /game-results:
+    get:
+      summary: Gets the Game Results
+      description: Gets the Game Results that were asked for..? Filter available by session and student.
+      tags: [GameResult]
+      parameters:
+        - name: session_id
+          in: query
+          description: The SessionID of the session whose game results you seek
+          schema: 
+            type: string
+            format: uuid
+        - name: student_id
+          in: query
+          description: The StudentID of the student whose game results you seek
+          schema: 
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: The Game Results you requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResult'
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad Request"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                message: "Internal Server Error"
+
+    post:
 
 
 components:
@@ -2874,3 +2955,108 @@ components:
             type: string
             format: uuid
           description: List of Students this Therapist will not be promoting...
+
+    GameContent:
+      type: object
+      required:
+        - id
+        - category
+        - level
+        - options
+        - answer
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of a Game Content.
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        category:
+          type: string
+          enum: [ sequencing, following_directions, wh_questions, true_false, concepts_sorting ]
+          description: The category of the game
+          example: "following_directions"
+        level:
+          type: integer
+          minimum: 0
+          maximum: 12
+          description: The corresponding grade level for this game's content
+          example: 4
+        options:
+          type: array
+          items:
+            type: string
+          description: The list of wrong-words that are given for the game.
+          example: ["Crocorokodile", "Krookodile", "Koorkodile"]
+        answer:
+          type: string
+          description: The answer to the game.
+          example: "Crocodile"
+        created_at:
+          type: string
+          format: date-time
+          description: When the game-content was created
+          example: "2025-09-13T17:19:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the game-content was last updated
+          example: "2025-09-13T17:19:00Z"
+
+    GameResult:
+      type: object
+      required:
+        - id
+        - session_id
+        - student_id
+        - content_id
+        - time_taken
+        - completed
+        - incorrect_tries
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of the Game Result.
+          example: "123e4567-e89b-12d3-a456-426614174946"
+        session_id:
+          type: string
+          format: uuid
+          description: ID of the Session the game was played
+          example: "123e4567-e89b-12d3-a456-426niossesid"
+        student_id:
+          type: string
+          format: uuid
+          description: ID of the Student who played the game
+          example: "123e4567-e89b-12d3-a456-426614174sid"
+        content_id:
+          type: string
+          format: uuid
+          description: ID of the Content of the Game
+          example: "123e4567-e89b-12d3-a456-426614174cid"
+        time_taken:
+          type: integer
+          description: Number of seconds it takes to complete the game
+          example: 93
+        completed:
+          type: boolean
+          description: Whether or not the game was completed or not
+          example: true
+        incorrect_tries:
+          type: integer
+          minimum: 0
+          description: The number of incorrect attempts made during the game
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          description: When the game-content was created
+          example: "2025-09-13T17:19:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the game-content was last updated
+          example: "2025-09-13T17:19:00Z"
