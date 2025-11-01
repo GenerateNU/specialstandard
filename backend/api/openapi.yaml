@@ -2146,7 +2146,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GameResult'
+                type: array
+                items:
+                  $ref: '#/components/schemas/GameResult'
         "400":
           description: Bad Request (e.g., validation errors)
           content:
@@ -2167,7 +2169,34 @@ paths:
                 message: "Internal Server Error"
 
     post:
-
+      summary: Creates a new game result
+      description: Creates a new result entry for a game result
+      tags: [GameResult]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostGameResultInput'
+      responses:
+        "201":
+          description: Game Result created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResult'
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -3060,3 +3089,40 @@ components:
           format: date-time
           description: When the game-content was last updated
           example: "2025-09-13T17:19:00Z"
+
+    PostGameResultInput:
+      type: object
+      required:
+        - session_id
+        - student_id
+        - content_id
+        - time_taken
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: ID of the Session the game was played
+          example: "123e4567-e89b-12d3-a456-426niossesid"
+        student_id:
+          type: string
+          format: uuid
+          description: ID of the Student who played the game
+          example: "123e4567-e89b-12d3-a456-426614174sid"
+        content_id:
+          type: string
+          format: uuid
+          description: ID of the Content of the Game
+          example: "123e4567-e89b-12d3-a456-426614174cid"
+        time_taken:
+          type: integer
+          description: Number of seconds it takes to complete the game
+          example: 93
+        completed:
+          type: boolean
+          description: Whether or not the game was completed or not
+          example: true
+        incorrect_tries:
+          type: integer
+          minimum: 0
+          description: The number of incorrect attempts made during the game
+          example: 1
