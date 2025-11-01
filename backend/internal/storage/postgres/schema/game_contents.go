@@ -18,7 +18,7 @@ func NewGameContentRepository(db *pgxpool.Pool) *GameContentRepository {
 	}
 }
 
-func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.GetGameContentRequest) ([]models.GameContent, error) {
+func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.GetGameContentRequest) (*models.GameContent, error) {
 	query := `SELECT id, 
        				 category, 
        				 level, 

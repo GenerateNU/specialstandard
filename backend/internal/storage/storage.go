@@ -72,7 +72,7 @@ type SessionResourceRepository interface {
 }
 
 type GameContentRepository interface {
-	GetGameContents(ctx context.Context, req models.GetGameContentRequest) ([]models.GameContent, error)
+	GetGameContents(ctx context.Context, req models.GetGameContentRequest) (*models.GameContent, error)
 }
 
 type GameResultRepository interface {

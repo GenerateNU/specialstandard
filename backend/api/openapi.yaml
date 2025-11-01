@@ -2056,6 +2056,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /game-contents:
+    get:
+      summary: Get Game Contents
+      description: Get all Game Contents for given category and level with a certain number of words
+      tags: [GameContent]
+      parameters:
+        - name: category
+          in: query
+          required: true
+          description: Category of the type of game
+          schema:
+            type: string
+            enum: [sequencing, following_directions, wh_questions, true_false, concepts_sorting]
+        - name: level
+          in: query
+          required: true
+          description: The Level of the game content (0-12; corresponding to grade-level)
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 12
+        - name: count
+          in: query
+          required: true
+          description: Number of options/words to choose from
+          schema:
+            type: integer
+            minimum: 2
+      responses:
+        "200":
+
+
 components:
   schemas:
     Error:

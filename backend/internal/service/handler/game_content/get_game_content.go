@@ -21,7 +21,7 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	gameContents, err := h.gameContentRepository.GetGameContents(c.Context(), getGameContentReq)
+	gameContent, err := h.gameContentRepository.GetGameContents(c.Context(), getGameContentReq)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return errs.NotFound("Game Contents not found")
@@ -33,5 +33,5 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 		return errs.InternalServerError("Failed to retrieve session")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(gameContents)
+	return c.Status(fiber.StatusOK).JSON(gameContent)
 }
