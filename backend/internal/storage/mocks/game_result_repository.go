@@ -13,7 +13,7 @@ type MockGameResultRepository struct {
 }
 
 func (m *MockGameResultRepository) GetGameResults(ctx context.Context, inputQuery *models.GetGameResultQuery, pagination utils.Pagination) ([]models.GameResult, error) {
-	args := m.Called(ctx, query, pagination)
+	args := m.Called(ctx, inputQuery, pagination)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

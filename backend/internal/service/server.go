@@ -187,7 +187,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	gameResultsHandler := game_result.NewHandler(repo.GameResult)
 	apiV1.Route("/game-results", func(r fiber.Router) {
 		r.Get("/", gameResultsHandler.GetGameResults)
-		r.Post("/", gameResultsHandler.PostGameResults)
+		r.Post("/", gameResultsHandler.PostGameResult)
 	})
 
 	// Handle 404 - Route not found

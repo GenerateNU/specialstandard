@@ -10,11 +10,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func (h *Handler) PostGameResults(c *fiber.Ctx) error {
+func (h *Handler) PostGameResult(c *fiber.Ctx) error {
 	var postGameResult models.PostGameResult
 
 	if err := c.BodyParser(&postGameResult); err != nil {
-		slog.Error("err", err)
 		return errs.InvalidJSON("Failed to parse PostGameResult data")
 	}
 
