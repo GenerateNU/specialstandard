@@ -2,20 +2,13 @@
 'use client'
 
 import type { ReactNode } from 'react'
-<<<<<<< HEAD
-import { Calendar, Component, GraduationCap, Home, PanelLeft, Users } from 'lucide-react'
-=======
 import { Calendar, Component, GraduationCap, Home, LogOut, PanelLeft, Users } from 'lucide-react'
->>>>>>> a056940 (64 nav bar (#93))
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-<<<<<<< HEAD
-=======
 import { useAuthContext } from '@/contexts/authContext'
->>>>>>> a056940 (64 nav bar (#93))
 
 interface AppLayoutProps {
   children: ReactNode
@@ -38,10 +31,7 @@ const navItems: NavItem[] = [
 export default function AppLayout({ children }: AppLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const pathname = usePathname()
-<<<<<<< HEAD
-=======
   const { logout } = useAuthContext()
->>>>>>> a056940 (64 nav bar (#93))
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
@@ -159,17 +149,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </nav>
 
           {/* Footer */}
-<<<<<<< HEAD
-          {isSidebarOpen && (
-            <>
-              <Separator />
-              <div className="p-4">
-                <p className="text-xs text-muted text-center whitespace-nowrap">
-                  The Special Standard © 2025
-                </p>
-              </div>
-            </>
-=======
           <Separator />
           <div className="p-2">
             {isSidebarOpen
@@ -201,7 +180,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 The Special Standard © 2025
               </p>
             </div>
->>>>>>> a056940 (64 nav bar (#93))
           )}
         </div>
       </aside>
