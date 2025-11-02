@@ -422,6 +422,7 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	sessionStudent, ratings, err = repo.RateStudentSession(ctx, engagementInput)
 	require.NoError(t, err)
 	assert.Len(t, ratings, 1)
+	assert.NotNil(t, sessionStudent)
 	assert.Equal(t, "engagement", *ratings[0].Category)
 	assert.Equal(t, "low", *ratings[0].Level)
 
