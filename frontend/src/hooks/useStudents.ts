@@ -1,20 +1,20 @@
-import { useAuthContext } from '@/contexts/authContext'
-import { getStudents } from '@/lib/api/students'
+import { useAuthContext } from "@/contexts/authContext";
+import { getStudents } from "@/lib/api/students";
 import type {
   CreateStudentInput,
   Student,
   UpdateStudentInput,
-} from '@/lib/api/theSpecialStandardAPI.schemas'
-import { gradeToDisplay } from '@/lib/gradeUtils'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+} from "@/lib/api/theSpecialStandardAPI.schemas";
+import { gradeToDisplay } from "@/lib/gradeUtils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export type StudentBody = Omit<Student, 'grade'> & {
-  grade: string
-}
+export type StudentBody = Omit<Student, "grade"> & {
+  grade: string;
+};
 export function useStudents() {
-  const queryClient = useQueryClient()
-  const api = getStudents()
-  const { userId: therapistId } = useAuthContext()
+  const queryClient = useQueryClient();
+  const api = getStudents();
+  const { userId: therapistId } = useAuthContext();
 
   const {
     data: studentsData = [],
@@ -22,40 +22,40 @@ export function useStudents() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['students'],
+    queryKey: ["students", therapistId],
     queryFn: () => api.getStudents({ limit: 100, therapist_id: therapistId! }), //TODO: add this, get rid of queryKey, and update get endpoints that dont have this, sessions, sessionstudents, student, session resources
-    // we technically dont need this line but it is just defensive programming!!  
+    // we technically dont need this line but it is just defensive programming!!
     enabled: !!therapistId,
-  })
+  });
 
   // get students/id/sessions
 
-  const students = studentsData.map(student => ({
+  const students = studentsData.map((student) => ({
     ...student,
     grade: gradeToDisplay(student.grade),
-  }))
+  }));
 
   const addStudentMutation = useMutation({
     mutationFn: (input: CreateStudentInput) => api.postStudents(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students', therapistId] })
+      queryClient.invalidateQueries({ queryKey: ["students"] });
     },
-  })
+  });
 
   const updateStudentMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string, data: UpdateStudentInput }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateStudentInput }) =>
       api.patchStudentsId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students', therapistId] })
+      queryClient.invalidateQueries({ queryKey: ["students"] });
     },
-  })
+  });
 
   const deleteStudentMutation = useMutation({
     mutationFn: (id: string) => api.deleteStudentsId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students', therapistId] })
+      queryClient.invalidateQueries({ queryKey: ["students"] });
     },
-  })
+  });
 
   return {
     students,
@@ -67,5 +67,5 @@ export function useStudents() {
     updateStudent: (id: string, data: UpdateStudentInput) =>
       updateStudentMutation.mutate({ id, data }),
     deleteStudent: (id: string) => deleteStudentMutation.mutate(id),
-  }
+  };
 }

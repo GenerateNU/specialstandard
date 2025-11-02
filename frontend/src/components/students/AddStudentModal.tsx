@@ -1,62 +1,60 @@
-'use client'
+"use client";
 
-import type {
-    CreateStudentInput,
-} from '@/lib/api/theSpecialStandardAPI.schemas'
+import type { CreateStudentInput } from "@/lib/api/theSpecialStandardAPI.schemas";
 
-import { Calendar, FileText, GraduationCap, User } from 'lucide-react'
-import { useState } from 'react'
+import { Calendar, FileText, GraduationCap, User } from "lucide-react";
+import { useState } from "react";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog'
-import { Dropdown } from '@/components/ui/dropdown'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Dropdown } from "@/components/ui/dropdown";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { useStudents } from '@/hooks/useStudents'
-import { gradeOptions, gradeToStorage } from '@/lib/gradeUtils'
-import { useForm } from 'react-hook-form'
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useStudents } from "@/hooks/useStudents";
+import { gradeOptions, gradeToStorage } from "@/lib/gradeUtils";
+import { useForm } from "react-hook-form";
 
 interface AddStudentModalProps {
-  trigger?: React.ReactNode
+  trigger?: React.ReactNode;
 }
 
 // Hard coded therapist ID as requested (using existing therapist from database)
-const HARDCODED_THERAPIST_ID = '9dad94d8-6534-4510-90d7-e4e97c175a65' // John Doe
+const HARDCODED_THERAPIST_ID = "9dad94d8-6534-4510-90d7-e4e97c175a65"; // John Doe
 
 export default function AddStudentModal({ trigger }: AddStudentModalProps) {
-  const [open, setOpen] = useState(false)
-  const { addStudent } = useStudents()
+  const [open, setOpen] = useState(false);
+  const { addStudent } = useStudents();
 
-  type CreateStudentFormInput = Omit<CreateStudentInput, 'grade'> & {
-    grade?: string
-  }
+  type CreateStudentFormInput = Omit<CreateStudentInput, "grade"> & {
+    grade?: string;
+  };
 
   const form = useForm<CreateStudentFormInput>({
     defaultValues: {
-      first_name: '',
-      last_name: '',
-      dob: '',
-      therapist_id: HARDCODED_THERAPIST_ID, // use auth hook to get ID?, change hard codedd\ 
-      grade: '',
-      iep: '',
+      first_name: "",
+      last_name: "",
+      dob: "",
+      therapist_id: HARDCODED_THERAPIST_ID, // use auth hook to get ID?, change hard codedd\
+      grade: "",
+      iep: "",
     },
-  })
+  });
 
   const onSubmit = async (data: CreateStudentFormInput) => {
     try {
@@ -68,19 +66,18 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
         therapist_id: HARDCODED_THERAPIST_ID, // Use the proper UUID
         grade: data.grade, // Convert K to 0, numbers to numbers
         iep: data.iep || undefined,
-      }
+      };
 
       // Add the student using the hook with converted data
-      addStudent(backendData as any)
+      addStudent(backendData as any);
 
       // Reset form and close modal
-      form.reset()
-      setOpen(false)
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      console.error("Error adding student:", error);
     }
-    catch (error) {
-      console.error('Error adding student:', error)
-    }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -110,7 +107,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
               <FormField
                 control={form.control}
                 name="first_name"
-                rules={{ required: 'First name is required' }}
+                rules={{ required: "First name is required" }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name *</FormLabel>
@@ -125,7 +122,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
               <FormField
                 control={form.control}
                 name="last_name"
-                rules={{ required: 'Last name is required' }}
+                rules={{ required: "Last name is required" }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Last Name *</FormLabel>
@@ -148,7 +145,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                     Date of Birth
                   </FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} value={field.value ?? ''} />
+                    <Input type="date" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -166,9 +163,9 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                   </FormLabel>
                   <FormControl>
                     <Dropdown
-                      value={field.value || ''}
+                      value={field.value || ""}
                       onValueChange={(value) => {
-                        field.onChange(gradeToStorage(value))
+                        field.onChange(gradeToStorage(value));
                       }}
                       placeholder="Select grade level..."
                       items={gradeOptions}
@@ -194,7 +191,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                       placeholder="Any relevant IEP information or special notes..."
                       rows={3}
                       {...field}
-                      value={field.value ?? ''}
+                      value={field.value ?? ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -207,8 +204,8 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  form.reset()
-                  setOpen(false)
+                  form.reset();
+                  setOpen(false);
                 }}
               >
                 Cancel
@@ -219,5 +216,5 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

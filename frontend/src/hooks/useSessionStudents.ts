@@ -1,15 +1,15 @@
-import { useAuthContext } from '@/contexts/authContext'
-import { getSessionStudents as getSessionStudentsApi } from '@/lib/api/session-students'
+import { useAuthContext } from "@/contexts/authContext";
+import { getSessionStudents as getSessionStudentsApi } from "@/lib/api/session-students";
 import type {
   CreateSessionStudentInput,
   DeleteSessionStudentsBody,
-} from '@/lib/api/theSpecialStandardAPI.schemas'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+} from "@/lib/api/theSpecialStandardAPI.schemas";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useSessionStudents() {
-  const queryClient = useQueryClient()
-  const api = getSessionStudentsApi()
-  const { userId: therapistId } = useAuthContext()
+  const queryClient = useQueryClient();
+  const api = getSessionStudentsApi();
+  const { userId: therapistId } = useAuthContext();
 
   const addStudentToSessionMutation = useMutation({
     mutationFn: (input: CreateSessionStudentInput) =>
@@ -18,25 +18,25 @@ export function useSessionStudents() {
       if (variables.session_ids) {
         variables.session_ids.forEach((id: string) => {
           queryClient.invalidateQueries({
-            queryKey: ['sessions', id, 'students'],
-          })
-        })
+            queryKey: ["sessions", id, "students"],
+          });
+        });
       }
 
-      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
-  })
+  });
 
   const removeStudentFromSessionMutation = useMutation({
     mutationFn: (input: DeleteSessionStudentsBody) =>
       api.deleteSessionStudents(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['sessions', variables.session_id, 'students', therapistId],
-      })
-      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+        queryKey: ["sessions", variables.session_id, "students", therapistId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
-  })
+  });
 
   return {
     addStudentToSession: (input: CreateSessionStudentInput) =>
@@ -47,5 +47,5 @@ export function useSessionStudents() {
     isRemoving: removeStudentFromSessionMutation.isPending,
     addError: addStudentToSessionMutation.error?.message || null,
     removeError: removeStudentFromSessionMutation.error?.message || null,
-  }
+  };
 }

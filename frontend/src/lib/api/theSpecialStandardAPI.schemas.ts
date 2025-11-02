@@ -4,142 +4,144 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-export interface ErrorMessageAnyOf { [key: string]: unknown }
+export interface ErrorMessageAnyOf {
+  [key: string]: unknown;
+}
 
 /**
  * Error message or validation errors
  */
-export type ErrorMessage = string | ErrorMessageAnyOf
+export type ErrorMessage = string | ErrorMessageAnyOf;
 
 export interface Error {
   /** HTTP status code */
-  code: number
+  code: number;
   /** Error message or validation errors */
-  message: ErrorMessage
+  message: ErrorMessage;
 }
 
 export interface Therapist {
   /** Unique identifier for the therapist */
-  id: string
-  first_name: string
-  last_name: string
-  email: string
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
   /** Whether the therapist is currently active */
-  active: boolean
-  created_at: string
-  updated_at: string
+  active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateTherapistInput {
   /** First name of the therapist */
-  first_name: string
+  first_name: string;
   /** Last name of the therapist */
-  last_name: string
+  last_name: string;
   /** Email of the therapist */
-  email: string
+  email: string;
 }
 
 export interface UpdateTherapistInput {
   /** First name of the therapist */
-  first_name?: string
+  first_name?: string;
   /** Last name of the therapist */
-  last_name?: string
+  last_name?: string;
   /** Email of the therapist */
-  email?: string
+  email?: string;
   /** Whether the therapist is active */
-  active?: boolean
+  active?: boolean;
 }
 
 export interface Session {
   /** Unique identifier for the session */
-  id: string
+  id: string;
   /** Start date and time of the session */
-  start_datetime: string
+  start_datetime: string;
   /** End date and time of the session */
-  end_datetime: string
+  end_datetime: string;
   /** ID of the therapist conducting the session */
-  therapist_id: string
+  therapist_id: string;
   /**
    * Session notes (optional)
    * @nullable
    */
-  notes?: string | null
+  notes?: string | null;
   /**
    * When the session record was created
    * @nullable
    */
-  created_at?: string | null
+  created_at?: string | null;
   /**
    * When the session record was last updated
    * @nullable
    */
-  updated_at?: string | null
+  updated_at?: string | null;
 }
 
 export interface UpdateSessionInput {
   /** Start date and time of the session */
-  start_datetime?: string
+  start_datetime?: string;
   /** End date and time of the session */
-  end_datetime?: string
+  end_datetime?: string;
   /** UUID of the Therapist */
-  therapist_id?: string
+  therapist_id?: string;
   /** Optional notes about the session */
-  notes?: string
+  notes?: string;
 }
 
 export interface Student {
   /** Unique identifier for the student */
-  id: string
+  id: string;
   /** Student's first name */
-  first_name: string
+  first_name: string;
   /** Student's last name */
-  last_name: string
+  last_name: string;
   /** Student's date of birth */
-  dob?: string
+  dob?: string;
   /** UUID of the assigned therapist */
-  therapist_id: string
+  therapist_id: string;
   /**
    * Student's current grade level. -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
    * @minimum -1
    * @maximum 12
    * @nullable
    */
-  grade?: number | null
+  grade?: number | null;
   /**
    * Individualized Education Program details
    * @nullable
    */
-  iep?: string | null
+  iep?: string | null;
   /** Timestamp when the student record was created */
-  created_at: string
+  created_at: string;
   /** Timestamp when the student record was last updated */
-  updated_at: string
+  updated_at: string;
 }
 
 export interface CreateStudentInput {
   /** Student's first name */
-  first_name: string
+  first_name: string;
   /** Student's last name */
-  last_name: string
+  last_name: string;
   /**
    * Student's date of birth (YYYY-MM-DD format, optional)
    * @nullable
    */
-  dob?: string | null
+  dob?: string | null;
   /** ID of the assigned therapist */
-  therapist_id: string
+  therapist_id: string;
   /**
    * Student's current grade level (optional). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
    * @minimum -1
    * @maximum 12
    * @nullable
    */
-  grade?: number | null
+  grade?: number | null;
   /**
    * Individualized Education Program details (optional)
    * @nullable
    */
-  iep?: string | null
+  iep?: string | null;
 }
 
 /**
@@ -147,52 +149,52 @@ export interface CreateStudentInput {
  */
 export interface UpdateStudentInput {
   /** Student's first name */
-  first_name?: string
+  first_name?: string;
   /** Student's last name */
-  last_name?: string
+  last_name?: string;
   /**
    * Student's date of birth (YYYY-MM-DD format, can be set to null)
    * @nullable
    */
-  dob?: string | null
+  dob?: string | null;
   /** ID of the assigned therapist */
-  therapist_id?: string
+  therapist_id?: string;
   /**
    * Student's current grade level (can be set to null). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
    * @minimum -1
    * @maximum 12
    * @nullable
    */
-  grade?: number | null
+  grade?: number | null;
   /**
    * Updated IEP details (can be set to null)
    * @nullable
    */
-  iep?: string | null
+  iep?: string | null;
 }
 
 export interface Theme {
   /** Unique identifier for the theme */
-  id: string
+  id: string;
   /** Name of the theme */
-  name: string
+  name: string;
   /** Month of the theme (1-12) */
-  month: number
+  month: number;
   /** Year of the theme (e.g., 2024) */
-  year: number
+  year: number;
   /** When the theme was created */
-  created_at: string
+  created_at: string;
   /** When the theme was last updated */
-  updated_at: string
+  updated_at: string;
 }
 
 export interface CreateThemeInput {
   /** Name of the theme */
-  name: string
+  name: string;
   /** Month of the theme */
-  month: number
+  month: number;
   /** Year of the theme */
-  year: number
+  year: number;
 }
 
 /**
@@ -200,145 +202,145 @@ export interface CreateThemeInput {
  */
 export interface UpdateThemeInput {
   /** Name of the theme */
-  name?: string
+  name?: string;
   /** Month of the theme (1-12) */
-  month?: number
+  month?: number;
   /** Year of the theme */
-  year?: number
+  year?: number;
 }
 
 export interface ThemeInfo {
   /** Name of the theme */
-  theme_name: string
+  theme_name: string;
   /** Month of the theme (1-12) */
-  theme_month?: number
+  theme_month?: number;
   /** Year of the theme */
-  theme_year?: number
+  theme_year?: number;
   /** When the theme was created */
-  created_at?: string
+  created_at?: string;
   /** When the theme was last updated */
-  updated_at?: string
+  updated_at?: string;
 }
 
 export interface CreateResourceBody {
   /** ID of the theme associated with the resource */
-  theme_id: string
+  theme_id: string;
   /**
    * Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
    * @minimum 0
    * @maximum 12
    * @nullable
    */
-  grade_level?: number | null
+  grade_level?: number | null;
   /**
    * Date associated with the resource (optional)
    * @nullable
    */
-  date?: string | null
+  date?: string | null;
   /**
    * Type of resource (optional)
    * @nullable
    */
-  type?: string | null
+  type?: string | null;
   /**
    * Title of the resource (optional)
    * @nullable
    */
-  title?: string | null
+  title?: string | null;
   /**
    * Category of the resource (optional)
    * @nullable
    */
-  category?: string | null
+  category?: string | null;
   /**
    * Content/URL of the resource (optional)
    * @nullable
    */
-  content?: string | null
+  content?: string | null;
 }
 
 export interface Resource {
   /** Unique identifier for the resource */
-  id: string
+  id: string;
   /** ID of the theme associated with the resource */
-  theme_id: string
+  theme_id: string;
   /**
    * Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
    * @minimum 0
    * @maximum 12
    * @nullable
    */
-  grade_level?: number | null
+  grade_level?: number | null;
   /**
    * Date associated with the resource (optional)
    * @nullable
    */
-  date?: string | null
+  date?: string | null;
   /**
    * Type of resource (optional)
    * @nullable
    */
-  type?: string | null
+  type?: string | null;
   /**
    * Title of the resource (optional)
    * @nullable
    */
-  title?: string | null
+  title?: string | null;
   /**
    * Category of the resource (optional)
    * @nullable
    */
-  category?: string | null
+  category?: string | null;
   /**
    * Content/URL of the resource (optional)
    * @nullable
    */
-  content?: string | null
+  content?: string | null;
   /** The theme associated with the resource */
-  theme?: ThemeInfo
+  theme?: ThemeInfo;
 }
 
 export interface ResourceWithPresignURL {
   /** Unique identifier for the resource */
-  id: string
+  id: string;
   /** ID of the theme associated with the resource */
-  theme_id: string
+  theme_id: string;
   /**
    * Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
    * @minimum 0
    * @maximum 12
    * @nullable
    */
-  grade_level?: number | null
+  grade_level?: number | null;
   /**
    * Date associated with the resource (optional)
    * @nullable
    */
-  date?: string | null
+  date?: string | null;
   /**
    * Type of resource (optional)
    * @nullable
    */
-  type?: string | null
+  type?: string | null;
   /**
    * Title of the resource (optional)
    * @nullable
    */
-  title?: string | null
+  title?: string | null;
   /**
    * Category of the resource (optional)
    * @nullable
    */
-  category?: string | null
+  category?: string | null;
   /**
    * Content/URL of the resource (optional)
    * @nullable
    */
-  content?: string | null
+  content?: string | null;
   /** Content/URL of the resource (optional) */
-  theme?: ThemeInfo
+  theme?: ThemeInfo;
   /** The Presigned URL to access the resource */
-  presigned_url?: string
+  presigned_url?: string;
 }
 
 export interface UpdateResourceBody {
@@ -346,187 +348,187 @@ export interface UpdateResourceBody {
    * ID of the theme associated with the resource (optional)
    * @nullable
    */
-  theme_id?: string | null
+  theme_id?: string | null;
   /**
    * Grade level for the resource (optional). 0 = kindergarten, 1-12 = grades 1-12
    * @minimum 0
    * @maximum 12
    * @nullable
    */
-  grade_level?: number | null
+  grade_level?: number | null;
   /**
    * Date associated with the resource (optional)
    * @nullable
    */
-  date?: string | null
+  date?: string | null;
   /**
    * Type of resource (optional)
    * @nullable
    */
-  type?: string | null
+  type?: string | null;
   /**
    * Title of the resource (optional)
    * @nullable
    */
-  title?: string | null
+  title?: string | null;
   /**
    * Category of the resource (optional)
    * @nullable
    */
-  category?: string | null
+  category?: string | null;
   /**
    * Content/URL of the resource (optional)
    * @nullable
    */
-  content?: string | null
+  content?: string | null;
 }
 
 export interface SessionStudent {
   /** UUID of the session */
-  session_id: string
+  session_id: string;
   /** UUID of the student */
-  student_id: string
+  student_id: string;
   /** Whether the student was present at the session */
-  present: boolean
+  present: boolean;
   /**
    * Notes about the student's participation in the session
    * @nullable
    */
-  notes?: string | null
+  notes?: string | null;
   /** When the relationship was created */
-  created_at: string
+  created_at: string;
   /** When the relationship was last updated */
-  updated_at: string
+  updated_at: string;
 }
 
 export interface CreateSessionStudentInput {
   /** List of all Sessions' UUIDs */
-  session_ids: string[]
+  session_ids: string[];
   /** List of all Students' UUIDs */
-  student_ids: string[]
+  student_ids: string[];
   /** Whether the student was present (defaults to true if not specified) */
-  present?: boolean
+  present?: boolean;
   /**
    * Initial notes about the student's participation
    * @nullable
    */
-  notes?: string | null
+  notes?: string | null;
 }
 
 export interface UpdateSessionStudentInput {
   /** UUID of the session (cannot be changed) */
-  session_id: string
+  session_id: string;
   /** UUID of the student (cannot be changed) */
-  student_id: string
+  student_id: string;
   /** Update the student's attendance status */
-  present?: boolean
+  present?: boolean;
   /**
    * Update or clear notes (set to null to clear)
    * @nullable
    */
-  notes?: string | null
+  notes?: string | null;
 }
 
 export interface StudentWithSessionInfoAllOf {
   /** UUID of the associated session */
-  session_id: string
+  session_id: string;
   /** Whether the student was present at the session */
-  present: boolean
+  present: boolean;
   /**
    * Session-specific notes about the student
    * @nullable
    */
-  notes?: string | null
+  notes?: string | null;
 }
 
-export type StudentWithSessionInfo = Student & StudentWithSessionInfoAllOf
+export type StudentWithSessionInfo = Student & StudentWithSessionInfoAllOf;
 
 export interface SessionWithStudentInfoAllOf {
   /** UUID of the associated student */
-  student_id: string
+  student_id: string;
   /** Whether the student was present at this session */
-  present: boolean
+  present: boolean;
   /**
    * Session-specific notes about the student
    * @nullable
    */
-  notes?: string | null
+  notes?: string | null;
 }
 
-export type SessionWithStudentInfo = Session & SessionWithStudentInfoAllOf
+export type SessionWithStudentInfo = Session & SessionWithStudentInfoAllOf;
 
 export interface SessionResource {
   /** ID of completed session */
-  session_id: string
+  session_id: string;
   /** ID of referenced resource */
-  resource_id: string
+  resource_id: string;
   /** When the session-resource link was created */
-  created_at: string
+  created_at: string;
   /** When the session-resource link was last updated */
-  updated_at: string
+  updated_at: string;
 }
 
 export interface ModifySessionResource {
   /** ID of completed session */
-  session_id: string
+  session_id: string;
   /** ID of referenced resource */
-  resource_id: string
+  resource_id: string;
 }
 
 export interface PromoteStudentsInput {
   /** ID of Therapist */
-  therapist_id: string
+  therapist_id: string;
   /** List of Students this Therapist will not be promoting... */
-  excluded_student_ids?: string[]
+  excluded_student_ids?: string[];
 }
 
 export interface PostAuthSignupBody {
   /** Email ID of the User/Therapist */
-  email: string
+  email: string;
   /** Password of the User/Therapist (meets strong password requirements) */
-  password: string
+  password: string;
   /** First Name of the User/Therapist */
-  first_name?: string
+  first_name?: string;
   /** Last Name of the User/Therapist */
-  last_name?: string
+  last_name?: string;
 }
 
 export interface PostAuthSignup201User {
   /** The unique identifier of the newly created therapist */
-  id?: string
+  id?: string;
 }
 
 export interface PostAuthSignup201 {
   /** The JWT Access Token issued for this User */
-  access_token: string
-  user: PostAuthSignup201User
+  access_token: string;
+  user: PostAuthSignup201User;
 }
 
 export interface PostAuthLoginBody {
   /** Email ID of the User/Therapist */
-  email: string
+  email: string;
   /** Password of the User/Therapist (meets strong password requirements) */
-  password: string
+  password: string;
   /** Whether to remember the user for a longer session duration */
-  remember_me: boolean
+  remember_me: boolean;
 }
 
 export interface PostAuthLogin200User {
   /** The unique identifier of the newly created therapist */
-  id?: string
+  id?: string;
 }
 
 export interface PostAuthLogin200 {
   /** The JWT Access Token issued for this User */
-  access_token: string
+  access_token: string;
   /** Describes the type of JWT Token designated to this User */
-  token_type: string
+  token_type: string;
   /** The Amount of Time it will take for this token to expire */
-  expires_in: unknown
+  expires_in: unknown;
   /** Used to get a new access token after the current one expires... */
-  refresh_token: string
-  user: PostAuthLogin200User
-  error?: unknown
+  refresh_token: string;
+  user: PostAuthLogin200User;
+  error?: unknown;
 }
 
 export interface GetSessionsParams {
@@ -534,67 +536,67 @@ export interface GetSessionsParams {
    * Page Number of pagination
    * @minimum 1
    */
-  page?: number
+  page?: number;
   /**
    * Number of Items per page in pagination
    * @minimum 1
    */
-  limit?: number
+  limit?: number;
   /**
    * Filter sessions starting on or after this datetime
    */
-  startdate?: string
+  startdate?: string;
   /**
    * Filter sessions starting on or before this datetime
    */
-  enddate?: string
+  enddate?: string;
   /**
    * Filter sessions by month (1-12)
    * @minimum 1
    * @maximum 12
    */
-  month?: number
+  month?: number;
   /**
    * Filter sessions by year
    * @minimum 1776
    * @maximum 2200
    */
-  year?: number
+  year?: number;
   /**
    * Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
    */
-  id?: string[]
+  id?: string[];
   /**
    * Filter sessions that contains all students from the specified therapist IDs
    */
-  therapistid: string
+  therapistid: string;
 }
 
 export interface PostSessionsBodyRepetition {
   /** Starting Date of Recurring Session */
-  recur_start: string
+  recur_start: string;
   /** Ending Date of Recurring Session */
-  recur_end: string
+  recur_end: string;
   /** Recurring Session will happen every "N" weeks */
-  every_n_weeks: unknown
+  every_n_weeks: unknown;
 }
 
 export interface PostSessionsBody {
   /** Start date and time of the session */
-  start_datetime: string
+  start_datetime: string;
   /** End date and time of the session */
-  end_datetime: string
+  end_datetime: string;
   /** UUID of the Therapist */
-  therapist_id: string
+  therapist_id: string;
   /** Optional notes about the session */
-  notes?: string
-  repetition?: PostSessionsBodyRepetition
+  notes?: string;
+  repetition?: PostSessionsBodyRepetition;
   /** List of Student IDs of the students that are being added to this Session. */
-  student_ids?: string[]
+  student_ids?: string[];
 }
 
 export interface DeleteSessionsId200 {
-  message?: string
+  message?: string;
 }
 
 export interface GetSessionsIdResourcesParams {
@@ -602,29 +604,29 @@ export interface GetSessionsIdResourcesParams {
    * Page Number of pagination
    * @minimum 1
    */
-  page?: number
+  page?: number;
   /**
    * Number of Items per page in pagination
    * @minimum 1
    */
-  limit?: number
+  limit?: number;
 }
 
 export interface GetSessionsSessionIdStudentsParams {
   /**
    * Filter students by attendance status
    */
-  present?: boolean
+  present?: boolean;
   /**
    * Page Number of pagination
    * @minimum 1
    */
-  page?: number
+  page?: number;
   /**
    * Number of Items per page in pagination
    * @minimum 1
    */
-  limit?: number
+  limit?: number;
 }
 
 export interface GetStudentsParams {
@@ -632,75 +634,75 @@ export interface GetStudentsParams {
    * Page number for pagination (starts at 1)
    * @minimum 1
    */
-  page?: number
+  page?: number;
   /**
    * Number of students per page
    * @minimum 1
    * @maximum 100
    */
-  limit?: number
+  limit?: number;
   /**
    * Filter students by grade level (exact match). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
    * @minimum -1
    * @maximum 12
    */
-  grade?: number
+  grade?: number;
   /**
    * Filter students by therapist UUID
    */
-  therapist_id?: string
+  therapist_id?: string;
   /**
    * Search students by name (case-insensitive, matches first or last name)
    */
-  name?: string
+  name?: string;
 }
 
 export interface GetStudentsStudentIdSessionsParams {
   /**
    * Filter sessions starting after this date (YYYY-MM-DD format)
    */
-  startDate?: string
+  startDate?: string;
   /**
    * Filter sessions ending before this date (YYYY-MM-DD format)
    */
-  endDate?: string
+  endDate?: string;
   /**
    * Filter sessions by month (1-12). Can be combined with year parameter.
    * @minimum 1
    * @maximum 12
    */
-  month?: number
+  month?: number;
   /**
    * Filter sessions by year. Can be combined with month parameter or used alone.
    * @minimum 1776
    * @maximum 2200
    */
-  year?: number
+  year?: number;
   /**
    * Filter sessions by student's attendance status
    */
-  present?: boolean
+  present?: boolean;
   /**
    * Page Number of pagination
    * @minimum 1
    */
-  page?: number
+  page?: number;
   /**
    * Number of Items per page in pagination
    * @minimum 1
    */
-  limit?: number
+  limit?: number;
 }
 
 export interface PatchStudentsPromote200 {
-  message?: string
+  message?: string;
 }
 
 export interface DeleteSessionStudentsBody {
   /** UUID of the session */
-  session_id: string
+  session_id: string;
   /** UUID of the student */
-  student_id: string
+  student_id: string;
 }
 
 export interface GetTherapistsParams {
@@ -708,76 +710,76 @@ export interface GetTherapistsParams {
    * Page Number of pagination
    * @minimum 1
    */
-  page?: number
+  page?: number;
   /**
    * Number of Items per page in pagination
    * @minimum 1
    */
-  limit?: number
+  limit?: number;
   /**
-   * TherapistID of current therapist logged in, 
+   * TherapistID of current therapist logged in,
    * purposefully not optional because ticket wanted us to pass in ID by default
    */
-  therapistId: string
+  therapistId: string;
 }
 
 export interface DeleteTherapistsId200 {
-  message?: string
+  message?: string;
 }
 
 export interface GetResourcesParams {
   /**
    * Filter resources by theme ID
    */
-  theme_id?: string
+  theme_id?: string;
   /**
    * Filter resources by grade level. 0 = kindergarten, 1-12 = grades 1-12
    * @minimum 0
    * @maximum 12
    */
-  grade_level?: number
+  grade_level?: number;
   /**
    * Filter resources by date
    */
-  date?: string
+  date?: string;
   /**
    * Filter resources by type
    */
-  type?: string
+  type?: string;
   /**
    * Filter resources by title
    */
-  title?: string
+  title?: string;
   /**
    * Filter resources by category
    */
-  category?: string
+  category?: string;
   /**
    * Filter resources by content/URL
    */
-  content?: string
+  content?: string;
   /**
    * Filter resources by theme name
    */
-  theme_name?: string
+  theme_name?: string;
   /**
    * Filter resources by theme month
    */
-  theme_month?: number
+  theme_month?: number;
   /**
    * Filter resources by theme year
    */
-  theme_year?: number
+  theme_year?: number;
   /**
    * Page Number of pagination
    * @minimum 1
    */
-  page?: number
+  page?: number;
   /**
    * Number of Items per page in pagination
    * @minimum 1
    */
-  limit?: number
+  limit?: number;
 }
 
 export interface GetThemesParams {
@@ -785,31 +787,31 @@ export interface GetThemesParams {
    * Page Number of pagination
    * @minimum 1
    */
-  page?: number
+  page?: number;
   /**
    * Number of Items per page in pagination
    * @minimum 1
    */
-  limit?: number
+  limit?: number;
   /**
    * Filter themes by month (1-12)
    * @minimum 1
    * @maximum 12
    */
-  month?: number
+  month?: number;
   /**
    * Filter themes by year
    * @minimum 1900
    * @maximum 2100
    */
-  year?: number
+  year?: number;
   /**
    * Search themes by name (case-insensitive, partial matching)
    * @maxLength 255
    */
-  search?: string
+  search?: string;
 }
 
 export interface DeleteThemesId200 {
-  message?: string
+  message?: string;
 }
