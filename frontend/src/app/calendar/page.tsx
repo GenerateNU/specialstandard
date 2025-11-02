@@ -73,9 +73,11 @@ export default function MyCalendar() {
 
   const handleSelectEvent = (event: CalendarEvent, e: React.SyntheticEvent) => {
     const target = e.target as HTMLElement
-    const rect = target.getBoundingClientRect()
-    
-    // Position modal to the right of the clicked event
+    // Find the actual event container for consistent positioning
+    const eventElement = target.closest('.rbc-event') as HTMLElement
+    const rect = eventElement?.getBoundingClientRect() || target.getBoundingClientRect()
+
+    // Position modal to the right of the event block with 10px gap
     setModalPosition({
       x: rect.right + 10,
       y: rect.top,

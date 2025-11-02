@@ -53,13 +53,7 @@ export function useSessionStudents() {
 
   const addStudentToSessionMutation = useMutation({
     mutationFn: (input: CreateSessionStudentInput) =>
-      api.postSessionStudents({
-        // Backend expects arrays, wrap single values
-        session_ids: [input.session_id],
-        student_ids: [input.student_id],
-        present: input.present,
-        notes: input.notes,
-      } as any),
+      api.postSessionStudents(input),
     onSuccess: (_, variables) => {
       if (variables.session_ids) {
         variables.session_ids.forEach((id: string) => {

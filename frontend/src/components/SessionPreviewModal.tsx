@@ -130,9 +130,22 @@ export default function SessionPreviewModal({
               <span className="font-medium">Students</span>
             </div>
             <div className="bg-gray-50 rounded-md px-3 py-2 text-sm text-gray-900">
-              {students.length}
-              {' '}
-              {students.length === 1 ? 'student' : 'students'}
+              {students.length === 0 ? (
+                <span className="text-gray-500">No students assigned</span>
+              ) : (
+                <>
+                  {students.slice(0, 3).map((student, index) => (
+                    <div key={student.id || index}>
+                      {student.first_name} {student.last_name}
+                    </div>
+                  ))}
+                  {students.length > 3 && (
+                    <div className="text-gray-500 mt-1">
+                      and {students.length - 3} more {students.length - 3 === 1 ? 'student' : 'students'}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

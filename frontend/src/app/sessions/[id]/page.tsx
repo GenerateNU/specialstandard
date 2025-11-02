@@ -109,8 +109,8 @@ export default function SessionPage({ params }: PageProps) {
 
   const handleAddStudent = (studentId: string) => {
     addStudentToSession({
-      session_id: id,
-      student_id: studentId,
+      session_ids: [id],
+      student_ids: [studentId],
       present: false,
     })
     setShowAddStudents(false)
