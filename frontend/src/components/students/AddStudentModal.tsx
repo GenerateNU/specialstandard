@@ -1,36 +1,36 @@
 'use client'
 
 import type {
-  CreateStudentInput,
+    CreateStudentInput,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 
 import { Calendar, FileText, GraduationCap, User } from 'lucide-react'
 import { useState } from 'react'
 
-import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from '@/components/ui/dialog'
 import { Dropdown } from '@/components/ui/dropdown'
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useStudents } from '@/hooks/useStudents'
 import { gradeOptions, gradeToStorage } from '@/lib/gradeUtils'
+import { useForm } from 'react-hook-form'
 
 interface AddStudentModalProps {
   trigger?: React.ReactNode
@@ -52,7 +52,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
       first_name: '',
       last_name: '',
       dob: '',
-      therapist_id: HARDCODED_THERAPIST_ID,
+      therapist_id: HARDCODED_THERAPIST_ID, // use auth hook to get ID?, change hard codedd\ 
       grade: '',
       iep: '',
     },

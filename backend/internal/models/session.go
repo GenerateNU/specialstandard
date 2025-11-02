@@ -39,11 +39,12 @@ type PatchSessionInput struct {
 }
 
 type GetSessionRequest struct {
-	StartTime  *time.Time `query:"startdate" validate:"omitempty"`
-	EndTime    *time.Time `query:"enddate" validate:"omitempty"`
-	Month      *int       `query:"month" validate:"omitempty,gte=1,lte=12"`
-	Year       *int       `query:"year" validate:"omitempty,gte=1776,lte=2200"`
-	StudentIDs *[]string  `query:"id" validate:"omitempty"`
+	StartTime   *time.Time `query:"startdate" validate:"omitempty"`
+	EndTime     *time.Time `query:"enddate" validate:"omitempty"`
+	Month       *int       `query:"month" validate:"omitempty,gte=1,lte=12"`
+	Year        *int       `query:"year" validate:"omitempty,gte=1776,lte=2200"`
+	StudentIDs  *[]string  `query:"id" validate:"omitempty"`
+	TherapistID string     `query:"therapistId" validate:"required,uuid"`
 }
 
 // This is what repository uses

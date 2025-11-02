@@ -35,19 +35,15 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     error,
     refetch,
   } = useQuery({
-<<<<<<< HEAD
-    queryKey: ['sessions', therapistId],
-    queryFn: () => api.getSessions(),
-    // we technically dont need this line but it is just defensive programming!!  
-    enabled: !!therapistId, 
-=======
     queryKey: ['sessions', params],
     queryFn: () => api.getSessions({
       limit: params?.limit ?? 100,
       startdate: params?.startdate,
       enddate: params?.enddate,
+      therapistid: therapistId!, // exclamation point essentially says "yo, this is confirmed to exist and not be null"
     }),
->>>>>>> main
+    // we technically dont need this line but it is just defensive programming!!  
+    enabled: !!therapistId,
   })
 
   const sessions = sessionsResponse ?? []
@@ -63,11 +59,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     mutationFn: ({ id, data }: { id: string, data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
     onSuccess: () => {
-<<<<<<< HEAD
-      queryClient.invalidateQueries({ queryKey: ['sessions', therapistId] })
-=======
-      queryClient.invalidateQueries({ queryKey: ['sessions'] })
->>>>>>> main
+      queryClient.invalidateQueries({ queryKey: ['ssions'] })
     },
   })
 

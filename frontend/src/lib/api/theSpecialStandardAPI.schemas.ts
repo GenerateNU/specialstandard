@@ -564,6 +564,10 @@ export interface GetSessionsParams {
    * Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
    */
   id?: string[]
+  /**
+   * Filter sessions that contains all students from the specified therapist IDs
+   */
+  therapistid: string
 }
 
 export interface PostSessionsBodyRepetition {

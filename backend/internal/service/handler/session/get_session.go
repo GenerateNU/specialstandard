@@ -23,6 +23,11 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 		return errs.BadRequest("Error parsing request body.")
 	}
 
+	therapistID, err := uuid.Parse(filter.TherapistID)
+	if err != nil {
+		return errs.BadRequest("Invalid therapist ID format")
+	}
+
 	var uuidStudentIDs []uuid.UUID
 	if filter.StudentIDs != nil && len(*filter.StudentIDs) > 0 {
 		for _, idStr := range *filter.StudentIDs {
@@ -45,7 +50,6 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 		return errs.BadRequest("Given invalid time range.")
 	}
 
-
 	if validationErrors := xvalidator.Validator.Validate(pagination); len(validationErrors) > 0 {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
@@ -61,14 +65,13 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 		Year:       filter.Year,
 		StudentIDs: nil,
 	}
-	
+
 	// Only set StudentIDs if we have valid UUIDs
 	if len(uuidStudentIDs) > 0 {
 		repoFilter.StudentIDs = &uuidStudentIDs
 	}
 
-
-	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination, repoFilter)
+	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination, repoFilter, therapistID)
 	if err != nil {
 		// For all database errors, return internal server error without exposing details
 		slog.Error("Failed to get session", "err", err)

@@ -22,7 +22,7 @@ func (r *SessionRepository) GetDB() *pgxpool.Pool {
 	return r.db
 }
 
-func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error) {
+func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, id uuid.UUID) ([]models.Session, error) {
 	query := `
 	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
 	FROM session`
@@ -30,6 +30,12 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 	conditions := []string{}
 	args := []interface{}{}
 	argCount := 1
+
+	if id != uuid.Nil {
+		conditions = append(conditions, fmt.Sprintf("therapist_id = $%d", argCount))
+		args = append(args, id)
+		argCount++
+	}
 
 	if filter != nil {
 		if filter.Month != nil && filter.Year != nil {
