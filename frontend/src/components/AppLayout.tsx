@@ -2,12 +2,20 @@
 'use client'
 
 import type { ReactNode } from 'react'
+<<<<<<< HEAD
 import { Calendar, Component, GraduationCap, Home, PanelLeft, Users } from 'lucide-react'
+=======
+import { Calendar, Component, GraduationCap, Home, LogOut, PanelLeft, Users } from 'lucide-react'
+>>>>>>> a056940 (64 nav bar (#93))
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+<<<<<<< HEAD
+=======
+import { useAuthContext } from '@/contexts/authContext'
+>>>>>>> a056940 (64 nav bar (#93))
 
 interface AppLayoutProps {
   children: ReactNode
@@ -30,6 +38,10 @@ const navItems: NavItem[] = [
 export default function AppLayout({ children }: AppLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const pathname = usePathname()
+<<<<<<< HEAD
+=======
+  const { logout } = useAuthContext()
+>>>>>>> a056940 (64 nav bar (#93))
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
@@ -147,6 +159,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </nav>
 
           {/* Footer */}
+<<<<<<< HEAD
           {isSidebarOpen && (
             <>
               <Separator />
@@ -156,6 +169,39 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </p>
               </div>
             </>
+=======
+          <Separator />
+          <div className="p-2">
+            {isSidebarOpen
+              ? (
+                  <Button
+                    onClick={logout}
+                    variant="ghost"
+                    className="w-full justify-start gap-3 text-secondary hover:text-primary hover:bg-card-hover"
+                  >
+                    <LogOut className="w-5 h-5 flex-shrink-0" />
+                    <span className="whitespace-nowrap">Logout</span>
+                  </Button>
+                )
+              : (
+                  <Button
+                    onClick={logout}
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Logout"
+                    className="w-10 h-10 mx-auto text-secondary hover:text-primary"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                )}
+          </div>
+          {isSidebarOpen && (
+            <div className="p-4 pt-2">
+              <p className="text-xs text-muted text-center whitespace-nowrap">
+                The Special Standard © 2025
+              </p>
+            </div>
+>>>>>>> a056940 (64 nav bar (#93))
           )}
         </div>
       </aside>
