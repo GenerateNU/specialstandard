@@ -157,8 +157,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	apiV1.Route("/session_students", func(r fiber.Router) {
 		r.Post("/", sessionStudentHandler.CreateSessionStudent)
 		r.Delete("/", sessionStudentHandler.DeleteSessionStudent)
-		r.Patch("/", sessionStudentHandler.PatchSessionStudent)
-		r.Patch("/rate", sessionStudentHandler.PatchStudentSessionRatings)
+		r.Patch("/", sessionStudentHandler.PatchStudentSessionRatings)
 	})
 
 	sessionResourceHandler := session_resource.NewHandler(repo.SessionResource)

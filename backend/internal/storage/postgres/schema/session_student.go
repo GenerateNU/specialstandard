@@ -88,13 +88,13 @@ func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, inpu
 	return sessionStudent, nil
 }
 
-func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []*models.SessionRating, error) {
+func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []models.SessionRating, error) {
 	sessionStudent, err := r.PatchSessionStudent(ctx, &input.PatchSessionStudentInput)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var ratings []*models.SessionRating
+	var ratings []models.SessionRating
 	for _, rating := range input.Ratings {
 		query := `INSERT INTO session_rating (session_student_id, category, level, description)
           VALUES ($1, $2, $3, $4) 
@@ -110,7 +110,12 @@ func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input
 		if err := row.Scan(&insertedRating.Category, &insertedRating.Level, &insertedRating.Description); err != nil {
 			return nil, nil, err
 		}
-		ratings = append(ratings, &insertedRating)
+		ratings = append(ratings, insertedRating)
 	}
+
+	if ratings == nil {
+		ratings = []models.SessionRating{}
+	}
+
 	return sessionStudent, ratings, nil
 }

@@ -30,10 +30,33 @@ func (h *Handler) PatchStudentSessionRatings(c *fiber.Ctx) error {
 		})
 	}
 
-	if len(studentSessionRatings.Ratings) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "At least one rating is required",
-		})
+	// Validate rating enums
+	validCategories := map[string]bool{
+		"visual_cue":   true,
+		"verbal_cue":   true,
+		"gestural_cue": true,
+		"engagement":   true,
+	}
+
+	validLevels := map[string]bool{
+		"minimal":  true,
+		"moderate": true,
+		"maximal":  true,
+		"low":      true,
+		"high":     true,
+	}
+
+	for _, rating := range studentSessionRatings.Ratings {
+		if !validCategories[rating.Category] {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid rating category: " + rating.Category,
+			})
+		}
+		if !validLevels[rating.Level] {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid rating level: " + rating.Level,
+			})
+		}
 	}
 
 	student_session, ratings, err := h.sessionStudentRepository.RateStudentSession(c.Context(), &studentSessionRatings)

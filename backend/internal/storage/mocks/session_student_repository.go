@@ -26,22 +26,14 @@ func (m *MockSessionStudentRepository) DeleteSessionStudent(ctx context.Context,
 	return args.Error(0)
 }
 
-func (m *MockSessionStudentRepository) PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error) {
-	args := m.Called(ctx, input)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.SessionStudent), args.Error(1)
-}
-
 func (m *MockSessionStudentRepository) GetDB() *pgxpool.Pool {
 	return nil
 }
 
-func (m *MockSessionStudentRepository) RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []*models.SessionRating, error) {
+func (m *MockSessionStudentRepository) RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []models.SessionRating, error) {
 	args := m.Called(ctx, input)
 	if args.Get(0) == nil {
 		return nil, nil, args.Error(2)
 	}
-	return args.Get(0).(*models.SessionStudent), args.Get(1).([]*models.SessionRating), args.Error(2)
+	return args.Get(0).(*models.SessionStudent), args.Get(1).([]models.SessionRating), args.Error(2)
 }

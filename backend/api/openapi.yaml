@@ -1280,49 +1280,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
     patch:
-      summary: Update session-student relationship
-      description: Update the present status or notes for a session-student relationship
-      tags: [Session Students]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateSessionStudentInput"
-      responses:
-        "200":
-          description: Session-student relationship updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SessionStudent"
-        "400":
-          description: Bad request (e.g., validation errors)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "404":
-          description: Session-student relationship not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 404
-                message: "Session-student relationship not found"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-  /session_students/rate:
-    patch:
-      summary: Rate session for a student
+      summary: Update or rate session for a student
       description: Update the rating for a specific category in a session-student relationship
       tags: [Session Students]
       requestBody:

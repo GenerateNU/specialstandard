@@ -77,3 +77,11 @@ type RateStudentSessionInput struct {
 	PatchSessionStudentInput
 	Ratings []RateInput `json:"ratings" validate:"required,dive"`
 }
+
+type PatchSessionStudentRatingsOutput struct {
+	SessionID uuid.UUID       `json:"session_id"`
+	StudentID uuid.UUID       `json:"student_id"`
+	Present   *bool           `json:"present,omitempty"`
+	Notes     *string         `json:"notes,omitempty"`
+	Ratings   []SessionRating `json:"ratings"`
+}
