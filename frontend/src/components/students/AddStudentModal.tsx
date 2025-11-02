@@ -29,17 +29,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { useStudents } from "@/hooks/useStudents";
 import { gradeOptions, gradeToStorage } from "@/lib/gradeUtils";
 import { useForm } from "react-hook-form";
+import { useAuthContext } from "@/contexts/authContext";
 
 interface AddStudentModalProps {
   trigger?: React.ReactNode;
 }
 
-// Hard coded therapist ID as requested (using existing therapist from database)
-const HARDCODED_THERAPIST_ID = "9dad94d8-6534-4510-90d7-e4e97c175a65"; // John Doe
-
 export default function AddStudentModal({ trigger }: AddStudentModalProps) {
   const [open, setOpen] = useState(false);
   const { addStudent } = useStudents();
+  const { userId } = useAuthContext();
 
   type CreateStudentFormInput = Omit<CreateStudentInput, "grade"> & {
     grade?: string;
@@ -50,7 +49,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
       first_name: "",
       last_name: "",
       dob: "",
-      therapist_id: HARDCODED_THERAPIST_ID, // use auth hook to get ID?, change hard codedd\
+      therapist_id: userId ?? undefined, // use auth hook to get ID?, change hard codedd\
       grade: "",
       iep: "",
     },
@@ -63,8 +62,8 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
         first_name: data.first_name,
         last_name: data.last_name,
         dob: data.dob || undefined,
-        therapist_id: HARDCODED_THERAPIST_ID, // Use the proper UUID
-        grade: data.grade, // Convert K to 0, numbers to numbers
+        therapist_id: userId ?? undefined, // Use the proper UUID
+        grade: gradeToStorage(data.grade ?? ""), // Convert K to 0, numbers to numbers
         iep: data.iep || undefined,
       };
 
@@ -164,9 +163,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                   <FormControl>
                     <Dropdown
                       value={field.value || ""}
-                      onValueChange={(value) => {
-                        field.onChange(gradeToStorage(value));
-                      }}
+                      onValueChange={(value) => field.onChange(value)} // no conversion here
                       placeholder="Select grade level..."
                       items={gradeOptions}
                       className="w-full justify-between"

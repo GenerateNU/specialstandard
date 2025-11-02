@@ -7,7 +7,7 @@ type Pagination struct {
 
 const (
 	defaultPage  int = 1
-	defaultLimit int = 10
+	defaultLimit int = 100
 )
 
 func NewPagination() Pagination {
