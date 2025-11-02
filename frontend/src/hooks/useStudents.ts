@@ -33,11 +33,13 @@ export function useStudents() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['students', therapistId],
-    queryFn: () => api.getStudents({ limit: 100, therapist_id: therapistId! }),
+    queryKey: ['students'],
+    queryFn: () => api.getStudents({ limit: 100, therapist_id: therapistId! }), //TODO: add this, get rid of queryKey, and update get endpoints that dont have this, sessions, sessionstudents, student, session resources
     // we technically dont need this line but it is just defensive programming!!  
     enabled: !!therapistId,
   })
+
+  // get students/id/sessions
 
   const students = studentsData.map(student => ({
     ...student,
