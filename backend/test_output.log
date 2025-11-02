@@ -1,0 +1,988 @@
+?   	specialstandard/cmd	[no test files]
+?   	specialstandard/internal/auth	[no test files]
+?   	specialstandard/internal/config	[no test files]
+?   	specialstandard/internal/errs	[no test files]
+?   	specialstandard/internal/models	[no test files]
+?   	specialstandard/internal/s3_client	[no test files]
+=== RUN   TestHealthEndpoint
+15:47:17 | 200 |       1.075ms | 0.0.0.0 | GET | /api/v1/health | -
+--- PASS: TestHealthEndpoint (0.00s)
+=== RUN   TestGetSessionsEndpoint
+=== RUN   TestGetSessionsEndpoint/successful_get_sessions_and_default_pagination
+15:47:17 | 200 |      3.4369ms | 0.0.0.0 | GET | /api/v1/sessions | -
+=== RUN   TestGetSessionsEndpoint/repository_error
+2025/11/02 15:47:17 ERROR Failed to get session err="database error"
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 500 Failed to retrieve sessions" method=GET path=/api/v1/sessions/
+15:47:17 | 500 |      1.0823ms | 0.0.0.0 | GET | /api/v1/sessions/ | http error: 500 Failed to retrieve sessions
+=== RUN   TestGetSessionsEndpoint/Violating_Pagination_Arguments_Constraints
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 map[limit:Limit is invalid page:Page is invalid]" method=GET path=/api/v1/sessions
+15:47:17 | 400 |       552.1µs | 0.0.0.0 | GET | /api/v1/sessions | http error: 400 map[limit:Limit is invalid page:Page is invalid]
+=== RUN   TestGetSessionsEndpoint/Bad_Pagination_Arguments
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Invalid Pagination Query Parameters" method=GET path=/api/v1/sessions
+15:47:17 | 400 |            0s | 0.0.0.0 | GET | /api/v1/sessions | http error: 400 Invalid Pagination Query Parameters
+=== RUN   TestGetSessionsEndpoint/Default_Pagination
+15:47:17 | 200 |            0s | 0.0.0.0 | GET | /api/v1/sessions | -
+--- PASS: TestGetSessionsEndpoint (0.01s)
+    --- PASS: TestGetSessionsEndpoint/successful_get_sessions_and_default_pagination (0.00s)
+    --- PASS: TestGetSessionsEndpoint/repository_error (0.00s)
+    --- PASS: TestGetSessionsEndpoint/Violating_Pagination_Arguments_Constraints (0.00s)
+    --- PASS: TestGetSessionsEndpoint/Bad_Pagination_Arguments (0.00s)
+    --- PASS: TestGetSessionsEndpoint/Default_Pagination (0.00s)
+=== RUN   TestGetStudentsEndpoint
+15:47:17 | 200 |       1.098ms | 0.0.0.0 | GET | /api/v1/students | -
+--- PASS: TestGetStudentsEndpoint (0.00s)
+=== RUN   TestGetStudentsEndpoint_WithGradeFilter
+15:47:17 | 200 |       546.2µs | 0.0.0.0 | GET | /api/v1/students | -
+--- PASS: TestGetStudentsEndpoint_WithGradeFilter (0.00s)
+=== RUN   TestGetStudentsEndpoint_WithTherapistFilter
+15:47:17 | 200 |       536.6µs | 0.0.0.0 | GET | /api/v1/students | -
+--- PASS: TestGetStudentsEndpoint_WithTherapistFilter (0.00s)
+=== RUN   TestGetStudentsEndpoint_WithNameFilter
+15:47:17 | 200 |       539.4µs | 0.0.0.0 | GET | /api/v1/students | -
+--- PASS: TestGetStudentsEndpoint_WithNameFilter (0.00s)
+=== RUN   TestGetStudentsEndpoint_WithCombinedFilters
+15:47:17 | 200 |       899.5µs | 0.0.0.0 | GET | /api/v1/students | -
+--- PASS: TestGetStudentsEndpoint_WithCombinedFilters (0.00s)
+=== RUN   TestGetStudentsEndpoint_InvalidTherapistID
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Invalid therapist_id format" method=GET path=/api/v1/students
+15:47:17 | 400 |            0s | 0.0.0.0 | GET | /api/v1/students | http error: 400 Invalid therapist_id format
+--- PASS: TestGetStudentsEndpoint_InvalidTherapistID (0.00s)
+=== RUN   TestGetStudentsEndpoint_EmptyFiltersIgnored
+15:47:17 | 200 |            0s | 0.0.0.0 | GET | /api/v1/students | -
+--- PASS: TestGetStudentsEndpoint_EmptyFiltersIgnored (0.00s)
+=== RUN   TestGetStudentByIDEndpoint
+15:47:17 | 200 |       539.5µs | 0.0.0.0 | GET | /api/v1/students/b1e317f8-3687-4ce4-87bc-d86426581f76 | -
+--- PASS: TestGetStudentByIDEndpoint (0.00s)
+=== RUN   TestCreateStudentEndpoint
+15:47:17 | 201 |       543.9µs | 0.0.0.0 | POST | /api/v1/students | -
+--- PASS: TestCreateStudentEndpoint (0.00s)
+=== RUN   TestUpdateStudentEndpoint
+15:47:17 | 200 |       944.4µs | 0.0.0.0 | PATCH | /api/v1/students/5dfdcb66-558f-4569-8cdf-f1d94752f52a | -
+--- PASS: TestUpdateStudentEndpoint (0.00s)
+=== RUN   TestDeleteStudentEndpoint
+15:47:17 | 204 |            0s | 0.0.0.0 | DELETE | /api/v1/students/5d3907ee-6f8a-44bb-8dca-0b254c20d7a4 | -
+--- PASS: TestDeleteStudentEndpoint (0.00s)
+=== RUN   TestGetSessionByIDEndpoint
+=== RUN   TestGetSessionByIDEndpoint/successful_get_session_by_valid_UUID
+15:47:17 | 200 |       637.9µs | 0.0.0.0 | GET | /api/v1/sessions/123e4567-e89b-12d3-a456-426614174000 | -
+=== RUN   TestGetSessionByIDEndpoint/bad_request_for_invalid_UUID
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Invalid UUID format for ID 'invalid-uuid'" method=GET path=/api/v1/sessions/invalid-uuid
+15:47:17 | 400 |      1.8261ms | 0.0.0.0 | GET | /api/v1/sessions/invalid-uuid | http error: 400 Invalid UUID format for ID 'invalid-uuid'
+=== RUN   TestGetSessionByIDEndpoint/session_not_found
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 404 Session not found" method=GET path=/api/v1/sessions/123e4567-e89b-12d3-a456-426614174001
+15:47:17 | 404 |       534.1µs | 0.0.0.0 | GET | /api/v1/sessions/123e4567-e89b-12d3-a456-426614174001 | http error: 404 Session not found
+--- PASS: TestGetSessionByIDEndpoint (0.01s)
+    --- PASS: TestGetSessionByIDEndpoint/successful_get_session_by_valid_UUID (0.00s)
+    --- PASS: TestGetSessionByIDEndpoint/bad_request_for_invalid_UUID (0.00s)
+    --- PASS: TestGetSessionByIDEndpoint/session_not_found (0.00s)
+=== RUN   TestDeleteSessionsEndpoint
+=== RUN   TestDeleteSessionsEndpoint/Invalid_UUID_-_Parsing_Error
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Parsing Error: Invalid ID Format. ID: 00000000-0000-0000-0000-000000000000" method=DELETE path=/sessions/0345
+=== RUN   TestDeleteSessionsEndpoint/Success
+15:47:17 | 200 |       533.3µs | 0.0.0.0 | DELETE | /api/v1/sessions/ee17a1c3-651c-424b-a561-72e0942fcfef | -
+--- PASS: TestDeleteSessionsEndpoint (0.00s)
+    --- PASS: TestDeleteSessionsEndpoint/Invalid_UUID_-_Parsing_Error (0.00s)
+    --- PASS: TestDeleteSessionsEndpoint/Success (0.00s)
+=== RUN   TestHandler_PostSessions
+2025/11/02 15:47:17 ERROR HTTP API error err="runtime error: invalid memory address or nil pointer dereference" method=POST path=/api/v1/sessions
+--- PASS: TestHandler_PostSessions (0.00s)
+=== RUN   TestHandler_PatchSessions
+=== RUN   TestHandler_PatchSessions/Bad_UUID_Request_-_Not_a_UUID
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Parsing Error with Invalid ID Format. ID: 00000000-0000-0000-0000-000000000000" method=PATCH path=/sessions/0345
+=== RUN   TestHandler_PatchSessions/Parsing_PatchInputSession_Error
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Failed to parse PatchSessionInput data" method=PATCH path=/sessions/e1863acb-b508-46e9-9922-a0bed28fc7a2
+=== RUN   TestHandler_PatchSessions/Given_ID_not_found
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 404 Session Not Found" method=PATCH path=/sessions/cd338a7a-ef6a-4746-8ee0-e6afd0c1d612
+=== RUN   TestHandler_PatchSessions/foreign_key_violation_-_DOCTOR_WHO?_We_don't_know..
+2025/11/02 15:47:17 ERROR Failed to patch session id=f5ac029a-a741-4858-9c7a-b08cce38c9d4 err="foreign key"
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Invalid Reference" method=PATCH path=/sessions/f5ac029a-a741-4858-9c7a-b08cce38c9d4
+=== RUN   TestHandler_PatchSessions/check_constraint_violation
+2025/11/02 15:47:17 ERROR Failed to patch session id=f676d6c6-9a71-422a-9960-dc53d8208c2e err="check constraint"
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Violated a check constraint" method=PATCH path=/sessions/f676d6c6-9a71-422a-9960-dc53d8208c2e
+=== RUN   TestHandler_PatchSessions/Successfully_changed_1_field
+=== RUN   TestHandler_PatchSessions/Successfully_changed_multiple_fields
+=== RUN   TestHandler_PatchSessions/Successfully_changed_all_patchable_fields
+--- PASS: TestHandler_PatchSessions (0.00s)
+    --- PASS: TestHandler_PatchSessions/Bad_UUID_Request_-_Not_a_UUID (0.00s)
+    --- PASS: TestHandler_PatchSessions/Parsing_PatchInputSession_Error (0.00s)
+    --- PASS: TestHandler_PatchSessions/Given_ID_not_found (0.00s)
+    --- PASS: TestHandler_PatchSessions/foreign_key_violation_-_DOCTOR_WHO?_We_don't_know.. (0.00s)
+    --- PASS: TestHandler_PatchSessions/check_constraint_violation (0.00s)
+    --- PASS: TestHandler_PatchSessions/Successfully_changed_1_field (0.00s)
+    --- PASS: TestHandler_PatchSessions/Successfully_changed_multiple_fields (0.00s)
+    --- PASS: TestHandler_PatchSessions/Successfully_changed_all_patchable_fields (0.00s)
+=== RUN   TestGetTherapistByIDEndpoint
+15:47:17 | 200 |       581.4µs | 0.0.0.0 | GET | /api/v1/therapists/9dad94d8-6534-4510-90d7-e4e97c175a65 | -
+--- PASS: TestGetTherapistByIDEndpoint (0.00s)
+=== RUN   TestGetTherapistsEndpoint
+=== RUN   TestGetTherapistsEndpoint/successful_get_therapists_with_default_pagination
+15:47:17 | 200 |         701µs | 0.0.0.0 | GET | /api/v1/therapists | -
+=== RUN   TestGetTherapistsEndpoint/repository_error
+2025/11/02 15:47:17 ERROR HTTP API error err="database error" method=GET path=/api/v1/therapists
+15:47:17 | 500 |       393.1µs | 0.0.0.0 | GET | /api/v1/therapists | database error
+=== RUN   TestGetTherapistsEndpoint/Bad_Pagination_Arguments
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Invalid Pagination Query Parameters" method=GET path=/api/v1/therapists
+15:47:17 | 400 |            0s | 0.0.0.0 | GET | /api/v1/therapists | http error: 400 Invalid Pagination Query Parameters
+=== RUN   TestGetTherapistsEndpoint/Violating_Pagination_Arguments_Constraints
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 map[limit:Limit is invalid page:Page is invalid]" method=GET path=/api/v1/therapists
+15:47:17 | 400 |       672.2µs | 0.0.0.0 | GET | /api/v1/therapists | http error: 400 map[limit:Limit is invalid page:Page is invalid]
+=== RUN   TestGetTherapistsEndpoint/Pagination_with_parameters
+15:47:17 | 200 |       534.9µs | 0.0.0.0 | GET | /api/v1/therapists | -
+--- PASS: TestGetTherapistsEndpoint (0.01s)
+    --- PASS: TestGetTherapistsEndpoint/successful_get_therapists_with_default_pagination (0.00s)
+    --- PASS: TestGetTherapistsEndpoint/repository_error (0.00s)
+    --- PASS: TestGetTherapistsEndpoint/Bad_Pagination_Arguments (0.00s)
+    --- PASS: TestGetTherapistsEndpoint/Violating_Pagination_Arguments_Constraints (0.00s)
+    --- PASS: TestGetTherapistsEndpoint/Pagination_with_parameters (0.00s)
+=== RUN   TestCreateTherapistEndpoint
+15:47:17 | 201 |       545.2µs | 0.0.0.0 | POST | /api/v1/therapists | -
+--- PASS: TestCreateTherapistEndpoint (0.00s)
+=== RUN   TestDeleteTherapistEndpoint
+15:47:17 | 200 |            0s | 0.0.0.0 | DELETE | /api/v1/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112 | -
+--- PASS: TestDeleteTherapistEndpoint (0.00s)
+=== RUN   TestPatchTherapistEndpoint
+15:47:17 | 200 |       539.3µs | 0.0.0.0 | PATCH | /api/v1/therapists/4a9a4e58-ea6c-496a-915f-3e8214e77112 | -
+--- PASS: TestPatchTherapistEndpoint (0.00s)
+=== RUN   TestCreateResourceEndpoint
+15:47:17 | 201 |      1.0415ms | 0.0.0.0 | POST | /api/v1/resources | -
+--- PASS: TestCreateResourceEndpoint (0.00s)
+=== RUN   TestGetResourcesEndpoint
+15:47:17 | 200 |      8.0564ms | 0.0.0.0 | GET | /api/v1/resources | -
+--- PASS: TestGetResourcesEndpoint (0.01s)
+=== RUN   TestGetResourceByIDEndpoint
+15:47:17 | 200 |      4.7796ms | 0.0.0.0 | GET | /api/v1/resources/63d64543-95c5-4d9f-a715-3aae63ace43c | -
+--- PASS: TestGetResourceByIDEndpoint (0.01s)
+=== RUN   TestUpdateResourceEndpoint
+15:47:17 | 200 |      2.2628ms | 0.0.0.0 | PATCH | /api/v1/resources/be8c488b-b15b-4148-b99f-4a79c33e9874 | -
+--- PASS: TestUpdateResourceEndpoint (0.00s)
+=== RUN   TestDeleteResourceEndpoint
+15:47:17 | 204 |       510.6µs | 0.0.0.0 | DELETE | /api/v1/resources/90d79a0d-f8fc-44b5-bb60-d891c96e43d1 | -
+--- PASS: TestDeleteResourceEndpoint (0.00s)
+=== RUN   TestGetResourceByIDEndpoint_NotFound
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 404 [resource resource not found]" method=GET path=/api/v1/resources/e0b4a84e-2cd3-4fa5-8391-a4c6482657f8
+15:47:17 | 404 |            0s | 0.0.0.0 | GET | /api/v1/resources/e0b4a84e-2cd3-4fa5-8391-a4c6482657f8 | http error: 404 [resource resource not found]
+--- PASS: TestGetResourceByIDEndpoint_NotFound (0.00s)
+=== RUN   TestUpdateResourceEndpoint_NotFound
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 404 [resource not found]" method=PATCH path=/api/v1/resources/fed35dd3-a66d-4c12-8c86-dbd6c628195d
+15:47:17 | 404 |      1.5018ms | 0.0.0.0 | PATCH | /api/v1/resources/fed35dd3-a66d-4c12-8c86-dbd6c628195d | http error: 404 [resource not found]
+--- PASS: TestUpdateResourceEndpoint_NotFound (0.00s)
+=== RUN   TestDeleteResourceEndpoint_NotFound
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 404 [resource not found]" method=DELETE path=/api/v1/resources/1882491b-31ec-4c2f-ba75-add0e5f5b172
+15:47:17 | 404 |            0s | 0.0.0.0 | DELETE | /api/v1/resources/1882491b-31ec-4c2f-ba75-add0e5f5b172 | http error: 404 [resource not found]
+--- PASS: TestDeleteResourceEndpoint_NotFound (0.00s)
+=== RUN   TestCreateSessionStudentEndpoint
+=== RUN   TestCreateSessionStudentEndpoint/Successful_creation
+15:47:17 | 201 |       537.5µs | 0.0.0.0 | POST | /api/v1/session_students | -
+=== RUN   TestCreateSessionStudentEndpoint/Missing_session_ID
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 map[sessionids:SessionIDs is required studentids:StudentIDs is required]" method=POST path=/api/v1/session_students
+15:47:17 | 400 |       506.8µs | 0.0.0.0 | POST | /api/v1/session_students | http error: 400 map[sessionids:SessionIDs is required studentids:StudentIDs is required]
+=== RUN   TestCreateSessionStudentEndpoint/Invalid_JSON_format
+15:47:17 | 400 |            0s | 0.0.0.0 | POST | /api/v1/session_students | -
+=== RUN   TestCreateSessionStudentEndpoint/Duplicate_relationship
+15:47:17 | 409 |       555.3µs | 0.0.0.0 | POST | /api/v1/session_students | -
+--- PASS: TestCreateSessionStudentEndpoint (0.00s)
+    --- PASS: TestCreateSessionStudentEndpoint/Successful_creation (0.00s)
+    --- PASS: TestCreateSessionStudentEndpoint/Missing_session_ID (0.00s)
+    --- PASS: TestCreateSessionStudentEndpoint/Invalid_JSON_format (0.00s)
+    --- PASS: TestCreateSessionStudentEndpoint/Duplicate_relationship (0.00s)
+=== RUN   TestDeleteSessionStudentEndpoint
+=== RUN   TestDeleteSessionStudentEndpoint/Successful_deletion
+15:47:17 | 204 |       551.3µs | 0.0.0.0 | DELETE | /api/v1/session_students | -
+=== RUN   TestDeleteSessionStudentEndpoint/Missing_student_ID
+15:47:17 | 400 |            0s | 0.0.0.0 | DELETE | /api/v1/session_students | -
+=== RUN   TestDeleteSessionStudentEndpoint/Invalid_JSON_format
+15:47:17 | 400 |            0s | 0.0.0.0 | DELETE | /api/v1/session_students | -
+=== RUN   TestDeleteSessionStudentEndpoint/Relationship_not_found
+15:47:17 | 404 |            0s | 0.0.0.0 | DELETE | /api/v1/session_students | -
+--- PASS: TestDeleteSessionStudentEndpoint (0.00s)
+    --- PASS: TestDeleteSessionStudentEndpoint/Successful_deletion (0.00s)
+    --- PASS: TestDeleteSessionStudentEndpoint/Missing_student_ID (0.00s)
+    --- PASS: TestDeleteSessionStudentEndpoint/Invalid_JSON_format (0.00s)
+    --- PASS: TestDeleteSessionStudentEndpoint/Relationship_not_found (0.00s)
+=== RUN   TestPatchSessionStudentEndpoint
+=== RUN   TestPatchSessionStudentEndpoint/Successful_patch_-_present_only
+2025/11/02 15:47:17 ERROR HTTP API error err="\nassert: mock: I don't know what to return because the method call was unexpected.\n\tEither do Mock.On(\"RateStudentSession\").Return(...) first, or remove the RateStudentSession() call.\n\tThis method was unexpected:\n\t\tRateStudentSession(*fasthttp.RequestCtx,*models.RateStudentSessionInput)\n\t\t0: &fasthttp.RequestCtx{noCopy:fasthttp.noCopy{}, Request:fasthttp.Request{noCopy:fasthttp.noCopy{}, Header:fasthttp.RequestHeader{noCopy:fasthttp.noCopy{}, disableNormalizing:false, noHTTP11:false, connectionClose:false, noDefaultContentType:false, disableSpecialHeader:false, cookiesCollected:true, contentLength:143, contentLengthBytes:[]uint8{0x31, 0x34, 0x33}, secureErrorLogMessage:false, method:[]uint8{0x50, 0x41, 0x54, 0x43, 0x48}, requestURI:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, proto:[]uint8{0x48, 0x54, 0x54, 0x50, 0x2f, 0x31, 0x2e, 0x31}, host:[]uint8{0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d}, contentType:[]uint8{0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e}, userAgent:[]uint8(nil), mulHeader:[][]uint8(nil), h:[]fasthttp.argsKV(nil), trailer:[]fasthttp.argsKV(nil), bufKV:fasthttp.argsKV{key:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, value:[]uint8(nil), noValue:false}, cookies:[]fasthttp.argsKV(nil), rawHeaders:[]uint8{0x48, 0x6f, 0x73, 0x74, 0x3a, 0x20, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0xd, 0xa, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x3a, 0x20, 0x31, 0x34, 0x33, 0xd, 0xa, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x54, 0x79, 0x70, 0x65, 0x3a, 0x20, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e, 0xd, 0xa, 0xd, 0xa}}, uri:fasthttp.URI{noCopy:fasthttp.noCopy{}, pathOriginal:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, scheme:[]uint8(nil), path:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, queryString:[]uint8(nil), hash:[]uint8(nil), host:[]uint8{0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d}, queryArgs:fasthttp.Args{noCopy:fasthttp.noCopy{}, args:[]fasthttp.argsKV(nil), buf:[]uint8(nil)}, parsedQueryArgs:false, DisablePathNormalizing:false, fullURI:[]uint8(nil), requestURI:[]uint8(nil), username:[]uint8(nil), password:[]uint8(nil)}, postArgs:fasthttp.Args{noCopy:fasthttp.noCopy{}, args:[]fasthttp.argsKV(nil), buf:[]uint8(nil)}, bodyStream:io.Reader(nil), w:fasthttp.requestBodyWriter{r:(*fasthttp.Request)(nil)}, body:(*bytebufferpool.ByteBuffer)(0xc0000095a8), bodyRaw:[]uint8(nil), multipartForm:(*multipart.Form)(nil), multipartFormBoundary:\"\", secureErrorLogMessage:false, parsedURI:true, parsedPostArgs:false, keepBodyBuffer:true, isTLS:false, timeout:0, UseHostHeader:false, DisableRedirectPathNormalizing:false}, Response:fasthttp.Response{noCopy:fasthttp.noCopy{}, Header:fasthttp.ResponseHeader{noCopy:fasthttp.noCopy{}, disableNormalizing:false, noHTTP11:false, connectionClose:false, noDefaultContentType:false, noDefaultDate:false, statusCode:0, statusMessage:[]uint8(nil), protocol:[]uint8(nil), contentLength:0, contentLengthBytes:[]uint8(nil), secureErrorLogMessage:false, contentType:[]uint8(nil), contentEncoding:[]uint8(nil), server:[]uint8(nil), mulHeader:[][]uint8(nil), h:[]fasthttp.argsKV{fasthttp.argsKV{key:[]uint8{0x56, 0x61, 0x72, 0x79}, value:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, noValue:false}}, trailer:[]fasthttp.argsKV(nil), bufKV:fasthttp.argsKV{key:[]uint8{0x56, 0x61, 0x72, 0x79}, value:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, noValue:false}, cookies:[]fasthttp.argsKV(nil)}, ImmediateHeaderFlush:false, StreamBody:false, bodyStream:io.Reader(nil), w:fasthttp.responseBodyWriter{r:(*fasthttp.Response)(nil)}, body:(*bytebufferpool.ByteBuffer)(nil), bodyRaw:[]uint8(nil), SkipBody:false, keepBodyBuffer:true, secureErrorLogMessage:false, raddr:net.Addr(nil), laddr:net.Addr(nil)}, userValues:fasthttp.userData{fasthttp.userDataKV{key:\"user\", value:\"test-user\"}}, connID:0x39, connRequestNum:0x1, connTime:time.Time{wall:0xc23a0eb564840ebc, ext:122310201, loc:(*time.Location)(0x32e2480)}, remoteAddr:net.Addr(nil), time:time.Time{wall:0xc23a0eb564840ebc, ext:122310201, loc:(*time.Location)(0x32e2480)}, logger:fasthttp.ctxLogger{ctx:(*fasthttp.RequestCtx)(nil), logger:fasthttp.Logger(nil)}, s:(*fasthttp.Server)(0xc0001db600), c:(*fiber.testConn)(0xc000aabb80), fbr:fasthttp.firstByteReader{c:net.Conn(nil), ch:0x0, byteRead:false}, timeoutResponse:(*fasthttp.Response)(nil), timeoutCh:(chan struct {})(nil), timeoutTimer:(*time.Timer)(nil), hijackHandler:(fasthttp.HijackHandler)(nil), hijackNoResponse:false, formValueFunc:(fasthttp.FormValueFunc)(nil)}\n\t\t1: &models.RateStudentSessionInput{PatchSessionStudentInput:models.PatchSessionStudentInput{SessionID:uuid.UUID{0x12, 0x3e, 0x45, 0x67, 0xe8, 0x9b, 0x12, 0xd3, 0xa4, 0x56, 0x42, 0x66, 0x14, 0x17, 0x40, 0x0}, StudentID:uuid.UUID{0x98, 0x7f, 0xcd, 0xeb, 0x51, 0xa2, 0x43, 0xd1, 0x9c, 0x4f, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc}, Present:(*bool)(0xc0001ef920), Notes:(*string)(nil)}, Ratings:[]models.RateInput(nil)}\n\tat: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/storage/mocks/session_student_repository.go:34 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/handler/session_student/patch_student_session.go:62 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1030 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server.go:112 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1030 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/cors/cors.go:173 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/logger/logger.go:119 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/compress/compress.go:55 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/favicon/favicon.go:121 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/recover/recover.go:43 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:170 C:/Users/aahil/go/pkg/mod/github.com/valyala/fasthttp@v1.51.0/server.go:2359 C:/Users/aahil/go/pkg/mod/github.com/valyala/fasthttp@v1.51.0/server.go:2028 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/app.go:950 C:/Program Files/Go/src/runtime/asm_amd64.s:1700]" method=PATCH path=/api/v1/session_students
+    server_test.go:1576: 
+        	Error Trace:	C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1576
+        	Error:      	Not equal: 
+        	            	expected: 200
+        	            	actual  : 500
+        	Test:       	TestPatchSessionStudentEndpoint/Successful_patch_-_present_only
+    server_test.go:1577: FAIL:	PatchSessionStudent(string,mock.anythingOfTypeArgument)
+        		at: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1491 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1562]
+    server_test.go:1577: FAIL: 0 out of 1 expectation(s) were met.
+        	The code you are testing needs to make 1 more call(s).
+        	at: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1577]
+=== RUN   TestPatchSessionStudentEndpoint/Successful_patch_-_notes_only
+2025/11/02 15:47:17 ERROR HTTP API error err="\nassert: mock: I don't know what to return because the method call was unexpected.\n\tEither do Mock.On(\"RateStudentSession\").Return(...) first, or remove the RateStudentSession() call.\n\tThis method was unexpected:\n\t\tRateStudentSession(*fasthttp.RequestCtx,*models.RateStudentSessionInput)\n\t\t0: &fasthttp.RequestCtx{noCopy:fasthttp.noCopy{}, Request:fasthttp.Request{noCopy:fasthttp.noCopy{}, Header:fasthttp.RequestHeader{noCopy:fasthttp.noCopy{}, disableNormalizing:false, noHTTP11:false, connectionClose:false, noDefaultContentType:false, disableSpecialHeader:false, cookiesCollected:true, contentLength:160, contentLengthBytes:[]uint8{0x31, 0x36, 0x30}, secureErrorLogMessage:false, method:[]uint8{0x50, 0x41, 0x54, 0x43, 0x48}, requestURI:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, proto:[]uint8{0x48, 0x54, 0x54, 0x50, 0x2f, 0x31, 0x2e, 0x31}, host:[]uint8{0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d}, contentType:[]uint8{0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e}, userAgent:[]uint8(nil), mulHeader:[][]uint8(nil), h:[]fasthttp.argsKV(nil), trailer:[]fasthttp.argsKV(nil), bufKV:fasthttp.argsKV{key:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, value:[]uint8(nil), noValue:false}, cookies:[]fasthttp.argsKV(nil), rawHeaders:[]uint8{0x48, 0x6f, 0x73, 0x74, 0x3a, 0x20, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0xd, 0xa, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x3a, 0x20, 0x31, 0x36, 0x30, 0xd, 0xa, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x54, 0x79, 0x70, 0x65, 0x3a, 0x20, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e, 0xd, 0xa, 0xd, 0xa}}, uri:fasthttp.URI{noCopy:fasthttp.noCopy{}, pathOriginal:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, scheme:[]uint8(nil), path:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, queryString:[]uint8(nil), hash:[]uint8(nil), host:[]uint8{0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d}, queryArgs:fasthttp.Args{noCopy:fasthttp.noCopy{}, args:[]fasthttp.argsKV(nil), buf:[]uint8(nil)}, parsedQueryArgs:false, DisablePathNormalizing:false, fullURI:[]uint8(nil), requestURI:[]uint8(nil), username:[]uint8(nil), password:[]uint8(nil)}, postArgs:fasthttp.Args{noCopy:fasthttp.noCopy{}, args:[]fasthttp.argsKV(nil), buf:[]uint8(nil)}, bodyStream:io.Reader(nil), w:fasthttp.requestBodyWriter{r:(*fasthttp.Request)(nil)}, body:(*bytebufferpool.ByteBuffer)(0xc000009998), bodyRaw:[]uint8(nil), multipartForm:(*multipart.Form)(nil), multipartFormBoundary:\"\", secureErrorLogMessage:false, parsedURI:true, parsedPostArgs:false, keepBodyBuffer:true, isTLS:false, timeout:0, UseHostHeader:false, DisableRedirectPathNormalizing:false}, Response:fasthttp.Response{noCopy:fasthttp.noCopy{}, Header:fasthttp.ResponseHeader{noCopy:fasthttp.noCopy{}, disableNormalizing:false, noHTTP11:false, connectionClose:false, noDefaultContentType:false, noDefaultDate:false, statusCode:0, statusMessage:[]uint8(nil), protocol:[]uint8(nil), contentLength:0, contentLengthBytes:[]uint8(nil), secureErrorLogMessage:false, contentType:[]uint8(nil), contentEncoding:[]uint8(nil), server:[]uint8(nil), mulHeader:[][]uint8(nil), h:[]fasthttp.argsKV{fasthttp.argsKV{key:[]uint8{0x56, 0x61, 0x72, 0x79}, value:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, noValue:false}}, trailer:[]fasthttp.argsKV(nil), bufKV:fasthttp.argsKV{key:[]uint8{0x56, 0x61, 0x72, 0x79}, value:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, noValue:false}, cookies:[]fasthttp.argsKV(nil)}, ImmediateHeaderFlush:false, StreamBody:false, bodyStream:io.Reader(nil), w:fasthttp.responseBodyWriter{r:(*fasthttp.Response)(nil)}, body:(*bytebufferpool.ByteBuffer)(nil), bodyRaw:[]uint8(nil), SkipBody:false, keepBodyBuffer:true, secureErrorLogMessage:false, raddr:net.Addr(nil), laddr:net.Addr(nil)}, userValues:fasthttp.userData{fasthttp.userDataKV{key:\"user\", value:\"test-user\"}}, connID:0x3a, connRequestNum:0x1, connTime:time.Time{wall:0xc23a0eb56499a54c, ext:123725001, loc:(*time.Location)(0x32e2480)}, remoteAddr:net.Addr(nil), time:time.Time{wall:0xc23a0eb56499a54c, ext:123725001, loc:(*time.Location)(0x32e2480)}, logger:fasthttp.ctxLogger{ctx:(*fasthttp.RequestCtx)(nil), logger:fasthttp.Logger(nil)}, s:(*fasthttp.Server)(0xc000246000), c:(*fiber.testConn)(0xc0005c0550), fbr:fasthttp.firstByteReader{c:net.Conn(nil), ch:0x0, byteRead:false}, timeoutResponse:(*fasthttp.Response)(nil), timeoutCh:(chan struct {})(nil), timeoutTimer:(*time.Timer)(nil), hijackHandler:(fasthttp.HijackHandler)(nil), hijackNoResponse:false, formValueFunc:(fasthttp.FormValueFunc)(nil)}\n\t\t1: &models.RateStudentSessionInput{PatchSessionStudentInput:models.PatchSessionStudentInput{SessionID:uuid.UUID{0x12, 0x3e, 0x45, 0x67, 0xe8, 0x9b, 0x12, 0xd3, 0xa4, 0x56, 0x42, 0x66, 0x14, 0x17, 0x40, 0x0}, StudentID:uuid.UUID{0x98, 0x7f, 0xcd, 0xeb, 0x51, 0xa2, 0x43, 0xd1, 0x9c, 0x4f, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc}, Present:(*bool)(nil), Notes:(*string)(0xc0008b44c0)}, Ratings:[]models.RateInput(nil)}\n\tat: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/storage/mocks/session_student_repository.go:34 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/handler/session_student/patch_student_session.go:62 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1030 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server.go:112 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1030 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/cors/cors.go:173 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/logger/logger.go:119 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/compress/compress.go:55 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/favicon/favicon.go:121 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/recover/recover.go:43 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:170 C:/Users/aahil/go/pkg/mod/github.com/valyala/fasthttp@v1.51.0/server.go:2359 C:/Users/aahil/go/pkg/mod/github.com/valyala/fasthttp@v1.51.0/server.go:2028 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/app.go:950 C:/Program Files/Go/src/runtime/asm_amd64.s:1700]" method=PATCH path=/api/v1/session_students
+    server_test.go:1576: 
+        	Error Trace:	C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1576
+        	Error:      	Not equal: 
+        	            	expected: 200
+        	            	actual  : 500
+        	Test:       	TestPatchSessionStudentEndpoint/Successful_patch_-_notes_only
+    server_test.go:1577: FAIL:	PatchSessionStudent(string,mock.anythingOfTypeArgument)
+        		at: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1513 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1562]
+    server_test.go:1577: FAIL: 0 out of 1 expectation(s) were met.
+        	The code you are testing needs to make 1 more call(s).
+        	at: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1577]
+=== RUN   TestPatchSessionStudentEndpoint/Missing_session_ID
+15:47:17 | 400 |            0s | 0.0.0.0 | PATCH | /api/v1/session_students | -
+=== RUN   TestPatchSessionStudentEndpoint/Relationship_not_found
+2025/11/02 15:47:17 ERROR HTTP API error err="\nassert: mock: I don't know what to return because the method call was unexpected.\n\tEither do Mock.On(\"RateStudentSession\").Return(...) first, or remove the RateStudentSession() call.\n\tThis method was unexpected:\n\t\tRateStudentSession(*fasthttp.RequestCtx,*models.RateStudentSessionInput)\n\t\t0: &fasthttp.RequestCtx{noCopy:fasthttp.noCopy{}, Request:fasthttp.Request{noCopy:fasthttp.noCopy{}, Header:fasthttp.RequestHeader{noCopy:fasthttp.noCopy{}, disableNormalizing:false, noHTTP11:false, connectionClose:false, noDefaultContentType:false, disableSpecialHeader:false, cookiesCollected:true, contentLength:142, contentLengthBytes:[]uint8{0x31, 0x34, 0x32}, secureErrorLogMessage:false, method:[]uint8{0x50, 0x41, 0x54, 0x43, 0x48}, requestURI:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, proto:[]uint8{0x48, 0x54, 0x54, 0x50, 0x2f, 0x31, 0x2e, 0x31}, host:[]uint8{0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d}, contentType:[]uint8{0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e}, userAgent:[]uint8(nil), mulHeader:[][]uint8(nil), h:[]fasthttp.argsKV(nil), trailer:[]fasthttp.argsKV(nil), bufKV:fasthttp.argsKV{key:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, value:[]uint8(nil), noValue:false}, cookies:[]fasthttp.argsKV(nil), rawHeaders:[]uint8{0x48, 0x6f, 0x73, 0x74, 0x3a, 0x20, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0xd, 0xa, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x3a, 0x20, 0x31, 0x34, 0x32, 0xd, 0xa, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x54, 0x79, 0x70, 0x65, 0x3a, 0x20, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e, 0xd, 0xa, 0xd, 0xa}}, uri:fasthttp.URI{noCopy:fasthttp.noCopy{}, pathOriginal:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, scheme:[]uint8(nil), path:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, queryString:[]uint8(nil), hash:[]uint8(nil), host:[]uint8{0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d}, queryArgs:fasthttp.Args{noCopy:fasthttp.noCopy{}, args:[]fasthttp.argsKV(nil), buf:[]uint8(nil)}, parsedQueryArgs:false, DisablePathNormalizing:false, fullURI:[]uint8(nil), requestURI:[]uint8(nil), username:[]uint8(nil), password:[]uint8(nil)}, postArgs:fasthttp.Args{noCopy:fasthttp.noCopy{}, args:[]fasthttp.argsKV(nil), buf:[]uint8(nil)}, bodyStream:io.Reader(nil), w:fasthttp.requestBodyWriter{r:(*fasthttp.Request)(nil)}, body:(*bytebufferpool.ByteBuffer)(0xc000009ef0), bodyRaw:[]uint8(nil), multipartForm:(*multipart.Form)(nil), multipartFormBoundary:\"\", secureErrorLogMessage:false, parsedURI:true, parsedPostArgs:false, keepBodyBuffer:true, isTLS:false, timeout:0, UseHostHeader:false, DisableRedirectPathNormalizing:false}, Response:fasthttp.Response{noCopy:fasthttp.noCopy{}, Header:fasthttp.ResponseHeader{noCopy:fasthttp.noCopy{}, disableNormalizing:false, noHTTP11:false, connectionClose:false, noDefaultContentType:false, noDefaultDate:false, statusCode:0, statusMessage:[]uint8(nil), protocol:[]uint8(nil), contentLength:0, contentLengthBytes:[]uint8(nil), secureErrorLogMessage:false, contentType:[]uint8(nil), contentEncoding:[]uint8(nil), server:[]uint8(nil), mulHeader:[][]uint8(nil), h:[]fasthttp.argsKV{fasthttp.argsKV{key:[]uint8{0x56, 0x61, 0x72, 0x79}, value:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, noValue:false}}, trailer:[]fasthttp.argsKV(nil), bufKV:fasthttp.argsKV{key:[]uint8{0x56, 0x61, 0x72, 0x79}, value:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, noValue:false}, cookies:[]fasthttp.argsKV(nil)}, ImmediateHeaderFlush:false, StreamBody:false, bodyStream:io.Reader(nil), w:fasthttp.responseBodyWriter{r:(*fasthttp.Response)(nil)}, body:(*bytebufferpool.ByteBuffer)(nil), bodyRaw:[]uint8(nil), SkipBody:false, keepBodyBuffer:true, secureErrorLogMessage:false, raddr:net.Addr(nil), laddr:net.Addr(nil)}, userValues:fasthttp.userData{fasthttp.userDataKV{key:\"user\", value:\"test-user\"}}, connID:0x3c, connRequestNum:0x1, connTime:time.Time{wall:0xc23a0eb564b2b938, ext:125368501, loc:(*time.Location)(0x32e2480)}, remoteAddr:net.Addr(nil), time:time.Time{wall:0xc23a0eb564b2b938, ext:125368501, loc:(*time.Location)(0x32e2480)}, logger:fasthttp.ctxLogger{ctx:(*fasthttp.RequestCtx)(nil), logger:fasthttp.Logger(nil)}, s:(*fasthttp.Server)(0xc000247400), c:(*fiber.testConn)(0xc0005c1900), fbr:fasthttp.firstByteReader{c:net.Conn(nil), ch:0x0, byteRead:false}, timeoutResponse:(*fasthttp.Response)(nil), timeoutCh:(chan struct {})(nil), timeoutTimer:(*time.Timer)(nil), hijackHandler:(fasthttp.HijackHandler)(nil), hijackNoResponse:false, formValueFunc:(fasthttp.FormValueFunc)(nil)}\n\t\t1: &models.RateStudentSessionInput{PatchSessionStudentInput:models.PatchSessionStudentInput{SessionID:uuid.UUID{0x12, 0x3e, 0x45, 0x67, 0xe8, 0x9b, 0x12, 0xd3, 0xa4, 0x56, 0x42, 0x66, 0x14, 0x17, 0x40, 0x0}, StudentID:uuid.UUID{0x98, 0x7f, 0xcd, 0xeb, 0x51, 0xa2, 0x43, 0xd1, 0x9c, 0x4f, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc}, Present:(*bool)(0xc000592ef0), Notes:(*string)(nil)}, Ratings:[]models.RateInput(nil)}\n\tat: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/storage/mocks/session_student_repository.go:34 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/handler/session_student/patch_student_session.go:62 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1030 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server.go:112 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1030 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/cors/cors.go:173 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/logger/logger.go:119 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/compress/compress.go:55 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/favicon/favicon.go:121 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/recover/recover.go:43 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:170 C:/Users/aahil/go/pkg/mod/github.com/valyala/fasthttp@v1.51.0/server.go:2359 C:/Users/aahil/go/pkg/mod/github.com/valyala/fasthttp@v1.51.0/server.go:2028 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/app.go:950 C:/Program Files/Go/src/runtime/asm_amd64.s:1700]" method=PATCH path=/api/v1/session_students
+    server_test.go:1576: 
+        	Error Trace:	C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1576
+        	Error:      	Not equal: 
+        	            	expected: 404
+        	            	actual  : 500
+        	Test:       	TestPatchSessionStudentEndpoint/Relationship_not_found
+    server_test.go:1577: FAIL:	PatchSessionStudent(string,mock.anythingOfTypeArgument)
+        		at: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1541 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1562]
+    server_test.go:1577: FAIL: 0 out of 1 expectation(s) were met.
+        	The code you are testing needs to make 1 more call(s).
+        	at: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1577]
+=== RUN   TestPatchSessionStudentEndpoint/Foreign_key_violation
+2025/11/02 15:47:17 ERROR HTTP API error err="\nassert: mock: I don't know what to return because the method call was unexpected.\n\tEither do Mock.On(\"RateStudentSession\").Return(...) first, or remove the RateStudentSession() call.\n\tThis method was unexpected:\n\t\tRateStudentSession(*fasthttp.RequestCtx,*models.RateStudentSessionInput)\n\t\t0: &fasthttp.RequestCtx{noCopy:fasthttp.noCopy{}, Request:fasthttp.Request{noCopy:fasthttp.noCopy{}, Header:fasthttp.RequestHeader{noCopy:fasthttp.noCopy{}, disableNormalizing:false, noHTTP11:false, connectionClose:false, noDefaultContentType:false, disableSpecialHeader:false, cookiesCollected:true, contentLength:142, contentLengthBytes:[]uint8{0x31, 0x34, 0x32}, secureErrorLogMessage:false, method:[]uint8{0x50, 0x41, 0x54, 0x43, 0x48}, requestURI:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, proto:[]uint8{0x48, 0x54, 0x54, 0x50, 0x2f, 0x31, 0x2e, 0x31}, host:[]uint8{0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d}, contentType:[]uint8{0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e}, userAgent:[]uint8(nil), mulHeader:[][]uint8(nil), h:[]fasthttp.argsKV(nil), trailer:[]fasthttp.argsKV(nil), bufKV:fasthttp.argsKV{key:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, value:[]uint8(nil), noValue:false}, cookies:[]fasthttp.argsKV(nil), rawHeaders:[]uint8{0x48, 0x6f, 0x73, 0x74, 0x3a, 0x20, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0xd, 0xa, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x3a, 0x20, 0x31, 0x34, 0x32, 0xd, 0xa, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x54, 0x79, 0x70, 0x65, 0x3a, 0x20, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e, 0xd, 0xa, 0xd, 0xa}}, uri:fasthttp.URI{noCopy:fasthttp.noCopy{}, pathOriginal:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, scheme:[]uint8(nil), path:[]uint8{0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x73}, queryString:[]uint8(nil), hash:[]uint8(nil), host:[]uint8{0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d}, queryArgs:fasthttp.Args{noCopy:fasthttp.noCopy{}, args:[]fasthttp.argsKV(nil), buf:[]uint8(nil)}, parsedQueryArgs:false, DisablePathNormalizing:false, fullURI:[]uint8(nil), requestURI:[]uint8(nil), username:[]uint8(nil), password:[]uint8(nil)}, postArgs:fasthttp.Args{noCopy:fasthttp.noCopy{}, args:[]fasthttp.argsKV(nil), buf:[]uint8(nil)}, bodyStream:io.Reader(nil), w:fasthttp.requestBodyWriter{r:(*fasthttp.Request)(nil)}, body:(*bytebufferpool.ByteBuffer)(0xc0005982a0), bodyRaw:[]uint8(nil), multipartForm:(*multipart.Form)(nil), multipartFormBoundary:\"\", secureErrorLogMessage:false, parsedURI:true, parsedPostArgs:false, keepBodyBuffer:true, isTLS:false, timeout:0, UseHostHeader:false, DisableRedirectPathNormalizing:false}, Response:fasthttp.Response{noCopy:fasthttp.noCopy{}, Header:fasthttp.ResponseHeader{noCopy:fasthttp.noCopy{}, disableNormalizing:false, noHTTP11:false, connectionClose:false, noDefaultContentType:false, noDefaultDate:false, statusCode:0, statusMessage:[]uint8(nil), protocol:[]uint8(nil), contentLength:0, contentLengthBytes:[]uint8(nil), secureErrorLogMessage:false, contentType:[]uint8(nil), contentEncoding:[]uint8(nil), server:[]uint8(nil), mulHeader:[][]uint8(nil), h:[]fasthttp.argsKV{fasthttp.argsKV{key:[]uint8{0x56, 0x61, 0x72, 0x79}, value:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, noValue:false}}, trailer:[]fasthttp.argsKV(nil), bufKV:fasthttp.argsKV{key:[]uint8{0x56, 0x61, 0x72, 0x79}, value:[]uint8{0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e}, noValue:false}, cookies:[]fasthttp.argsKV(nil)}, ImmediateHeaderFlush:false, StreamBody:false, bodyStream:io.Reader(nil), w:fasthttp.responseBodyWriter{r:(*fasthttp.Response)(nil)}, body:(*bytebufferpool.ByteBuffer)(nil), bodyRaw:[]uint8(nil), SkipBody:false, keepBodyBuffer:true, secureErrorLogMessage:false, raddr:net.Addr(nil), laddr:net.Addr(nil)}, userValues:fasthttp.userData{fasthttp.userDataKV{key:\"user\", value:\"test-user\"}}, connID:0x3d, connRequestNum:0x1, connTime:time.Time{wall:0xc23a0eb564c88c54, ext:126798801, loc:(*time.Location)(0x32e2480)}, remoteAddr:net.Addr(nil), time:time.Time{wall:0xc23a0eb564c88c54, ext:126798801, loc:(*time.Location)(0x32e2480)}, logger:fasthttp.ctxLogger{ctx:(*fasthttp.RequestCtx)(nil), logger:fasthttp.Logger(nil)}, s:(*fasthttp.Server)(0xc000247c00), c:(*fiber.testConn)(0xc0001f02d0), fbr:fasthttp.firstByteReader{c:net.Conn(nil), ch:0x0, byteRead:false}, timeoutResponse:(*fasthttp.Response)(nil), timeoutCh:(chan struct {})(nil), timeoutTimer:(*time.Timer)(nil), hijackHandler:(fasthttp.HijackHandler)(nil), hijackNoResponse:false, formValueFunc:(fasthttp.FormValueFunc)(nil)}\n\t\t1: &models.RateStudentSessionInput{PatchSessionStudentInput:models.PatchSessionStudentInput{SessionID:uuid.UUID{0x12, 0x3e, 0x45, 0x67, 0xe8, 0x9b, 0x12, 0xd3, 0xa4, 0x56, 0x42, 0x66, 0x14, 0x17, 0x40, 0x0}, StudentID:uuid.UUID{0x98, 0x7f, 0xcd, 0xeb, 0x51, 0xa2, 0x43, 0xd1, 0x9c, 0x4f, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc}, Present:(*bool)(0xc000593800), Notes:(*string)(nil)}, Ratings:[]models.RateInput(nil)}\n\tat: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/storage/mocks/session_student_repository.go:34 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/handler/session_student/patch_student_session.go:62 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1030 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server.go:112 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1030 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/cors/cors.go:173 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/logger/logger.go:119 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/compress/compress.go:55 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/favicon/favicon.go:121 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/ctx.go:1027 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/middleware/recover/recover.go:43 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:143 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/router.go:170 C:/Users/aahil/go/pkg/mod/github.com/valyala/fasthttp@v1.51.0/server.go:2359 C:/Users/aahil/go/pkg/mod/github.com/valyala/fasthttp@v1.51.0/server.go:2028 C:/Users/aahil/go/pkg/mod/github.com/gofiber/fiber/v2@v2.52.9/app.go:950 C:/Program Files/Go/src/runtime/asm_amd64.s:1700]" method=PATCH path=/api/v1/session_students
+    server_test.go:1576: 
+        	Error Trace:	C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1576
+        	Error:      	Not equal: 
+        	            	expected: 400
+        	            	actual  : 500
+        	Test:       	TestPatchSessionStudentEndpoint/Foreign_key_violation
+    server_test.go:1577: FAIL:	PatchSessionStudent(string,mock.anythingOfTypeArgument)
+        		at: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1553 C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1562]
+    server_test.go:1577: FAIL: 0 out of 1 expectation(s) were met.
+        	The code you are testing needs to make 1 more call(s).
+        	at: [C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/service/server_test.go:1577]
+--- FAIL: TestPatchSessionStudentEndpoint (0.01s)
+    --- FAIL: TestPatchSessionStudentEndpoint/Successful_patch_-_present_only (0.00s)
+    --- FAIL: TestPatchSessionStudentEndpoint/Successful_patch_-_notes_only (0.00s)
+    --- PASS: TestPatchSessionStudentEndpoint/Missing_session_ID (0.00s)
+    --- FAIL: TestPatchSessionStudentEndpoint/Relationship_not_found (0.00s)
+    --- FAIL: TestPatchSessionStudentEndpoint/Foreign_key_violation (0.00s)
+=== RUN   TestGetResourcesBySessionIDEndpoint_Success
+15:47:17 | 200 |       896.7µs | 0.0.0.0 | GET | /api/v1/sessions/0ee9f193-ca9a-47fe-a37c-49fd8eda6089/resources | -
+--- PASS: TestGetResourcesBySessionIDEndpoint_Success (0.00s)
+=== RUN   TestGetResourcesBySessionIDEndpoint_EmptyArray
+15:47:17 | 200 |            0s | 0.0.0.0 | GET | /api/v1/sessions/74557d1a-992f-491a-959e-f95d455a5170/resources | -
+--- PASS: TestGetResourcesBySessionIDEndpoint_EmptyArray (0.00s)
+=== RUN   TestGetResourcesBySessionIDEndpoint_InvalidUUID
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 map[id:Invalid UUID format]" method=GET path=/api/v1/sessions/invalid-uuid/resources
+15:47:17 | 400 |            0s | 0.0.0.0 | GET | /api/v1/sessions/invalid-uuid/resources | http error: 400 map[id:Invalid UUID format]
+--- PASS: TestGetResourcesBySessionIDEndpoint_InvalidUUID (0.00s)
+=== RUN   TestGetResourcesBySessionIDEndpoint_InternalError
+2025/11/02 15:47:17 ERROR Failed to get session's resources id=d11c8caa-a683-4e13-a0a6-9d2771fa7a98 err="database error"
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 500 Failed to retrieve session resources" method=GET path=/api/v1/sessions/d11c8caa-a683-4e13-a0a6-9d2771fa7a98/resources
+15:47:17 | 500 |      2.5207ms | 0.0.0.0 | GET | /api/v1/sessions/d11c8caa-a683-4e13-a0a6-9d2771fa7a98/resources | http error: 500 Failed to retrieve session resources
+--- PASS: TestGetResourcesBySessionIDEndpoint_InternalError (0.00s)
+=== RUN   TestPostSessionResourceEndpoint_Success
+15:47:17 | 201 |            0s | 0.0.0.0 | POST | /api/v1/session-resource | -
+--- PASS: TestPostSessionResourceEndpoint_Success (0.00s)
+=== RUN   TestPostSessionResourceEndpoint_SessionNotFound
+2025/11/02 15:47:17 ERROR Failed to post session_resource err=":  (SQLSTATE 23503)"
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 404 session not found" method=POST path=/api/v1/session-resource
+15:47:17 | 404 |       531.6µs | 0.0.0.0 | POST | /api/v1/session-resource | http error: 404 session not found
+--- PASS: TestPostSessionResourceEndpoint_SessionNotFound (0.00s)
+=== RUN   TestPostSessionResourceEndpoint_ResourceNotFound
+2025/11/02 15:47:17 ERROR Failed to post session_resource err=":  (SQLSTATE 23503)"
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 404 session not found" method=POST path=/api/v1/session-resource
+15:47:17 | 404 |            0s | 0.0.0.0 | POST | /api/v1/session-resource | http error: 404 session not found
+--- PASS: TestPostSessionResourceEndpoint_ResourceNotFound (0.00s)
+=== RUN   TestPostSessionResourceEndpoint_InvalidBody
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Failed to parse PostSessionResource request body" method=POST path=/api/v1/session-resource
+15:47:17 | 400 |         535µs | 0.0.0.0 | POST | /api/v1/session-resource | http error: 400 Failed to parse PostSessionResource request body
+--- PASS: TestPostSessionResourceEndpoint_InvalidBody (0.00s)
+=== RUN   TestPostSessionResourceEndpoint_MissingFields
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Failed to parse PostSessionResource request body" method=POST path=/api/v1/session-resource
+15:47:17 | 400 |            0s | 0.0.0.0 | POST | /api/v1/session-resource | http error: 400 Failed to parse PostSessionResource request body
+--- PASS: TestPostSessionResourceEndpoint_MissingFields (0.00s)
+=== RUN   TestDeleteSessionResourceEndpoint_Success
+15:47:17 | 204 |            0s | 0.0.0.0 | DELETE | /api/v1/session-resource | -
+--- PASS: TestDeleteSessionResourceEndpoint_Success (0.00s)
+=== RUN   TestDeleteSessionResourceEndpoint_NotFound
+2025/11/02 15:47:17 ERROR Failed to delete session_resource err="session resource relationship not found"
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 404 session or resource not found" method=DELETE path=/api/v1/session-resource
+15:47:17 | 404 |            0s | 0.0.0.0 | DELETE | /api/v1/session-resource | http error: 404 session or resource not found
+--- PASS: TestDeleteSessionResourceEndpoint_NotFound (0.00s)
+=== RUN   TestDeleteSessionResourceEndpoint_InvalidBody
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Failed to parse DeleteSessionResource data" method=DELETE path=/api/v1/session-resource
+15:47:17 | 400 |            0s | 0.0.0.0 | DELETE | /api/v1/session-resource | http error: 400 Failed to parse DeleteSessionResource data
+--- PASS: TestDeleteSessionResourceEndpoint_InvalidBody (0.00s)
+=== RUN   TestDeleteSessionResourceEndpoint_MissingFields
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Failed to parse DeleteSessionResource data" method=DELETE path=/api/v1/session-resource
+15:47:17 | 400 |            0s | 0.0.0.0 | DELETE | /api/v1/session-resource | http error: 400 Failed to parse DeleteSessionResource data
+--- PASS: TestDeleteSessionResourceEndpoint_MissingFields (0.00s)
+=== RUN   TestDeleteSessionResourceEndpoint_InternalError
+2025/11/02 15:47:17 ERROR Failed to delete session_resource err="database error"
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 500 Failed to Delete Session Resource" method=DELETE path=/api/v1/session-resource
+15:47:17 | 500 |       535.6µs | 0.0.0.0 | DELETE | /api/v1/session-resource | http error: 500 Failed to Delete Session Resource
+--- PASS: TestDeleteSessionResourceEndpoint_InternalError (0.00s)
+=== RUN   TestHandler_Signup
+=== RUN   TestHandler_Signup/Invalid_Request_Body
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Invalid Request Body: json: cannot unmarshal number into Go struct field Credentials.first_name of type string" method=POST path=/signup
+=== RUN   TestHandler_Signup/Successful_Signup_Request
+--- PASS: TestHandler_Signup (0.03s)
+    --- PASS: TestHandler_Signup/Invalid_Request_Body (0.02s)
+    --- PASS: TestHandler_Signup/Successful_Signup_Request (0.00s)
+=== RUN   TestHandler_Login
+=== RUN   TestHandler_Login/Invalid_Request_Body
+2025/11/02 15:47:17 ERROR HTTP API error err="http error: 400 Invalid Request Body: {  <nil> <nil> false}" method=POST path=/login
+=== RUN   TestHandler_Login/Successful_Login_Request
+false
+--- PASS: TestHandler_Login (0.00s)
+    --- PASS: TestHandler_Login/Invalid_Request_Body (0.00s)
+    --- PASS: TestHandler_Login/Successful_Login_Request (0.00s)
+=== RUN   TestEndpoint_PromoteStudents
+15:47:17 | 200 |       539.6µs | 0.0.0.0 | PATCH | /api/v1/students/promote | -
+--- PASS: TestEndpoint_PromoteStudents (0.00s)
+FAIL
+FAIL	specialstandard/internal/service	0.654s
+?   	specialstandard/internal/service/authsession	[no test files]
+=== RUN   TestHandler_SignUp
+=== RUN   TestHandler_SignUp/Invalid_Request_Body
+2025/10/29 20:05:42 ERROR HTTP API error err="http error: 400 Invalid Request Body: json: cannot unmarshal number into Go struct field Credentials.first_name of type string" method=POST path=/signup
+=== RUN   TestHandler_SignUp/Successful_Signup_Request
+--- PASS: TestHandler_SignUp (0.01s)
+    --- PASS: TestHandler_SignUp/Invalid_Request_Body (0.01s)
+    --- PASS: TestHandler_SignUp/Successful_Signup_Request (0.01s)
+=== RUN   TestHandler_Login
+=== RUN   TestHandler_Login/Invalid_Request_Body
+2025/10/29 20:05:42 ERROR HTTP API error err="http error: 400 Invalid Request Body: {  <nil> <nil> false}" method=POST path=/login
+=== RUN   TestHandler_Login/Successful_Login_Request
+false
+--- PASS: TestHandler_Login (0.00s)
+    --- PASS: TestHandler_Login/Invalid_Request_Body (0.00s)
+    --- PASS: TestHandler_Login/Successful_Login_Request (0.00s)
+PASS
+ok  	specialstandard/internal/service/handler/auth	(cached)
+=== RUN   TestHandler_PostResource
+=== RUN   TestHandler_PostResource/successful_post_resource
+=== RUN   TestHandler_PostResource/repository_error
+--- PASS: TestHandler_PostResource (0.01s)
+    --- PASS: TestHandler_PostResource/successful_post_resource (0.01s)
+    --- PASS: TestHandler_PostResource/repository_error (0.00s)
+=== RUN   TestHandler_GetResource
+=== RUN   TestHandler_GetResource/successful_get_resource
+=== RUN   TestHandler_GetResource/repository_error
+--- PASS: TestHandler_GetResource (0.00s)
+    --- PASS: TestHandler_GetResource/successful_get_resource (0.00s)
+    --- PASS: TestHandler_GetResource/repository_error (0.00s)
+=== RUN   TestHandler_GetResources
+=== RUN   TestHandler_GetResources/successful_get_resources_with_default_pagination
+=== RUN   TestHandler_GetResources/empty_resources_list
+=== RUN   TestHandler_GetResources/theme_params_filter
+=== RUN   TestHandler_GetResources/invalid_theme_year_filter
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[theme_year:year is invalid]" method=GET path=/resources
+=== RUN   TestHandler_GetResources/repository_error
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 database error" method=GET path=/resources
+=== RUN   TestHandler_GetResources/Violating_Pagination_Arguments_Constraints
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[limit:Limit is invalid page:Page is invalid]" method=GET path=/resources
+=== RUN   TestHandler_GetResources/Bad_Pagination_Arguments
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid Pagination Query Parameters" method=GET path=/resources
+=== RUN   TestHandler_GetResources/Pagination_Parameters
+--- PASS: TestHandler_GetResources (0.01s)
+    --- PASS: TestHandler_GetResources/successful_get_resources_with_default_pagination (0.00s)
+    --- PASS: TestHandler_GetResources/empty_resources_list (0.00s)
+    --- PASS: TestHandler_GetResources/theme_params_filter (0.00s)
+    --- PASS: TestHandler_GetResources/invalid_theme_year_filter (0.01s)
+    --- PASS: TestHandler_GetResources/repository_error (0.00s)
+    --- PASS: TestHandler_GetResources/Violating_Pagination_Arguments_Constraints (0.00s)
+    --- PASS: TestHandler_GetResources/Bad_Pagination_Arguments (0.00s)
+    --- PASS: TestHandler_GetResources/Pagination_Parameters (0.00s)
+=== RUN   TestHandler_PatchResource
+=== RUN   TestHandler_PatchResource/repository_error
+--- PASS: TestHandler_PatchResource (0.00s)
+    --- PASS: TestHandler_PatchResource/repository_error (0.00s)
+=== RUN   TestHandler_DeleteResource
+=== RUN   TestHandler_DeleteResource/successful_delete_resource
+=== RUN   TestHandler_DeleteResource/repository_error
+--- PASS: TestHandler_DeleteResource (0.00s)
+    --- PASS: TestHandler_DeleteResource/successful_delete_resource (0.00s)
+    --- PASS: TestHandler_DeleteResource/repository_error (0.00s)
+PASS
+ok  	specialstandard/internal/service/handler/resource	(cached)
+=== RUN   TestHandler_GetSessions
+=== RUN   TestHandler_GetSessions/successful_get_sessions_with_default_pagination
+=== RUN   TestHandler_GetSessions/repository_error
+2025/11/02 15:47:18 ERROR Failed to get session err="database error"
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 500 Failed to retrieve sessions" method=GET path=/sessions/
+=== RUN   TestHandler_GetSessions/Violating_Pagination_Arguments_Constraints
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 map[limit:Limit is invalid page:Page is invalid]" method=GET path=/sessions
+=== RUN   TestHandler_GetSessions/Bad_Pagination_Arguments
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Invalid Pagination Query Parameters" method=GET path=/sessions
+=== RUN   TestHandler_GetSessions/Pagination_Parameters
+--- PASS: TestHandler_GetSessions (0.01s)
+    --- PASS: TestHandler_GetSessions/successful_get_sessions_with_default_pagination (0.01s)
+    --- PASS: TestHandler_GetSessions/repository_error (0.00s)
+    --- PASS: TestHandler_GetSessions/Violating_Pagination_Arguments_Constraints (0.00s)
+    --- PASS: TestHandler_GetSessions/Bad_Pagination_Arguments (0.00s)
+    --- PASS: TestHandler_GetSessions/Pagination_Parameters (0.00s)
+=== RUN   TestHandler_DeleteSessions
+=== RUN   TestHandler_DeleteSessions/Bad_UUID_Request
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Parsing Error: Invalid ID Format. ID: 00000000-0000-0000-0000-000000000000" method=DELETE path=/sessions/1234
+=== RUN   TestHandler_DeleteSessions/Successful_Delete_Session
+=== RUN   TestHandler_DeleteSessions/internal_server_error
+2025/11/02 15:47:18 ERROR Failed to delete session id=0f4e9e00-0c44-437c-8a0d-3cbbab96e986 err="database error"
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 500 Internal Server Error" method=DELETE path=/sessions/0f4e9e00-0c44-437c-8a0d-3cbbab96e986
+--- PASS: TestHandler_DeleteSessions (0.00s)
+    --- PASS: TestHandler_DeleteSessions/Bad_UUID_Request (0.00s)
+    --- PASS: TestHandler_DeleteSessions/Successful_Delete_Session (0.00s)
+    --- PASS: TestHandler_DeleteSessions/internal_server_error (0.00s)
+=== RUN   TestHandler_PostSessions
+=== RUN   TestHandler_PostSessions/Missing_Items,_Invalid_JSON
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 map[therapistid:TherapistID is required]" method=POST path=/sessions
+=== RUN   TestHandler_PostSessions/Empty_Values_that_are_Required
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Failed to parse PostSessionInput data" method=POST path=/sessions
+=== RUN   TestHandler_PostSessions/Foreign_Key_Violation:_Therapist_ID_doesn't_exist._DOCTOR_WHO?!
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 500 Failed to GetDB" method=POST path=/sessions
+=== RUN   TestHandler_PostSessions/Start_time_and_end_time_(check_constraint_violation)
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 500 Failed to GetDB" method=POST path=/sessions
+=== RUN   TestHandler_PostSessions/Success!
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 500 Failed to GetDB" method=POST path=/sessions
+=== RUN   TestHandler_PostSessions/Database_Connection_Refused
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 500 Failed to GetDB" method=POST path=/sessions
+--- PASS: TestHandler_PostSessions (0.00s)
+    --- PASS: TestHandler_PostSessions/Missing_Items,_Invalid_JSON (0.00s)
+    --- PASS: TestHandler_PostSessions/Empty_Values_that_are_Required (0.00s)
+    --- PASS: TestHandler_PostSessions/Foreign_Key_Violation:_Therapist_ID_doesn't_exist._DOCTOR_WHO?! (0.00s)
+    --- PASS: TestHandler_PostSessions/Start_time_and_end_time_(check_constraint_violation) (0.00s)
+    --- PASS: TestHandler_PostSessions/Success! (0.00s)
+    --- PASS: TestHandler_PostSessions/Database_Connection_Refused (0.00s)
+=== RUN   TestHandler_PatchSessions
+=== RUN   TestHandler_PatchSessions/Bad_UUID_Request
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Parsing Error with Invalid ID Format. ID: 00000000-0000-0000-0000-000000000000" method=PATCH path=/sessions/0345
+=== RUN   TestHandler_PatchSessions/Parsing_PatchInputSession_Error
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Failed to parse PatchSessionInput data" method=PATCH path=/sessions/7d01ce6f-e45e-4091-affe-983ccbcc37a4
+=== RUN   TestHandler_PatchSessions/Given_ID_not_found
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 404 Session Not Found" method=PATCH path=/sessions/403dbf03-e4af-4ce6-a49d-ec54cd925121
+=== RUN   TestHandler_PatchSessions/foreign_key_violation_-_DOCTOR_WHO?_We_don't_know..
+2025/11/02 15:47:18 ERROR Failed to patch session id=2392af21-9fbc-4d7f-b706-2dae14277adf err="foreign key"
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Invalid Reference" method=PATCH path=/sessions/2392af21-9fbc-4d7f-b706-2dae14277adf
+=== RUN   TestHandler_PatchSessions/check_constraint_violation
+2025/11/02 15:47:18 ERROR Failed to patch session id=e4ff5d4f-b49e-4bb8-a63e-e3927a0a0de5 err="check constraint"
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Violated a check constraint" method=PATCH path=/sessions/e4ff5d4f-b49e-4bb8-a63e-e3927a0a0de5
+=== RUN   TestHandler_PatchSessions/Successfully_changed_1_field
+=== RUN   TestHandler_PatchSessions/Successfully_changed_multiple_fields
+=== RUN   TestHandler_PatchSessions/Successfully_changed_all_patchable_fields
+--- PASS: TestHandler_PatchSessions (0.00s)
+    --- PASS: TestHandler_PatchSessions/Bad_UUID_Request (0.00s)
+    --- PASS: TestHandler_PatchSessions/Parsing_PatchInputSession_Error (0.00s)
+    --- PASS: TestHandler_PatchSessions/Given_ID_not_found (0.00s)
+    --- PASS: TestHandler_PatchSessions/foreign_key_violation_-_DOCTOR_WHO?_We_don't_know.. (0.00s)
+    --- PASS: TestHandler_PatchSessions/check_constraint_violation (0.00s)
+    --- PASS: TestHandler_PatchSessions/Successfully_changed_1_field (0.00s)
+    --- PASS: TestHandler_PatchSessions/Successfully_changed_multiple_fields (0.00s)
+    --- PASS: TestHandler_PatchSessions/Successfully_changed_all_patchable_fields (0.00s)
+PASS
+ok  	specialstandard/internal/service/handler/session	0.391s
+=== RUN   TestHandler_GetSessionResources
+=== RUN   TestHandler_GetSessionResources/Invalid_UUID_format
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[id:Invalid UUID format]" method=GET path=/sessions/invalid-uuid/resources
+=== RUN   TestHandler_GetSessionResources/Empty_ID_parameter
+2025/10/29 20:05:39 ERROR HTTP API error err="Cannot GET /sessions//resources" method=GET path=/sessions//resources
+=== RUN   TestHandler_GetSessionResources/successful_get_resources_-_multiple_resources_with_default_pagination
+=== RUN   TestHandler_GetSessionResources/successful_get_resources_-_empty_array
+=== RUN   TestHandler_GetSessionResources/repository_returns_nil_-_converts_to_empty_array
+=== RUN   TestHandler_GetSessionResources/repository_error
+2025/10/29 20:05:39 ERROR Failed to get session's resources id=825d76f5-baef-43ad-abba-a348d65f11a0 err="database error"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Failed to retrieve session resources" method=GET path=/sessions/825d76f5-baef-43ad-abba-a348d65f11a0/resources
+=== RUN   TestHandler_GetSessionResources/Violating_Pagination_Arguments_Constraints
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[limit:Limit is invalid page:Page is invalid]" method=GET path=/sessions/274ff681-2166-4fb2-8e98-04490f00fade/resources
+=== RUN   TestHandler_GetSessionResources/Bad_Pagination_Arguments
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid Pagination Query Parameters" method=GET path=/sessions/a3eb3246-8b91-4820-8964-79c787c5e781/resources
+=== RUN   TestHandler_GetSessionResources/Pagination_Parameters
+--- PASS: TestHandler_GetSessionResources (0.01s)
+    --- PASS: TestHandler_GetSessionResources/Invalid_UUID_format (0.01s)
+    --- PASS: TestHandler_GetSessionResources/Empty_ID_parameter (0.00s)
+    --- PASS: TestHandler_GetSessionResources/successful_get_resources_-_multiple_resources_with_default_pagination (0.00s)
+    --- PASS: TestHandler_GetSessionResources/successful_get_resources_-_empty_array (0.00s)
+    --- PASS: TestHandler_GetSessionResources/repository_returns_nil_-_converts_to_empty_array (0.00s)
+    --- PASS: TestHandler_GetSessionResources/repository_error (0.00s)
+    --- PASS: TestHandler_GetSessionResources/Violating_Pagination_Arguments_Constraints (0.00s)
+    --- PASS: TestHandler_GetSessionResources/Bad_Pagination_Arguments (0.00s)
+    --- PASS: TestHandler_GetSessionResources/Pagination_Parameters (0.00s)
+=== RUN   TestHandler_PostSessionResource
+=== RUN   TestHandler_PostSessionResource/Invalid_JSON
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Failed to parse PostSessionResource request body" method=POST path=/session-resource
+=== RUN   TestHandler_PostSessionResource/Invalid_UUID_format_in_session_id
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Failed to parse PostSessionResource request body" method=POST path=/session-resource
+=== RUN   TestHandler_PostSessionResource/Invalid_UUID_format_in_resource_id
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Failed to parse PostSessionResource request body" method=POST path=/session-resource
+=== RUN   TestHandler_PostSessionResource/Foreign_key_violation_-_session_not_found
+2025/10/29 20:05:39 ERROR Failed to post session_resource err="ERROR: insert or update on table \"session_resource\" violates foreign key constraint (SQLSTATE 23503)"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 404 session not found" method=POST path=/session-resource
+=== RUN   TestHandler_PostSessionResource/Check_constraint_violation
+2025/10/29 20:05:39 ERROR Failed to post session_resource err="violates check constraint"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Violated a check constraint" method=POST path=/session-resource
+=== RUN   TestHandler_PostSessionResource/Database_connection_error
+2025/10/29 20:05:39 ERROR Failed to post session_resource err="connection refused"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Database Connection Error" method=POST path=/session-resource
+=== RUN   TestHandler_PostSessionResource/Generic_database_error
+2025/10/29 20:05:39 ERROR Failed to post session_resource err="some database error"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Failed to Create Session Resource" method=POST path=/session-resource
+=== RUN   TestHandler_PostSessionResource/Success!
+--- PASS: TestHandler_PostSessionResource (0.00s)
+    --- PASS: TestHandler_PostSessionResource/Invalid_JSON (0.00s)
+    --- PASS: TestHandler_PostSessionResource/Invalid_UUID_format_in_session_id (0.00s)
+    --- PASS: TestHandler_PostSessionResource/Invalid_UUID_format_in_resource_id (0.00s)
+    --- PASS: TestHandler_PostSessionResource/Foreign_key_violation_-_session_not_found (0.00s)
+    --- PASS: TestHandler_PostSessionResource/Check_constraint_violation (0.00s)
+    --- PASS: TestHandler_PostSessionResource/Database_connection_error (0.00s)
+    --- PASS: TestHandler_PostSessionResource/Generic_database_error (0.00s)
+    --- PASS: TestHandler_PostSessionResource/Success! (0.00s)
+=== RUN   TestHandler_DeleteSessionResource
+=== RUN   TestHandler_DeleteSessionResource/Invalid_JSON
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Failed to parse DeleteSessionResource data" method=DELETE path=/session-resource
+=== RUN   TestHandler_DeleteSessionResource/Invalid_UUID_format
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Failed to parse DeleteSessionResource data" method=DELETE path=/session-resource
+=== RUN   TestHandler_DeleteSessionResource/Foreign_key_violation_-_session_or_resource_not_found
+2025/10/29 20:05:39 ERROR Failed to delete session_resource err="ERROR: violates foreign key constraint (SQLSTATE 23503)"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 404 session or resource not found" method=DELETE path=/session-resource
+=== RUN   TestHandler_DeleteSessionResource/Relationship_not_found
+2025/10/29 20:05:39 ERROR Failed to delete session_resource err="relationship not found"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 404 session or resource not found" method=DELETE path=/session-resource
+=== RUN   TestHandler_DeleteSessionResource/Database_connection_error
+2025/10/29 20:05:39 ERROR Failed to delete session_resource err="connection refused"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Database Connection Error" method=DELETE path=/session-resource
+=== RUN   TestHandler_DeleteSessionResource/Generic_database_error
+2025/10/29 20:05:39 ERROR Failed to delete session_resource err="some database error"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Failed to Delete Session Resource" method=DELETE path=/session-resource
+=== RUN   TestHandler_DeleteSessionResource/Success!
+--- PASS: TestHandler_DeleteSessionResource (0.00s)
+    --- PASS: TestHandler_DeleteSessionResource/Invalid_JSON (0.00s)
+    --- PASS: TestHandler_DeleteSessionResource/Invalid_UUID_format (0.00s)
+    --- PASS: TestHandler_DeleteSessionResource/Foreign_key_violation_-_session_or_resource_not_found (0.00s)
+    --- PASS: TestHandler_DeleteSessionResource/Relationship_not_found (0.00s)
+    --- PASS: TestHandler_DeleteSessionResource/Database_connection_error (0.00s)
+    --- PASS: TestHandler_DeleteSessionResource/Generic_database_error (0.00s)
+    --- PASS: TestHandler_DeleteSessionResource/Success! (0.00s)
+PASS
+ok  	specialstandard/internal/service/handler/session_resource	(cached)
+=== RUN   TestHandler_CreateSessionStudent
+=== RUN   TestHandler_CreateSessionStudent/successful_create_session_student
+=== RUN   TestHandler_CreateSessionStudent/successful_create_session_student_minimal_data
+=== RUN   TestHandler_CreateSessionStudent/invalid_JSON_body
+=== RUN   TestHandler_CreateSessionStudent/missing_session_id
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 map[sessionids:SessionIDs is required]" method=POST path=/session_students
+=== RUN   TestHandler_CreateSessionStudent/missing_student_id
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 map[studentids:StudentIDs is required]" method=POST path=/session_students
+=== RUN   TestHandler_CreateSessionStudent/invalid_session_id_format
+=== RUN   TestHandler_CreateSessionStudent/invalid_student_id_format
+=== RUN   TestHandler_CreateSessionStudent/empty_session_id_nil_uuid
+=== RUN   TestHandler_CreateSessionStudent/empty_student_id_nil_uuid
+=== RUN   TestHandler_CreateSessionStudent/duplicate_session_student_relationship
+=== RUN   TestHandler_CreateSessionStudent/repository_save_error
+=== RUN   TestHandler_CreateSessionStudent/empty_JSON_body
+=== RUN   TestHandler_CreateSessionStudent/unique_violation_conflict_error
+=== RUN   TestHandler_CreateSessionStudent/successful_multiple_session_ids
+--- PASS: TestHandler_CreateSessionStudent (0.03s)
+    --- PASS: TestHandler_CreateSessionStudent/successful_create_session_student (0.03s)
+    --- PASS: TestHandler_CreateSessionStudent/successful_create_session_student_minimal_data (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/invalid_JSON_body (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/missing_session_id (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/missing_student_id (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/invalid_session_id_format (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/invalid_student_id_format (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/empty_session_id_nil_uuid (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/empty_student_id_nil_uuid (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/duplicate_session_student_relationship (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/repository_save_error (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/empty_JSON_body (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/unique_violation_conflict_error (0.00s)
+    --- PASS: TestHandler_CreateSessionStudent/successful_multiple_session_ids (0.00s)
+=== RUN   TestHandler_PatchSessionStudent
+=== RUN   TestHandler_PatchSessionStudent/successful_patch_present_only
+=== RUN   TestHandler_PatchSessionStudent/successful_patch_notes_only
+=== RUN   TestHandler_PatchSessionStudent/successful_patch_both_fields
+=== RUN   TestHandler_PatchSessionStudent/successful_ratings_update_only
+=== RUN   TestHandler_PatchSessionStudent/invalid_ratings_category
+=== RUN   TestHandler_PatchSessionStudent/invalid_ratings_level
+=== RUN   TestHandler_PatchSessionStudent/invalid_JSON_body
+=== RUN   TestHandler_PatchSessionStudent/missing_session_id
+=== RUN   TestHandler_PatchSessionStudent/missing_student_id
+=== RUN   TestHandler_PatchSessionStudent/session_student_not_found
+2025/11/02 15:47:18 ERROR Failed to rate session student session_id=e6821aff-2a1d-4622-85d7-a62346bf4577 student_id=1beb75e7-33be-495d-9d01-5f0d38eb578e err="no rows affected"
+=== RUN   TestHandler_PatchSessionStudent/foreign_key_violation
+2025/11/02 15:47:18 ERROR Failed to rate session student session_id=e6821aff-2a1d-4622-85d7-a62346bf4577 student_id=1beb75e7-33be-495d-9d01-5f0d38eb578e err="foreign key violation"
+=== RUN   TestHandler_PatchSessionStudent/repository_error
+2025/11/02 15:47:18 ERROR Failed to rate session student session_id=e6821aff-2a1d-4622-85d7-a62346bf4577 student_id=1beb75e7-33be-495d-9d01-5f0d38eb578e err="database connection failed"
+--- PASS: TestHandler_PatchSessionStudent (0.02s)
+    --- PASS: TestHandler_PatchSessionStudent/successful_patch_present_only (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/successful_patch_notes_only (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/successful_patch_both_fields (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/successful_ratings_update_only (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/invalid_ratings_category (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/invalid_ratings_level (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/invalid_JSON_body (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/missing_session_id (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/missing_student_id (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/session_student_not_found (0.00s)
+    --- PASS: TestHandler_PatchSessionStudent/foreign_key_violation (0.02s)
+    --- PASS: TestHandler_PatchSessionStudent/repository_error (0.00s)
+=== RUN   TestHandler_DeleteSessionStudent
+=== RUN   TestHandler_DeleteSessionStudent/successful_delete_session_student
+=== RUN   TestHandler_DeleteSessionStudent/invalid_JSON_body
+=== RUN   TestHandler_DeleteSessionStudent/missing_session_id
+=== RUN   TestHandler_DeleteSessionStudent/missing_student_id
+=== RUN   TestHandler_DeleteSessionStudent/invalid_session_id_format
+=== RUN   TestHandler_DeleteSessionStudent/invalid_student_id_format
+=== RUN   TestHandler_DeleteSessionStudent/empty_session_id_nil_uuid
+=== RUN   TestHandler_DeleteSessionStudent/empty_student_id_nil_uuid
+=== RUN   TestHandler_DeleteSessionStudent/session_student_relationship_not_found
+=== RUN   TestHandler_DeleteSessionStudent/repository_delete_error
+--- PASS: TestHandler_DeleteSessionStudent (0.09s)
+    --- PASS: TestHandler_DeleteSessionStudent/successful_delete_session_student (0.00s)
+    --- PASS: TestHandler_DeleteSessionStudent/invalid_JSON_body (0.00s)
+    --- PASS: TestHandler_DeleteSessionStudent/missing_session_id (0.00s)
+    --- PASS: TestHandler_DeleteSessionStudent/missing_student_id (0.00s)
+    --- PASS: TestHandler_DeleteSessionStudent/invalid_session_id_format (0.04s)
+    --- PASS: TestHandler_DeleteSessionStudent/invalid_student_id_format (0.00s)
+    --- PASS: TestHandler_DeleteSessionStudent/empty_session_id_nil_uuid (0.00s)
+    --- PASS: TestHandler_DeleteSessionStudent/empty_student_id_nil_uuid (0.00s)
+    --- PASS: TestHandler_DeleteSessionStudent/session_student_relationship_not_found (0.00s)
+    --- PASS: TestHandler_DeleteSessionStudent/repository_delete_error (0.00s)
+PASS
+ok  	specialstandard/internal/service/handler/session_student	0.665s
+=== RUN   TestHandler_GetStudents
+=== RUN   TestHandler_GetStudents/successful_get_students_with_default_pagination
+=== RUN   TestHandler_GetStudents/empty_students_list
+=== RUN   TestHandler_GetStudents/repository_error
+2025/11/02 15:47:18 ERROR HTTP API error err="database error" method=GET path=/students
+=== RUN   TestHandler_GetStudents/Violating_Pagination_Arguments_Constraints
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 map[limit:Limit is invalid]" method=GET path=/students
+=== RUN   TestHandler_GetStudents/Bad_Pagination_Arguments
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Invalid Query Parameters" method=GET path=/students
+=== RUN   TestHandler_GetStudents/Pagination_Parameters
+=== RUN   TestHandler_GetStudents/successful_get_students_with_grade_filter
+=== RUN   TestHandler_GetStudents/successful_get_students_with_therapist_filter
+=== RUN   TestHandler_GetStudents/successful_get_students_with_name_filter
+=== RUN   TestHandler_GetStudents/successful_get_students_with_all_filters
+=== RUN   TestHandler_GetStudents/empty_results_with_filters
+=== RUN   TestHandler_GetStudents/case_insensitive_name_search
+=== RUN   TestHandler_GetStudents/filter_by_grade_with_pagination
+--- PASS: TestHandler_GetStudents (0.02s)
+    --- PASS: TestHandler_GetStudents/successful_get_students_with_default_pagination (0.02s)
+    --- PASS: TestHandler_GetStudents/empty_students_list (0.00s)
+    --- PASS: TestHandler_GetStudents/repository_error (0.00s)
+    --- PASS: TestHandler_GetStudents/Violating_Pagination_Arguments_Constraints (0.00s)
+    --- PASS: TestHandler_GetStudents/Bad_Pagination_Arguments (0.00s)
+    --- PASS: TestHandler_GetStudents/Pagination_Parameters (0.00s)
+    --- PASS: TestHandler_GetStudents/successful_get_students_with_grade_filter (0.00s)
+    --- PASS: TestHandler_GetStudents/successful_get_students_with_therapist_filter (0.00s)
+    --- PASS: TestHandler_GetStudents/successful_get_students_with_name_filter (0.00s)
+    --- PASS: TestHandler_GetStudents/successful_get_students_with_all_filters (0.00s)
+    --- PASS: TestHandler_GetStudents/empty_results_with_filters (0.00s)
+    --- PASS: TestHandler_GetStudents/case_insensitive_name_search (0.00s)
+    --- PASS: TestHandler_GetStudents/filter_by_grade_with_pagination (0.00s)
+=== RUN   TestHandler_GetStudent
+=== RUN   TestHandler_GetStudent/successful_get_student
+=== RUN   TestHandler_GetStudent/student_not_found
+=== RUN   TestHandler_GetStudent/invalid_UUID_format
+=== RUN   TestHandler_GetStudent/repository_error
+--- PASS: TestHandler_GetStudent (0.00s)
+    --- PASS: TestHandler_GetStudent/successful_get_student (0.00s)
+    --- PASS: TestHandler_GetStudent/student_not_found (0.00s)
+    --- PASS: TestHandler_GetStudent/invalid_UUID_format (0.00s)
+    --- PASS: TestHandler_GetStudent/repository_error (0.00s)
+=== RUN   TestHandler_UpdateStudent
+=== RUN   TestHandler_UpdateStudent/update_grade_only
+=== RUN   TestHandler_UpdateStudent/update_IEP_only
+=== RUN   TestHandler_UpdateStudent/update_name_and_grade
+=== RUN   TestHandler_UpdateStudent/update_DOB_with_valid_date
+=== RUN   TestHandler_UpdateStudent/invalid_UUID_format
+=== RUN   TestHandler_UpdateStudent/student_not_found
+=== RUN   TestHandler_UpdateStudent/invalid_JSON_body
+=== RUN   TestHandler_UpdateStudent/invalid_date_format
+=== RUN   TestHandler_UpdateStudent/invalid_therapist_UUID
+=== RUN   TestHandler_UpdateStudent/UpdateStudent_repository_error
+--- PASS: TestHandler_UpdateStudent (0.01s)
+    --- PASS: TestHandler_UpdateStudent/update_grade_only (0.00s)
+    --- PASS: TestHandler_UpdateStudent/update_IEP_only (0.00s)
+    --- PASS: TestHandler_UpdateStudent/update_name_and_grade (0.00s)
+    --- PASS: TestHandler_UpdateStudent/update_DOB_with_valid_date (0.00s)
+    --- PASS: TestHandler_UpdateStudent/invalid_UUID_format (0.00s)
+    --- PASS: TestHandler_UpdateStudent/student_not_found (0.00s)
+    --- PASS: TestHandler_UpdateStudent/invalid_JSON_body (0.00s)
+    --- PASS: TestHandler_UpdateStudent/invalid_date_format (0.01s)
+    --- PASS: TestHandler_UpdateStudent/invalid_therapist_UUID (0.00s)
+    --- PASS: TestHandler_UpdateStudent/UpdateStudent_repository_error (0.00s)
+=== RUN   TestHandler_AddStudent
+=== RUN   TestHandler_AddStudent/successful_create_student
+=== RUN   TestHandler_AddStudent/successful_create_student_with_different_data
+=== RUN   TestHandler_AddStudent/invalid_JSON_body
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 Invalid JSON format" method=POST path=/students
+=== RUN   TestHandler_AddStudent/missing_required_fields
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 map[lastname:LastName is required therapistid:TherapistID is required]" method=POST path=/students
+=== RUN   TestHandler_AddStudent/invalid_date_format
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 map[dob:DOB is invalid]" method=POST path=/students
+=== RUN   TestHandler_AddStudent/invalid_therapist_UUID_format
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 400 map[therapistid:TherapistID is invalid]" method=POST path=/students
+=== RUN   TestHandler_AddStudent/repository_save_error
+2025/11/02 15:47:18 ERROR HTTP API error err="http error: 500 Database error" method=POST path=/students
+=== RUN   TestHandler_AddStudent/valid_date_edge_cases
+--- PASS: TestHandler_AddStudent (0.01s)
+    --- PASS: TestHandler_AddStudent/successful_create_student (0.00s)
+    --- PASS: TestHandler_AddStudent/successful_create_student_with_different_data (0.00s)
+    --- PASS: TestHandler_AddStudent/invalid_JSON_body (0.00s)
+    --- PASS: TestHandler_AddStudent/missing_required_fields (0.00s)
+    --- PASS: TestHandler_AddStudent/invalid_date_format (0.00s)
+    --- PASS: TestHandler_AddStudent/invalid_therapist_UUID_format (0.01s)
+    --- PASS: TestHandler_AddStudent/repository_save_error (0.00s)
+    --- PASS: TestHandler_AddStudent/valid_date_edge_cases (0.00s)
+=== RUN   TestHandler_DeleteStudent
+=== RUN   TestHandler_DeleteStudent/successful_delete_student
+=== RUN   TestHandler_DeleteStudent/invalid_UUID_format
+=== RUN   TestHandler_DeleteStudent/repository_error
+--- PASS: TestHandler_DeleteStudent (0.00s)
+    --- PASS: TestHandler_DeleteStudent/successful_delete_student (0.00s)
+    --- PASS: TestHandler_DeleteStudent/invalid_UUID_format (0.00s)
+    --- PASS: TestHandler_DeleteStudent/repository_error (0.00s)
+PASS
+ok  	specialstandard/internal/service/handler/student	0.518s
+=== RUN   TestHandler_CreateTheme
+=== RUN   TestHandler_CreateTheme/successful_create_theme
+=== RUN   TestHandler_CreateTheme/invalid_JSON
+2025/10/29 20:05:39 ERROR Failed to parse theme JSON error="unexpected end of JSON input"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Failed to parse theme data" method=POST path=/themes
+=== RUN   TestHandler_CreateTheme/validation_error_-_missing_name
+2025/10/29 20:05:39 ERROR Theme validation failed errors="[{Error:true FailedField:Name Tag:required Value:}]"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[name:Name is required]" method=POST path=/themes
+=== RUN   TestHandler_CreateTheme/validation_error_-_invalid_month
+2025/10/29 20:05:39 ERROR Theme validation failed errors="[{Error:true FailedField:Month Tag:lte:12 Value:13}]"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[month:Month is invalid]" method=POST path=/themes
+=== RUN   TestHandler_CreateTheme/validation_error_-_invalid_year
+2025/10/29 20:05:39 ERROR Theme validation failed errors="[{Error:true FailedField:Year Tag:gte:1900 Value:1800}]"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[year:Year is invalid]" method=POST path=/themes
+=== RUN   TestHandler_CreateTheme/foreign_key_constraint_error
+2025/10/29 20:05:39 ERROR Foreign key constraint error creating theme error="foreign key constraint violated"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid reference to related data" method=POST path=/themes
+=== RUN   TestHandler_CreateTheme/database_connection_error
+2025/10/29 20:05:39 ERROR Database connection error creating theme error="connection refused"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Database connection error" method=POST path=/themes
+=== RUN   TestHandler_CreateTheme/repository_error
+2025/10/29 20:05:39 ERROR Failed to create theme error="database error"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Failed to create theme" method=POST path=/themes
+--- PASS: TestHandler_CreateTheme (0.01s)
+    --- PASS: TestHandler_CreateTheme/successful_create_theme (0.00s)
+    --- PASS: TestHandler_CreateTheme/invalid_JSON (0.00s)
+    --- PASS: TestHandler_CreateTheme/validation_error_-_missing_name (0.00s)
+    --- PASS: TestHandler_CreateTheme/validation_error_-_invalid_month (0.00s)
+    --- PASS: TestHandler_CreateTheme/validation_error_-_invalid_year (0.00s)
+    --- PASS: TestHandler_CreateTheme/foreign_key_constraint_error (0.00s)
+    --- PASS: TestHandler_CreateTheme/database_connection_error (0.00s)
+    --- PASS: TestHandler_CreateTheme/repository_error (0.00s)
+=== RUN   TestHandler_GetThemes
+=== RUN   TestHandler_GetThemes/successful_get_themes
+=== RUN   TestHandler_GetThemes/repository_error
+2025/10/29 20:05:39 ERROR Failed to fetch themes error="database error"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Failed to fetch themes" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Violating_Pagination_Arguments_Constraints
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[limit:Limit is invalid page:Page is invalid]" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Bad_Pagination_Arguments
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid Pagination Query Parameters" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Pagination_Parameters
+=== RUN   TestHandler_GetThemes/Filter_by_month
+=== RUN   TestHandler_GetThemes/Filter_by_year
+=== RUN   TestHandler_GetThemes/Filter_by_search_term
+=== RUN   TestHandler_GetThemes/Filter_by_multiple_parameters
+=== RUN   TestHandler_GetThemes/Invalid_month_filter
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[month:Month is invalid]" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Invalid_year_filter
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[year:Year is invalid]" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Invalid_month_filter_-_zero
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[month:Month is invalid]" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Invalid_month_filter_-_negative
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[month:Month is invalid]" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Invalid_year_filter_-_too_high
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[year:Year is invalid]" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Non-integer_month_parameter
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid Filter Query Parameters" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Non-integer_year_parameter
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid Filter Query Parameters" method=GET path=/themes
+=== RUN   TestHandler_GetThemes/Empty_search_parameter
+=== RUN   TestHandler_GetThemes/Combined_filters_with_pagination
+--- PASS: TestHandler_GetThemes (0.01s)
+    --- PASS: TestHandler_GetThemes/successful_get_themes (0.00s)
+    --- PASS: TestHandler_GetThemes/repository_error (0.00s)
+    --- PASS: TestHandler_GetThemes/Violating_Pagination_Arguments_Constraints (0.00s)
+    --- PASS: TestHandler_GetThemes/Bad_Pagination_Arguments (0.00s)
+    --- PASS: TestHandler_GetThemes/Pagination_Parameters (0.00s)
+    --- PASS: TestHandler_GetThemes/Filter_by_month (0.00s)
+    --- PASS: TestHandler_GetThemes/Filter_by_year (0.00s)
+    --- PASS: TestHandler_GetThemes/Filter_by_search_term (0.00s)
+    --- PASS: TestHandler_GetThemes/Filter_by_multiple_parameters (0.00s)
+    --- PASS: TestHandler_GetThemes/Invalid_month_filter (0.00s)
+    --- PASS: TestHandler_GetThemes/Invalid_year_filter (0.00s)
+    --- PASS: TestHandler_GetThemes/Invalid_month_filter_-_zero (0.00s)
+    --- PASS: TestHandler_GetThemes/Invalid_month_filter_-_negative (0.00s)
+    --- PASS: TestHandler_GetThemes/Invalid_year_filter_-_too_high (0.00s)
+    --- PASS: TestHandler_GetThemes/Non-integer_month_parameter (0.00s)
+    --- PASS: TestHandler_GetThemes/Non-integer_year_parameter (0.00s)
+    --- PASS: TestHandler_GetThemes/Empty_search_parameter (0.00s)
+    --- PASS: TestHandler_GetThemes/Combined_filters_with_pagination (0.00s)
+=== RUN   TestHandler_GetThemeByID
+=== RUN   TestHandler_GetThemeByID/successful_get_theme_by_id
+=== RUN   TestHandler_GetThemeByID/invalid_UUID_format
+2025/10/29 20:05:39 ERROR Invalid UUID format for theme ID id=invalid-uuid error="invalid UUID length: 12"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid UUID format" method=GET path=/themes/invalid-uuid
+=== RUN   TestHandler_GetThemeByID/theme_not_found
+2025/10/29 20:05:39 ERROR Database error getting theme id=47f51146-59cd-4ced-9040-fb3ebe7f8fdc error="http error: 404 Error querying database for given ID"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 404 Error querying database for given ID" method=GET path=/themes/47f51146-59cd-4ced-9040-fb3ebe7f8fdc
+=== RUN   TestHandler_GetThemeByID/repository_error
+2025/10/29 20:05:39 ERROR Database error getting theme id=5ecb5b84-279e-4104-bab7-fa111b0a127b error="database error"
+2025/10/29 20:05:39 ERROR HTTP API error err="database error" method=GET path=/themes/5ecb5b84-279e-4104-bab7-fa111b0a127b
+--- PASS: TestHandler_GetThemeByID (0.00s)
+    --- PASS: TestHandler_GetThemeByID/successful_get_theme_by_id (0.00s)
+    --- PASS: TestHandler_GetThemeByID/invalid_UUID_format (0.00s)
+    --- PASS: TestHandler_GetThemeByID/theme_not_found (0.00s)
+    --- PASS: TestHandler_GetThemeByID/repository_error (0.00s)
+=== RUN   TestHandler_PatchTheme
+=== RUN   TestHandler_PatchTheme/successful_patch_theme
+=== RUN   TestHandler_PatchTheme/invalid_UUID_format
+2025/10/29 20:05:39 ERROR Invalid UUID format for theme update id=invalid-uuid error="invalid UUID length: 12"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid UUID format" method=PATCH path=/themes/invalid-uuid
+=== RUN   TestHandler_PatchTheme/invalid_JSON
+2025/10/29 20:05:39 ERROR Failed to parse theme update JSON error="unexpected end of JSON input"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Failed to parse theme data" method=PATCH path=/themes/5d1b45bb-6bc3-4bd4-b019-81c56eda6701
+=== RUN   TestHandler_PatchTheme/validation_error_-_invalid_month
+2025/10/29 20:05:39 ERROR Theme update validation failed errors="[{Error:true FailedField:Month Tag:lte:12 Value:13}]"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[month:Month is invalid]" method=PATCH path=/themes/02f0d852-6f55-43c4-a5ed-3c8c458ef5f9
+=== RUN   TestHandler_PatchTheme/validation_error_-_invalid_year
+2025/10/29 20:05:39 ERROR Theme update validation failed errors="[{Error:true FailedField:Year Tag:gte:1900 Value:1800}]"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[year:Year is invalid]" method=PATCH path=/themes/3c59126a-91a0-4516-90a7-d3ab94a8fb63
+=== RUN   TestHandler_PatchTheme/no_fields_provided_to_update
+2025/10/29 20:05:39 ERROR Failed to update theme id=2305f882-27fb-46db-8d71-c8429aa533f2 error="http error: 400 No fields provided to update"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 No fields provided to update" method=PATCH path=/themes/2305f882-27fb-46db-8d71-c8429aa533f2
+=== RUN   TestHandler_PatchTheme/theme_not_found
+2025/10/29 20:05:39 ERROR Failed to update theme id=f64bb85f-ea6d-4687-8cd0-ea615394c320 error="http error: 404 error querying database for given theme ID"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 404 error querying database for given theme ID" method=PATCH path=/themes/f64bb85f-ea6d-4687-8cd0-ea615394c320
+=== RUN   TestHandler_PatchTheme/foreign_key_constraint_error
+2025/10/29 20:05:39 ERROR Failed to update theme id=ecf54667-8e89-42e7-9378-a0fc39e559f6 error="foreign key constraint violated"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid reference to related data" method=PATCH path=/themes/ecf54667-8e89-42e7-9378-a0fc39e559f6
+=== RUN   TestHandler_PatchTheme/database_connection_error
+2025/10/29 20:05:39 ERROR Failed to update theme id=1ef98778-deb6-447a-b7ad-cec57c2769b6 error="connection refused"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 500 Database connection error" method=PATCH path=/themes/1ef98778-deb6-447a-b7ad-cec57c2769b6
+=== RUN   TestHandler_PatchTheme/repository_error
+2025/10/29 20:05:39 ERROR Failed to update theme id=4cc71c15-08f0-4962-96f7-2eab25c3e7ef error="database error"
+2025/10/29 20:05:39 ERROR HTTP API error err="database error" method=PATCH path=/themes/4cc71c15-08f0-4962-96f7-2eab25c3e7ef
+--- PASS: TestHandler_PatchTheme (0.01s)
+    --- PASS: TestHandler_PatchTheme/successful_patch_theme (0.00s)
+    --- PASS: TestHandler_PatchTheme/invalid_UUID_format (0.00s)
+    --- PASS: TestHandler_PatchTheme/invalid_JSON (0.00s)
+    --- PASS: TestHandler_PatchTheme/validation_error_-_invalid_month (0.00s)
+    --- PASS: TestHandler_PatchTheme/validation_error_-_invalid_year (0.00s)
+    --- PASS: TestHandler_PatchTheme/no_fields_provided_to_update (0.00s)
+    --- PASS: TestHandler_PatchTheme/theme_not_found (0.00s)
+    --- PASS: TestHandler_PatchTheme/foreign_key_constraint_error (0.00s)
+    --- PASS: TestHandler_PatchTheme/database_connection_error (0.00s)
+    --- PASS: TestHandler_PatchTheme/repository_error (0.00s)
+=== RUN   TestHandler_DeleteTheme
+=== RUN   TestHandler_DeleteTheme/successful_delete_theme
+=== RUN   TestHandler_DeleteTheme/invalid_UUID_format
+2025/10/29 20:05:39 ERROR Invalid UUID format for theme deletion id=invalid-uuid error="invalid UUID length: 12"
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid UUID format" method=DELETE path=/themes/invalid-uuid
+=== RUN   TestHandler_DeleteTheme/theme_not_found_(idempotent)
+=== RUN   TestHandler_DeleteTheme/repository_error
+2025/10/29 20:05:39 ERROR Failed to delete theme id=bb47e426-4ead-4642-94a5-7c1af795fcf4 error="database error"
+2025/10/29 20:05:39 ERROR HTTP API error err="database error" method=DELETE path=/themes/bb47e426-4ead-4642-94a5-7c1af795fcf4
+--- PASS: TestHandler_DeleteTheme (0.00s)
+    --- PASS: TestHandler_DeleteTheme/successful_delete_theme (0.00s)
+    --- PASS: TestHandler_DeleteTheme/invalid_UUID_format (0.00s)
+    --- PASS: TestHandler_DeleteTheme/theme_not_found_(idempotent) (0.00s)
+    --- PASS: TestHandler_DeleteTheme/repository_error (0.00s)
+PASS
+ok  	specialstandard/internal/service/handler/theme	(cached)
+=== RUN   TestHandler_GetTherapistByID
+=== RUN   TestHandler_GetTherapistByID/successful_get_therapist_by_id
+=== RUN   TestHandler_GetTherapistByID/repository_error
+2025/10/29 20:05:39 ERROR Error updating document error="database error"
+--- PASS: TestHandler_GetTherapistByID (0.01s)
+    --- PASS: TestHandler_GetTherapistByID/successful_get_therapist_by_id (0.01s)
+    --- PASS: TestHandler_GetTherapistByID/repository_error (0.00s)
+=== RUN   TestHandler_GetTherapists
+=== RUN   TestHandler_GetTherapists/successful_get_therapists_and_default_pagination
+=== RUN   TestHandler_GetTherapists/repository_error
+2025/10/29 20:05:39 ERROR HTTP API error err="database error" method=GET path=/therapists
+=== RUN   TestHandler_GetTherapists/Bad_Pagination_Arguments
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 Invalid Pagination Query Parameters" method=GET path=/therapists
+=== RUN   TestHandler_GetTherapists/Violating_Pagination_Arguments_Constraints
+2025/10/29 20:05:39 ERROR HTTP API error err="http error: 400 map[limit:Limit is invalid page:Page is invalid]" method=GET path=/therapists
+=== RUN   TestHandler_GetTherapists/Pagination_with_parameters
+--- PASS: TestHandler_GetTherapists (0.00s)
+    --- PASS: TestHandler_GetTherapists/successful_get_therapists_and_default_pagination (0.00s)
+    --- PASS: TestHandler_GetTherapists/repository_error (0.00s)
+    --- PASS: TestHandler_GetTherapists/Bad_Pagination_Arguments (0.00s)
+    --- PASS: TestHandler_GetTherapists/Violating_Pagination_Arguments_Constraints (0.00s)
+    --- PASS: TestHandler_GetTherapists/Pagination_with_parameters (0.00s)
+=== RUN   TestHandler_CreateTherapist
+=== RUN   TestHandler_CreateTherapist/successful_create_therapist
+=== RUN   TestHandler_CreateTherapist/repository_error
+2025/10/29 20:05:39 ERROR Error updating document error="database error"
+--- PASS: TestHandler_CreateTherapist (0.00s)
+    --- PASS: TestHandler_CreateTherapist/successful_create_therapist (0.00s)
+    --- PASS: TestHandler_CreateTherapist/repository_error (0.00s)
+=== RUN   TestHandler_DeleteTherapist
+=== RUN   TestHandler_DeleteTherapist/successful_delete_therapist_by_id
+=== RUN   TestHandler_DeleteTherapist/repository_error
+2025/10/29 20:05:39 ERROR Error deleting document error="database error"
+--- PASS: TestHandler_DeleteTherapist (0.00s)
+    --- PASS: TestHandler_DeleteTherapist/successful_delete_therapist_by_id (0.00s)
+    --- PASS: TestHandler_DeleteTherapist/repository_error (0.00s)
+=== RUN   TestHandler_PatchTherapist
+=== RUN   TestHandler_PatchTherapist/successful_patch_therapist_by_id
+=== RUN   TestHandler_PatchTherapist/repository_error
+2025/10/29 20:05:39 ERROR Error updating document error="database error"
+--- PASS: TestHandler_PatchTherapist (0.00s)
+    --- PASS: TestHandler_PatchTherapist/successful_patch_therapist_by_id (0.00s)
+    --- PASS: TestHandler_PatchTherapist/repository_error (0.00s)
+PASS
+ok  	specialstandard/internal/service/handler/therapist	(cached)
+?   	specialstandard/internal/storage	[no test files]
+?   	specialstandard/internal/storage/dbinterface	[no test files]
+?   	specialstandard/internal/storage/mocks	[no test files]
+?   	specialstandard/internal/storage/postgres	[no test files]
+=== RUN   TestResourceRepository_GetResources
+--- FAIL: TestResourceRepository_GetResources (0.00s)
+panic: rootless Docker is not supported on Windows [recovered]
+	panic: rootless Docker is not supported on Windows
+
+goroutine 18 [running]:
+testing.tRunner.func1.2({0xa938e0, 0xc00030a4b0})
+	C:/Program Files/Go/src/testing/testing.go:1734 +0x219
+testing.tRunner.func1()
+	C:/Program Files/Go/src/testing/testing.go:1737 +0x359
+panic({0xa938e0?, 0xc00030a4b0?})
+	C:/Program Files/Go/src/runtime/panic.go:792 +0x132
+github.com/testcontainers/testcontainers-go/internal/core.MustExtractDockerHost.func1()
+	C:/Users/aahil/go/pkg/mod/github.com/testcontainers/testcontainers-go@v0.38.0/internal/core/docker_host.go:91 +0x65
+sync.(*Once).doSlow(0xc000385b20?, 0xc000385b70?)
+	C:/Program Files/Go/src/sync/once.go:78 +0xab
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/testcontainers/testcontainers-go/internal/core.MustExtractDockerHost({0xc93d28?, 0x11c6900?})
+	C:/Users/aahil/go/pkg/mod/github.com/testcontainers/testcontainers-go@v0.38.0/internal/core/docker_host.go:88 +0x49
+github.com/testcontainers/testcontainers-go/internal/core.NewClient({0xc93d28, 0x11c6900}, {0x0, 0x0, 0x0?})
+	C:/Users/aahil/go/pkg/mod/github.com/testcontainers/testcontainers-go@v0.38.0/internal/core/client.go:17 +0x88
+github.com/testcontainers/testcontainers-go.NewDockerClientWithOpts({0xc93d28, 0x11c6900}, {0x0, 0x0, 0x0})
+	C:/Users/aahil/go/pkg/mod/github.com/testcontainers/testcontainers-go@v0.38.0/docker_client.go:118 +0x71
+github.com/testcontainers/testcontainers-go.NewDockerProvider({0xc000303a00, 0x2, 0xb91c26?})
+	C:/Users/aahil/go/pkg/mod/github.com/testcontainers/testcontainers-go@v0.38.0/provider.go:144 +0x112
+github.com/testcontainers/testcontainers-go.ProviderType.GetProvider(0x0, {0xc000386d78, 0x1, 0x0?})
+	C:/Users/aahil/go/pkg/mod/github.com/testcontainers/testcontainers-go@v0.38.0/provider.go:115 +0x3f6
+github.com/testcontainers/testcontainers-go.GenericContainer({_, _}, {{{{0x0, 0x0}, {0x0, 0x0}, {0x0, 0x0}, {0x0, 0x0}, ...}, ...}, ...})
+	C:/Users/aahil/go/pkg/mod/github.com/testcontainers/testcontainers-go@v0.38.0/generic.go:62 +0x139
+github.com/testcontainers/testcontainers-go/modules/postgres.Run({0xc93d28, 0x11c6900}, {0xb9768c?, 0x12?}, {0xc000387c90, 0x4, 0x4?})
+	C:/Users/aahil/go/pkg/mod/github.com/testcontainers/testcontainers-go/modules/postgres@v0.38.0/postgres.go:186 +0x3a6
+specialstandard/internal/storage/postgres/testutil.SetupTestDB({0xc9a080, 0xc0003781c0})
+	C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/storage/postgres/testutil/testdb.go:24 +0x29e
+specialstandard/internal/storage/postgres/schema_test.TestResourceRepository_GetResources(0xc0003781c0)
+	C:/Users/aahil/Documents/Generate/specialstandard/backend/internal/storage/postgres/schema/resource_test.go:31 +0xae
+testing.tRunner(0xc0003781c0, 0xbc8838)
+	C:/Program Files/Go/src/testing/testing.go:1792 +0xcb
+created by testing.(*T).Run in goroutine 1
+	C:/Program Files/Go/src/testing/testing.go:1851 +0x3f6
+FAIL	specialstandard/internal/storage/postgres/schema	0.285s
+?   	specialstandard/internal/storage/postgres/testutil	[no test files]
+?   	specialstandard/internal/utils	[no test files]
+?   	specialstandard/internal/xvalidator	[no test files]
+FAIL

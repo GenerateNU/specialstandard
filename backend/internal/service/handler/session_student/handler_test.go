@@ -753,7 +753,3 @@ func TestHandler_DeleteSessionStudent(t *testing.T) {
 func stringPtr(s string) *string {
 	return &s
 }
-
-func boolPtr(b bool) *bool {
-	return &b
-}

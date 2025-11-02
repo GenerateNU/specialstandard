@@ -12,4 +12,8 @@ export default antfu({
   //   "perfectionist/sort-imports": "off",
   //   "style/jsx-one-expression-per-line": "off",
   // },
+}, {
+  ignores: [
+    'src/lib/api/theSpecialStandardAPI.schemas.ts', // ignore generated file with eslint
+  ],
 })
