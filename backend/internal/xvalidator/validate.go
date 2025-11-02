@@ -39,6 +39,10 @@ func (v XValidator) Validate(data interface{}) []ErrorResponse {
 			elem.Value = err.Value()       // Export field value
 			elem.Error = true
 
+			if param := err.Param(); param != "" {
+				elem.Tag = fmt.Sprintf("%s:%s", elem.Tag, param)
+			}
+
 			validationErrors = append(validationErrors, elem)
 		}
 	}
@@ -54,9 +58,18 @@ func ConvertToMessages(errors []ErrorResponse) map[string]string {
 		field := strings.ToLower(err.FailedField)
 		message := getErrorMessage(err)
 		errorMap[field] = message
+		// slog.Error(message)
 	}
 
 	return errorMap
+}
+
+func extractOtherField(tag string) string {
+	parts := strings.Split(tag, " ")
+	if len(parts) > 1 {
+		return parts[1]
+	}
+	return "the referenced field"
 }
 
 // getErrorMessage generates user-friendly error messages
@@ -79,6 +92,8 @@ func getErrorMessage(err ErrorResponse) string {
 		return fmt.Sprintf("%s must be a valid email address", field)
 	case "url":
 		return fmt.Sprintf("%s must be a valid URL", field)
+	case "gtfield":
+		return fmt.Sprintf("%s must be greater than %s", field, extractOtherField(tag))
 	default:
 		return fmt.Sprintf("%s is invalid", field)
 	}

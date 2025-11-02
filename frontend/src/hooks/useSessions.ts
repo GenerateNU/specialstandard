@@ -18,7 +18,13 @@ interface UseSessionsReturn {
   deleteSession: (id: string) => void
 }
 
-export function useSessions(): UseSessionsReturn {
+interface UseSessionsParams {
+  startdate?: string
+  enddate?: string
+  limit?: number
+}
+
+export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
   const queryClient = useQueryClient()
   const api = getSessionsApi()
   const { userId: therapistId } = useAuthContext()
@@ -29,10 +35,19 @@ export function useSessions(): UseSessionsReturn {
     error,
     refetch,
   } = useQuery({
+<<<<<<< HEAD
     queryKey: ['sessions', therapistId],
     queryFn: () => api.getSessions(),
     // we technically dont need this line but it is just defensive programming!!  
     enabled: !!therapistId, 
+=======
+    queryKey: ['sessions', params],
+    queryFn: () => api.getSessions({
+      limit: params?.limit ?? 100,
+      startdate: params?.startdate,
+      enddate: params?.enddate,
+    }),
+>>>>>>> main
   })
 
   const sessions = sessionsResponse ?? []
@@ -48,7 +63,11 @@ export function useSessions(): UseSessionsReturn {
     mutationFn: ({ id, data }: { id: string, data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
     onSuccess: () => {
+<<<<<<< HEAD
       queryClient.invalidateQueries({ queryKey: ['sessions', therapistId] })
+=======
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+>>>>>>> main
     },
   })
 

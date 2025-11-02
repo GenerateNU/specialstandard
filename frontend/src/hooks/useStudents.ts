@@ -11,17 +11,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 export type StudentBody = Omit<Student, 'grade'> & {
   grade: string
 }
-
-// interface UseStudentsReturn {
-//   students: StudentBody[]
-//   isLoading: boolean
-//   error: string | null
-//   refetch: () => Promise<QueryObserverResult<Student[], Error>>
-//   addStudent: (student: Omit<Student, "id">) => void
-//   updateStudent: (id: string, updatedStudent: Partial<Student>) => void
-//   deleteStudent: (id: string) => void
-// }
-
 export function useStudents() {
   const queryClient = useQueryClient()
   const api = getStudents()

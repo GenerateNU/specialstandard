@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"specialstandard/internal/models"
+	"specialstandard/internal/storage/dbinterface"
 	"specialstandard/internal/utils"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -14,6 +16,10 @@ import (
 
 type SessionRepository struct {
 	db *pgxpool.Pool
+}
+
+func (r *SessionRepository) GetDB() *pgxpool.Pool {
+	return r.db
 }
 
 func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error) {
@@ -114,28 +120,50 @@ func (r *SessionRepository) DeleteSession(ctx context.Context, id uuid.UUID) err
 	return err
 }
 
-func (r *SessionRepository) PostSession(ctx context.Context, input *models.PostSessionInput) (*models.Session, error) {
-	session := &models.Session{}
+func addNWeeks(timestamp time.Time, nWeeks int) time.Time {
+	return timestamp.Add(time.Duration(24*7*nWeeks) * time.Hour)
+}
 
+func (r *SessionRepository) PostSession(ctx context.Context, q dbinterface.Queryable, input *models.PostSessionInput) (*[]models.Session, error) {
 	query := `INSERT INTO session (start_datetime, end_datetime, therapist_id, notes)
-				VALUES ($1, $2, $3, $4)
-				RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
+              VALUES ($1, $2, $3, $4)`
+	args := []interface{}{}
+	args = append(args, input.StartTime, input.EndTime, input.TherapistID, input.Notes)
+	argCount := 5
 
-	row := r.db.QueryRow(ctx, query, input.StartTime, input.EndTime, input.TherapistID, input.Notes)
-	// Scan into Session model to return the one we just inserted.
-	if err := row.Scan(
-		&session.ID,
-		&session.StartDateTime,
-		&session.EndDateTime,
-		&session.TherapistID,
-		&session.Notes,
-		&session.CreatedAt,
-		&session.UpdatedAt,
-	); err != nil {
-		return nil, err
+	if input.Repetition != nil {
+		rp := input.Repetition
+		if rp.RecurEnd.Before(rp.RecurStart) {
+			return nil, fmt.Errorf("invalid repetition range: recur_end (%s) is before recur_start (%s)",
+				rp.RecurEnd.Format(time.RFC3339), rp.RecurStart.Format(time.RFC3339))
+		}
+
+		startTime := addNWeeks(input.StartTime, rp.EveryNWeeks)
+		endTime := addNWeeks(input.EndTime, rp.EveryNWeeks)
+
+		for startTime.Before(rp.RecurEnd) {
+			query += fmt.Sprintf(`, ($%d, $%d, $%d, $%d)`, argCount, argCount+1, argCount+2, argCount+3)
+			argCount += 4
+			args = append(args, startTime, endTime, input.TherapistID, input.Notes)
+
+			startTime = addNWeeks(startTime, rp.EveryNWeeks)
+			endTime = addNWeeks(endTime, rp.EveryNWeeks)
+		}
 	}
 
-	return session, nil
+	query += ` RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
+
+	rows, err := q.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	sessions, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Session])
+	if err != nil {
+		return nil, err
+	}
+	return &sessions, nil
 }
 
 func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, input *models.PatchSessionInput) (*models.Session, error) {

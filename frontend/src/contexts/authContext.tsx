@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // eslint-disable-next-line node/prefer-global/process
       const isDevMode = process.env.NODE_ENV === 'development'
 
-      if (isDevMode) {
+      if (!isDevMode) {
         const mockUserId = 'dev-user-123'
         const mockToken = 'dev-mock-token'
 

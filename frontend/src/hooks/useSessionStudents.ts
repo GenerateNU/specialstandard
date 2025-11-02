@@ -15,9 +15,20 @@ export function useSessionStudents() {
     mutationFn: (input: CreateSessionStudentInput) =>
       api.postSessionStudents(input),
     onSuccess: (_, variables) => {
+<<<<<<< HEAD
       queryClient.invalidateQueries({
         queryKey: ['sessions', variables.session_id, 'students', therapistId],
       })
+=======
+      if (variables.session_ids) {
+        variables.session_ids.forEach((id: string) => {
+          queryClient.invalidateQueries({
+            queryKey: ['sessions', id, 'students'],
+          })
+        })
+      }
+
+>>>>>>> main
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
   })

@@ -341,13 +341,44 @@ paths:
                   type: string
                   description: Optional notes about the session
                   example: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
+                repetition:
+                  type: object
+                  required:
+                    - recur_start
+                    - recur_end
+                    - every_n_weeks
+                  properties:
+                    recur_start:
+                      type: string
+                      format: date-time
+                      description: Starting Date of Recurring Session
+                      example: "2025-09-13T17:19:00Z"
+                    recur_end:
+                      type: string
+                      format: date-time
+                      description: Ending Date of Recurring Session
+                      example: "2025-11-13T17:19:00Z"
+                    every_n_weeks:
+                      type: int
+                      format: positive
+                      description: Recurring Session will happen every "N" weeks
+                      example: 2
+                student_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: List of Student IDs of the students that are being added to this Session.
       responses:
         "201":
           description: Session created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Session"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+                description: Every Session that was created as a result of this request
         "400":
           description: Bad Request (e.g., validation errors)
           content:
@@ -1085,7 +1116,7 @@ paths:
   /session_students:
     post:
       summary: Create session-student relationship
-      description: Associate a student with a session, creating an entry in the bridge table
+      description: Associate each given student with each given session, creating an entry in the bridge table
       tags: [Session Students]
       requestBody:
         required: true
@@ -1099,7 +1130,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionStudent"
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionStudent"
+                description: The Session-Student relationships that were created successfully
         "400":
           description: Bad request (e.g., validation errors)
           content:
@@ -2654,19 +2688,21 @@ components:
     CreateSessionStudentInput:
       type: object
       required:
-        - session_id
-        - student_id
+        - session_ids
+        - student_ids
       properties:
-        session_id:
-          type: string
-          format: uuid
-          description: UUID of the session
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        student_id:
-          type: string
-          format: uuid
-          description: UUID of the student
-          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        session_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of all Sessions' UUIDs
+        student_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of all Students' UUIDs
         present:
           type: boolean
           description: Whether the student was present (defaults to true if not specified)

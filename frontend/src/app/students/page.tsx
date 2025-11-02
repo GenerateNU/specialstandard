@@ -9,13 +9,6 @@ import { useStudents } from '@/hooks/useStudents'
 export default function StudentsPage() {
   const { students, isLoading, error, refetch } = useStudents()
 
-  // useEffect(() => {
-  //   console.log("Students:", students);
-  //   console.log("Resources:", resources);
-  //   console.log("Sessions:", sessions);
-  //   console.log("Themes:", themes);
-  // }, [students, resources, sessions, themes]);
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
