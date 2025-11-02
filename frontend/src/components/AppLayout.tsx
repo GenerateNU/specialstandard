@@ -154,7 +154,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {isSidebarOpen
               ? (
                   <Button
-                    onClick={logout}
+                    onClick={() => {
+                      logout()
+                      window.location.href = '/login'
+                    }}
                     variant="ghost"
                     className="w-full justify-start gap-3 text-secondary hover:text-primary hover:bg-card-hover"
                   >

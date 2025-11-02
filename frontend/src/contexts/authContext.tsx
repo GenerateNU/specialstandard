@@ -27,24 +27,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if user is authenticated on mount (check localStorage instead of cookies)
   useEffect(() => {
     const checkAuth = () => {
-      // Dev mode bypass - auto-authenticate with mock data
-      // eslint-disable-next-line node/prefer-global/process
-      const isDevMode = process.env.NODE_ENV === 'development'
+// Dev mode bypass - DISABLED - uncomment to use mock auth in dev
 
-      if (!isDevMode) {
-        const mockUserId = 'dev-user-123'
-        const mockToken = 'dev-mock-token'
+// const isDevMode = process.env.NODE_ENV === 'development'
+// if (isDevMode) {
+//   const mockUserId = 'dev-user-123'
+//   const mockToken = 'dev-mock-token'
 
-        // Only set if not already set
-        if (!localStorage.getItem('userId')) {
-          localStorage.setItem('userId', mockUserId)
-          localStorage.setItem('jwt', mockToken)
-        }
+//   // Only set if not already set
+//   if (!localStorage.getItem('userId')) {
+//     localStorage.setItem('userId', mockUserId)
+//     localStorage.setItem('jwt', mockToken)
+//   }
 
-        setUserId(localStorage.getItem('userId'))
-        setIsLoading(false)
-        return
-      }
+//   setUserId(localStorage.getItem('userId'))
+//   setIsLoading(false)
+//   return
+// }
 
       // Check localStorage for auth data
       const storedUserId = localStorage.getItem('userId')
