@@ -2,11 +2,11 @@
 import moment from 'moment'
 import { useStudentSessions } from '@/hooks/useStudentSessions'
 
-interface RecentSessionProps {
+interface SessionNotesProps {
   studentId?: string
 }
 
-export default function RecentSession({ studentId }: RecentSessionProps) {
+export default function SessionNotes({ studentId }: SessionNotesProps) {
   const { sessions, isLoading, error } = studentId
     ? useStudentSessions(studentId)
     : { sessions: [], isLoading: false, error: null }
@@ -14,15 +14,17 @@ export default function RecentSession({ studentId }: RecentSessionProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-sm text-background">Loading...</div>
+        <div className="text-sm text-muted-foreground">Loading session notes...</div>
       </div>
     )
   }
 
   if (error || sessions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-2 text-background">
-        <div className="text-sm">No recent sessions</div>
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <div className="text-sm text-muted-foreground italic">
+          No session notes available
+        </div>
       </div>
     )
   }
@@ -33,7 +35,7 @@ export default function RecentSession({ studentId }: RecentSessionProps) {
   )
 
   return (
-    <div className="h-full overflow-y-auto space-y-2 text-background w-full">
+    <div className="h-full overflow-y-auto">
       {sortedSessions.map((session) => {
         const startMoment = moment(session.start_datetime)
         const endMoment = moment(session.end_datetime)
@@ -41,10 +43,10 @@ export default function RecentSession({ studentId }: RecentSessionProps) {
         return (
           <div
             key={session.id}
-            className="p-4 border-b border-background/20 rounded-2xl flex flex-col justify-center h-20 bg-background w-full text-primary last:border-b-0"
+            className="w-full p-4 bg-background text-primary border-border border-b-2 last:border-b-0"
           >
             {/* Session title and date */}
-            <div className="w-full flex justify-between items-center">
+            <div className="w-full flex justify-between items-start">
               <div className="font-semibold text-base">
                 Session #
                 {sortedSessions.length - sortedSessions.indexOf(session)}
@@ -53,18 +55,15 @@ export default function RecentSession({ studentId }: RecentSessionProps) {
                 {startMoment.format('MM/DD/YYYY')}
               </div>
             </div>
-            {/* Present/Absent status */}
-            <div className="text-sm mb-1">
-              {session.present
-                ? (
-                    <span className="font-medium">Present ✓</span>
-                  )
-                : (
-                    <span className="font-medium">Absent</span>
-                  )}
-            </div>
+
+            {session.notes && (
+              <div className="text-sm text-muted-foreground mt-2">
+                {session.notes}
+              </div>
+            )}
+
             {/* Time range */}
-            <div className="text-sm opacity-75">
+            <div className="text-xs opacity-75 mt-2">
               {startMoment.format('h:mm A')}
               {' - '}
               {endMoment.format('h:mm A')}
