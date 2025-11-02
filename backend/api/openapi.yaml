@@ -2100,6 +2100,15 @@ paths:
               example:
                 code: 400
                 message: "Bad Request"
+        "404":
+          description: Game Content not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Game Content not found"
         "500":
           description: Internal Server Error
           content:

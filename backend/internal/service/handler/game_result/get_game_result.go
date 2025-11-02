@@ -11,7 +11,7 @@ import (
 )
 
 func (h *Handler) GetGameResults(c *fiber.Ctx) error {
-	var gameResultsReq *models.GetGameResultQuery
+	var gameResultsReq models.GetGameResultQuery
 	if err := c.QueryParser(&gameResultsReq); err != nil {
 		return errs.BadRequest("GameResults Query-Parameters Parsing Error")
 	}
@@ -29,7 +29,7 @@ func (h *Handler) GetGameResults(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	gameResults, err := h.gameResultRepository.GetGameResults(c.Context(), gameResultsReq, pagination)
+	gameResults, err := h.gameResultRepository.GetGameResults(c.Context(), &gameResultsReq, pagination)
 	if err != nil {
 		// For all database errors, return internal server error without exposing details
 		slog.Error("Failed to get session", "err", err)
