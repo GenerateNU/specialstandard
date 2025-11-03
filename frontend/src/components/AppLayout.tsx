@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
 ]
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const pathname = usePathname()
   const { logout } = useAuthContext()
 
@@ -44,7 +44,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(true)
+        setIsSidebarOpen(false)
       }
     }
 
@@ -151,36 +151,25 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {/* Footer */}
           <Separator />
           <div className="p-2">
-            {isSidebarOpen
-              ? (
-                  <Button
-                    onClick={logout}
-                    variant="ghost"
-                    className="w-full justify-start gap-3 text-secondary hover:text-primary hover:bg-card-hover"
-                  >
-                    <LogOut className="w-5 h-5 flex-shrink-0" />
-                    <span className="whitespace-nowrap">Logout</span>
-                  </Button>
-                )
-              : (
-                  <Button
-                    onClick={logout}
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Logout"
-                    className="w-10 h-10 mx-auto text-secondary hover:text-primary"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </Button>
-                )}
+            <Button
+              onClick={() => {
+                logout()
+                window.location.href = '/login'
+              }}
+              variant="ghost"
+              aria-label="Logout"
+              className={`
+                flex items-center gap-3 rounded-lg
+                transition-all duration-200
+                h-10 flex-shrink-0 overflow-hidden justify-start
+                text-secondary hover:text-primary hover:bg-card-hover
+                ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
+              `}
+            >
+              <LogOut className="w-5 h-5 mr-0.5" />
+              <span className="whitespace-nowrap">Logout</span>
+            </Button>
           </div>
-          {isSidebarOpen && (
-            <div className="p-4 pt-2">
-              <p className="text-xs text-muted text-center whitespace-nowrap">
-                The Special Standard © 2025
-              </p>
-            </div>
-          )}
         </div>
       </aside>
 

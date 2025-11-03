@@ -1,0 +1,48 @@
+cat > .dockerignore << 'EOF'
+# Frontend build artifacts
+frontend/node_modules
+frontend/.next
+frontend/.turbo
+frontend/dist
+frontend/coverage
+
+# Backend vendor (if you use it)
+backend/vendor
+
+# Dependencies
+node_modules
+vendor
+
+# Git
+.git
+.github
+
+# Environment
+.env
+.env.local
+*.env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist
+build
+.next
+coverage
+
+# Logs
+*.log
+logs
+
+# Database
+*.db
+*.sqlite
+EOF

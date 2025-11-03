@@ -32,21 +32,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if user is authenticated on mount
   useEffect(() => {
     const checkAuth = () => {
-      const isDevMode = false; //process.env.NODE_ENV === "development";
+      // Dev mode bypass - DISABLED - uncomment to use mock auth in dev
 
-      if (!isDevMode) {
-        const mockUserId = "dev-user-123";
-        const mockToken = "dev-mock-token";
+      // const isDevMode = process.env.NODE_ENV === 'development'
+      // if (isDevMode) {
+      //   const mockUserId = 'dev-user-123'
+      //   const mockToken = 'dev-mock-token'
 
-        if (!localStorage.getItem("userId")) {
-          localStorage.setItem("userId", mockUserId);
-          localStorage.setItem("jwt", mockToken);
-        }
+      //   // Only set if not already set
+      //   if (!localStorage.getItem('userId')) {
+      //     localStorage.setItem('userId', mockUserId)
+      //     localStorage.setItem('jwt', mockToken)
+      //   }
 
-        setUserId(localStorage.getItem("userId"));
-        setIsLoading(false);
-        return;
-      }
+      //   setUserId(localStorage.getItem("userId"));
+      //   setIsLoading(false);
+      //   return;
+      // }
 
       const storedUserId = localStorage.getItem("userId");
       const storedJwt = localStorage.getItem("jwt");
