@@ -1289,14 +1289,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SessionRatingInfo"
+              $ref: "#/components/schemas/UpdateSessionStudentInput"
       responses:
         "200":
           description: Session rated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionRatingInfo"
+                $ref: "#/components/schemas/SessionStudentWithRatings"
         "400":
           description: Bad request (e.g., validation errors)
           content:
@@ -2830,6 +2830,44 @@ components:
           nullable: true
           description: Update or clear notes (set to null to clear)
           example: "Student left early due to appointment"
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionRating"
+          description: List of ratings for this student during the session
+
+    SessionStudentWithRatings:
+      type: object
+      required:
+        - session_id
+        - student_id
+        - ratings
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: UUID of the session (cannot be changed)
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        student_id:
+          type: string
+          format: uuid
+          description: UUID of the student (cannot be changed)
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        present:
+          type: boolean
+          description: Update the student's attendance status
+          example: false
+        notes:
+          type: string
+          nullable: true
+          description: Update or clear notes (set to null to clear)
+          example: "Student left early due to appointment"
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionRating"
+          description: List of ratings for this student during the session
+
 
     StudentRatingEntry:
       type: object
@@ -2837,6 +2875,7 @@ components:
         - session_id
         - student_id
         - session_date
+        - ratings
       properties:
         session_id:
           type: string
@@ -2919,38 +2958,6 @@ components:
               nullable: true
               description: Session-specific notes about the student
               example: "Worked on balance exercises"
-
-    SessionRatingInfo:
-      type: object
-      required:
-        - session_id
-        - student_id
-        - ratings
-      properties:
-        session_id:
-          type: string
-          format: uuid
-          description: UUID of the session
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        student_id:
-          type: string
-          format: uuid
-          description: UUID of the student
-          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        notes:
-          type: string
-          nullable: true
-          description: Optional notes about the student's performance during the session
-          example: "Student improved in following verbal cues"
-        present:
-          type: boolean
-          description: Whether the student was present at the session
-          example: true
-        ratings:
-          type: array
-          items:
-            $ref: "#/components/schemas/SessionRating"
-          description: List of ratings for this student during the session
 
     SessionResource:
       type: object

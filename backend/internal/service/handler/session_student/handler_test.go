@@ -313,7 +313,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 					Notes:     stringPtr("Original notes"),
 				}
 				ratings := []models.SessionRating{}
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(sessionStudent, ratings, nil)
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(sessionStudent, ratings, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -333,7 +333,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 					Notes:     stringPtr("Updated notes about student progress"),
 				}
 				ratings := []models.SessionRating{}
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(sessionStudent, ratings, nil)
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(sessionStudent, ratings, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -354,7 +354,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 					Notes:     stringPtr("Student showed improvement"),
 				}
 				ratings := []models.SessionRating{}
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(sessionStudent, ratings, nil)
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(sessionStudent, ratings, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -396,7 +396,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 						Description: stringPtr("Student responds to questions with complete sentences."),
 					},
 				}
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(sessionStudent, ratings, nil)
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(sessionStudent, ratings, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -469,7 +469,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(nil, nil, errors.New("no rows affected"))
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, nil, errors.New("no rows affected"))
 			},
 			expectedStatus: fiber.StatusNotFound,
 			wantErr:        true,
@@ -482,7 +482,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(nil, nil, errors.New("foreign key violation"))
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, nil, errors.New("foreign key violation"))
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -495,7 +495,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"present": false
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(nil, nil, errors.New("database connection failed"))
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, nil, errors.New("database connection failed"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,

@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/dbinterface"
 
@@ -61,7 +62,7 @@ func (r *SessionStudentRepository) DeleteSessionStudent(ctx context.Context, inp
 	return err
 }
 
-func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error) {
+func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, input *models.SessionStudent) (*models.SessionStudent, error) {
 	sessionStudent := &models.SessionStudent{}
 
 	query := `UPDATE session_student
@@ -88,15 +89,27 @@ func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, inpu
 	return sessionStudent, nil
 }
 
-func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []models.SessionRating, error) {
-	sessionStudent, err := r.PatchSessionStudent(ctx, &input.PatchSessionStudentInput)
+func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, []models.SessionRating, error) {
+	// Add logging here
+	slog.Info("RateStudentSession called with input: %+v", input)
+
+	inputSessionStudent := models.SessionStudent{
+		SessionID: input.SessionID,
+		StudentID: input.StudentID,
+		Present:   *input.Present,
+		Notes:     input.Notes,
+	}
+
+	sessionStudent, err := r.PatchSessionStudent(ctx, &inputSessionStudent)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	var ratings []models.SessionRating
-	for _, rating := range input.Ratings {
-		query := `INSERT INTO session_rating (session_student_id, category, level, description)
+	if input.Ratings != nil && *input.Ratings != nil {
+		for _, rating := range *input.Ratings {
+
+			query := `INSERT INTO session_rating (session_student_id, category, level, description)
           VALUES ($1, $2, $3, $4) 
           ON CONFLICT (session_student_id, category) 
           DO UPDATE SET 
@@ -105,16 +118,13 @@ func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input
               updated_at = NOW()
           RETURNING category, level, description`
 
-		row := r.db.QueryRow(ctx, query, sessionStudent.ID, rating.Category, rating.Level, rating.Description)
-		var insertedRating models.SessionRating
-		if err := row.Scan(&insertedRating.Category, &insertedRating.Level, &insertedRating.Description); err != nil {
-			return nil, nil, err
+			row := r.db.QueryRow(ctx, query, sessionStudent.ID, rating.Category, rating.Level, rating.Description)
+			var insertedRating models.SessionRating
+			if err := row.Scan(&insertedRating.Category, &insertedRating.Level, &insertedRating.Description); err != nil {
+				return nil, nil, err
+			}
+			ratings = append(ratings, insertedRating)
 		}
-		ratings = append(ratings, insertedRating)
-	}
-
-	if ratings == nil {
-		ratings = []models.SessionRating{}
 	}
 
 	return sessionStudent, ratings, nil
