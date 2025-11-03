@@ -2,13 +2,9 @@
 
 import type { StudentBody } from '@/hooks/useStudents'
 import {
-  Calendar,
-  FileText,
   GraduationCap,
-  User,
 } from 'lucide-react'
 
-import { useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { getAvatarVariant } from '@/lib/utils'
 
@@ -19,18 +15,6 @@ interface StudentCardProps {
 // getAvatarVariant is provided by the shared utils module
 
 export default function StudentCard({ student }: StudentCardProps) {
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString)
-      return 'N/A'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-
   const getFullName = () => `${student.first_name} ${student.last_name}`
 
   const getAge = () => {
