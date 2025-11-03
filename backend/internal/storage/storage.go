@@ -26,8 +26,7 @@ type SessionRepository interface {
 type SessionStudentRepository interface {
 	CreateSessionStudent(ctx context.Context, q dbinterface.Queryable, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error)
 	DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error
-	PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error)
-
+	RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []models.SessionRating, error)
 	GetDB() *pgxpool.Pool
 }
 
@@ -38,6 +37,7 @@ type StudentRepository interface {
 	UpdateStudent(ctx context.Context, student models.Student) (models.Student, error)
 	DeleteStudent(ctx context.Context, id uuid.UUID) error
 	GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination, filter *models.GetStudentSessionsRepositoryRequest) ([]models.StudentSessionsOutput, error)
+	GetStudentRatings(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination, filter *models.GetStudentSessionsRatingsRequest) ([]models.StudentSessionsWithRatingsOutput, error)
 	PromoteStudents(ctx context.Context, input models.PromoteStudentsInput) error
 }
 

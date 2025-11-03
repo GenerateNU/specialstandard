@@ -7,11 +7,13 @@
 import type {
   CreateStudentInput,
   GetStudentsParams,
+  GetStudentsStudentIdRatingsParams,
   GetStudentsStudentIdSessionsParams,
   PatchStudentsPromote200,
   PromoteStudentsInput,
   SessionWithStudentInfo,
   Student,
+  StudentRatingEntry,
   UpdateStudentInput,
 } from './theSpecialStandardAPI.schemas'
 
@@ -68,14 +70,18 @@ export function getStudents() {
   }
   /**
    * Retrieve all sessions associated with a specific student, including bridge table information.
+
    *Date Filtering Options:**
 - Use `startDate` and `endDate` for date range filtering: `?startDate=2025-09-01&endDate=2025-09-30`
 - Use `month` and `year` for monthly filtering: `?month=9&year=2025`
 - Use `year` alone for yearly filtering: `?year=2025`
+
    *Attendance Filtering:**
 - Use `present` to filter by attendance: `?present=true` or `?present=false`
+
    *Combining Filters:**
-  All filters can be combined: `?month=9&year=2025&present=true`
+All filters can be combined: `?month=9&year=2025&present=true`
+
    * @summary Get all sessions for a student
    */
   const getStudentsStudentIdSessions = (
@@ -84,6 +90,20 @@ export function getStudents() {
   ) => {
     return customAxios<SessionWithStudentInfo[]>({
       url: `/students/${studentId}/sessions`,
+      method: 'GET',
+      params,
+    })
+  }
+  /**
+   * Retrieve all session ratings for a specific student
+   * @summary Get ratings for a student
+   */
+  const getStudentsStudentIdRatings = (
+    studentId: string,
+    params?: GetStudentsStudentIdRatingsParams,
+  ) => {
+    return customAxios<StudentRatingEntry[]>({
+      url: `/students/${studentId}/ratings`,
       method: 'GET',
       params,
     })
@@ -107,6 +127,7 @@ export function getStudents() {
     patchStudentsId,
     deleteStudentsId,
     getStudentsStudentIdSessions,
+    getStudentsStudentIdRatings,
     patchStudentsPromote,
   }
 }
@@ -128,6 +149,11 @@ export type DeleteStudentsIdResult = NonNullable<
 export type GetStudentsStudentIdSessionsResult = NonNullable<
   Awaited<
     ReturnType<ReturnType<typeof getStudents>['getStudentsStudentIdSessions']>
+  >
+>
+export type GetStudentsStudentIdRatingsResult = NonNullable<
+  Awaited<
+    ReturnType<ReturnType<typeof getStudents>['getStudentsStudentIdRatings']>
   >
 >
 export type PatchStudentsPromoteResult = NonNullable<
