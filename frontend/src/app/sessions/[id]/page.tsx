@@ -103,7 +103,7 @@ export default function SessionPage({ params }: PageProps) {
     addStudentToSession({
       session_ids: [id],
       student_ids: [studentId],
-      present: false,
+      present: true,
     })
   }
 
