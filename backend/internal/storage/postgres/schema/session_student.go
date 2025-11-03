@@ -61,7 +61,7 @@ func (r *SessionStudentRepository) DeleteSessionStudent(ctx context.Context, inp
 	return err
 }
 
-func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, input *models.SessionStudent) (*models.SessionStudent, error) {
+func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, error) {
 	sessionStudent := &models.SessionStudent{}
 
 	query := `UPDATE session_student
@@ -89,10 +89,10 @@ func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, inpu
 }
 
 func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, []models.SessionRating, error) {
-	inputSessionStudent := models.SessionStudent{
+	inputSessionStudent := models.PatchSessionStudentInput{
 		SessionID: input.SessionID,
 		StudentID: input.StudentID,
-		Present:   *input.Present,
+		Present:   input.Present,
 		Notes:     input.Notes,
 	}
 

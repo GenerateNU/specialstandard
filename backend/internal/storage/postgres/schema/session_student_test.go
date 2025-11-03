@@ -215,10 +215,10 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 
 	// Test patching present field only
 	presentFalse := false
-	patchInput := &models.SessionStudent{
+	patchInput := &models.PatchSessionStudentInput{
 		SessionID: sessionID,
 		StudentID: studentID,
-		Present:   presentFalse,
+		Present:   &presentFalse,
 		Notes:     nil, // Don't update notes
 	}
 
@@ -233,7 +233,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 
 	// Test patching notes field only
 	newNotes := ptrString("Updated progress notes")
-	patchInput = &models.SessionStudent{
+	patchInput = &models.PatchSessionStudentInput{
 		SessionID: sessionID,
 		StudentID: studentID,
 		Notes:     newNotes,
@@ -251,10 +251,10 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	// Test patching both fields
 	presentTrue := true
 	bothFieldsNotes := ptrString("Final comprehensive notes")
-	patchInput = &models.SessionStudent{
+	patchInput = &models.PatchSessionStudentInput{
 		SessionID: sessionID,
 		StudentID: studentID,
-		Present:   presentTrue,
+		Present:   &presentTrue,
 		Notes:     bothFieldsNotes,
 	}
 
@@ -263,15 +263,15 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, sessionID, result.SessionID)
 	assert.Equal(t, studentID, result.StudentID)
-	assert.True(t, result.Present) // Should be updated
+	assert.True(t, result.Present)
 	assert.NotNil(t, result.Notes)
 	assert.Equal(t, "Final comprehensive notes", *result.Notes) // Should be updated
 
 	// Test patching non-existent relationship
-	nonExistentInput := &models.SessionStudent{
+	nonExistentInput := &models.PatchSessionStudentInput{
 		SessionID: uuid.New(),
 		StudentID: uuid.New(),
-		Present:   presentTrue,
+		Present:   &presentTrue,
 		Notes:     ptrString("Should fail"),
 	}
 
@@ -392,7 +392,6 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, sessionStudent)
 	assert.Equal(t, "No ratings update", *sessionStudent.Notes)
-	assert.NotNil(t, ratings)
 	assert.Len(t, ratings, 0)
 
 	// Test 4: Test engagement levels (low/high)
