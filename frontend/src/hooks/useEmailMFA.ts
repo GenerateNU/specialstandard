@@ -22,9 +22,16 @@ export const useEmailMFA = () => {
     setError(null);
 
     try {
+      // Get the temp JWT from localStorage
+      const jwt =
+        localStorage.getItem("temp_jwt") || localStorage.getItem("jwt");
+
       const response = await fetch("/api/sendVerification", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`, // Add JWT to header
+        },
       });
 
       const data: SendVerificationResponse = await response.json();

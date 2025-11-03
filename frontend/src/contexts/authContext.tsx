@@ -68,6 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Store credentials temporarily, DON'T set as authenticated yet
       if (response.access_token && response.user?.id) {
+        localStorage.setItem("temp_jwt", response.access_token);
+        localStorage.setItem("temp_userId", response.user.id);
+
         setPendingMFAAuth({
           jwt: response.access_token,
           userId: response.user.id,
@@ -98,6 +101,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (pendingMFAAuth) {
       localStorage.setItem("jwt", pendingMFAAuth.jwt);
       localStorage.setItem("userId", pendingMFAAuth.userId);
+
+      // Clean up temp storage
+      localStorage.removeItem("temp_jwt");
+      localStorage.removeItem("temp_userId");
+
       setUserId(pendingMFAAuth.userId);
       setPendingMFAAuth(null);
     }
