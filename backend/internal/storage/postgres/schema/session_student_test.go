@@ -10,7 +10,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func ptrBool(b bool) *bool {
+	return &b
+}
 
 func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	if testing.Short() {
@@ -62,7 +67,8 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	results, err := repo.CreateSessionStudent(ctx, db, input)
 	assert.NoError(t, err)
 	assert.NotNil(t, results)
-	for _, result := range *results {
+	for idx, result := range *results {
+		assert.Equal(t, idx+1, result.ID)
 		assert.Equal(t, sessionID, result.SessionID)
 		assert.Equal(t, studentID, result.StudentID)
 		assert.True(t, result.Present)
@@ -89,7 +95,7 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	invalidInput := &models.CreateSessionStudentInput{
 		SessionIDs: []uuid.UUID{invalidSessionID},
 		StudentIDs: []uuid.UUID{studentID},
-		Present:    true,
+		Present:    *ptrBool(false),
 		Notes:      nil,
 	}
 
@@ -230,7 +236,6 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	patchInput = &models.PatchSessionStudentInput{
 		SessionID: sessionID,
 		StudentID: studentID,
-		Present:   nil, // Don't update present
 		Notes:     newNotes,
 	}
 
@@ -258,7 +263,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, sessionID, result.SessionID)
 	assert.Equal(t, studentID, result.StudentID)
-	assert.True(t, result.Present) // Should be updated
+	assert.True(t, result.Present)
 	assert.NotNil(t, result.Notes)
 	assert.Equal(t, "Final comprehensive notes", *result.Notes) // Should be updated
 
@@ -273,4 +278,176 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	failResult, err := repo.PatchSessionStudent(ctx, nonExistentInput)
 	assert.Error(t, err)
 	assert.Nil(t, failResult)
+}
+
+func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+
+	// Setup
+	testDB := testutil.SetupTestDB(t)
+	defer testDB.Cleanup()
+
+	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	ctx := context.Background()
+
+	// Create test therapist
+	therapistID := uuid.New()
+	_, err := testDB.Pool.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email)
+        VALUES ($1, $2, $3, $4)
+    `, therapistID, "Dr. Rate", "Test", "rate.test@example.com")
+	require.NoError(t, err)
+
+	// Create test session
+	sessionID := uuid.New()
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
+	_, err = testDB.Pool.Exec(ctx, `
+        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
+        VALUES ($1, $2, $3, $4, $5)
+    `, sessionID, therapistID, startTime, endTime, "Session for rating test")
+	require.NoError(t, err)
+
+	// Create test student
+	studentID := uuid.New()
+	_, err = testDB.Pool.Exec(ctx, `
+        INSERT INTO student (id, first_name, last_name, therapist_id, grade)
+        VALUES ($1, $2, $3, $4, $5)
+    `, studentID, "Rating", "Student", therapistID, 5)
+	require.NoError(t, err)
+
+	// Create initial session-student relationship
+	_, err = testDB.Pool.Exec(ctx, `
+        INSERT INTO session_student (session_id, student_id, present, notes)
+        VALUES ($1, $2, $3, $4)
+    `, sessionID, studentID, true, "Initial notes")
+	require.NoError(t, err)
+
+	// Test 1: Create new ratings
+	presentTrue := true
+	notes := ptrString("Session went well")
+	rateInput := &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   &presentTrue,
+		Notes:     notes,
+		Ratings: &[]models.RateInput{
+			{
+				Category:    "visual_cue",
+				Level:       "minimal",
+				Description: "Minimal visual prompting needed",
+			},
+			{
+				Category:    "engagement",
+				Level:       "high",
+				Description: "Highly engaged",
+			},
+		},
+	}
+
+	sessionStudent, ratings, err := repo.RateStudentSession(ctx, rateInput)
+	require.NoError(t, err)
+	require.NotNil(t, sessionStudent)
+	assert.Equal(t, sessionID, sessionStudent.SessionID)
+	assert.Equal(t, studentID, sessionStudent.StudentID)
+	assert.True(t, sessionStudent.Present)
+	assert.Equal(t, "Session went well", *sessionStudent.Notes)
+	assert.Len(t, ratings, 2)
+
+	// Test 2: Update existing ratings (ON CONFLICT)
+	rateInput = &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   nil,
+		Notes:     ptrString("Updated notes"),
+		Ratings: &[]models.RateInput{
+			{
+				Category:    "visual_cue",
+				Level:       "maximal", // Changed from minimal
+				Description: "Required significant visual support",
+			},
+		},
+	}
+
+	sessionStudent, ratings, err = repo.RateStudentSession(ctx, rateInput)
+	require.NoError(t, err)
+	require.NotNil(t, sessionStudent)
+	assert.Equal(t, "Updated notes", *sessionStudent.Notes)
+	assert.Len(t, ratings, 1)
+	assert.Equal(t, "visual_cue", *ratings[0].Category)
+	assert.Equal(t, "maximal", *ratings[0].Level)
+
+	// Test 3: Empty ratings array
+	emptyRatingsInput := &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   &presentTrue,
+		Notes:     ptrString("No ratings update"),
+		Ratings:   &[]models.RateInput{},
+	}
+
+	sessionStudent, ratings, err = repo.RateStudentSession(ctx, emptyRatingsInput)
+	require.NoError(t, err)
+	require.NotNil(t, sessionStudent)
+	assert.Equal(t, "No ratings update", *sessionStudent.Notes)
+	assert.Len(t, ratings, 0)
+
+	// Test 4: Test engagement levels (low/high)
+	engagementInput := &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   nil,
+		Notes:     nil,
+		Ratings: &[]models.RateInput{
+			{
+				Category:    "engagement",
+				Level:       "low", // Testing low engagement
+				Description: "Low engagement today",
+			},
+		},
+	}
+
+	// Test 5: No update to ratings
+	emptyRatingsInput = &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   &presentTrue,
+		Notes:     ptrString("No ratings update"),
+	}
+
+	sessionStudent, ratings, err = repo.RateStudentSession(ctx, emptyRatingsInput)
+	require.NoError(t, err)
+	require.NotNil(t, sessionStudent)
+	assert.NotNil(t, ratings)
+	assert.Equal(t, "No ratings update", *sessionStudent.Notes)
+	assert.Len(t, ratings, 2)
+
+	sessionStudent, ratings, err = repo.RateStudentSession(ctx, engagementInput)
+	require.NoError(t, err)
+	assert.Len(t, ratings, 1)
+	assert.NotNil(t, sessionStudent)
+	assert.Equal(t, "engagement", *ratings[0].Category)
+	assert.Equal(t, "low", *ratings[0].Level)
+
+	// Test 5: Non-existent session-student relationship
+	nonExistentInput := &models.PatchSessionStudentInput{
+		SessionID: uuid.New(),
+		StudentID: uuid.New(),
+		Present:   ptrBool(true),
+		Notes:     ptrString("Should fail"),
+		Ratings: &[]models.RateInput{
+			{
+				Category:    "visual_cue",
+				Level:       "minimal",
+				Description: "Should not be inserted",
+			},
+		},
+	}
+
+	failSessionStudent, failRatings, err := repo.RateStudentSession(ctx, nonExistentInput)
+	assert.Error(t, err)
+	assert.Nil(t, failSessionStudent)
+	assert.Nil(t, failRatings)
 }

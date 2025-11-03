@@ -42,3 +42,4 @@ clean:
 # Orval
 orval:
 	npx orval
+	npm run lint:fix

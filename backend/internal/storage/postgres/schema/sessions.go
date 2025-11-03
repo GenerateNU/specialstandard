@@ -203,13 +203,16 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 
 func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error) {
 	query := `
-	SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
-	       s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 
-	       s.grade, s.iep, s.created_at, s.updated_at
-	FROM session_student ss
-	JOIN student s ON ss.student_id = s.id
-	WHERE ss.session_id = $1
-	AND s.grade != -1
+    SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
+           s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 
+           s.grade, s.iep, s.created_at, s.updated_at, 
+           sr.level, sr.category, sr.description
+    FROM session_student ss
+    JOIN student s ON ss.student_id = s.id
+    LEFT JOIN session_rating sr ON ss.id = sr.session_student_id
+    WHERE ss.session_id = $1
+    AND s.grade != -1
+    ORDER BY ss.id, sr.id
 	LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
@@ -218,22 +221,43 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
 	}
 	defer rows.Close()
 
-	var sessionStudents []models.SessionStudentsOutput
+	sessionStudentsMap := make(map[string]*models.SessionStudentsOutput)
 	for rows.Next() {
 		var result models.SessionStudentsOutput
 		var student models.Student
+		var rating models.SessionRating
 
 		err := rows.Scan(
 			&result.SessionID, &result.Present, &result.Notes, &result.CreatedAt, &result.UpdatedAt,
 			&student.ID, &student.FirstName, &student.LastName, &student.DOB, &student.TherapistID,
 			&student.Grade, &student.IEP, &student.CreatedAt, &student.UpdatedAt,
+			&rating.Level, &rating.Category, &rating.Description,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		result.Student = student
-		sessionStudents = append(sessionStudents, result)
+		if existing, exists := sessionStudentsMap[student.ID.String()]; exists {
+			// Student already exists
+			if rating.Level != nil && rating.Category != nil {
+				existing.Ratings = append(existing.Ratings, rating)
+			}
+		} else {
+			result.Student = student
+			result.Ratings = []models.SessionRating{}
+
+			// Only add the rating if it's valid
+			if rating.Level != nil && rating.Category != nil {
+				result.Ratings = append(result.Ratings, rating)
+			}
+
+			sessionStudentsMap[student.ID.String()] = &result
+		}
+	}
+
+	var sessionStudents []models.SessionStudentsOutput
+	for _, ss := range sessionStudentsMap {
+		sessionStudents = append(sessionStudents, *ss)
 	}
 
 	return sessionStudents, nil

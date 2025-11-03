@@ -1078,6 +1078,73 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /students/{student_id}/ratings:
+    get:
+      summary: Get ratings for a student
+      description: Retrieve all session ratings for a specific student
+      tags: [Students]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          description: UUID of the student
+          schema:
+            type: string
+            format: uuid
+            example: "0711034b-18b9-4f41-9b61-467ce9a373d5"
+        - name: category
+          in: query
+          required: false
+          description: Filter ratings by category
+          schema:
+            type: string
+            enum: ["visual_cue", "verbal_cue", "gestural_cue", "engagement"]
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query 
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: List of session ratings for the student
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentRatingEntry"
+        "400":
+          description: Bad request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Student not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /students/promote:
     patch:
       summary: Promotes all of a therapist's students
@@ -1213,10 +1280,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
     patch:
-      summary: Update session-student relationship
-      description: Update the present status or notes for a session-student relationship
+      summary: Update or rate session for a student
+      description: Update the rating for a specific category in a session-student relationship
       tags: [Session Students]
       requestBody:
         required: true
@@ -1226,11 +1292,11 @@ paths:
               $ref: "#/components/schemas/UpdateSessionStudentInput"
       responses:
         "200":
-          description: Session-student relationship updated successfully
+          description: Session rated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionStudent"
+                $ref: "#/components/schemas/SessionStudentWithRatings"
         "400":
           description: Bad request (e.g., validation errors)
           content:
@@ -2797,6 +2863,28 @@ components:
           description: Content/URL of the resource (optional)
           example: "https://example.com/resource"
 
+    SessionRating:
+      type: object
+      required:
+        - category
+        - level
+      properties:
+        category:
+          type: string
+          enum: ['visual_cue', 'verbal_cue', 'gestural_cue', 'engagement']
+          description: Category of the rating
+          example: "engagement"
+        level:
+          type: string
+          enum: ['minimal', 'moderate', 'maximal', 'low', 'high']
+          description: Rating level
+          example: "high"
+        description:
+          type: string
+          nullable: true
+          description: Optional description for the rating
+          example: "Student was highly engaged throughout the session"
+
     SessionStudent:
       type: object
       required:
@@ -2806,6 +2894,10 @@ components:
         - created_at
         - updated_at
       properties:
+        id:
+          type: integer
+          description: Unique identifier for the session-student relationship
+          example: 1
         session_id:
           type: string
           format: uuid
@@ -2889,29 +2981,113 @@ components:
           nullable: true
           description: Update or clear notes (set to null to clear)
           example: "Student left early due to appointment"
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionRating"
+          description: List of ratings for this student during the session
+
+    SessionStudentWithRatings:
+      type: object
+      required:
+        - session_id
+        - student_id
+        - ratings
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: UUID of the session (cannot be changed)
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        student_id:
+          type: string
+          format: uuid
+          description: UUID of the student (cannot be changed)
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        present:
+          type: boolean
+          description: Update the student's attendance status
+          example: false
+        notes:
+          type: string
+          nullable: true
+          description: Update or clear notes (set to null to clear)
+          example: "Student left early due to appointment"
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionRating"
+          description: List of ratings for this student during the session
+
+    StudentRatingEntry:
+      type: object
+      required:
+        - session_id
+        - student_id
+        - session_date
+        - ratings
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: UUID of the session
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        student_id:
+          type: string
+          format: uuid
+          description: UUID of the student
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        session_date:
+          type: string
+          format: date-time
+          description: Date and time of the session
+          example: "2024-01-15T14:30:00Z"
+        ratings:  
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionRating"
+          description: List of ratings for this student
 
     StudentWithSessionInfo:
-      allOf:
-        - $ref: "#/components/schemas/Student"
-        - type: object
-          required:
-            - session_id
-            - present
-          properties:
-            session_id:
-              type: string
-              format: uuid
-              description: UUID of the associated session
-              example: "123e4567-e89b-12d3-a456-426614174000"
-            present:
-              type: boolean
-              description: Whether the student was present at the session
-              example: true
-            notes:
-              type: string
-              nullable: true
-              description: Session-specific notes about the student
-              example: "Showed significant progress with motor skills"
+      type: object
+      required:
+        - student
+        - present
+        - session_id
+        - ratings
+      properties:
+        student:
+          $ref: "#/components/schemas/Student"
+          description: The student information
+        session_id:
+          type: string
+          format: uuid
+          description: UUID of the associated session
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        present:
+          type: boolean
+          description: Whether the student was present at the session
+          example: true
+        notes:
+          type: string
+          nullable: true
+          description: Session-specific notes about the student
+          example: "Showed significant progress with motor skills"
+        created_at:
+          type: string
+          format: date-time
+          description: When the session-student relationship was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the session-student relationship was last updated
+          example: "2024-01-15T10:35:00Z"
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionRating"
+          description: List of ratings given to the student during the session
 
     SessionWithStudentInfo:
       allOf:
