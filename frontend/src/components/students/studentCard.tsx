@@ -12,24 +12,10 @@ import {
 
 import { useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
+import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 
 interface StudentCardProps {
   student: StudentBody
-}
-
-// Function to deterministically select avatar variant based on student ID
-function getAvatarVariant(id: string): 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big-smile' | 'personas' {
-  // DiceBear expects lowercase with hyphens
-  const variants = ['avataaars', 'lorelei', 'micah', 'miniavs', 'big-smile', 'personas'] as const
-
-  // Simple hash function to get consistent index
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = ((hash << 5) - hash) + id.charCodeAt(i)
-    hash = hash & hash // Convert to 32-bit integer
-  }
-
-  return variants[Math.abs(hash) % variants.length]
 }
 
 export default function StudentCard({ student }: StudentCardProps) {
@@ -79,7 +65,7 @@ export default function StudentCard({ student }: StudentCardProps) {
       >
         <div className="flex items-center space-x-4">
           <Avatar
-            name={getFullName() + student.id} // Ensure uniqueness
+            name={getAvatarName(student.first_name, student.last_name, student.id)}
             variant={avatarVariant}
             className="w-12 h-12 ring-2 ring-accent-light"
           />

@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,6 +21,9 @@ func ConnectDatabase(ctx context.Context, config config.DB) (*pgxpool.Pool, erro
 		log.Fatalf("Failed to connect to the database: %v", err)
 		return nil, err
 	}
+
+	// Disable prepared statement caching to avoid conflicts with connection pooling
+	dbConfig.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
 	conn, err := pgxpool.NewWithConfig(ctx, dbConfig)
 	if err != nil {
