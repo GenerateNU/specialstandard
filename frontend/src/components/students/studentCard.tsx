@@ -8,7 +8,6 @@ import {
 import { Avatar } from '@/components/ui/avatar'
 import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 
-
 interface StudentCardProps {
   student: StudentBody
 }
