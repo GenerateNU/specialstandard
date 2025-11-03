@@ -30,9 +30,7 @@ export function useTherapists(): UseTherapistsReturn {
     refetch,
   } = useQuery({
     queryKey: ["therapists", therapistId],
-    queryFn: () => api.getTherapists({ therapistId: therapistId! }),
-    // we technically dont need this line but it is just defensive programming!!
-    enabled: !!therapistId,
+    queryFn: () => api.getTherapists({}),
   });
 
   const therapists = therapistsResponse ?? [];

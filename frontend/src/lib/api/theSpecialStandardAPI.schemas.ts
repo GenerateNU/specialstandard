@@ -642,6 +642,10 @@ export type GetSessionsParams = {
    * Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
    */
   id?: string[];
+  /**
+   * Therapist ID for auth purposes
+   */
+  therapistId: string;
 };
 
 export type PostSessionsBodyRepetition = {
@@ -682,6 +686,10 @@ export type GetSessionsIdResourcesParams = {
    * @minimum 1
    */
   limit?: number;
+  /**
+   * Therapist ID for auth purposes
+   */
+  therapistId: string;
 };
 
 export type GetSessionsSessionIdStudentsParams = {
@@ -699,6 +707,10 @@ export type GetSessionsSessionIdStudentsParams = {
    * @minimum 1
    */
   limit?: number;
+  /**
+   * Therapist ID for auth purposes
+   */
+  therapistId: string;
 };
 
 export type GetStudentsParams = {

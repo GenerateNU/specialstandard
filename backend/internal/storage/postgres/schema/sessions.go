@@ -207,7 +207,12 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 	}
 }
 
-func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error) {
+func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination, therapistID uuid.UUID) ([]models.SessionStudentsOutput, error) {
+	// Validate that therapistID is provided
+	if therapistID == uuid.Nil {
+		return nil, fmt.Errorf("therapist_id is required")
+	}
+
 	query := `
     SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
            s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 
@@ -217,11 +222,9 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
     JOIN student s ON ss.student_id = s.id
     LEFT JOIN session_rating sr ON ss.id = sr.session_student_id
     WHERE ss.session_id = $1
-    AND s.grade != -1
-    ORDER BY ss.id, sr.id
-	LIMIT $2 OFFSET $3`
+    AND s.therapist_id = $2`
 
-	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
+	rows, err := r.db.Query(ctx, query, sessionID, therapistID, pagination.Limit, pagination.GettOffset())
 	if err != nil {
 		return nil, err
 	}

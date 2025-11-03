@@ -25,10 +25,10 @@ interface UseSessionsParams {
 }
 
 interface UseSessionReturn {
-  session: Session | null
-  isLoading: boolean
-  error: string | null
-  refetch: () => Promise<QueryObserverResult<Session, Error>>
+  session: Session | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<QueryObserverResult<Session, Error>>;
 }
 
 export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
@@ -48,7 +48,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
         limit: params?.limit ?? 100,
         startdate: params?.startdate,
         enddate: params?.enddate,
-        therapistid: therapistId!, // exclamation point essentially says "yo, this is confirmed to exist and not be null"
+        therapistId: therapistId!, // exclamation point essentially says "yo, this is confirmed to exist and not be null"
       }),
     // we technically dont need this line but it is just defensive programming!!
     enabled: !!therapistId,
@@ -92,7 +92,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
 }
 
 export function useSession(id: string): UseSessionReturn {
-  const api = getSessionsApi()
+  const api = getSessionsApi();
 
   const {
     data: session,
@@ -100,15 +100,15 @@ export function useSession(id: string): UseSessionReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['sessions', id],
+    queryKey: ["sessions", id],
     queryFn: () => api.getSessionsId(id),
     enabled: !!id,
-  })
+  });
 
   return {
     session: session || null,
     isLoading,
     error: error?.message || null,
     refetch,
-  }
+  };
 }
