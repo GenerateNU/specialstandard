@@ -76,20 +76,12 @@ export default function LoginPage() {
     router.push("/");
   };
 
-  const handleMFACancel = () => {
-    console.log("❌ MFA cancelled");
-    setNeedsMFA(false);
-  };
-
   // Show MFA screen when needed
   if (needsMFA) {
     console.log("✨ Rendering MFA screen");
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <EmailMFAVerification
-          onVerified={handleMFAVerified}
-          onCancel={handleMFACancel}
-        />
+        <EmailMFAVerification onVerified={handleMFAVerified} />
       </div>
     );
   }

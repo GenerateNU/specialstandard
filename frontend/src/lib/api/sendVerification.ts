@@ -55,10 +55,9 @@ export default async function handler(
 
     const userEmail = user.email;
 
-    // Create service role client for database insert (bypasses RLS)
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY! // This bypasses RLS
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     // Generating random code for email verif
@@ -84,7 +83,7 @@ export default async function handler(
       });
     }
     const { data, error } = await resend.emails.send({
-      from: "Kevin Matula <matulakevin91@gmail.com>",
+      from: "Kevin Matula <kevinmatula@plantkeepr.co>",
       to: userEmail!,
       subject: "The Special Standard Verification Code",
       html: getEmailTemplate(code),

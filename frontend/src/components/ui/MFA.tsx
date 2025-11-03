@@ -3,12 +3,10 @@ import React, { useState } from "react";
 
 interface EmailMFAVerificationProps {
   onVerified: () => void;
-  onCancel?: () => void;
 }
 
 export const EmailMFAVerification: React.FC<EmailMFAVerificationProps> = ({
   onVerified,
-  onCancel,
 }) => {
   const [code, setCode] = useState("");
   const { sendVerificationCode, verifyCode, loading, error, codeSent } =
@@ -37,7 +35,9 @@ export const EmailMFAVerification: React.FC<EmailMFAVerificationProps> = ({
   if (!codeSent) {
     return (
       <div className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4">Email Verification Required</h2>
+        <h2 className="text-2xl font-bold mb-4 text-black">
+          Email Verification Required
+        </h2>
         <p className="mb-6 text-gray-600">
           To continue, we need to verify your identity. Click below to receive a
           verification code via email.
@@ -57,16 +57,6 @@ export const EmailMFAVerification: React.FC<EmailMFAVerificationProps> = ({
           >
             {loading ? "Sending..." : "Send Verification Code"}
           </button>
-
-          {onCancel && (
-            <button
-              onClick={onCancel}
-              disabled={loading}
-              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-          )}
         </div>
       </div>
     );
@@ -74,7 +64,9 @@ export const EmailMFAVerification: React.FC<EmailMFAVerificationProps> = ({
 
   return (
     <div className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Enter Verification Code</h2>
+      <h2 className="text-2xl font-bold mb-4 text-black">
+        Enter Verification Code
+      </h2>
       <p className="mb-6 text-gray-600">
         We've sent a 6-digit code to your email. Please enter it below.
       </p>
@@ -91,7 +83,7 @@ export const EmailMFAVerification: React.FC<EmailMFAVerificationProps> = ({
           value={code}
           onChange={handleCodeChange}
           placeholder="000000"
-          className="w-full text-center text-3xl tracking-widest p-4 border-2 border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-600"
+          className="w-full text-center text-3xl text-gray-600 tracking-widest p-4 border-2 border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-600"
           maxLength={6}
           autoComplete="off"
           autoFocus
@@ -110,7 +102,7 @@ export const EmailMFAVerification: React.FC<EmailMFAVerificationProps> = ({
             type="button"
             onClick={handleSendCode}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 text-gray-600 rounded hover:bg-gray-50"
           >
             Resend Code
           </button>
