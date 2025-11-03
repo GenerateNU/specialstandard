@@ -17,3 +17,4 @@ supabase/.temp/
 
 backend/coverage.out
 backend/coverage.html
+backend/test_output.log
