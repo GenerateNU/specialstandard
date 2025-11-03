@@ -1,65 +1,97 @@
-'use client'
+"use client";
 
-import { Loader2, LogIn } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import CustomAlert from '@/components/ui/CustomAlert'
-import { Input } from '@/components/ui/input'
-import { useAuthContext } from '@/contexts/authContext'
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import CustomAlert from "@/components/ui/CustomAlert";
+import { Input } from "@/components/ui/input";
+import { EmailMFAVerification } from "@/components/ui/MFA";
+import { useAuthContext } from "@/contexts/authContext";
+import { Loader2, LogIn } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [showError, setShowError] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [needsMFA, setNeedsMFA] = useState(false);
+  const hasRedirected = useRef(false);
 
-  const { login, isAuthenticated } = useAuthContext()
-  const router = useRouter()
+  const { login, completeMFALogin, isAuthenticated } = useAuthContext();
+  const router = useRouter();
 
-  // All useEffect hooks here
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/')
+    if (error) setShowError(true);
+  }, [error]);
+
+  // Handle redirect only when user navigates directly to /login while already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !needsMFA && !hasRedirected.current && !isLoading) {
+      console.log("✅ Already authenticated, redirecting to home");
+      hasRedirected.current = true;
+      router.push("/");
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, needsMFA, isLoading, router]);
 
-  useEffect(() => {
-    if (error)
-      setShowError(true)
-  }, [error])
-
-  if (isLoading) {
+  if (isLoading && !needsMFA) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
-    )
-  }
-
-  if (isAuthenticated) {
-    return null
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setIsLoading(true)
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    hasRedirected.current = false;
 
     try {
-      await login({ email, password, remember_me: rememberMe })
+      const result = await login({ email, password, remember_me: rememberMe });
+      if (result.requiresMFA) {
+        setNeedsMFA(true);
+      } else {
+        // No MFA required, redirect
+        router.push("/");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Invalid email or password");
+      setNeedsMFA(false);
+    } finally {
+      setIsLoading(false);
     }
-    catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid email or password')
-    }
-    finally {
-      setIsLoading(false)
-    }
+  };
+
+  const handleMFAVerified = () => {
+    console.log("✨ MFA verified, completing login...");
+    completeMFALogin(); // Now set as authenticated
+    hasRedirected.current = true;
+    setNeedsMFA(false);
+    router.push("/");
+  };
+
+  const handleMFACancel = () => {
+    console.log("❌ MFA cancelled");
+    setNeedsMFA(false);
+  };
+
+  // Show MFA screen when needed
+  if (needsMFA) {
+    console.log("✨ Rendering MFA screen");
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <EmailMFAVerification
+          onVerified={handleMFAVerified}
+          onCancel={handleMFACancel}
+        />
+      </div>
+    );
   }
 
   return (
@@ -85,8 +117,8 @@ export default function LoginPage() {
               title="Login Failed"
               description={error}
               onClose={() => {
-                setShowError(false)
-                setError(null)
+                setShowError(false);
+                setError(null);
               }}
             />
           )}
@@ -103,7 +135,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
                 placeholder="therapist@example.com"
@@ -121,7 +153,7 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
                 placeholder="••••••••"
@@ -144,26 +176,23 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" disabled={isLoading} size="long">
-              {isLoading
-                ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Signing in...</span>
-                    </>
-                  )
-                : (
-                    <>
-                      <LogIn className="w-5 h-5" />
-                      <span>Sign In</span>
-                    </>
-                  )}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5" />
+                  <span>Sign In</span>
+                </>
+              )}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-secondary">
-              Don't have an account?
-              {' '}
+              Don't have an account?{" "}
               <Link href="/signup">
                 <Button variant="link" size="sm">
                   Sign up
@@ -174,5 +203,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
