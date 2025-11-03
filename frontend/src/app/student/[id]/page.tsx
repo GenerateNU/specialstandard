@@ -1,6 +1,6 @@
 'use client'
 
-import { CirclePlus, PencilLine, Save, Trash2, X } from 'lucide-react'
+import { ChevronLeft, CirclePlus, PencilLine, Save, Trash2, X } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
@@ -165,7 +165,11 @@ function StudentPage() {
 
           <div className="flex gap-8">
             {/* pfp and initials */}
-            <div className="flex flex-col items-center justify-between gap-2 w-1/5">
+            <div className="flex flex-col items-left justify-between gap-2 w-1/6">
+              <Button variant={'outline'} className={`w-1/2 pl-4 flex flex-row items-left justify-start ${CORNER_ROUND}`} 
+              onClick={() => window.history.back()}>
+                <ChevronLeft />
+                Back</Button>
               <div className="w-full aspect-square border-2 border-accent rounded-full">
                 <Avatar
                   name={fullName + student.id}
