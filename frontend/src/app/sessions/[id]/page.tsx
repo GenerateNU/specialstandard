@@ -1,16 +1,18 @@
 'use client'
 
-import { ArrowLeft, Calendar, Clock, MapPin, Plus, X } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, MapPin, Pencil, Plus, X } from 'lucide-react'
 import Link from 'next/link'
 import { use, useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { useSession } from '@/hooks/useSessions'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useSession, useSessions } from '@/hooks/useSessions'
 import {
   useSessionStudents,
   useSessionStudentsForSession,
 } from '@/hooks/useSessionStudents'
 import { useStudents } from '@/hooks/useStudents'
+import { getAvatarName, getAvatarVariant, getStudentInitials } from '@/lib/avatarUtils'
 
 interface PageProps {
   params: Promise<
@@ -23,6 +25,7 @@ interface PageProps {
 export default function SessionPage({ params }: PageProps) {
   const { id } = use(params)
   const { session, isLoading: sessionLoading } = useSession(id)
+  const { updateSession } = useSessions()
   const { students: sessionStudents, isLoading: studentsLoading }
     = useSessionStudentsForSession(id)
   const { students: allStudents } = useStudents()
@@ -34,8 +37,16 @@ export default function SessionPage({ params }: PageProps) {
     isRemoving,
   } = useSessionStudents()
 
-  const [isAttendanceMode, setIsAttendanceMode] = useState(false)
-  const [showAddStudents, setShowAddStudents] = useState(false)
+  const [mode, setMode] = useState<'view' | 'attendance' | 'editStudents'>('view')
+  const [studentToRemove, setStudentToRemove] = useState<{ id: string, name: string } | null>(null)
+  const [isEditingSession, setIsEditingSession] = useState(false)
+  const [editedSession, setEditedSession] = useState({
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '',
+    notes: '',
+  })
 
   if (sessionLoading || studentsLoading) {
     return (
@@ -75,36 +86,17 @@ export default function SessionPage({ params }: PageProps) {
     return `${formatTime(session.start_datetime)} - ${formatTime(session.end_datetime)}`
   }
 
-  const getInitials = (firstName?: string, lastName?: string) => {
-    const first = firstName?.charAt(0) || '?'
-    const last = lastName?.charAt(0) || '?'
-    return `${first}${last}`.toUpperCase()
+  const handleRemoveStudent = (studentId: string, studentName: string) => {
+    setStudentToRemove({ id: studentId, name: studentName })
   }
 
-  // Function to deterministically select avatar variant based on student ID
-  function getAvatarVariant(id?: string): 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big-smile' | 'personas' {
-    const variants = ['avataaars', 'lorelei', 'micah', 'miniavs', 'big-smile', 'personas'] as const
-
-    // Default to first variant if no ID
-    if (!id) {
-      return variants[0]
+  const confirmRemoveStudent = () => {
+    if (studentToRemove) {
+      removeStudentFromSession({
+        session_id: id,
+        student_id: studentToRemove.id,
+      })
     }
-
-    // Simple hash function to get consistent index
-    let hash = 0
-    for (let i = 0; i < id.length; i++) {
-      hash = ((hash << 5) - hash) + id.charCodeAt(i)
-      hash = hash & hash // Convert to 32-bit integer
-    }
-
-    return variants[Math.abs(hash) % variants.length]
-  }
-
-  const handleRemoveStudent = (studentId: string) => {
-    removeStudentFromSession({
-      session_id: id,
-      student_id: studentId,
-    })
   }
 
   const handleAddStudent = (studentId: string) => {
@@ -113,7 +105,6 @@ export default function SessionPage({ params }: PageProps) {
       student_ids: [studentId],
       present: false,
     })
-    setShowAddStudents(false)
   }
 
   const handleToggleAttendance = (studentId: string, present: boolean) => {
@@ -122,6 +113,36 @@ export default function SessionPage({ params }: PageProps) {
       student_id: studentId,
       present,
     })
+  }
+
+  const handleEditClick = () => {
+    const start = new Date(session.start_datetime)
+    const end = new Date(session.end_datetime)
+
+    setEditedSession({
+      startDate: start.toISOString().split('T')[0],
+      startTime: start.toTimeString().slice(0, 5),
+      endDate: end.toISOString().split('T')[0],
+      endTime: end.toTimeString().slice(0, 5),
+      notes: session.notes || '',
+    })
+    setIsEditingSession(true)
+  }
+
+  const handleSaveSession = () => {
+    const startDatetime = new Date(`${editedSession.startDate}T${editedSession.startTime}`).toISOString()
+    const endDatetime = new Date(`${editedSession.endDate}T${editedSession.endTime}`).toISOString()
+
+    updateSession(id, {
+      start_datetime: startDatetime,
+      end_datetime: endDatetime,
+      notes: editedSession.notes,
+    })
+    setIsEditingSession(false)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingSession(false)
   }
 
   // Filter out students already in session
@@ -142,27 +163,122 @@ export default function SessionPage({ params }: PageProps) {
 
       {/* Session header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-6">Session Details</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {/* Date */}
-          <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-            <Calendar className="w-5 h-5 text-accent" />
-            <span className="text-lg">{formatDateTime(session.start_datetime)}</span>
-          </div>
-
-          {/* Time */}
-          <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-            <Clock className="w-5 h-5 text-accent" />
-            <span className="text-lg">{formatTimeRange()}</span>
-          </div>
-
-          {/* Location */}
-          <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-            <MapPin className="w-5 h-5 text-accent" />
-            <span className="text-lg">{session.notes || 'No location'}</span>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-4xl font-bold">Session Details</h1>
+          {!isEditingSession
+            ? (
+                <Button
+                  onClick={handleEditClick}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit
+                </Button>
+              )
+            : (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleCancelEdit}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveSession}
+                    variant="default"
+                  >
+                    Save
+                  </Button>
+                </div>
+              )}
         </div>
+
+        {!isEditingSession
+          ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Date */}
+                <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-accent" />
+                  <span className="text-lg">{formatDateTime(session.start_datetime)}</span>
+                </div>
+
+                {/* Time */}
+                <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-accent" />
+                  <span className="text-lg">{formatTimeRange()}</span>
+                </div>
+
+                {/* Location */}
+                <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
+                  <MapPin className="w-5 h-5 text-accent" />
+                  <span className="text-lg">{session.notes || 'No location'}</span>
+                </div>
+              </div>
+            )
+          : (
+              <div className="space-y-4 mb-6">
+                {/* Date & Time Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Calendar className="w-4 h-4 inline mr-2" />
+                      Start Date & Time
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={editedSession.startDate}
+                        onChange={e => setEditedSession({ ...editedSession, startDate: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <input
+                        type="time"
+                        value={editedSession.startTime}
+                        onChange={e => setEditedSession({ ...editedSession, startTime: e.target.value })}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Clock className="w-4 h-4 inline mr-2" />
+                      End Date & Time
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={editedSession.endDate}
+                        onChange={e => setEditedSession({ ...editedSession, endDate: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <input
+                        type="time"
+                        value={editedSession.endTime}
+                        onChange={e => setEditedSession({ ...editedSession, endTime: e.target.value })}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location Input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <MapPin className="w-4 h-4 inline mr-2" />
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={editedSession.notes}
+                    onChange={e => setEditedSession({ ...editedSession, notes: e.target.value })}
+                    placeholder="e.g., Boston Latin Academy"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
       </div>
 
       {/* Students section */}
@@ -170,101 +286,108 @@ export default function SessionPage({ params }: PageProps) {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-semibold">Students</h2>
           <div className="flex gap-3">
-            {!isAttendanceMode && (
-              <Button
-                onClick={() => setIsAttendanceMode(true)}
-                variant="default"
-                size="lg"
-              >
-                Attendance
-              </Button>
-            )}
-            {isAttendanceMode && (
+            {mode === 'view' && (
               <>
                 <Button
-                  onClick={() => setShowAddStudents(!showAddStudents)}
+                  onClick={() => setMode('attendance')}
                   variant="default"
                   size="lg"
                 >
-                  {showAddStudents ? 'Close' : 'Swap'}
+                  Attendance
                 </Button>
                 <Button
-                  onClick={() => setIsAttendanceMode(false)}
-                  variant="secondary"
+                  onClick={() => setMode('editStudents')}
+                  variant="outline"
                   size="lg"
                 >
-                  Done
+                  Edit Students
                 </Button>
               </>
+            )}
+            {mode !== 'view' && (
+              <Button
+                onClick={() => setMode('view')}
+                variant="secondary"
+                size="lg"
+              >
+                Done
+              </Button>
             )}
           </div>
         </div>
 
-        {/* Student list */}
-        {!showAddStudents && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sessionStudents.map((student, index) => (
-              <div
-                key={student.id || `student-${index}`}
-                className="bg-card rounded-2xl p-6 shadow-sm border border-default flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <Avatar
-                    name={`${student.first_name || 'Unknown'} ${student.last_name || 'Student'}${student.id}`}
-                    variant={getAvatarVariant(student.id)}
-                    className="w-16 h-16 ring-2 ring-accent-light"
-                  />
-                  <div>
-                    <p className="text-lg font-medium">
-                      {getInitials(student.first_name, student.last_name)}
-                    </p>
-                    <p className="text-sm text-secondary">
-                      {student.first_name || 'Unknown'}
-                      {' '}
-                      {student.last_name || 'Student'}
-                    </p>
-                  </div>
+        {/* Current students list */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {sessionStudents.map((student, index) => (
+            <div
+              key={student.id || `student-${index}`}
+              className="bg-card rounded-2xl p-6 shadow-sm border border-default flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <Avatar
+                  name={getAvatarName(
+                    student.first_name || 'Unknown',
+                    student.last_name || 'Student',
+                    student.id,
+                  )}
+                  variant={getAvatarVariant(student.id)}
+                  className="w-16 h-16 ring-2 ring-accent-light"
+                />
+                <div>
+                  <p className="text-lg font-medium">
+                    {getStudentInitials(student.first_name, student.last_name)}
+                  </p>
+                  <p className="text-sm text-secondary">
+                    {student.first_name || 'Unknown'}
+                    {' '}
+                    {student.last_name || 'Student'}
+                  </p>
                 </div>
-
-                {isAttendanceMode && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleToggleAttendance(student.id, true)}
-                      variant={student.present ? 'default' : 'outline'}
-                      size="sm"
-                    >
-                      Present
-                    </Button>
-                    <Button
-                      onClick={() => handleToggleAttendance(student.id, false)}
-                      variant={!student.present ? 'default' : 'outline'}
-                      size="sm"
-                    >
-                      Absent
-                    </Button>
-                  </div>
-                )}
-
-                {!isAttendanceMode && (
-                  <Button
-                    onClick={() => handleRemoveStudent(student.id)}
-                    disabled={isRemoving}
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Remove student"
-                  >
-                    <X className="w-5 h-5" />
-                  </Button>
-                )}
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* Add students mode */}
-        {showAddStudents && (
+              {/* Attendance mode: Present/Absent buttons */}
+              {mode === 'attendance' && (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleToggleAttendance(student.id, true)}
+                    variant={student.present ? 'default' : 'outline'}
+                    size="sm"
+                  >
+                    Present
+                  </Button>
+                  <Button
+                    onClick={() => handleToggleAttendance(student.id, false)}
+                    variant={!student.present ? 'default' : 'outline'}
+                    size="sm"
+                  >
+                    Absent
+                  </Button>
+                </div>
+              )}
+
+              {/* Edit mode: Remove button */}
+              {mode === 'editStudents' && (
+                <Button
+                  onClick={() => handleRemoveStudent(
+                    student.id,
+                    `${student.first_name || 'Unknown'} ${student.last_name || 'Student'}`,
+                  )}
+                  disabled={isRemoving}
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Remove student"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Add students section (only in edit mode) */}
+        {mode === 'editStudents' && availableStudents.length > 0 && (
           <div>
-            <h3 className="text-xl font-semibold mb-4">All Students</h3>
+            <h3 className="text-xl font-semibold mb-4">Add Students</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {availableStudents.map((student, index) => (
                 <div
@@ -273,13 +396,17 @@ export default function SessionPage({ params }: PageProps) {
                 >
                   <div className="flex items-center gap-4">
                     <Avatar
-                      name={`${student.first_name || 'Unknown'} ${student.last_name || 'Student'}${student.id}`}
+                      name={getAvatarName(
+                        student.first_name || 'Unknown',
+                        student.last_name || 'Student',
+                        student.id,
+                      )}
                       variant={getAvatarVariant(student.id)}
                       className="w-16 h-16 ring-2 ring-accent-light"
                     />
                     <div>
                       <p className="text-lg font-medium">
-                        {getInitials(student.first_name, student.last_name)}
+                        {getStudentInitials(student.first_name, student.last_name)}
                       </p>
                       <p className="text-sm text-secondary">
                         {student.first_name || 'Unknown'}
@@ -295,6 +422,7 @@ export default function SessionPage({ params }: PageProps) {
                     variant="default"
                     size="sm"
                   >
+                    <Plus className="w-4 h-4 mr-1" />
                     Add
                   </Button>
                 </div>
@@ -302,23 +430,20 @@ export default function SessionPage({ params }: PageProps) {
             </div>
           </div>
         )}
-
-        {/* Add student button (non-attendance mode) */}
-        {!isAttendanceMode && (
-          <button
-            onClick={() => {
-              setIsAttendanceMode(true)
-              setShowAddStudents(true)
-            }}
-            className="mt-6 flex items-center gap-2 text-accent hover:text-accent-dark transition-colors"
-          >
-            <div className="w-12 h-12 rounded-full bg-card-hover flex items-center justify-center">
-              <Plus className="w-6 h-6" />
-            </div>
-            <span className="text-lg font-medium">Add student</span>
-          </button>
-        )}
       </div>
+
+      {/* Confirmation dialog for removing student */}
+      <ConfirmDialog
+        isOpen={!!studentToRemove}
+        onClose={() => setStudentToRemove(null)}
+        onConfirm={confirmRemoveStudent}
+        title="Remove Student"
+        description={`Are you sure you want to remove ${studentToRemove?.name} from this session?`}
+        confirmText="Remove"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isRemoving}
+      />
     </div>
   )
 }
