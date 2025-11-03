@@ -50,10 +50,11 @@ type CreateSessionStudentInput struct {
 }
 
 type PatchSessionStudentInput struct {
-	SessionID uuid.UUID `json:"session_id" validate:"required,uuid"`
-	StudentID uuid.UUID `json:"student_id" validate:"required,uuid"`
-	Present   *bool     `json:"present,omitempty"`
-	Notes     *string   `json:"notes,omitempty"`
+	SessionID uuid.UUID    `json:"session_id" validate:"required,uuid"`
+	StudentID uuid.UUID    `json:"student_id" validate:"required,uuid"`
+	Present   *bool        `json:"present,omitempty"`
+	Notes     *string      `json:"notes,omitempty"`
+	Ratings   *[]RateInput `json:"ratings" validate:"required,dive"`
 }
 
 type DeleteSessionStudentInput struct {
@@ -71,11 +72,6 @@ type SessionRating struct {
 	Category    *string `json:"category" validate:"oneof=visual_cue verbal_cue gestural_cue engagement"`
 	Level       *string `json:"level" validate:"oneof=minimal moderate maximal low high"`
 	Description *string `json:"description"`
-}
-
-type RateStudentSessionInput struct {
-	PatchSessionStudentInput
-	Ratings []RateInput `json:"ratings" validate:"required,dive"`
 }
 
 type PatchSessionStudentRatingsOutput struct {

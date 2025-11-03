@@ -340,14 +340,17 @@ func (r *StudentRepository) GetStudentRatings(ctx context.Context, studentID uui
 			}
 		}
 
-		sessionMap[sessionID].Ratings = append(sessionMap[sessionID].Ratings, models.SessionRating{
-			Level:       level,
-			Category:    category,
-			Description: description,
-		})
+		// Only append rating if it's not null
+		if level != nil && category != nil {
+			sessionMap[sessionID].Ratings = append(sessionMap[sessionID].Ratings, models.SessionRating{
+				Level:       level,
+				Category:    category,
+				Description: description,
+			})
+		}
 	}
 
-	var result []models.StudentSessionsWithRatingsOutput
+	result := []models.StudentSessionsWithRatingsOutput{}
 	for _, v := range sessionMap {
 		result = append(result, *v)
 	}
