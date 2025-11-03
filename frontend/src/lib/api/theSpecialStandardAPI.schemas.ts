@@ -499,7 +499,9 @@ export interface StudentRatingEntry {
   ratings: SessionRating[];
 }
 
-export type StudentWithSessionInfoAllOf = {
+export interface StudentWithSessionInfo {
+  /** The student information */
+  student: Student;
   /** UUID of the associated session */
   session_id: string;
   /** Whether the student was present at the session */
@@ -514,10 +516,8 @@ export type StudentWithSessionInfoAllOf = {
   /** When the session-student relationship was last updated */
   updated_at?: string;
   /** List of ratings given to the student during the session */
-  ratings?: SessionRating[];
-};
-
-export type StudentWithSessionInfo = Student & StudentWithSessionInfoAllOf;
+  ratings: SessionRating[];
+}
 
 export type SessionWithStudentInfoAllOf = {
   /** UUID of the associated student */
