@@ -2868,7 +2868,6 @@ components:
             $ref: "#/components/schemas/SessionRating"
           description: List of ratings for this student during the session
 
-
     StudentRatingEntry:
       type: object
       required:
@@ -2899,42 +2898,45 @@ components:
           description: List of ratings for this student
 
     StudentWithSessionInfo:
-      allOf:
-        - $ref: "#/components/schemas/Student"
-        - type: object
-          required:
-            - session_id
-            - present
-          properties:
-            session_id:
-              type: string
-              format: uuid
-              description: UUID of the associated session
-              example: "123e4567-e89b-12d3-a456-426614174000"
-            present:
-              type: boolean
-              description: Whether the student was present at the session
-              example: true
-            notes:
-              type: string
-              nullable: true
-              description: Session-specific notes about the student
-              example: "Showed significant progress with motor skills"
-            created_at:
-              type: string
-              format: date-time
-              description: When the session-student relationship was created
-              example: "2024-01-15T10:30:00Z"
-            updated_at:
-              type: string
-              format: date-time
-              description: When the session-student relationship was last updated
-              example: "2024-01-15T10:35:00Z"
-            ratings:
-              type: array
-              items:
-                $ref: "#/components/schemas/SessionRating"
-              description: List of ratings given to the student during the session
+      type: object
+      required:
+        - student
+        - present
+        - session_id
+        - ratings
+      properties:
+        student:
+          $ref: "#/components/schemas/Student"
+          description: The student information
+        session_id:
+          type: string
+          format: uuid
+          description: UUID of the associated session
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        present:
+          type: boolean
+          description: Whether the student was present at the session
+          example: true
+        notes:
+          type: string
+          nullable: true
+          description: Session-specific notes about the student
+          example: "Showed significant progress with motor skills"
+        created_at:
+          type: string
+          format: date-time
+          description: When the session-student relationship was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the session-student relationship was last updated
+          example: "2024-01-15T10:35:00Z"
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionRating"
+          description: List of ratings given to the student during the session
 
     SessionWithStudentInfo:
       allOf:
