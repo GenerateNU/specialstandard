@@ -106,13 +106,13 @@ func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input
 		for _, rating := range *input.Ratings {
 
 			query := `INSERT INTO session_rating (session_student_id, category, level, description)
-          VALUES ($1, $2, $3, $4) 
-          ON CONFLICT (session_student_id, category) 
-          DO UPDATE SET 
-              level = EXCLUDED.level,
-              description = EXCLUDED.description,
-              updated_at = NOW()
-          RETURNING category, level, description`
+		  VALUES ($1, $2, $3, $4) 
+		  ON CONFLICT (session_student_id, category) 
+		  DO UPDATE SET 
+			  level = EXCLUDED.level,
+			  description = EXCLUDED.description,
+			  updated_at = NOW()
+		  RETURNING category, level, description`
 
 			row := r.db.QueryRow(ctx, query, sessionStudent.ID, rating.Category, rating.Level, rating.Description)
 			var insertedRating models.SessionRating
@@ -120,6 +120,21 @@ func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input
 				return nil, nil, err
 			}
 			ratings = append(ratings, insertedRating)
+		}
+	} else {
+		query := `SELECT category, level, description 
+				  FROM session_rating 
+				  WHERE session_student_id = $1`
+
+		rows, err := r.db.Query(ctx, query, sessionStudent.ID)
+		if err != nil {
+			return nil, nil, err
+		}
+		defer rows.Close()
+
+		ratings, err = pgx.CollectRows(rows, pgx.RowToStructByName[models.SessionRating])
+		if err != nil {
+			return nil, nil, err
 		}
 	}
 

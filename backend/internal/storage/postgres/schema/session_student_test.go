@@ -409,6 +409,21 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 		},
 	}
 
+	// Test 5: No update to ratings
+	emptyRatingsInput = &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   &presentTrue,
+		Notes:     ptrString("No ratings update"),
+	}
+
+	sessionStudent, ratings, err = repo.RateStudentSession(ctx, emptyRatingsInput)
+	require.NoError(t, err)
+	require.NotNil(t, sessionStudent)
+	assert.NotNil(t, ratings)
+	assert.Equal(t, "No ratings update", *sessionStudent.Notes)
+	assert.Len(t, ratings, 2)
+
 	sessionStudent, ratings, err = repo.RateStudentSession(ctx, engagementInput)
 	require.NoError(t, err)
 	assert.Len(t, ratings, 1)
