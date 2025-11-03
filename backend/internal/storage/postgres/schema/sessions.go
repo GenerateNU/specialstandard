@@ -238,12 +238,19 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
 		}
 
 		if existing, exists := sessionStudentsMap[student.ID.String()]; exists {
-			// Student already exists, just add the rating
-			existing.Ratings = append(existing.Ratings, rating)
+			// Student already exists
+			if rating.Level != nil && rating.Category != nil {
+				existing.Ratings = append(existing.Ratings, rating)
+			}
 		} else {
-			// New student
 			result.Student = student
-			result.Ratings = []models.SessionRating{rating}
+			result.Ratings = []models.SessionRating{}
+
+			// Only add the rating if it's valid
+			if rating.Level != nil && rating.Category != nil {
+				result.Ratings = append(result.Ratings, rating)
+			}
+
 			sessionStudentsMap[student.ID.String()] = &result
 		}
 	}

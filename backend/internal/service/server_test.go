@@ -1498,7 +1498,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 				}
 				ratings := []models.SessionRating{}
 
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).
 					Return(sessionStudent, ratings, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
@@ -1524,7 +1524,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 				}
 				ratings := []models.SessionRating{}
 
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).
 					Return(sessionStudent, ratings, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
@@ -1573,7 +1573,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 					},
 				}
 
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).
 					Return(sessionStudent, ratings, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
@@ -1613,7 +1613,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).
 					Return(nil, nil, errors.New("no rows affected"))
 			},
 			expectedStatusCode: fiber.StatusNotFound,
@@ -1626,7 +1626,7 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).
 					Return(nil, nil, errors.New("foreign key violation"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,

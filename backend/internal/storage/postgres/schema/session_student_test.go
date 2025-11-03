@@ -236,7 +236,6 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	patchInput = &models.PatchSessionStudentInput{
 		SessionID: sessionID,
 		StudentID: studentID,
-		Present:   nil, // Don't update present
 		Notes:     newNotes,
 	}
 
@@ -264,7 +263,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, sessionID, result.SessionID)
 	assert.Equal(t, studentID, result.StudentID)
-	assert.True(t, result.Present) // Should be updated
+	assert.True(t, result.Present)
 	assert.NotNil(t, result.Notes)
 	assert.Equal(t, "Final comprehensive notes", *result.Notes) // Should be updated
 
@@ -329,14 +328,12 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	// Test 1: Create new ratings
 	presentTrue := true
 	notes := ptrString("Session went well")
-	rateInput := &models.RateStudentSessionInput{
-		PatchSessionStudentInput: models.PatchSessionStudentInput{
-			SessionID: sessionID,
-			StudentID: studentID,
-			Present:   &presentTrue,
-			Notes:     notes,
-		},
-		Ratings: []models.RateInput{
+	rateInput := &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   &presentTrue,
+		Notes:     notes,
+		Ratings: &[]models.RateInput{
 			{
 				Category:    "visual_cue",
 				Level:       "minimal",
@@ -360,14 +357,12 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	assert.Len(t, ratings, 2)
 
 	// Test 2: Update existing ratings (ON CONFLICT)
-	rateInput = &models.RateStudentSessionInput{
-		PatchSessionStudentInput: models.PatchSessionStudentInput{
-			SessionID: sessionID,
-			StudentID: studentID,
-			Present:   nil,
-			Notes:     ptrString("Updated notes"),
-		},
-		Ratings: []models.RateInput{
+	rateInput = &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   nil,
+		Notes:     ptrString("Updated notes"),
+		Ratings: &[]models.RateInput{
 			{
 				Category:    "visual_cue",
 				Level:       "maximal", // Changed from minimal
@@ -385,32 +380,27 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	assert.Equal(t, "maximal", *ratings[0].Level)
 
 	// Test 3: Empty ratings array
-	emptyRatingsInput := &models.RateStudentSessionInput{
-		PatchSessionStudentInput: models.PatchSessionStudentInput{
-			SessionID: sessionID,
-			StudentID: studentID,
-			Present:   &presentTrue,
-			Notes:     ptrString("No ratings update"),
-		},
-		Ratings: []models.RateInput{},
+	emptyRatingsInput := &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   &presentTrue,
+		Notes:     ptrString("No ratings update"),
+		Ratings:   &[]models.RateInput{},
 	}
 
 	sessionStudent, ratings, err = repo.RateStudentSession(ctx, emptyRatingsInput)
 	require.NoError(t, err)
 	require.NotNil(t, sessionStudent)
 	assert.Equal(t, "No ratings update", *sessionStudent.Notes)
-	assert.NotNil(t, ratings)
 	assert.Len(t, ratings, 0)
 
 	// Test 4: Test engagement levels (low/high)
-	engagementInput := &models.RateStudentSessionInput{
-		PatchSessionStudentInput: models.PatchSessionStudentInput{
-			SessionID: sessionID,
-			StudentID: studentID,
-			Present:   nil,
-			Notes:     nil,
-		},
-		Ratings: []models.RateInput{
+	engagementInput := &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   nil,
+		Notes:     nil,
+		Ratings: &[]models.RateInput{
 			{
 				Category:    "engagement",
 				Level:       "low", // Testing low engagement
@@ -418,6 +408,21 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 			},
 		},
 	}
+
+	// Test 5: No update to ratings
+	emptyRatingsInput = &models.PatchSessionStudentInput{
+		SessionID: sessionID,
+		StudentID: studentID,
+		Present:   &presentTrue,
+		Notes:     ptrString("No ratings update"),
+	}
+
+	sessionStudent, ratings, err = repo.RateStudentSession(ctx, emptyRatingsInput)
+	require.NoError(t, err)
+	require.NotNil(t, sessionStudent)
+	assert.NotNil(t, ratings)
+	assert.Equal(t, "No ratings update", *sessionStudent.Notes)
+	assert.Len(t, ratings, 2)
 
 	sessionStudent, ratings, err = repo.RateStudentSession(ctx, engagementInput)
 	require.NoError(t, err)
@@ -427,14 +432,12 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	assert.Equal(t, "low", *ratings[0].Level)
 
 	// Test 5: Non-existent session-student relationship
-	nonExistentInput := &models.RateStudentSessionInput{
-		PatchSessionStudentInput: models.PatchSessionStudentInput{
-			SessionID: uuid.New(),
-			StudentID: uuid.New(),
-			Present:   ptrBool(true),
-			Notes:     ptrString("Should fail"),
-		},
-		Ratings: []models.RateInput{
+	nonExistentInput := &models.PatchSessionStudentInput{
+		SessionID: uuid.New(),
+		StudentID: uuid.New(),
+		Present:   ptrBool(true),
+		Notes:     ptrString("Should fail"),
+		Ratings: &[]models.RateInput{
 			{
 				Category:    "visual_cue",
 				Level:       "minimal",

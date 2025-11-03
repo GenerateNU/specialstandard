@@ -88,33 +88,54 @@ func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, inpu
 	return sessionStudent, nil
 }
 
-func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.RateStudentSessionInput) (*models.SessionStudent, []models.SessionRating, error) {
-	sessionStudent, err := r.PatchSessionStudent(ctx, &input.PatchSessionStudentInput)
+func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, []models.SessionRating, error) {
+	inputSessionStudent := models.PatchSessionStudentInput{
+		SessionID: input.SessionID,
+		StudentID: input.StudentID,
+		Present:   input.Present,
+		Notes:     input.Notes,
+	}
+
+	sessionStudent, err := r.PatchSessionStudent(ctx, &inputSessionStudent)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	var ratings []models.SessionRating
-	for _, rating := range input.Ratings {
-		query := `INSERT INTO session_rating (session_student_id, category, level, description)
-          VALUES ($1, $2, $3, $4) 
-          ON CONFLICT (session_student_id, category) 
-          DO UPDATE SET 
-              level = EXCLUDED.level,
-              description = EXCLUDED.description,
-              updated_at = NOW()
-          RETURNING category, level, description`
+	if input.Ratings != nil && *input.Ratings != nil {
+		for _, rating := range *input.Ratings {
 
-		row := r.db.QueryRow(ctx, query, sessionStudent.ID, rating.Category, rating.Level, rating.Description)
-		var insertedRating models.SessionRating
-		if err := row.Scan(&insertedRating.Category, &insertedRating.Level, &insertedRating.Description); err != nil {
+			query := `INSERT INTO session_rating (session_student_id, category, level, description)
+		  VALUES ($1, $2, $3, $4) 
+		  ON CONFLICT (session_student_id, category) 
+		  DO UPDATE SET 
+			  level = EXCLUDED.level,
+			  description = EXCLUDED.description,
+			  updated_at = NOW()
+		  RETURNING category, level, description`
+
+			row := r.db.QueryRow(ctx, query, sessionStudent.ID, rating.Category, rating.Level, rating.Description)
+			var insertedRating models.SessionRating
+			if err := row.Scan(&insertedRating.Category, &insertedRating.Level, &insertedRating.Description); err != nil {
+				return nil, nil, err
+			}
+			ratings = append(ratings, insertedRating)
+		}
+	} else {
+		query := `SELECT category, level, description 
+				  FROM session_rating 
+				  WHERE session_student_id = $1`
+
+		rows, err := r.db.Query(ctx, query, sessionStudent.ID)
+		if err != nil {
 			return nil, nil, err
 		}
-		ratings = append(ratings, insertedRating)
-	}
+		defer rows.Close()
 
-	if ratings == nil {
-		ratings = []models.SessionRating{}
+		ratings, err = pgx.CollectRows(rows, pgx.RowToStructByName[models.SessionRating])
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return sessionStudent, ratings, nil
