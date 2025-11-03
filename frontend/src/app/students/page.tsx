@@ -5,6 +5,7 @@ import Link from 'next/link'
 import AddStudentModal from '@/components/students/AddStudentModal'
 import StudentCard from '@/components/students/studentCard'
 import { useStudents } from '@/hooks/useStudents'
+import AppLayout from '@/components/AppLayout'
 
 export default function StudentsPage() {
   const { students, isLoading, error, refetch } = useStudents()
@@ -22,6 +23,7 @@ export default function StudentsPage() {
 
   if (error) {
     return (
+      <AppLayout>
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
@@ -37,10 +39,12 @@ export default function StudentsPage() {
           </button>
         </div>
       </div>
+      </AppLayout>
     )
   }
 
   return (
+    <AppLayout>
     <div className="min-h-screen bg-background py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="mb-8">
@@ -109,5 +113,6 @@ export default function StudentsPage() {
             )}
       </div>
     </div>
+    </AppLayout>
   )
 }

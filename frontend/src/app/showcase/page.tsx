@@ -56,6 +56,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import AppLayout from '@/components/AppLayout'
 
 export default function ComponentShowcase() {
   const [showAlert, setShowAlert] = useState(true)
@@ -79,6 +80,7 @@ export default function ComponentShowcase() {
   }
 
   return (
+    <AppLayout>
     <div className="font-sans min-h-screen p-8 pb-20 sm:p-20">
       {/* Back button */}
       <Link
@@ -513,5 +515,6 @@ export default function ComponentShowcase() {
         </section>
       </main>
     </div>
+    </AppLayout>
   )
 }

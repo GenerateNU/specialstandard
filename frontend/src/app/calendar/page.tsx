@@ -14,6 +14,7 @@ import { useSessions } from '@/hooks/useSessions'
 import { useStudents } from '@/hooks/useStudents'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import './override-calendar.css'
+import AppLayout from '@/components/AppLayout'
 
 const localizer = momentLocalizer(moment)
 
@@ -105,6 +106,7 @@ export default function MyCalendar() {
   }
 
   return (
+    <AppLayout>
     <div>
       {/* Back button */}
       <Link
@@ -158,5 +160,6 @@ export default function MyCalendar() {
         />
       )}
     </div>
+    </AppLayout>
   )
 }

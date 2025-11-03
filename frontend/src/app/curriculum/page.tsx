@@ -3,6 +3,7 @@
 import { AlertCircle, ArrowLeft, FileText, Loader2, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
 import { useResources } from '@/hooks/useResources'
+import AppLayout from '@/components/AppLayout'
 
 export default function Curriculum() {
   const { resources, isLoading, error, refetch } = useResources()
@@ -20,6 +21,7 @@ export default function Curriculum() {
 
   if (error) {
     return (
+      <AppLayout>
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
@@ -34,10 +36,12 @@ export default function Curriculum() {
           </button>
         </div>
       </div>
+      </AppLayout>
     )
   }
 
   return (
+    <AppLayout>
     <div className="min-h-screen bg-background py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -102,5 +106,6 @@ export default function Curriculum() {
             )}
       </div>
     </div>
+    </AppLayout>
   )
 }
