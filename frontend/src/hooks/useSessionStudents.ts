@@ -28,13 +28,16 @@ export function useSessionStudentsForSession(sessionId: string) {
   })
 
   // Flatten the nested student structure
-  const students = (studentsData || []).map((item: StudentWithSessionInfo) => ({
+  // Note: API returns nested structure but TypeScript type doesn't reflect this
+  const students = (studentsData || []).map((item: any) => ({
     // Spread the nested student object first to get id, first_name, last_name, etc.
     ...(item.student || {}),
     // Then add session-specific fields
     session_id: item.session_id,
     present: item.present,
     notes: item.notes,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
     // Override grade with display format
     grade: gradeToDisplay(item.student?.grade ?? item.grade),
   }))

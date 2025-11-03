@@ -4,6 +4,8 @@
 
 export type AvatarVariant = 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big-smile' | 'personas'
 
+const AVATAR_VARIANTS: AvatarVariant[] = ['avataaars', 'lorelei', 'micah', 'miniavs', 'big-smile', 'personas']
+
 /**
  * Get a deterministic avatar variant based on a student ID
  * Uses a simple hash function to ensure the same ID always gets the same avatar
@@ -11,11 +13,9 @@ export type AvatarVariant = 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big
  * @returns Avatar variant string
  */
 export function getAvatarVariant(id?: string): AvatarVariant {
-  const variants: AvatarVariant[] = ['avataaars', 'lorelei', 'micah', 'miniavs', 'big-smile', 'personas']
-
   // Default to first variant if no ID
   if (!id) {
-    return variants[0]
+    return AVATAR_VARIANTS[0]
   }
 
   // Simple hash function to get consistent index
@@ -25,7 +25,7 @@ export function getAvatarVariant(id?: string): AvatarVariant {
     hash = hash & hash // Convert to 32-bit integer
   }
 
-  return variants[Math.abs(hash) % variants.length]
+  return AVATAR_VARIANTS[Math.abs(hash) % AVATAR_VARIANTS.length]
 }
 
 /**
