@@ -558,6 +558,84 @@ export interface PromoteStudentsInput {
   excluded_student_ids?: string[];
 }
 
+/**
+ * The category of the game
+ */
+export type GameContentCategory =
+  (typeof GameContentCategory)[keyof typeof GameContentCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GameContentCategory = {
+  sequencing: "sequencing",
+  following_directions: "following_directions",
+  wh_questions: "wh_questions",
+  true_false: "true_false",
+  concepts_sorting: "concepts_sorting",
+} as const;
+
+export interface GameContent {
+  /** ID of a Game Content. */
+  id: string;
+  /** The category of the game */
+  category: GameContentCategory;
+  /**
+   * The corresponding grade level for this game's content
+   * @minimum 0
+   * @maximum 12
+   */
+  level: number;
+  /** The list of wrong-words that are given for the game. */
+  options: string[];
+  /** The answer to the game. */
+  answer: string;
+  /** When the game-content was created */
+  created_at: string;
+  /** When the game-content was last updated */
+  updated_at: string;
+}
+
+export interface GameResult {
+  /** ID of the Game Result. */
+  id: string;
+  /** ID of the Session the game was played */
+  session_id: string;
+  /** ID of the Student who played the game */
+  student_id: string;
+  /** ID of the Content of the Game */
+  content_id: string;
+  /** Number of seconds it takes to complete the game */
+  time_taken: number;
+  /** Whether or not the game was completed or not */
+  completed: boolean;
+  /**
+   * The number of incorrect attempts made during the game
+   * @minimum 0
+   */
+  incorrect_tries: number;
+  /** When the game-content was created */
+  created_at: string;
+  /** When the game-content was last updated */
+  updated_at: string;
+}
+
+export interface PostGameResultInput {
+  /** ID of the Session the game was played */
+  session_id: string;
+  /** ID of the Student who played the game */
+  student_id: string;
+  /** ID of the Content of the Game */
+  content_id: string;
+  /** Number of seconds it takes to complete the game */
+  time_taken: number;
+  /** Whether or not the game was completed or not */
+  completed?: boolean;
+  /**
+   * The number of incorrect attempts made during the game
+   * @minimum 0
+   */
+  incorrect_tries?: number;
+}
+
 export type PostAuthSignupBody = {
   /** Email ID of the User/Therapist */
   email: string;
@@ -909,4 +987,55 @@ export type GetThemesParams = {
 
 export type DeleteThemesId200 = {
   message?: string;
+};
+
+export type GetGameContentsParams = {
+  /**
+   * Category of the type of game
+   */
+  category: GetGameContentsCategory;
+  /**
+   * The Level of the game content (0-12; corresponding to grade-level)
+   * @minimum 0
+   * @maximum 12
+   */
+  level: number;
+  /**
+   * Number of options/words to choose from
+   * @minimum 2
+   */
+  count: number;
+};
+
+export type GetGameContentsCategory =
+  (typeof GetGameContentsCategory)[keyof typeof GetGameContentsCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameContentsCategory = {
+  sequencing: "sequencing",
+  following_directions: "following_directions",
+  wh_questions: "wh_questions",
+  true_false: "true_false",
+  concepts_sorting: "concepts_sorting",
+} as const;
+
+export type GetGameResultsParams = {
+  /**
+   * The SessionID of the session whose game results you seek
+   */
+  session_id?: string;
+  /**
+   * The StudentID of the student whose game results you seek
+   */
+  student_id?: string;
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
 };
