@@ -3,7 +3,6 @@ package schema
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/dbinterface"
 
@@ -90,9 +89,6 @@ func (r *SessionStudentRepository) PatchSessionStudent(ctx context.Context, inpu
 }
 
 func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, []models.SessionRating, error) {
-	// Add logging here
-	slog.Info("RateStudentSession called with input: %+v", input)
-
 	inputSessionStudent := models.SessionStudent{
 		SessionID: input.SessionID,
 		StudentID: input.StudentID,
