@@ -6,6 +6,7 @@ import (
 	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -246,6 +247,115 @@ func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uu
 	}
 
 	return studentSessions, nil
+}
+
+func (r *StudentRepository) GetStudentRatings(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination, filter *models.GetStudentSessionsRatingsRequest) ([]models.StudentSessionsWithRatingsOutput, error) {
+	query := `
+	SELECT ss.session_id, ss.student_id, s.start_datetime, sr.level, sr.category, sr.description
+	FROM session_student ss
+	JOIN session s ON ss.session_id = s.id
+	LEFT JOIN session_rating sr ON ss.id = sr.session_student_id
+	WHERE ss.student_id = $1`
+
+	conditions := []string{}
+	args := []interface{}{studentID}
+	argCount := 2
+
+	if filter != nil {
+		// Date filtering
+		if filter.Month != nil && filter.Year != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM s.start_datetime) = $%d AND EXTRACT(YEAR FROM s.start_datetime) = $%d", argCount, argCount+1))
+			args = append(args, *filter.Month, *filter.Year)
+			argCount += 2
+		} else if filter.Year != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(YEAR FROM s.start_datetime) = $%d", argCount))
+			args = append(args, *filter.Year)
+			argCount++
+		} else if filter.Month != nil {
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM s.start_datetime) = $%d", argCount))
+			args = append(args, *filter.Month)
+			argCount++
+		}
+
+		// Start and end date filtering
+		if filter.StartDate != nil {
+			conditions = append(conditions, fmt.Sprintf("s.start_datetime >= $%d", argCount))
+			args = append(args, *filter.StartDate)
+			argCount++
+		}
+
+		if filter.EndDate != nil {
+			conditions = append(conditions, fmt.Sprintf("s.end_datetime <= $%d", argCount))
+			args = append(args, *filter.EndDate)
+			argCount++
+		}
+
+		if filter.Present != nil {
+			conditions = append(conditions, fmt.Sprintf("ss.present = $%d", argCount))
+			args = append(args, *filter.Present)
+			argCount++
+		}
+		if filter.Category != nil && len(*filter.Category) > 0 {
+			conditions = append(conditions, fmt.Sprintf("sr.category = ANY($%d)", argCount))
+			args = append(args, *filter.Category)
+			argCount++
+		}
+
+	}
+
+	// Add conditions to query
+	if len(conditions) > 0 {
+		query += " AND " + strings.Join(conditions, " AND ")
+	}
+
+	// Add pagination
+	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount, argCount+1)
+	args = append(args, pagination.Limit, pagination.GettOffset())
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	sessionMap := make(map[uuid.UUID]*models.StudentSessionsWithRatingsOutput)
+	for rows.Next() {
+		var sessionID, studentID uuid.UUID
+		var sessionDate time.Time
+		var category, level, description *string
+
+		err := rows.Scan(
+			&sessionID, &studentID, &sessionDate, &level, &category, &description,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, exists := sessionMap[sessionID]; !exists {
+			sessionMap[sessionID] = &models.StudentSessionsWithRatingsOutput{
+				SessionID:   sessionID,
+				StudentID:   studentID,
+				SessionDate: sessionDate,
+				Ratings:     []models.SessionRating{},
+			}
+		}
+
+		// Only append rating if it's not null
+		if level != nil && category != nil {
+			sessionMap[sessionID].Ratings = append(sessionMap[sessionID].Ratings, models.SessionRating{
+				Level:       level,
+				Category:    category,
+				Description: description,
+			})
+		}
+	}
+
+	result := []models.StudentSessionsWithRatingsOutput{}
+	for _, v := range sessionMap {
+		result = append(result, *v)
+	}
+
+	return result, nil
 }
 
 func (r *StudentRepository) PromoteStudents(ctx context.Context, input models.PromoteStudentsInput) error {

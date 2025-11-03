@@ -24,6 +24,13 @@ interface UseSessionsParams {
   limit?: number;
 }
 
+interface UseSessionReturn {
+  session: Session | null
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<QueryObserverResult<Session, Error>>
+}
+
 export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
   const queryClient = useQueryClient();
   const api = getSessionsApi();
@@ -82,4 +89,26 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
       updateSessionMutation.mutate({ id, data }),
     deleteSession: (id: string) => deleteSessionMutation.mutate(id),
   };
+}
+
+export function useSession(id: string): UseSessionReturn {
+  const api = getSessionsApi()
+
+  const {
+    data: session,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['sessions', id],
+    queryFn: () => api.getSessionsId(id),
+    enabled: !!id,
+  })
+
+  return {
+    session: session || null,
+    isLoading,
+    error: error?.message || null,
+    refetch,
+  }
 }

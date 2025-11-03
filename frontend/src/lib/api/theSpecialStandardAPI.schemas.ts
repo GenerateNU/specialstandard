@@ -4,9 +4,7 @@
  * The Special Standard API
  * OpenAPI spec version: 0.1.0
  */
-export interface ErrorMessageAnyOf {
-  [key: string]: unknown;
-}
+export type ErrorMessageAnyOf = { [key: string]: unknown };
 
 /**
  * Error message or validation errors
@@ -383,7 +381,50 @@ export interface UpdateResourceBody {
   content?: string | null;
 }
 
+/**
+ * Category of the rating
+ */
+export type SessionRatingCategory =
+  (typeof SessionRatingCategory)[keyof typeof SessionRatingCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SessionRatingCategory = {
+  visual_cue: "visual_cue",
+  verbal_cue: "verbal_cue",
+  gestural_cue: "gestural_cue",
+  engagement: "engagement",
+} as const;
+
+/**
+ * Rating level
+ */
+export type SessionRatingLevel =
+  (typeof SessionRatingLevel)[keyof typeof SessionRatingLevel];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SessionRatingLevel = {
+  minimal: "minimal",
+  moderate: "moderate",
+  maximal: "maximal",
+  low: "low",
+  high: "high",
+} as const;
+
+export interface SessionRating {
+  /** Category of the rating */
+  category: SessionRatingCategory;
+  /** Rating level */
+  level: SessionRatingLevel;
+  /**
+   * Optional description for the rating
+   * @nullable
+   */
+  description?: string | null;
+}
+
 export interface SessionStudent {
+  /** Unique identifier for the session-student relationship */
+  id?: number;
   /** UUID of the session */
   session_id: string;
   /** UUID of the student */
@@ -427,9 +468,40 @@ export interface UpdateSessionStudentInput {
    * @nullable
    */
   notes?: string | null;
+  /** List of ratings for this student during the session */
+  ratings?: SessionRating[];
 }
 
-export interface StudentWithSessionInfoAllOf {
+export interface SessionStudentWithRatings {
+  /** UUID of the session (cannot be changed) */
+  session_id: string;
+  /** UUID of the student (cannot be changed) */
+  student_id: string;
+  /** Update the student's attendance status */
+  present?: boolean;
+  /**
+   * Update or clear notes (set to null to clear)
+   * @nullable
+   */
+  notes?: string | null;
+  /** List of ratings for this student during the session */
+  ratings: SessionRating[];
+}
+
+export interface StudentRatingEntry {
+  /** UUID of the session */
+  session_id: string;
+  /** UUID of the student */
+  student_id: string;
+  /** Date and time of the session */
+  session_date: string;
+  /** List of ratings for this student */
+  ratings: SessionRating[];
+}
+
+export interface StudentWithSessionInfo {
+  /** The student information */
+  student: Student;
   /** UUID of the associated session */
   session_id: string;
   /** Whether the student was present at the session */
@@ -439,11 +511,15 @@ export interface StudentWithSessionInfoAllOf {
    * @nullable
    */
   notes?: string | null;
+  /** When the session-student relationship was created */
+  created_at?: string;
+  /** When the session-student relationship was last updated */
+  updated_at?: string;
+  /** List of ratings given to the student during the session */
+  ratings: SessionRating[];
 }
 
-export type StudentWithSessionInfo = Student & StudentWithSessionInfoAllOf;
-
-export interface SessionWithStudentInfoAllOf {
+export type SessionWithStudentInfoAllOf = {
   /** UUID of the associated student */
   student_id: string;
   /** Whether the student was present at this session */
@@ -453,7 +529,7 @@ export interface SessionWithStudentInfoAllOf {
    * @nullable
    */
   notes?: string | null;
-}
+};
 
 export type SessionWithStudentInfo = Session & SessionWithStudentInfoAllOf;
 
@@ -482,7 +558,7 @@ export interface PromoteStudentsInput {
   excluded_student_ids?: string[];
 }
 
-export interface PostAuthSignupBody {
+export type PostAuthSignupBody = {
   /** Email ID of the User/Therapist */
   email: string;
   /** Password of the User/Therapist (meets strong password requirements) */
@@ -491,34 +567,34 @@ export interface PostAuthSignupBody {
   first_name?: string;
   /** Last Name of the User/Therapist */
   last_name?: string;
-}
+};
 
-export interface PostAuthSignup201User {
+export type PostAuthSignup201User = {
   /** The unique identifier of the newly created therapist */
   id?: string;
-}
+};
 
-export interface PostAuthSignup201 {
+export type PostAuthSignup201 = {
   /** The JWT Access Token issued for this User */
   access_token: string;
   user: PostAuthSignup201User;
-}
+};
 
-export interface PostAuthLoginBody {
+export type PostAuthLoginBody = {
   /** Email ID of the User/Therapist */
   email: string;
   /** Password of the User/Therapist (meets strong password requirements) */
   password: string;
   /** Whether to remember the user for a longer session duration */
   remember_me: boolean;
-}
+};
 
-export interface PostAuthLogin200User {
+export type PostAuthLogin200User = {
   /** The unique identifier of the newly created therapist */
   id?: string;
-}
+};
 
-export interface PostAuthLogin200 {
+export type PostAuthLogin200 = {
   /** The JWT Access Token issued for this User */
   access_token: string;
   /** Describes the type of JWT Token designated to this User */
@@ -529,9 +605,9 @@ export interface PostAuthLogin200 {
   refresh_token: string;
   user: PostAuthLogin200User;
   error?: unknown;
-}
+};
 
-export interface GetSessionsParams {
+export type GetSessionsParams = {
   /**
    * Page Number of pagination
    * @minimum 1
@@ -566,22 +642,18 @@ export interface GetSessionsParams {
    * Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
    */
   id?: string[];
-  /**
-   * Filter sessions that contains all students from the specified therapist IDs
-   */
-  therapistid: string;
-}
+};
 
-export interface PostSessionsBodyRepetition {
+export type PostSessionsBodyRepetition = {
   /** Starting Date of Recurring Session */
   recur_start: string;
   /** Ending Date of Recurring Session */
   recur_end: string;
   /** Recurring Session will happen every "N" weeks */
   every_n_weeks: unknown;
-}
+};
 
-export interface PostSessionsBody {
+export type PostSessionsBody = {
   /** Start date and time of the session */
   start_datetime: string;
   /** End date and time of the session */
@@ -593,13 +665,13 @@ export interface PostSessionsBody {
   repetition?: PostSessionsBodyRepetition;
   /** List of Student IDs of the students that are being added to this Session. */
   student_ids?: string[];
-}
+};
 
-export interface DeleteSessionsId200 {
+export type DeleteSessionsId200 = {
   message?: string;
-}
+};
 
-export interface GetSessionsIdResourcesParams {
+export type GetSessionsIdResourcesParams = {
   /**
    * Page Number of pagination
    * @minimum 1
@@ -610,9 +682,9 @@ export interface GetSessionsIdResourcesParams {
    * @minimum 1
    */
   limit?: number;
-}
+};
 
-export interface GetSessionsSessionIdStudentsParams {
+export type GetSessionsSessionIdStudentsParams = {
   /**
    * Filter students by attendance status
    */
@@ -627,9 +699,9 @@ export interface GetSessionsSessionIdStudentsParams {
    * @minimum 1
    */
   limit?: number;
-}
+};
 
-export interface GetStudentsParams {
+export type GetStudentsParams = {
   /**
    * Page number for pagination (starts at 1)
    * @minimum 1
@@ -655,9 +727,9 @@ export interface GetStudentsParams {
    * Search students by name (case-insensitive, matches first or last name)
    */
   name?: string;
-}
+};
 
-export interface GetStudentsStudentIdSessionsParams {
+export type GetStudentsStudentIdSessionsParams = {
   /**
    * Filter sessions starting after this date (YYYY-MM-DD format)
    */
@@ -692,20 +764,13 @@ export interface GetStudentsStudentIdSessionsParams {
    * @minimum 1
    */
   limit?: number;
-}
+};
 
-export interface PatchStudentsPromote200 {
-  message?: string;
-}
-
-export interface DeleteSessionStudentsBody {
-  /** UUID of the session */
-  session_id: string;
-  /** UUID of the student */
-  student_id: string;
-}
-
-export interface GetTherapistsParams {
+export type GetStudentsStudentIdRatingsParams = {
+  /**
+   * Filter ratings by category
+   */
+  category?: GetStudentsStudentIdRatingsCategory;
   /**
    * Page Number of pagination
    * @minimum 1
@@ -716,18 +781,48 @@ export interface GetTherapistsParams {
    * @minimum 1
    */
   limit?: number;
-  /**
-   * TherapistID of current therapist logged in,
-   * purposefully not optional because ticket wanted us to pass in ID by default
-   */
-  therapistId: string;
-}
+};
 
-export interface DeleteTherapistsId200 {
+export type GetStudentsStudentIdRatingsCategory =
+  (typeof GetStudentsStudentIdRatingsCategory)[keyof typeof GetStudentsStudentIdRatingsCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetStudentsStudentIdRatingsCategory = {
+  visual_cue: "visual_cue",
+  verbal_cue: "verbal_cue",
+  gestural_cue: "gestural_cue",
+  engagement: "engagement",
+} as const;
+
+export type PatchStudentsPromote200 = {
   message?: string;
-}
+};
 
-export interface GetResourcesParams {
+export type DeleteSessionStudentsBody = {
+  /** UUID of the session */
+  session_id: string;
+  /** UUID of the student */
+  student_id: string;
+};
+
+export type GetTherapistsParams = {
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
+};
+
+export type DeleteTherapistsId200 = {
+  message?: string;
+};
+
+export type GetResourcesParams = {
   /**
    * Filter resources by theme ID
    */
@@ -780,9 +875,9 @@ export interface GetResourcesParams {
    * @minimum 1
    */
   limit?: number;
-}
+};
 
-export interface GetThemesParams {
+export type GetThemesParams = {
   /**
    * Page Number of pagination
    * @minimum 1
@@ -810,8 +905,8 @@ export interface GetThemesParams {
    * @maxLength 255
    */
   search?: string;
-}
+};
 
-export interface DeleteThemesId200 {
+export type DeleteThemesId200 = {
   message?: string;
-}
+};

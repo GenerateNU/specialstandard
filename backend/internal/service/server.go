@@ -73,7 +73,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 
 	// Use CORS middleware to configure CORS and handle preflight/OPTIONS requests.
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:3000,https://clownfish-app-wq7as.ondigitalocean.app,https://king-prawn-app-n5vk6.ondigitalocean.app",
+		AllowOrigins:     "http://localhost:3000,http://localhost:3001,http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:3000,https://clownfish-app-wq7as.ondigitalocean.app,https://king-prawn-app-n5vk6.ondigitalocean.app",
 		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS", // Using these methods.
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true, // Allow cookies
@@ -123,6 +123,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Patch("/promote", studentHandler.PromoteStudents)
 		r.Patch("/:id", studentHandler.UpdateStudent)
 		r.Get("/:id/sessions", studentHandler.GetStudentSessions)
+		r.Get("/:id/ratings", studentHandler.GetStudentRatings)
 	})
 
 	themeHandler := theme.NewHandler(repo.Theme)
@@ -156,7 +157,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	apiV1.Route("/session_students", func(r fiber.Router) {
 		r.Post("/", sessionStudentHandler.CreateSessionStudent)
 		r.Delete("/", sessionStudentHandler.DeleteSessionStudent)
-		r.Patch("/", sessionStudentHandler.PatchSessionStudent)
+		r.Patch("/", sessionStudentHandler.PatchStudentSessionRatings)
 	})
 
 	sessionResourceHandler := session_resource.NewHandler(repo.SessionResource)
