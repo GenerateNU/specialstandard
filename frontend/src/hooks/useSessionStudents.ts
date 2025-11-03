@@ -28,7 +28,7 @@ export function useSessionStudentsForSession(sessionId: string) {
   })
 
   // Flatten the nested student structure
-  const students = (studentsData || []).map((item: any) => ({
+  const students = (studentsData || []).map((item: StudentWithSessionInfo) => ({
     // Spread the nested student object first to get id, first_name, last_name, etc.
     ...(item.student || {}),
     // Then add session-specific fields
