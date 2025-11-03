@@ -7,8 +7,8 @@
 import type {
   CreateSessionStudentInput,
   DeleteSessionStudentsBody,
+  SessionRatingInfo,
   SessionStudent,
-  UpdateSessionStudentInput,
 } from './theSpecialStandardAPI.schemas'
 
 import { customAxios } from './apiClient'
@@ -43,17 +43,15 @@ export function getSessionStudents() {
     })
   }
   /**
-   * Update the present status or notes for a session-student relationship
-   * @summary Update session-student relationship
+   * Update the rating for a specific category in a session-student relationship
+   * @summary Update or rate session for a student
    */
-  const patchSessionStudents = (
-    updateSessionStudentInput: UpdateSessionStudentInput,
-  ) => {
-    return customAxios<SessionStudent>({
+  const patchSessionStudents = (sessionRatingInfo: SessionRatingInfo) => {
+    return customAxios<SessionRatingInfo>({
       url: `/session_students`,
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      data: updateSessionStudentInput,
+      data: sessionRatingInfo,
     })
   }
   return { postSessionStudents, deleteSessionStudents, patchSessionStudents }

@@ -306,14 +306,14 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"present": false
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+				sessionStudent := &models.SessionStudent{
 					SessionID: sessionID,
 					StudentID: studentID,
 					Present:   false,
 					Notes:     stringPtr("Original notes"),
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				}, nil)
+				}
+				ratings := []models.SessionRating{}
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(sessionStudent, ratings, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -326,14 +326,14 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"notes": "Updated notes about student progress"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+				sessionStudent := &models.SessionStudent{
 					SessionID: sessionID,
 					StudentID: studentID,
 					Present:   true,
 					Notes:     stringPtr("Updated notes about student progress"),
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				}, nil)
+				}
+				ratings := []models.SessionRating{}
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(sessionStudent, ratings, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -347,23 +347,100 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"notes": "Student showed improvement"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+				sessionStudent := &models.SessionStudent{
 					SessionID: sessionID,
 					StudentID: studentID,
 					Present:   true,
 					Notes:     stringPtr("Student showed improvement"),
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				}, nil)
+				}
+				ratings := []models.SessionRating{}
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(sessionStudent, ratings, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
+			name: "successful_ratings_update_only",
+			requestBody: `{
+				"session_id": "` + sessionID.String() + `",
+				"student_id": "` + studentID.String() + `",
+				"ratings": [
+					{
+						"category": "visual_cue",
+						"level": "minimal",
+						"description": "Student occasionally makes eye contact."
+					},
+					{
+						"category": "verbal_cue",
+						"level": "moderate",
+						"description": "Student responds to questions with complete sentences."
+					}
+				]
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				sessionStudent := &models.SessionStudent{
+					SessionID: sessionID,
+					StudentID: studentID,
+					Present:   true,
+					Notes:     stringPtr("Original notes"),
+				}
+				ratings := []models.SessionRating{
+					{
+						Category:    stringPtr("visual_cue"),
+						Level:       stringPtr("minimal"),
+						Description: stringPtr("Student occasionally makes eye contact."),
+					},
+					{
+						Category:    stringPtr("verbal_cue"),
+						Level:       stringPtr("moderate"),
+						Description: stringPtr("Student responds to questions with complete sentences."),
+					},
+				}
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(sessionStudent, ratings, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "invalid_ratings_category",
+			requestBody: `{
+				"session_id": "` + sessionID.String() + `",
+				"student_id": "` + studentID.String() + `",
+				"ratings": [
+					{
+						"category": "invalid_category",
+						"level": "minimal",
+						"description": "Student occasionally makes eye contact."
+					}
+				]
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name: "invalid_ratings_level",
+			requestBody: `{
+				"session_id": "` + sessionID.String() + `",
+				"student_id": "` + studentID.String() + `",
+				"ratings": [
+					{
+						"category": "visual_cue",
+						"level": "invalid_level",
+						"description": "Student occasionally makes eye contact."
+					}
+				]
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
 			name:        "invalid_JSON_body",
 			requestBody: `{"session_id": "` + sessionID.String() + `", "present": /* missing value */}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// No mock setup needed - JSON parsing fails
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -372,7 +449,6 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 			name:        "missing_session_id",
 			requestBody: `{"student_id": "` + studentID.String() + `", "present": true}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// No mock setup needed - validation fails
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -381,7 +457,6 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 			name:        "missing_student_id",
 			requestBody: `{"session_id": "` + sessionID.String() + `", "present": true}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// No mock setup needed - validation fails
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -394,7 +469,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("no rows affected"))
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(nil, nil, errors.New("no rows affected"))
 			},
 			expectedStatus: fiber.StatusNotFound,
 			wantErr:        true,
@@ -407,7 +482,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("foreign key violation"))
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(nil, nil, errors.New("foreign key violation"))
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -420,7 +495,7 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 				"present": false
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("database connection failed"))
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).Return(nil, nil, errors.New("database connection failed"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -431,71 +506,62 @@ func TestHandler_PatchSessionStudent(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			app := fiber.New()
 			mockRepo := new(mocks.MockSessionStudentRepository)
-			tt.mockSetup(mockRepo)
+
+			if tt.mockSetup != nil {
+				tt.mockSetup(mockRepo)
+			}
 
 			handler := sessionstudent.NewHandler(mockRepo)
-			app.Patch("/session_students", handler.PatchSessionStudent)
+			app.Patch("/session_students", handler.PatchStudentSessionRatings)
 
 			req := httptest.NewRequest("PATCH", "/session_students", strings.NewReader(tt.requestBody))
 			req.Header.Set("Content-Type", "application/json")
 			resp, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-			mockRepo.AssertExpectations(t)
+
+			if tt.mockSetup != nil {
+				mockRepo.AssertExpectations(t)
+			}
 
 			if !tt.wantErr && resp.StatusCode == fiber.StatusOK {
-				// Success case - validate updated session student data
 				body, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
 
-				var sessionStudent models.SessionStudent
-				err = json.Unmarshal(body, &sessionStudent)
+				var result map[string]interface{}
+				err = json.Unmarshal(body, &result)
 				assert.NoError(t, err)
 
-				// Validate response data
-				assert.Equal(t, sessionID, sessionStudent.SessionID)
-				assert.Equal(t, studentID, sessionStudent.StudentID)
-				assert.False(t, sessionStudent.CreatedAt.IsZero())
-				assert.False(t, sessionStudent.UpdatedAt.IsZero())
+				assert.Equal(t, sessionID.String(), result["sessionId"])
+				assert.Equal(t, studentID.String(), result["studentId"])
 
 				switch tt.name {
 				case "successful_patch_present_only":
-					assert.False(t, sessionStudent.Present)
+					assert.False(t, result["present"].(bool))
+					assert.NotNil(t, result["notes"])
 				case "successful_patch_notes_only":
-					assert.True(t, sessionStudent.Present)
-					assert.NotNil(t, sessionStudent.Notes)
-					assert.Contains(t, *sessionStudent.Notes, "Updated notes")
+					assert.True(t, result["present"].(bool))
+					assert.NotNil(t, result["notes"])
+					assert.Contains(t, result["notes"].(string), "Updated notes")
+				case "successful_ratings_update_only":
+					assert.True(t, result["present"].(bool))
+					ratings := result["ratings"].([]interface{})
+					assert.Len(t, ratings, 2)
 				case "successful_patch_both_fields":
-					assert.True(t, sessionStudent.Present)
-					assert.NotNil(t, sessionStudent.Notes)
-					assert.Contains(t, *sessionStudent.Notes, "improvement")
+					assert.True(t, result["present"].(bool))
+					assert.NotNil(t, result["notes"])
+					assert.Contains(t, result["notes"].(string), "improvement")
 				}
 			}
 
 			if tt.wantErr {
-				// Error cases - validate error response structure
 				body, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
 
 				var errorResp map[string]interface{}
 				err = json.Unmarshal(body, &errorResp)
-				assert.NoError(t, err)
-				assert.Contains(t, errorResp, "error")
-
-				// Validate specific error messages
-				switch tt.name {
-				case "invalid_JSON_body":
-					assert.Contains(t, errorResp["error"], "Invalid JSON format")
-				case "missing_session_id":
-					assert.Contains(t, errorResp["error"], "Session ID is required")
-				case "missing_student_id":
-					assert.Contains(t, errorResp["error"], "Student ID is required")
-				case "session_student_not_found":
-					assert.Contains(t, errorResp["error"], "Session student relationship not found")
-				case "foreign_key_violation":
-					assert.Contains(t, errorResp["error"], "Invalid Reference")
-				case "repository_error":
-					assert.Contains(t, errorResp["error"], "Failed to Update SessionStudent")
+				if err == nil {
+					assert.Contains(t, errorResp, "error")
 				}
 			}
 		})

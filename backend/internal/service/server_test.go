@@ -1488,14 +1488,18 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
 
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+				sessionStudent := &models.SessionStudent{
 					SessionID: sessionID,
 					StudentID: studentID,
 					Present:   false,
 					Notes:     ptrString("Original notes"),
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
-				}, nil)
+				}
+				ratings := []models.SessionRating{}
+
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+					Return(sessionStudent, ratings, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
 		},
@@ -1510,16 +1514,87 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
 
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(&models.SessionStudent{
+				sessionStudent := &models.SessionStudent{
 					SessionID: sessionID,
 					StudentID: studentID,
 					Present:   true,
 					Notes:     ptrString("Updated progress notes"),
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
-				}, nil)
+				}
+				ratings := []models.SessionRating{}
+
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+					Return(sessionStudent, ratings, nil)
 			},
 			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			name: "Successful patch - ratings only",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"ratings": [
+					{
+						"category": "visual_cue",
+						"level": "minimal",
+						"description": "Student makes occasional eye contact"
+					},
+					{
+						"category": "verbal_cue",
+						"level": "moderate",
+						"description": "Student responds to questions appropriately"
+					}
+				]
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
+
+				sessionStudent := &models.SessionStudent{
+					SessionID: sessionID,
+					StudentID: studentID,
+					Present:   true,
+					Notes:     ptrString("Original notes"),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
+
+				ratings := []models.SessionRating{
+					{
+						Category:    ptrString("visual_cue"),
+						Level:       ptrString("minimal"),
+						Description: ptrString("Student makes occasional eye contact"),
+					},
+					{
+						Category:    ptrString("verbal_cue"),
+						Level:       ptrString("moderate"),
+						Description: ptrString("Student responds to questions appropriately"),
+					},
+				}
+
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+					Return(sessionStudent, ratings, nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			name: "Invalid rating category",
+			payload: `{
+				"session_id": "123e4567-e89b-12d3-a456-426614174000",
+				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"ratings": [
+					{
+						"category": "invalid_category",
+						"level": "minimal",
+						"description": "Test description"
+					}
+				]
+			}`,
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				// No mock needed if validation happens in handler
+			},
+			expectedStatusCode: fiber.StatusBadRequest,
 		},
 		{
 			name: "Missing session ID",
@@ -1538,7 +1613,8 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("no rows affected"))
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+					Return(nil, nil, errors.New("no rows affected"))
 			},
 			expectedStatusCode: fiber.StatusNotFound,
 		},
@@ -1550,7 +1626,8 @@ func TestPatchSessionStudentEndpoint(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("PatchSessionStudent", mock.Anything, mock.AnythingOfType("*models.PatchSessionStudentInput")).Return(nil, errors.New("foreign key violation"))
+				m.On("RateStudentSession", mock.Anything, mock.AnythingOfType("*models.RateStudentSessionInput")).
+					Return(nil, nil, errors.New("foreign key violation"))
 			},
 			expectedStatusCode: fiber.StatusBadRequest,
 		},
