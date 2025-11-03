@@ -21,7 +21,6 @@ func ConnectDatabase(ctx context.Context, config config.DB) (*pgxpool.Pool, erro
 		log.Fatalf("Failed to connect to the database: %v", err)
 		return nil, err
 	}
-
 	// Disable prepared statements to avoid conflicts during hot reload in development
 	// This prevents "prepared statement already exists" errors when connections are reused
 	dbConfig.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol

@@ -6,14 +6,13 @@ import {
 } from 'lucide-react'
 
 import { Avatar } from '@/components/ui/avatar'
-import { getAvatarVariant } from '@/lib/utils'
+import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
+
 
 interface StudentCardProps {
   student: StudentBody
 }
-
 // getAvatarVariant is provided by the shared utils module
-
 export default function StudentCard({ student }: StudentCardProps) {
   const getFullName = () => `${student.first_name} ${student.last_name}`
 
@@ -46,7 +45,7 @@ export default function StudentCard({ student }: StudentCardProps) {
       >
         <div className="flex items-center space-x-4">
           <Avatar
-            name={getFullName() + student.id} // Ensure uniqueness
+            name={getAvatarName(student.first_name, student.last_name, student.id)}
             variant={avatarVariant}
             className="w-12 h-12 ring-2 ring-accent-light"
           />
