@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
+import { ArrowDown, ChevronDown, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import AppLayout from '@/components/AppLayout'
@@ -84,10 +84,39 @@ export default function Home() {
                   date="11/04/2025"
                 />
               </div>
-              <div className={`w-2/3 h-full bg-accent p-4 bg-red-500 ${CORNER_ROUND}`}></div>
+              <div className={`w-2/3 h-full bg-accent p-4 text-sm font-normal text-background ${CORNER_ROUND} flex flex-col gap-4`}>
+                <div className="flex flex-row flex-1">
+                  <div className="flex flex-col flex-1">
+                    <strong>Session Name</strong>
+                    <strong>Room 101</strong>
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <span>9:15am – 10:00am</span>
+                    <span>11/04/2025</span>
+                  </div>
+
+                </div>
+                <div className="w-full h-4/5 gap-4 flex flex-col">
+                  <div className="flex items-end text-lg p-2 px-4 justify-between w-full h-12 border-b-2 border-border transition cursor-pointer group">
+                    <span>Students</span>
+                    <ArrowDown size={18} className="group-hover:translate-y-1 transition-transform" />
+                  </div>
+                  <div className="flex items-end text-lg p-2 px-4 justify-between w-full h-12 border-b-2 border-border transition cursor-pointer group">
+                    <span>Curriculum</span>
+                    <ArrowDown size={18} className="group-hover:translate-y-1 transition-transform" />
+                  </div>
+                  <div className="flex items-end text-lg p-2 px-4 justify-between w-full h-12 border-b-2 border-border transition cursor-pointer group">
+                    <span>Weekly Calendar</span>
+                    <ArrowDown size={18} className="group-hover:translate-y-1 transition-transform" />
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
-          <div className={`w-full h-96 shrink-0 bg-background ${CORNER_ROUND}`}></div>
+          <div className={`w-full h-96 shrink-0 bg-background ${CORNER_ROUND}`}>
+
+          </div>
         </div>
         {/* Sidebar */}
         <div className="hidden md:block w-1/3 h-screen bg-red-500 sticky top-0"></div>
