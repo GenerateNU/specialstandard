@@ -84,6 +84,31 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Custom brand colors for Tailwind */
+  --color-blue: #6c78ff;
+  --color-blue-disabled: #bac0ff;
+  --color-blue-hover: #5a68e6;
+  --color-blue-light: rgba(108, 120, 255, 0.1);
+  
+  --color-orange: #f4b860;
+  --color-orange-disabled: #ffdfb1;
+  --color-orange-hover: #e6a94f;
+  --color-orange-light: rgba(244, 184, 96, 0.1);
+  
+  --color-pink: #cd0a7d;
+  --color-pink-disabled: #f9aeda;
+  --color-pink-hover: #b4096b;
+  --color-pink-light: rgba(205, 10, 125, 0.1);
+  
+  --color-card: var(--card-bg);
+  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  
+  --color-muted: var(--text-muted);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
 }
 
 body {

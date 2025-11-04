@@ -7,6 +7,7 @@ interface UpcomingSessionCardProps {
   startTime: string
   endTime: string
   date: string
+  className?: string
   onClick?: () => void
 }
 
@@ -15,12 +16,13 @@ export default function UpcomingSessionCard({
   startTime,
   endTime,
   date,
+  className,
   onClick,
 }: UpcomingSessionCardProps) {
   return (
     <button
       onClick={onClick}
-      className="h-16 bg-accent hover:bg-accent-hover transition w-full rounded-lg p-2 flex flex-row items-center justify-between text-background cursor-pointer group"
+      className={`h-16 bg-blue transition w-full rounded-lg p-2 flex flex-row items-center justify-between text-background cursor-pointer group ${className}`}
     >
       <div className="flex flex-col text-xs font-normal justify-start text-left">
         <span>{sessionName}</span>
