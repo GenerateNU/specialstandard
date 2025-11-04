@@ -127,6 +127,7 @@ export default function SessionPage({ params }: PageProps) {
       notes: session.notes || '',
     })
     setIsEditingSession(true)
+    setMode('editStudents') // Also enable student editing
   }
 
   const handleSaveSession = () => {
@@ -139,10 +140,12 @@ export default function SessionPage({ params }: PageProps) {
       notes: editedSession.notes,
     })
     setIsEditingSession(false)
+    setMode('view') // Exit student editing mode
   }
 
   const handleCancelEdit = () => {
     setIsEditingSession(false)
+    setMode('view') // Exit student editing mode
   }
 
   // Filter out students already in session
@@ -287,24 +290,15 @@ export default function SessionPage({ params }: PageProps) {
           <h2 className="text-3xl font-semibold">Students</h2>
           <div className="flex gap-3">
             {mode === 'view' && (
-              <>
-                <Button
-                  onClick={() => setMode('attendance')}
-                  variant="default"
-                  size="lg"
-                >
-                  Attendance
-                </Button>
-                <Button
-                  onClick={() => setMode('editStudents')}
-                  variant="outline"
-                  size="lg"
-                >
-                  Edit Students
-                </Button>
-              </>
+              <Button
+                onClick={() => setMode('attendance')}
+                variant="default"
+                size="lg"
+              >
+                Attendance
+              </Button>
             )}
-            {mode !== 'view' && (
+            {mode === 'attendance' && (
               <Button
                 onClick={() => setMode('view')}
                 variant="secondary"
