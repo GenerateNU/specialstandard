@@ -82,9 +82,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Actual Sidebar */}
       <aside
         className={`
-          bg-card border-r border-default
+          bg-black border-r border-default
           transition-all duration-300 ease-in-out
-          shadow-md
+          shadow-md 
           
           /* Sticky sidebar on all screen sizes */
           sticky
@@ -102,7 +102,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex flex-col h-full">
           <div className="flex flex-row items-center justify-between p-2">
             <div className="font-bold text-xl flex items-center overflow-hidden">
-              <span className={`whitespace-nowrap ml-2 transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
+              <span className={`whitespace-nowrap ml-2 transition-opacity duration-200 text-white ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
                 The Special Standard
               </span>
             </div>
@@ -111,13 +111,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
               variant="secondary"
               size="icon"
               aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-              className="w-10 h-10 flex-shrink-0 p-0"
+              className="w-10 h-10 flex-shrink-0 p-0 bg-white/10 hover:bg-white/20 border-white/20"
             >
-              <PanelLeft className="w-5 h-5 transition-transform duration-300" />
+              <PanelLeft className="w-5 h-5 transition-transform duration-300 text-white" />
             </Button>
           </div>
 
-          <Separator />
+          <Separator className="bg-white/10" />
 
           {/* Navigation */}
           <nav className="flex-1 p-2 space-y-1">
@@ -136,8 +136,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
                     ${
                 isActive
-                  ? 'bg-accent text-white font-medium'
-                  : 'text-secondary hover:bg-card-hover hover:text-primary'
+                  ? 'bg-blue text-white font-medium'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }
                   `}
                 >
@@ -149,7 +149,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </nav>
 
           {/* Footer */}
-          <Separator />
+          <Separator className="bg-white/10" />
           <div className="p-2">
             <Button
               onClick={() => {
@@ -162,7 +162,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 flex items-center gap-3 rounded-lg
                 transition-all duration-200
                 h-10 flex-shrink-0 overflow-hidden justify-start
-                text-secondary hover:text-primary hover:bg-card-hover
+                text-white/70 hover:text-white hover:bg-white/10
                 ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
               `}
             >
