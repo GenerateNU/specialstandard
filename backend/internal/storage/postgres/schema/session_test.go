@@ -45,7 +45,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test
-	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
+	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil, therapistID)
 
 	// Assert
 	assert.NoError(t, err)
@@ -66,7 +66,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), nil)
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), nil, therapistID)
 
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 10)
@@ -74,7 +74,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	sessions, err = repo.GetSessions(ctx, utils.Pagination{
 		Page:  4,
 		Limit: 5,
-	}, nil)
+	}, nil, therapistID)
 
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 4)
@@ -84,7 +84,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	yearFilter := &models.GetSessionRepositoryRequest{
 		Year: ptrInt(startTime.Year()),
 	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), yearFilter)
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), yearFilter, therapistID)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, len(sessions))
 
@@ -93,7 +93,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 		Month: ptrInt(int(startTime.Month())),
 		Year:  ptrInt(startTime.Year()),
 	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), monthYearFilter)
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), monthYearFilter, therapistID)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, len(sessions))
 
@@ -118,7 +118,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	studentFilter := &models.GetSessionRepositoryRequest{
 		StudentIDs: &[]uuid.UUID{studentID1, studentID2},
 	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), studentFilter)
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), studentFilter, therapistID)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(sessions))
 }
@@ -447,7 +447,7 @@ func TestGetSessionStudents(t *testing.T) {
 	studentID1 := uuid.New()
 	studentID3 := uuid.New() // graduated
 
-	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
+	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil, therapistID)
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 1)
 
@@ -465,7 +465,7 @@ func TestGetSessionStudents(t *testing.T) {
 	`, sessionWithStudents, studentID1, sessionWithStudents, studentID3)
 	assert.NoError(t, err)
 
-	students, err := repo.GetSessionStudents(ctx, sessionWithStudents, utils.NewPagination())
+	students, err := repo.GetSessionStudents(ctx, sessionWithStudents, utils.NewPagination(), therapistID)
 
 	assert.NoError(t, err)
 	assert.Len(t, students, 1) // returns the one student that has not graduated.
