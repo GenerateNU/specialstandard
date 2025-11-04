@@ -96,14 +96,22 @@ export default function AppLayout({ children }: AppLayoutProps) {
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           
           /* Desktop: toggle width */
-          ${isSidebarOpen ? 'w-70' : 'lg:w-14'}
+          ${isSidebarOpen ? 'w-1/6' : 'lg:w-14'}
         `}
       >
         <div className="flex flex-col h-full">
           <div className="flex flex-row items-center justify-between p-2">
+<<<<<<< HEAD
             <div className="font-bold text-xl flex items-center overflow-hidden">
               <span className={`whitespace-nowrap ml-2 transition-opacity duration-200 text-white ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
                 The Special Standard
+=======
+            <div className="font-bold text-lg font-serif flex items-center overflow-hidden h-full">
+              <span className={`whitespace-nowrap ml-2 h-full transition-opacity duration-200 leading-tight ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
+                The Special
+                <br />
+                Standard
+>>>>>>> d3bc331 (feat: sidebar qol)
               </span>
             </div>
             <Button
