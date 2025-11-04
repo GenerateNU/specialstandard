@@ -47,9 +47,11 @@ func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapi
 		argNum++
 	}
 
+	queryString += " ORDER BY first_name ASC, last_name ASC, dob ASC"
+
 	// Add pagination
 	queryString += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argNum, argNum+1)
-	args = append(args, pagination.Limit, pagination.GettOffset())
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, queryString, args...)
 	if err != nil {
@@ -218,9 +220,11 @@ func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uu
 		query += " AND " + strings.Join(conditions, " AND ")
 	}
 
+	query += " ORDER BY s.start_datetime ASC"
+
 	// Add pagination
 	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount, argCount+1)
-	args = append(args, pagination.Limit, pagination.GettOffset())
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -308,9 +312,11 @@ func (r *StudentRepository) GetStudentRatings(ctx context.Context, studentID uui
 		query += " AND " + strings.Join(conditions, " AND ")
 	}
 
+	query += " ORDER BY s.start_datetime ASC"
+
 	// Add pagination
 	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount, argCount+1)
-	args = append(args, pagination.Limit, pagination.GettOffset())
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {

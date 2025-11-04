@@ -83,8 +83,10 @@ func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID
 		argNum++
 	}
 
+	queryString += " ORDER BY r.year ASC, r.month ASC"
+
 	queryString += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argNum, argNum+1)
-	args = append(args, pagination.Limit, pagination.GettOffset())
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, queryString, args...)
 	if err != nil {
