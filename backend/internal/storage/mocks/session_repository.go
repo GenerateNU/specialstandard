@@ -16,7 +16,7 @@ type MockSessionRepository struct {
 }
 
 func (m *MockSessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, id uuid.UUID) ([]models.Session, error) {
-	args := m.Called(ctx, pagination)
+	args := m.Called(ctx, pagination, filter, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -56,7 +56,7 @@ func (m *MockSessionRepository) PatchSession(ctx context.Context, id uuid.UUID, 
 }
 
 func (m *MockSessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination, id uuid.UUID) ([]models.SessionStudentsOutput, error) {
-	args := m.Called(ctx, sessionID, pagination)
+	args := m.Called(ctx, sessionID, pagination, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

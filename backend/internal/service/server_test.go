@@ -63,6 +63,7 @@ func TestHealthEndpoint(t *testing.T) {
 }
 
 func TestGetSessionsEndpoint(t *testing.T) {
+	therapistId := uuid.New()
 	tests := []struct {
 		name           string
 		url            string
@@ -77,7 +78,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 				sessions := []models.Session{
 					{
 						ID:            uuid.New(),
-						TherapistID:   uuid.New(),
+						TherapistID:   therapistId,
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
 						Notes:         ptrString("Test session"),
@@ -85,16 +86,16 @@ func TestGetSessionsEndpoint(t *testing.T) {
 						UpdatedAt:     ptrTime(time.Now()),
 					},
 				}
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(sessions, nil)
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.Anything, mock.Anything).Return(sessions, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "repository error",
-			url:  "/",
+			url:  "",
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -102,7 +103,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 		// ------- Pagination Cases -------
 		{
 			name:           "Violating Pagination Arguments Constraints",
-			url:            "?page=0&limit=-1",
+			url:            "&page=0&limit=-1",
 			mockSetup:      func(m *mocks.MockSessionRepository) {},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -116,13 +117,13 @@ func TestGetSessionsEndpoint(t *testing.T) {
 		},
 		{
 			name: "Default Pagination",
-			url:  "?page=2&limit=5",
+			url:  "&page=2&limit=5",
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				pagination := utils.Pagination{
 					Page:  2,
 					Limit: 5,
 				}
-				m.On("GetSessions", mock.Anything, pagination).Return([]models.Session{}, nil)
+				m.On("GetSessions", mock.Anything, pagination, mock.Anything, mock.Anything).Return([]models.Session{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -141,7 +142,8 @@ func TestGetSessionsEndpoint(t *testing.T) {
 				TestMode: true,
 			}, repo, &s3_client.Client{})
 
-			req := httptest.NewRequest("GET", "/api/v1/sessions"+tt.url, nil)
+			req := httptest.NewRequest("GET", "/api/v1/sessions?therapist_id="+therapistId.String()+tt.url, nil)
+
 			res, _ := app.Test(req, -1)
 
 			assert.Equal(t, tt.expectedStatus, res.StatusCode)
