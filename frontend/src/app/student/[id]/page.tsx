@@ -190,14 +190,14 @@ function StudentPage() {
               </div>
             </div>
             {/* student schedule */}
-            <div className={`flex-[3] ${CORNER_ROUND} overflow-hidden bg-accent flex flex-col justify-between ${PADDING}`}>
+            <div className={`flex-[3] ${CORNER_ROUND} overflow-hidden bg-blue flex flex-col justify-between ${PADDING}`}>
               <StudentSchedule studentId={studentId} className="h-3/4" />
               <Button className="h-1/5 rounded-2xl text-lg font-bold " variant="secondary">
                 View Student Schedule
               </Button>
             </div>
-            <div className={`bg-accent flex-[2] flex flex-col items-center justify-between ${CORNER_ROUND} ${PADDING}`}>
-              <div className="w-full h-3/4 text-3xl font-bold flex items-center rounded-2xl bg-primary">
+            <div className={`bg-pink flex-2 flex flex-col items-center justify-between ${CORNER_ROUND} ${PADDING}`}>
+              <div className="w-full h-3/4 text-3xl font-bold flex items-center rounded-2xl">
                 <RecentSession studentId={studentId} />
               </div>
               <Button className="w-full h-1/5 rounded-2xl text-lg font-bold " variant="secondary">

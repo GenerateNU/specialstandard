@@ -39,7 +39,7 @@ export default function StudentSchedule({ studentId, initialView = 'day', classN
       }))
 
   return (
-    <div className={`bg-background rounded-2xl overflow-hidden flex flex-col ${className}`}>
+    <div className={`bg-card rounded-2xl overflow-hidden flex flex-col ${className}`}>
       {/* Custom header */}
       <div className="px-4 py-2 border-b border-border">
         <div className="font-semibold text-lg text-primary">Today</div>

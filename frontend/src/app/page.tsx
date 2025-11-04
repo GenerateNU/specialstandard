@@ -5,6 +5,7 @@ import { ChevronDown, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
+import StudentSchedule from '@/components/schedule/StudentSchedule'
 import { Button } from '@/components/ui/button'
 import UpcomingSessionCard from '@/components/UpcomingSessionCard'
 import { useAuthContext } from '@/contexts/authContext'
@@ -13,21 +14,27 @@ import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { useTherapists } from '@/hooks/useTherapists'
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuthContext()
+  const { isAuthenticated, isLoading, userId } = useAuthContext()
   const router = useRouter()
   const CORNER_ROUND = 'rounded-2xl'
 
-  // Fetch sessions data - show 5 sessions
-  const { sessions, isLoading: sessionsLoading } = useSessions({
+  // Fetch therapists data
+  const { therapists } = useTherapists()
+  const currentTherapist = therapists.find(t => t.id === userId)
+
+  // Fetch all sessions for today (backend doesn't support therapist_id filtering yet)
+  // TODO: Add therapist_id query param to backend API for better performance
+  const { sessions: allSessions, isLoading: sessionsLoading } = useSessions({
     startdate: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(), // Today at midnight
-    limit: 5,
   })
+
+  // Filter sessions by current therapist and limit to 5
+  const sessions = currentTherapist
+    ? allSessions.filter(s => s.therapist_id === currentTherapist.id).slice(0, 5)
+    : allSessions.slice(0, 5)
 
   const [selectedSession, setSelectedSession] = useState<Session | null>(null)
   const [openSection, setOpenSection] = useState<'students' | 'curriculum' | 'calendar' | null>('students')
-
-  // Fetch therapists data
-  const { therapists } = useTherapists()
 
   // Fetch students for the selected session
   const { students: sessionStudents, isLoading: studentsLoading } = useSessionStudentsForSession(
@@ -107,15 +114,15 @@ export default function Home() {
             <div className="w-full flex items-center justify-between">
               <div>Upcoming Sessions</div>
               <Button
-                variant="outline"
                 size="sm"
+                variant="default"
                 onClick={() => router.push('/sessions')}
               >
                 View All Sessions
               </Button>
             </div>
             <div className="grid grid-cols-[1fr_2fr] w-full gap-3 items-start">
-              <div className="gap-2 flex flex-col p-1">
+              <div className="gap-2 flex flex-col">
                 {sessionsLoading
                   ? (
                       <div className="flex items-center justify-center py-8">
@@ -147,7 +154,7 @@ export default function Home() {
                         </div>
                       )}
               </div>
-              <div className={`bg-accent p-4 text-sm font-normal ${CORNER_ROUND} justify-start flex flex-col gap-4 self-start transition-all duration-300`}>
+              <div className={`p-4 text-sm font-normal ${CORNER_ROUND} justify-start flex flex-col gap-4 self-start transition-all duration-300`}>
                 {selectedSession
                   ? (
                       <div className="flex flex-col gap-6 animate-in fade-in duration-300">
@@ -294,12 +301,32 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className={`w-full h-96 shrink-0 bg-card ${CORNER_ROUND}`}>
-
+          <div className={`w-full shrink-0 p-6 bg-card flex items-start flex-col gap-4 ${CORNER_ROUND}`}>
+            <div className="w-full flex items-center justify-between font-bold text-xl">
+              <div>
+                Schedule
+              </div>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => router.push('/calendar')}
+              >
+                View Full Schedule
+              </Button>
+            </div>
+            {/* Calendar */}
+            <div className="w-full h-[500px]">
+              <StudentSchedule
+                initialView="day"
+                className="h-full"
+              />
+            </div>
           </div>
         </div>
         {/* Sidebar */}
-        <div className="hidden md:block w-1/3 h-screen bg-black sticky top-0"></div>
+        <div className="hidden md:block w-1/3 h-screen bg-orange sticky top-0">
+
+        </div>
       </div>
     </AppLayout>
   )
