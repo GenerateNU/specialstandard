@@ -7,6 +7,7 @@ import moment from 'moment'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
+import AppLayout from '@/components/AppLayout'
 import { CreateSessionDialog } from '@/components/calendar/NewSessionModal'
 import SessionPreviewModal from '@/components/SessionPreviewModal'
 import { Button } from '@/components/ui/button'
@@ -105,58 +106,60 @@ export default function MyCalendar() {
   }
 
   return (
-    <div>
-      {/* Back button */}
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-4 transition-colors group"
-      >
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        <span className="text-sm font-medium">Back to Home</span>
-      </Link>
+    <AppLayout>
+      <div>
+        {/* Back button */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-4 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm font-medium">Back to Home</span>
+        </Link>
 
-      <Button variant="default" onClick={() => setNewSessionOpen(true)}>
-        + New Session
-      </Button>
+        <Button variant="default" onClick={() => setNewSessionOpen(true)}>
+          + New Session
+        </Button>
 
-      <CreateSessionDialog
-        open={newSessionOpen}
-        therapistId={HARDCODED_THERAPIST_ID}
-        students={students}
-        setOpen={handleCloseModal}
-        onSubmit={async data => addSession(data)}
-        initialDateTime={selectedSlot ?? undefined}
-      />
-
-      <div className="flex items-center justify-center h-screen">
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: '80vh', width: '90vw' }}
-          date={date}
-          view={view}
-          onNavigate={setDate}
-          onView={setView}
-          onSelectEvent={handleSelectEvent}
-          views={['week', 'day', 'month']}
-          selectable
-          onSelectSlot={handleSelectSlot}
+        <CreateSessionDialog
+          open={newSessionOpen}
+          therapistId={HARDCODED_THERAPIST_ID}
+          students={students}
+          setOpen={handleCloseModal}
+          onSubmit={async data => addSession(data)}
+          initialDateTime={selectedSlot ?? undefined}
         />
+
+        <div className="flex items-center justify-center h-screen">
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: '80vh', width: '90vw' }}
+            date={date}
+            view={view}
+            onNavigate={setDate}
+            onView={setView}
+            onSelectEvent={handleSelectEvent}
+            views={['week', 'day', 'month']}
+            selectable
+            onSelectSlot={handleSelectSlot}
+          />
+        </div>
+
+        {/* Session preview modal */}
+        {selectedSession && modalPosition && (
+          <SessionPreviewModal
+            session={selectedSession}
+            position={modalPosition}
+            onClose={() => {
+              setSelectedSession(null)
+              setModalPosition(null)
+            }}
+          />
+        )}
       </div>
-
-      {/* Session preview modal */}
-      {selectedSession && modalPosition && (
-        <SessionPreviewModal
-          session={selectedSession}
-          position={modalPosition}
-          onClose={() => {
-            setSelectedSession(null)
-            setModalPosition(null)
-          }}
-        />
-      )}
-    </div>
+    </AppLayout>
   )
 }

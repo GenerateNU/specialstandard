@@ -86,10 +86,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
           transition-all duration-300 ease-in-out
           shadow-md
           
-          /* Mobile: Fixed overlay modal */
-          fixed lg:sticky
+          /* Sticky sidebar on all screen sizes */
+          sticky
           top-0
-          h-full lg:h-screen
+          h-screen
           z-50 lg:z-auto
           
           /* Mobile: slide in/out from left */
@@ -174,7 +174,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Page content */}
         <main className="flex-1">
           {children}
