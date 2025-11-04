@@ -84,15 +84,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
         className={`
           bg-black border-r border-default
           transition-all duration-300 ease-in-out
-          shadow-md 
-          
-          /* Sticky sidebar on all screen sizes */
-          sticky
-          top-0
+          shadow-md
           h-screen
           z-50 lg:z-auto
           
-          /* Mobile: slide in/out from left */
+          /* Mobile: fixed positioning, slide in/out from left */
+          fixed lg:sticky
+          top-0
+          left-0
+          
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           
           /* Desktop: toggle width */
@@ -173,10 +173,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
       </aside>
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      {/* Main content area - add left padding on desktop to account for sidebar */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto transition-all duration-300">
         {/* Page content */}
-        <main className="flex-1">
+        <main className="flex-1 w-full">
           {children}
         </main>
       </div>
