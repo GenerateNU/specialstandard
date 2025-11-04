@@ -25,8 +25,6 @@ func ConnectDatabase(ctx context.Context, config config.DB) (*pgxpool.Pool, erro
 	// This prevents "prepared statement already exists" errors when connections are reused
 	dbConfig.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
-	// Disable prepared statement caching to avoid conflicts with connection pooling
-	dbConfig.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
 	conn, err := pgxpool.NewWithConfig(ctx, dbConfig)
 	if err != nil {
