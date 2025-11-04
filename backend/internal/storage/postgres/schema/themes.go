@@ -46,8 +46,7 @@ func (r *ThemeRepository) CreateTheme(ctx context.Context, input *models.CreateT
 func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagination, filter *models.ThemeFilter) ([]models.Theme, error) {
 	query := `
 	SELECT id, theme_name, month, year, created_at, updated_at
-	FROM theme
-	ORDER BY year ASC, month ASC`
+	FROM theme`
 
 	conditions := []string{}
 	args := []interface{}{}
@@ -78,7 +77,7 @@ func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagina
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += fmt.Sprintf(` ORDER BY year DESC, month DESC
+	query += fmt.Sprintf(` ORDER BY year ASC, month ASC
 	LIMIT $%d OFFSET $%d`, argCount, argCount+1)
 
 	args = append(args, pagination.Limit, pagination.GetOffset())
