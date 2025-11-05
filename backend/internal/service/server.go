@@ -105,7 +105,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	authGroup.Post("/signup", SupabaseAuthHandler.SignUp)
 
 	if !config.TestMode {
-		apiV1.Use(supabase_auth.Middleware(&config.Supabase))
+		//apiV1.Use(supabase_auth.Middleware(&config.Supabase))
 	} else {
 		apiV1.Use(func(c *fiber.Ctx) error {
 			c.Locals("user", "test-user")

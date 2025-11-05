@@ -28,15 +28,14 @@ func TestResourceRepository_GetResources(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewResourceRepository(testDB.Pool)
+	repo := schema.NewResourceRepository(testDB)
 	ctx := context.Background()
 
 	// Create test theme first (foreign key requirement)
 	themeID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
     `, themeID, "Test Theme", 1, 2024, time.Now(), time.Now())
@@ -45,7 +44,7 @@ func TestResourceRepository_GetResources(t *testing.T) {
 	// Create test resource
 	resourceID := uuid.New()
 	testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `, resourceID, themeID, 5, testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
@@ -67,7 +66,7 @@ func TestResourceRepository_GetResources(t *testing.T) {
 
 	// More Tests for Pagination Behaviour
 	for i := 1; i <= 12; i++ {
-		_, err := testDB.Pool.Exec(ctx,
+		_, err := testDB.Exec(ctx,
 			`INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         `, uuid.New(), themeID, i, testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
@@ -93,15 +92,14 @@ func TestResourceRepository_GetResourceByID(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewResourceRepository(testDB.Pool)
+	repo := schema.NewResourceRepository(testDB)
 	ctx := context.Background()
 
 	// Create test theme first
 	themeID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
     `, themeID, "Science Theme", 2, 2024, time.Now(), time.Now())
@@ -110,7 +108,7 @@ func TestResourceRepository_GetResourceByID(t *testing.T) {
 	// Create test resource
 	resourceID := uuid.New()
 	testDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `, resourceID, themeID, 3, testDate, "video", "Science Video", "science", "Volcano experiment", time.Now(), time.Now())
@@ -136,15 +134,14 @@ func TestResourceRepository_CreateResource(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewResourceRepository(testDB.Pool)
+	repo := schema.NewResourceRepository(testDB)
 	ctx := context.Background()
 
 	// Create test theme first
 	themeID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
     `, themeID, "Reading Theme", 3, 2024, time.Now(), time.Now())
@@ -179,15 +176,14 @@ func TestResourceRepository_UpdateResource(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewResourceRepository(testDB.Pool)
+	repo := schema.NewResourceRepository(testDB)
 	ctx := context.Background()
 
 	// Create test theme first
 	themeID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
     `, themeID, "Art Theme", 4, 2024, time.Now(), time.Now())
@@ -196,7 +192,7 @@ func TestResourceRepository_UpdateResource(t *testing.T) {
 	// Create test resource
 	resourceID := uuid.New()
 	testDate := time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `, resourceID, themeID, 2, testDate, "activity", "Art Activity", "art", "Drawing exercise", time.Now(), time.Now())
@@ -225,15 +221,14 @@ func TestResourceRepository_DeleteResource(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewResourceRepository(testDB.Pool)
+	repo := schema.NewResourceRepository(testDB)
 	ctx := context.Background()
 
 	// Create test theme first
 	themeID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
     `, themeID, "History Theme", 5, 2024, time.Now(), time.Now())
@@ -242,7 +237,7 @@ func TestResourceRepository_DeleteResource(t *testing.T) {
 	// Create test resource
 	resourceID := uuid.New()
 	testDate := time.Date(2024, 5, 1, 0, 0, 0, 0, time.UTC)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `, resourceID, themeID, 6, testDate, "document", "History Document", "history", "Ancient civilizations", time.Now(), time.Now())
@@ -255,7 +250,7 @@ func TestResourceRepository_DeleteResource(t *testing.T) {
 	assert.NoError(t, err)
 
 	var count int
-	err = testDB.Pool.QueryRow(ctx, "SELECT COUNT(*) FROM resource WHERE id = $1", resourceID).Scan(&count)
+	err = testDB.QueryRow(ctx, "SELECT COUNT(*) FROM resource WHERE id = $1", resourceID).Scan(&count)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, count)
 }
