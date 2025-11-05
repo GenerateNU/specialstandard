@@ -75,9 +75,9 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += fmt.Sprintf(` ORDER BY start_datetime DESC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
+	query += fmt.Sprintf(` ORDER BY start_datetime ASC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
 
-	args = append(args, pagination.Limit, pagination.GettOffset())
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -212,10 +212,10 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
     LEFT JOIN session_rating sr ON ss.id = sr.session_student_id
     WHERE ss.session_id = $1
     AND s.grade != -1
-    ORDER BY ss.id, sr.id
-	LIMIT $2 OFFSET $3`
+    ORDER BY s.first_name, s.last_name
+		LIMIT $2 OFFSET $3`
 
-	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
+	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GetOffset())
 	if err != nil {
 		return nil, err
 	}

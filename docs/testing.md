@@ -118,8 +118,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
     }
     
     // Setup test database
-    testDB := testutil.SetupTestDB(t)
-    defer testDB.Cleanup()
+    testDB := testutil.SetupTestWithCleanup(t)
     
     // Test repository methods
     sessions, err := repo.GetSessions(ctx)

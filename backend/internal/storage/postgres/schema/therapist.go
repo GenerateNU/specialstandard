@@ -44,9 +44,10 @@ func (r *TherapistRepository) GetTherapists(ctx context.Context, pagination util
 	query := `
 	SELECT id, first_name, last_name, email, active, created_at, updated_at
 	FROM therapist
+	ORDER BY first_name ASC, last_name ASC
 	LIMIT $1 OFFSET $2`
 
-	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GettOffset())
+	rows, err := r.db.Query(ctx, query, pagination.Limit, pagination.GetOffset())
 
 	if err != nil {
 		return nil, err
