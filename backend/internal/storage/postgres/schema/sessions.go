@@ -212,7 +212,7 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
     LEFT JOIN session_rating sr ON ss.id = sr.session_student_id
     WHERE ss.session_id = $1
     AND s.grade != -1
-    ORDER BY ss.created_at ASC
+    ORDER BY s.first_name, s.last_name
 		LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GetOffset())
