@@ -85,7 +85,10 @@ test-summary-full:
 		echo ""; \
 		echo "$(GREEN)$(BOLD)✅ ALL TESTS PASSED ✅$(NC)"; \
 	fi
-	@rm -f test_output.log
+	# Only remove test_output.log if NOT in CI
+	@if [ -z "$$CI" ]; then \
+		rm -f test_output.log; \
+	fi
 
 # Original summary target (minimal output)
 test-summary:
@@ -168,7 +171,7 @@ test-clean:
 	go clean -testcache
 	@echo "$(GREEN)Test cache cleaned$(NC)"
 
-# CI-specific target without colors
+# CI-specific target without colors and without removing the log file
 test-ci:
 	@echo "Running all tests (CI mode)..."
 	@echo "========================================"
@@ -192,9 +195,9 @@ test-ci:
 		echo ""; \
 		echo "ALL TESTS PASSED"; \
 	fi
-	@rm -f test_output.log
+	# DO NOT remove test_output.log here - GitHub Actions needs it!
 
-# CI coverage target
+# CI coverage target that preserves the log file
 test-coverage-ci:
 	@echo "Running tests with coverage (CI mode)..."
 	@go test ./... -v -coverprofile=coverage.out 2>&1 | tee test_output.log
@@ -203,6 +206,7 @@ test-coverage-ci:
 	@go tool cover -func=coverage.out | grep total | awk '{print "Total coverage: " $$3}'
 	@go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
+	# DO NOT remove test_output.log here!
 
 # Extract coverage percentage for CI
 coverage-percentage:

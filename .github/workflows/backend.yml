@@ -79,6 +79,15 @@ jobs:
             echo "✅ Coverage $COVERAGE% meets threshold $THRESHOLD%"
             echo "COVERAGE_STATUS=meets" >> $GITHUB_ENV
           fi
+
+          # Verify test_output.log was created
+          if [ -f test_output.log ]; then
+            echo "test_output.log created successfully"
+          else
+            echo "WARNING: test_output.log was not created"
+            # Try to run tests again with direct command
+            go test ./... -v 2>&1 | tee test_output.log || true
+          fi
       
       # Parse test results for better reporting
       - name: Parse Test Results
