@@ -138,7 +138,7 @@ func createAllTables(pool *pgxpool.Pool) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Enable extensions
 	if _, err := tx.Exec(ctx, `

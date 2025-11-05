@@ -168,6 +168,46 @@ test-clean:
 	go clean -testcache
 	@echo "$(GREEN)Test cache cleaned$(NC)"
 
+# CI-specific target without colors
+test-ci:
+	@echo "Running all tests (CI mode)..."
+	@echo "========================================"
+	@go test ./... -v 2>&1 | tee test_output.log
+	@echo ""
+	@echo "===== Test Summary ====="
+	@if grep -q "^--- FAIL" test_output.log; then \
+		echo "FAILURES DETECTED:"; \
+		echo ""; \
+		grep -A 5 "^--- FAIL" test_output.log; \
+		echo ""; \
+	fi
+	@echo "Passed: $$(grep -c '^--- PASS' test_output.log || echo 0)"
+	@echo "Failed: $$(grep -c '^--- FAIL' test_output.log || echo 0)"
+	@echo "Skipped: $$(grep -c '^--- SKIP' test_output.log || echo 0)"
+	@if grep -q "^--- FAIL" test_output.log; then \
+		echo ""; \
+		echo "TEST SUITE FAILED"; \
+		exit 1; \
+	else \
+		echo ""; \
+		echo "ALL TESTS PASSED"; \
+	fi
+	@rm -f test_output.log
+
+# CI coverage target
+test-coverage-ci:
+	@echo "Running tests with coverage (CI mode)..."
+	@go test ./... -v -coverprofile=coverage.out 2>&1 | tee test_output.log
+	@echo ""
+	@echo "===== Coverage Summary ====="
+	@go tool cover -func=coverage.out | grep total | awk '{print "Total coverage: " $$3}'
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+# Extract coverage percentage for CI
+coverage-percentage:
+	@go tool cover -func=coverage.out | grep total | awk '{print substr($$3, 1, length($$3)-1)}'
+
 # Lint all code
 lint:
 	@echo "$(BOLD)Running linter...$(NC)"
