@@ -315,9 +315,9 @@ export default function Home() {
               </Button>
             </div>
             {/* Calendar */}
-            <div className="w-full h-[500px]">
+            <div className="w-full h-[300px]">
               <StudentSchedule
-                initialView="day"
+                initialView="week"
                 className="h-full"
               />
             </div>
