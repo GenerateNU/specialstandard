@@ -95,13 +95,13 @@ export default function Home() {
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
         {/* Main Content */}
-        <div className="w-full md:w-2/3 p-10 flex flex-col gap-10 overflow-y-scroll">
+        <div className="w-full md:w-7/10 p-10 flex flex-col gap-10 overflow-y-scroll">
           <div className="flex flex-row justify-between items-end shrink-0">
             <div className="flex flex-col items-left justify-start">
-              <div className="text-4xl font-serif font-bold">Your Educator Dashboard</div>
-              <div className="text-2xl">
+              <h1>Your Educator Dashboard</h1>
+              <p className="text-2xl">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </div>
+              </p>
 
             </div>
             <div className="flex gap-2">
@@ -110,9 +110,9 @@ export default function Home() {
               </Button>
             </div>
           </div>
-          <div className={`w-full bg-card p-6 gap-4 font-semibold text-xl ${CORNER_ROUND} flex flex-col`}>
+          <div className={`w-full bg-card p-6 gap-4 ${CORNER_ROUND} flex flex-col`}>
             <div className="w-full flex items-center justify-between">
-              <div>Upcoming Sessions</div>
+              <h3>Upcoming Sessions</h3>
               <Button
                 size="sm"
                 variant="default"
@@ -196,12 +196,12 @@ export default function Home() {
                 {selectedSession && (
                   <div className="w-full gap-3 flex flex-col mt-2">
                     {/* Students Section */}
-                    <div className="flex flex-col text-lg w-full border-b-2 border-border overflow-hidden">
+                    <div className="flex flex-col w-full border-b-2 border-border overflow-hidden">
                       <button
                         className="flex items-center justify-between px-2 py-2 cursor-pointer group hover:bg-card-hover transition-colors"
                         onClick={() => setOpenSection(openSection === 'students' ? null : 'students')}
                       >
-                        <span className="font-semibold">Students</span>
+                        <h4>Students</h4>
                         <ChevronDown
                           size={18}
                           className={`transition-transform duration-300 ease-in-out ${openSection === 'students' ? 'rotate-180' : ''}`}
@@ -247,12 +247,12 @@ export default function Home() {
                     </div>
 
                     {/* Curriculum Section */}
-                    <div className="flex flex-col text-lg w-full border-b-2 border-border overflow-hidden">
+                    <div className="flex flex-col w-full border-b-2 border-border overflow-hidden">
                       <button
                         className="flex items-center justify-between px-2 py-2 cursor-pointer group hover:bg-card-hover transition-colors"
                         onClick={() => setOpenSection(openSection === 'curriculum' ? null : 'curriculum')}
                       >
-                        <span className="font-semibold">Curriculum</span>
+                        <h4>Curriculum</h4>
                         <ChevronDown
                           size={18}
                           className={`transition-transform duration-300 ease-in-out ${openSection === 'curriculum' ? 'rotate-180' : ''}`}
@@ -272,12 +272,12 @@ export default function Home() {
                     </div>
 
                     {/* Calendar Section */}
-                    <div className="flex flex-col text-lg w-full border-b-2 border-border overflow-hidden">
+                    <div className="flex flex-col w-full border-b-2 border-border overflow-hidden">
                       <button
                         className="flex items-center justify-between px-2 py-2 cursor-pointer group hover:bg-card-hover transition-colors"
                         onClick={() => setOpenSection(openSection === 'calendar' ? null : 'calendar')}
                       >
-                        <span className="font-semibold">Weekly Calendar</span>
+                        <h4>Weekly Calendar</h4>
                         <ChevronDown
                           size={18}
                           className={`transition-transform duration-300 ease-in-out ${openSection === 'calendar' ? 'rotate-180' : ''}`}
@@ -302,10 +302,8 @@ export default function Home() {
             </div>
           </div>
           <div className={`w-full shrink-0 p-6 bg-card flex items-start flex-col gap-4 ${CORNER_ROUND}`}>
-            <div className="w-full flex items-center justify-between font-bold text-xl">
-              <div>
-                Schedule
-              </div>
+            <div className="w-full flex items-center justify-between">
+              <h3>Schedule</h3>
               <Button
                 size="sm"
                 variant="default"
@@ -324,7 +322,7 @@ export default function Home() {
           </div>
         </div>
         {/* Sidebar */}
-        <div className="hidden md:block w-1/3 h-screen bg-orange sticky top-0">
+        <div className="flex flex-col p-6 md:block w-3/10 h-screen bg-orange sticky top-0">
 
         </div>
       </div>
