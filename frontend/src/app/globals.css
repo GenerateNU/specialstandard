@@ -92,6 +92,50 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Typography - Semantic Heading Styles */
+h1 {
+  font-size: 2.25rem; /* 36px - text-4xl */
+  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  font-weight: 700; /* font-bold */
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.875rem; /* 30px - text-3xl */
+  font-weight: 600; /* font-semibold */
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: 1.25rem; /* 20px - text-xl */
+  font-weight: 600; /* font-semibold */
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+h4 {
+  font-size: 1.125rem; /* 18px - text-lg */
+  font-weight: 600; /* font-semibold */
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+h5 {
+  font-size: 1rem; /* 16px - text-base */
+  font-weight: 600; /* font-semibold */
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+h6 {
+  font-size: 0.875rem; /* 14px - text-sm */
+  font-weight: 600; /* font-semibold */
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
 /* Utility Classes for Custom Colors */
 .bg-background {
   background-color: var(--background);
