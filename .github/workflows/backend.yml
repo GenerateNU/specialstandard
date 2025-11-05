@@ -94,21 +94,36 @@ jobs:
         if: always()
         run: |
           cd backend
+          
+          # Initialize variables
+          echo "TESTS_PASSED=0" >> $GITHUB_ENV
+          echo "TESTS_FAILED=0" >> $GITHUB_ENV
+          echo "TESTS_SKIPPED=0" >> $GITHUB_ENV
+          echo "FAILED_TESTS=" >> $GITHUB_ENV
+          
           if [ -f test_output.log ]; then
-            PASSED=$(grep -c '^--- PASS' test_output.log || echo 0)
-            FAILED=$(grep -c '^--- FAIL' test_output.log || echo 0)
-            SKIPPED=$(grep -c '^--- SKIP' test_output.log || echo 0)
+            # Parse test counts - use awk for more reliable parsing
+            PASSED=$(awk '/^--- PASS:/ {count++} END {print count+0}' test_output.log)
+            FAILED=$(awk '/^--- FAIL:/ {count++} END {print count+0}' test_output.log)
+            SKIPPED=$(awk '/^--- SKIP:/ {count++} END {print count+0}' test_output.log)
             
             echo "TESTS_PASSED=$PASSED" >> $GITHUB_ENV
             echo "TESTS_FAILED=$FAILED" >> $GITHUB_ENV
             echo "TESTS_SKIPPED=$SKIPPED" >> $GITHUB_ENV
             
-            # Extract failure details if any
-            if [ "$FAILED" -gt 0 ]; then
-              echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
-              grep -A 3 "^--- FAIL" test_output.log >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
+            # Extract failure details using a simpler approach
+            if [ "$FAILED" -gt "0" ]; then
+              # Use printf to ensure proper formatting
+              FAILED_DETAILS=$(awk '/^--- FAIL:/ {print; for(i=1; i<=3; i++) {getline; print}}' test_output.log | head -20)
+              
+              # Use delimiter approach for multi-line values
+              DELIMITER=$(openssl rand -hex 8)
+              echo "FAILED_TESTS<<$DELIMITER" >> $GITHUB_ENV
+              echo "$FAILED_DETAILS" >> $GITHUB_ENV
+              echo "$DELIMITER" >> $GITHUB_ENV
             fi
+          else
+            echo "WARNING: test_output.log not found"
           fi
       
       # Upload coverage report as artifact
