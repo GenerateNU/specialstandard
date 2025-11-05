@@ -27,23 +27,22 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapists
 	therapistID1 := uuid.New()
 	therapistID2 := uuid.New()
 
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID1, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID2, "Jane", "Smith", "janesmith@gmail.com", true, time.Now(), time.Now())
@@ -52,14 +51,14 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 	// Create test students with different grades and therapists
 	studentID1 := uuid.New()
 	testDOB, _ := time.Parse("2006-01-02", "2010-05-15")
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, studentID1, "John", "Doe", testDOB, therapistID1, 5, "IEP Goals: Speech articulation", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	studentID2 := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, studentID2, "Jane", "Smith", testDOB, therapistID2, 3, "IEP Goals: Reading", time.Now(), time.Now())
@@ -111,7 +110,7 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 	// More Tests for Pagination Behaviour
 	for i := 3; i <= 6; i++ {
 		testDOB, _ := time.Parse("2006-01-02", "2004-09-24")
-		_, err := testDB.Pool.Exec(ctx, `
+		_, err := testDB.Exec(ctx, `
             INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             `, uuid.New(), "Student", fmt.Sprintf("Number%d", i), testDOB, therapistID1, i, "IEP: GOALS!!", time.Now(), time.Now())
@@ -139,15 +138,14 @@ func TestStudentRepository_GetStudents_FilterByGrade(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Test", "Therapist", "test@test.com", true, time.Now(), time.Now())
@@ -156,26 +154,26 @@ func TestStudentRepository_GetStudents_FilterByGrade(t *testing.T) {
 	// Create students with different grades
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, uuid.New(), "John", "Doe", testDOB, therapistID, 5, "IEP Goals", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, uuid.New(), "Jane", "Smith", testDOB, therapistID, 4, "IEP Goals", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, uuid.New(), "Mike", "Johnson", testDOB, therapistID, 5, "IEP Goals", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Add a graduated student
-	_, err = testDB.Pool.Exec(ctx, ` 
+	_, err = testDB.Exec(ctx, ` 
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, uuid.New(), "Jack", "Douglas", testDOB, therapistID, -1, "IEP Goals", time.Now(), time.Now())
@@ -206,23 +204,22 @@ func TestStudentRepository_GetStudents_FilterByTherapist(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create two therapists
 	therapistID1 := uuid.New()
 	therapistID2 := uuid.New()
 
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID1, "Therapist", "One", "one@test.com", true, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID2, "Therapist", "Two", "two@test.com", true, time.Now(), time.Now())
@@ -231,19 +228,19 @@ func TestStudentRepository_GetStudents_FilterByTherapist(t *testing.T) {
 	// Create students assigned to different therapists
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "Student", "One", testDOB, therapistID1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "Student", "Two", testDOB, therapistID1, 4, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "Student", "Three", testDOB, therapistID2, 5, time.Now(), time.Now())
@@ -271,15 +268,14 @@ func TestStudentRepository_GetStudents_FilterByName(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Test", "Therapist", "test@test.com", true, time.Now(), time.Now())
@@ -288,19 +284,19 @@ func TestStudentRepository_GetStudents_FilterByName(t *testing.T) {
 	// Create students with different names
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "John", "Doe", testDOB, therapistID, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "Jane", "Johnson", testDOB, therapistID, 4, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "Michael", "Johns", testDOB, therapistID, 5, time.Now(), time.Now())
@@ -333,23 +329,22 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create two therapists
 	therapistID1 := uuid.New()
 	therapistID2 := uuid.New()
 
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID1, "Therapist", "One", "one@test.com", true, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID2, "Therapist", "Two", "two@test.com", true, time.Now(), time.Now())
@@ -359,28 +354,28 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 
 	// Student 1: Therapist 1, Grade 5, Name John
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "John", "Doe", testDOB, therapistID1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Student 2: Therapist 1, Grade 4, Name Jane
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "Jane", "Smith", testDOB, therapistID1, 4, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Student 3: Therapist 2, Grade 5, Name John
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "John", "Wilson", testDOB, therapistID2, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Student 4: Therapist 1, Grade 5, Name Sarah
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "Sarah", "Johnson", testDOB, therapistID1, 5, time.Now(), time.Now())
@@ -442,15 +437,14 @@ func TestStudentRepository_GetStudents_CaseInsensitiveSearch(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Test", "Therapist", "test@test.com", true, time.Now(), time.Now())
@@ -458,7 +452,7 @@ func TestStudentRepository_GetStudents_CaseInsensitiveSearch(t *testing.T) {
 
 	// Create test student
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, uuid.New(), "John", "Smith", testDOB, therapistID, 5, time.Now(), time.Now())
@@ -487,15 +481,14 @@ func TestStudentRepository_GetStudents_WithPagination(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Test", "Therapist", "test@test.com", true, time.Now(), time.Now())
@@ -504,7 +497,7 @@ func TestStudentRepository_GetStudents_WithPagination(t *testing.T) {
 	// Create 6 students all with grade 5
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 	for i := 1; i <= 6; i++ {
-		_, err = testDB.Pool.Exec(ctx, `
+		_, err = testDB.Exec(ctx, `
             INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         `, uuid.New(), fmt.Sprintf("Student%d", i), "Test", testDOB, therapistID, 5, time.Now(), time.Now())
@@ -538,15 +531,14 @@ func TestStudentRepository_GetStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist first
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
@@ -555,7 +547,7 @@ func TestStudentRepository_GetStudent(t *testing.T) {
 	// Create test student
 	studentID := uuid.New()
 	testDOB, _ := time.Parse("2006-01-02", "2010-05-15")
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, studentID, "Jane", "Smith", testDOB, therapistID, 3, "IEP Goals: Language comprehension", time.Now(), time.Now())
@@ -579,15 +571,14 @@ func TestStudentRepository_AddStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist first
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
@@ -611,7 +602,7 @@ func TestStudentRepository_AddStudent(t *testing.T) {
 
 	// Verify student was inserted correctly using the returned ID
 	var insertedStudent models.Student
-	err = testDB.Pool.QueryRow(ctx, `
+	err = testDB.QueryRow(ctx, `
 		SELECT id, first_name, last_name, dob, therapist_id, grade, iep 
 		FROM student WHERE id = $1
 	`, createdStudent.ID).Scan( // Use the returned ID, not a manual one
@@ -638,15 +629,14 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist first
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
@@ -655,7 +645,7 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 	// Create test student
 	studentID := uuid.New()
 	testDOB, _ := time.Parse("2006-01-02", "2011-03-10")
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, studentID, "Sam", "Wilson", testDOB, therapistID, 4, "Initial IEP", time.Now(), time.Now())
@@ -680,7 +670,7 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 
 	// Verify student was updated correctly
 	var verifyStudent models.Student
-	err = testDB.Pool.QueryRow(ctx, `
+	err = testDB.QueryRow(ctx, `
 		SELECT id, first_name, last_name, dob, therapist_id, grade, iep 
 		FROM student WHERE id = $1
 	`, studentID).Scan(
@@ -703,15 +693,14 @@ func TestStudentRepository_DeleteStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist first
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
@@ -720,7 +709,7 @@ func TestStudentRepository_DeleteStudent(t *testing.T) {
 	// Create test student
 	studentID := uuid.New()
 	testDOB, _ := time.Parse("2006-01-02", "2009-12-25")
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `, studentID, "Chris", "Brown", testDOB, therapistID, 6, "IEP Goals: Social communication", time.Now(), time.Now())
@@ -734,7 +723,7 @@ func TestStudentRepository_DeleteStudent(t *testing.T) {
 
 	// Verify student was deleted
 	var count int
-	err = testDB.Pool.QueryRow(ctx, `SELECT COUNT(*) FROM student WHERE id = $1`, studentID).Scan(&count)
+	err = testDB.QueryRow(ctx, `SELECT COUNT(*) FROM student WHERE id = $1`, studentID).Scan(&count)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, count)
 }
@@ -744,16 +733,15 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 		t.Skip("Skipping Database Test in Short Mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
 	ctx := context.Background()
-	repo := schema.NewStudentRepository(testDB.Pool)
+	repo := schema.NewStudentRepository(testDB)
 
 	// Insert 2 Therapists
 	doctorWhoID := uuid.New()
 	doctorDoofenshmirtzID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
 		INSERT INTO therapist (id, first_name, last_name, email)
 		VALUES ($1, $2, $3, $4),
 		       ($5, $6, $7, $8);
@@ -762,7 +750,7 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Insert 5 Students
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO student (first_name, last_name, dob, therapist_id, grade, iep, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, NOW()),
 		       ($7, $8, $3, $4, $9, $6, NOW()),

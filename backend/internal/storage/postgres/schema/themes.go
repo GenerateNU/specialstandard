@@ -47,7 +47,7 @@ func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagina
 	query := `
 	SELECT id, theme_name, month, year, created_at, updated_at
 	FROM theme`
-	
+
 	conditions := []string{}
 	args := []interface{}{}
 	argCount := 1
@@ -59,13 +59,13 @@ func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagina
 			args = append(args, *filter.Month)
 			argCount++
 		}
-		
+
 		if filter.Year != nil {
 			conditions = append(conditions, fmt.Sprintf("year = $%d", argCount))
 			args = append(args, *filter.Year)
 			argCount++
 		}
-		
+
 		if filter.Search != nil && *filter.Search != "" {
 			conditions = append(conditions, fmt.Sprintf("theme_name ILIKE $%d", argCount))
 			args = append(args, "%"+*filter.Search+"%")
@@ -77,10 +77,10 @@ func (r *ThemeRepository) GetThemes(ctx context.Context, pagination utils.Pagina
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += fmt.Sprintf(` ORDER BY year DESC, month DESC
+	query += fmt.Sprintf(` ORDER BY year ASC, month ASC
 	LIMIT $%d OFFSET $%d`, argCount, argCount+1)
-	
-	args = append(args, pagination.Limit, pagination.GettOffset())
+
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, query, args...)
 

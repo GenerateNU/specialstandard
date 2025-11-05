@@ -21,17 +21,16 @@ func TestSessionRepository_GetTherapistByID(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewTherapistRepository(testDB.Pool)
+	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
 	// Generate a UUID for therapist_id
 	therapistID := uuid.New()
 
 	// Insert test data with UUID
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
@@ -52,17 +51,16 @@ func TestSessionRepository_GetTherapists(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewTherapistRepository(testDB.Pool)
+	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
 	// Generate a UUID for therapist_id
 	therapistID := uuid.New()
 
 	// Insert test data with UUID
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
@@ -78,7 +76,7 @@ func TestSessionRepository_GetTherapists(t *testing.T) {
 
 	// More Tests for Pagination Behaviour
 	for i := 2; i <= 10; i++ {
-		_, err := testDB.Pool.Exec(ctx, `
+		_, err := testDB.Exec(ctx, `
             INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
             `, uuid.New(), "Doctor", fmt.Sprintf("Person %d", i), fmt.Sprintf("doctor%d@doctor.com", i),
@@ -107,17 +105,16 @@ func TestSessionRepository_PatchTherapist(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewTherapistRepository(testDB.Pool)
+	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
 	// Generate a UUID for therapist_id
 	therapistID := uuid.New()
 
 	// Insert test data with UUID
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
@@ -141,17 +138,16 @@ func TestSessionRepository_DeleteTherapist(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewTherapistRepository(testDB.Pool)
+	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
 	// Generate a UUID for therapist_id
 	therapistID := uuid.New()
 
 	// Insert test data with UUID
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
@@ -170,10 +166,9 @@ func TestSessionRepository_CreateTherapist(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewTherapistRepository(testDB.Pool)
+	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
 	updated := &models.CreateTherapistInput{

@@ -42,10 +42,10 @@ func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context
 				FROM session_resource sr
 				JOIN resource r ON sr.resource_id = r.id
 				WHERE sr.session_id = $1
-				ORDER BY r.created_at DESC
+				ORDER BY r.created_at ASC
 				LIMIT $2 OFFSET $3`
 
-	rows, err := sr.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
+	rows, err := sr.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GetOffset())
 	if err != nil {
 		return nil, err
 	}
