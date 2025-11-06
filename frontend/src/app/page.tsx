@@ -5,11 +5,11 @@ import { ChevronDown, Loader2, UserCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
-import MiniCalendar from '@/components/MiniCalendar'
-import RecentStudentCard from '@/components/RecentStudentCard'
+import MiniCalendar from '@/components/dashboard/MiniCalendar'
+import RecentStudentCard from '@/components/dashboard/RecentStudentCard'
+import UpcomingSessionCard from '@/components/dashboard/UpcomingSessionCard'
 import StudentSchedule from '@/components/schedule/StudentSchedule'
 import { Button } from '@/components/ui/button'
-import UpcomingSessionCard from '@/components/UpcomingSessionCard'
 import { useAuthContext } from '@/contexts/authContext'
 import { useRecentlyViewedStudents } from '@/hooks/useRecentlyViewedStudents'
 import { useSessions } from '@/hooks/useSessions'
@@ -116,7 +116,7 @@ export default function Home() {
               </Button>
             </div>
           </div>
-          <div className={`w-full bg-card p-6 gap-4 ${CORNER_ROUND} flex flex-col`}>
+          <div className={`w-full bg-card p-6 gap-4 ${CORNER_ROUND} flex flex-col transition`}>
             <div className="w-full flex items-center justify-between">
               <h3>Upcoming Sessions</h3>
               <Button
@@ -160,7 +160,7 @@ export default function Home() {
                         </div>
                       )}
               </div>
-              <div className={`p-4 text-sm font-normal ${CORNER_ROUND} justify-start flex flex-col gap-4 self-start transition-all duration-300`}>
+              <div className={`p-4 text-sm font-normal ${CORNER_ROUND} justify-start flex flex-col gap-2 self-start transition-all duration-300`}>
                 {selectedSession
                   ? (
                       <div className="flex flex-col gap-6 animate-in fade-in duration-300">
@@ -329,7 +329,9 @@ export default function Home() {
         </div>
         {/* Sidebar */}
         <div className="flex flex-col p-10 w-3/10 h-screen bg-orange sticky space-y-6 top-0">
-          <div className="flex flex-row justify-between items-center">
+          <div className="flex flex-row justify-between items-center
+          hover:shadow-md hover:-translate-y-1 cursor-pointer transition p-4 rounded-2xl hover:bg-orange-disabled"
+          >
             <div>
               <h4>Mark Jones</h4>
               <p>My Profile</p>

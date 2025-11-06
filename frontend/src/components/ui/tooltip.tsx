@@ -56,7 +56,7 @@ export default function Tooltip({ content, children, enabled = true }: TooltipPr
             className={`pointer-events-none fixed whitespace-nowrap 
                 rounded-lg bg-foreground text-white text-sm px-3 
                 py-1.5 z-50 shadow-lg -translate-y-1/2 transition-opacity 
-                duration-500 ${isMounted ? 'opacity-100' : 'opacity-0'}`}
+                duration-200 ${isMounted ? 'opacity-100' : 'opacity-0'}`}
             style={{
               top: `${position.top}px`,
               left: `${position.left}px`,

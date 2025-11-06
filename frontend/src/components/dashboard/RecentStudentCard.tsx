@@ -25,7 +25,7 @@ export default function RecentStudentCard({
     <button
       onClick={() => router.push(`/student/${id}`)}
       className={cn(
-        'w-full flex items-center gap-3 p-3 cursor-pointer rounded-lg hover:bg-orange transition-colors text-left',
+        'w-full flex items-center gap-3 p-3 cursor-pointer rounded-lg hover:bg-pink-disabled transition-colors text-left',
         className,
       )}
     >
@@ -38,13 +38,13 @@ export default function RecentStudentCard({
 
       {/* Student Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate text-foreground">
+        <p className="text-md font-bold truncate text-foreground">
           {firstName}
           {' '}
           {lastName}
         </p>
         {grade !== undefined && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Grade
             {' '}
             {grade}
