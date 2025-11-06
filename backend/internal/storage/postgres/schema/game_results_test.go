@@ -23,15 +23,14 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewGameResultRepository(testDB.Pool)
+	repo := schema.NewGameResultRepository(testDB)
 	ctx := context.Background()
 
 	// Inserting Valid Therapist
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx,
+	_, err := testDB.Exec(ctx,
 		`INSERT INTO therapist (id, first_name, last_name, email)
         	 VALUES ($1, $2, $3, $4)`,
 		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
@@ -41,7 +40,7 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4, $5)
     `, sessionID, therapistID, startTime, endTime, "Test session for session-student")
@@ -49,14 +48,14 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 
 	// Create test student
 	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
     `, studentID, "Test", "Student", therapistID, 5)
 	assert.NoError(t, err)
 
 	// Inserting SessionStudent
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO session_student (session_id, student_id)
 		VALUES ($1, $2);
     `, sessionID, studentID)
@@ -68,14 +67,14 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 	level := 5
 	options := []string{"Koorkodile", "Krokorok", "Krookodile", "Korkorockodile"}
 	answer := "Crocodile"
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO game_content (id, category, level, options, answer)
 		VALUES ($1, $2, $3, $4, $5)
     `, contentID, category, level, options, answer)
 	assert.NoError(t, err)
 
 	// Inserting GameResult
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO game_result (session_id, student_id, content_id, time_taken, completed, incorrect_tries)
 		VALUES ($1, $2, $3, $4, $5, $6);
     `, sessionID, studentID, contentID, 93, true, 5)
@@ -107,10 +106,9 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewGameResultRepository(testDB.Pool)
+	repo := schema.NewGameResultRepository(testDB)
 	ctx := context.Background()
 
 	input := models.PostGameResult{
@@ -128,7 +126,7 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 
 	// Inserting Valid Therapist
 	therapistID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx,
+	_, err = testDB.Exec(ctx,
 		`INSERT INTO therapist (id, first_name, last_name, email)
         	 VALUES ($1, $2, $3, $4)`,
 		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
@@ -138,7 +136,7 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4, $5)
     `, sessionID, therapistID, startTime, endTime, "Test session for session-student")
@@ -146,14 +144,14 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 
 	// Create test student
 	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
     `, studentID, "Test", "Student", therapistID, 5)
 	assert.NoError(t, err)
 
 	// Inserting SessionStudent
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO session_student (session_id, student_id)
 		VALUES ($1, $2);
     `, sessionID, studentID)
@@ -165,7 +163,7 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 	level := 5
 	options := []string{"Koorkodile", "Krokorok", "Krookodile", "Korkorockodile"}
 	answer := "Crocodile"
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO game_content (id, category, level, options, answer)
 		VALUES ($1, $2, $3, $4, $5)
     `, contentID, category, level, options, answer)

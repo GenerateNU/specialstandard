@@ -17,10 +17,9 @@ func TestGameContentRepository_GetGameContent(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewGameContentRepository(testDB.Pool)
+	repo := schema.NewGameContentRepository(testDB)
 	ctx := context.Background()
 
 	input := models.GetGameContentRequest{
@@ -42,7 +41,7 @@ func TestGameContentRepository_GetGameContent(t *testing.T) {
 	answer := "Crocodile"
 
 	// Inserting GameContent!
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO game_content (id, category, level, options, answer)
 		VALUES ($1, $2, $3, $4, $5)
     `, id, category, level, options, answer)
