@@ -9,6 +9,7 @@ import StudentSchedule from '@/components/schedule/StudentSchedule'
 import SessionNotes from '@/components/sessions/sessionNotes'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { useRecentlyViewedStudents } from '@/hooks/useRecentlyViewedStudents'
 import { useStudents } from '@/hooks/useStudents'
 import { getAvatarVariant } from '@/lib/utils'
 
@@ -18,6 +19,14 @@ function StudentPage() {
 
   const { students, isLoading, updateStudent } = useStudents()
   const student = students.find(s => s.id === studentId)
+  const { addRecentStudent } = useRecentlyViewedStudents()
+
+  // Track this student as recently viewed - only when studentId changes
+  useEffect(() => {
+    if (student && studentId) {
+      addRecentStudent(student)
+    }
+  }, [studentId]) // Only track when navigating to a new student
 
   const [edit, setEdit] = useState(false)
   const [iepGoals, setIepGoals] = useState<string[]>([])
@@ -126,7 +135,7 @@ function StudentPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen h-screen flex items-center justify-center bg-background">
+      <div className="w-full h-screen bg-background">
         <div className={`w-full h-full grid grid-rows-2 gap-8 ${PADDING} relative`}>
           {/* Edit toggle button */}
           <div className="absolute top-1/2 right-5 z-20 flex gap-2">

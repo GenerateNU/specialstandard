@@ -1,14 +1,17 @@
 'use client'
 
 import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
-import { ChevronDown, Loader2 } from 'lucide-react'
+import { ChevronDown, Loader2, UserCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
+import MiniCalendar from '@/components/MiniCalendar'
+import RecentStudentCard from '@/components/RecentStudentCard'
 import StudentSchedule from '@/components/schedule/StudentSchedule'
 import { Button } from '@/components/ui/button'
 import UpcomingSessionCard from '@/components/UpcomingSessionCard'
 import { useAuthContext } from '@/contexts/authContext'
+import { useRecentlyViewedStudents } from '@/hooks/useRecentlyViewedStudents'
 import { useSessions } from '@/hooks/useSessions'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { useTherapists } from '@/hooks/useTherapists'
@@ -17,6 +20,9 @@ export default function Home() {
   const { isAuthenticated, isLoading, userId } = useAuthContext()
   const router = useRouter()
   const CORNER_ROUND = 'rounded-2xl'
+
+  // Recently viewed students
+  const { recentStudents } = useRecentlyViewedStudents()
 
   // Fetch therapists data
   const { therapists } = useTherapists()
@@ -322,8 +328,53 @@ export default function Home() {
           </div>
         </div>
         {/* Sidebar */}
-        <div className="flex flex-col p-6 md:block w-3/10 h-screen bg-orange sticky top-0">
-
+        <div className="flex flex-col p-10 w-3/10 h-screen bg-orange sticky space-y-6 top-0">
+          <div className="flex flex-row justify-between items-center">
+            <div>
+              <h4>Mark Jones</h4>
+              <p>My Profile</p>
+            </div>
+            <UserCircle size={36} strokeWidth={1} />
+          </div>
+          <div className="w-full bg-white rounded-xl">
+            <MiniCalendar />
+          </div>
+          <div className="flex flex-col w-full p-6 flex-1 bg-white rounded-xl gap-4">
+            <div>
+              <h3>Students</h3>
+              <p className="text-sm text-muted-foreground">Recently Viewed</p>
+            </div>
+            <div className="w-full flex-1 flex flex-col gap-2">
+              {recentStudents.length > 0
+                ? (
+                    recentStudents.map((student, index) => (
+                      <div
+                        key={student.id}
+                        className="animate-in fade-in duration-300"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <RecentStudentCard
+                          id={student.id}
+                          firstName={student.first_name}
+                          lastName={student.last_name}
+                          grade={student.grade}
+                        />
+                      </div>
+                    ))
+                  )
+                : (
+                    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+                      No recently viewed students
+                    </div>
+                  )}
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => router.push('/students')}
+            >
+              View All Students
+            </Button>
+          </div>
         </div>
       </div>
     </AppLayout>
