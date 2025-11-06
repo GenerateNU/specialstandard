@@ -48,7 +48,7 @@ func (r *GameResultRepository) GetGameResults(ctx context.Context, inputQuery *m
 	}
 
 	query += fmt.Sprintf(` ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
-	args = append(args, pagination.Limit, pagination.GettOffset())
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
