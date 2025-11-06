@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import Tooltip from '@/components/ui/tooltip'
 import { useAuthContext } from '@/contexts/authContext'
 
 interface AppLayoutProps {
@@ -113,7 +114,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               variant="secondary"
               size="icon"
               aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-              className="w-10 h-10 flex-shrink-0 p-0 bg-white/10 hover:bg-white/20 border-white/20"
+              className="w-10 h-10 flex shrink-0 p-0 bg-white/10 hover:bg-white/20 border-white/20"
             >
               <PanelLeft className="w-5 h-5 transition-transform duration-300 text-white" />
             </Button>
@@ -128,13 +129,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
               const isActive = pathname === item.href
 
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`
+                <Tooltip content={item.label} enabled={!isSidebarOpen}>
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`
                     flex items-center gap-3 rounded-lg
                     transition-all duration-200
-                    h-10 flex-shrink-0 overflow-hidden justify-start
+                    h-10 shrink-0 overflow-hidden justify-start
                     ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
                     ${
                 isActive
@@ -142,10 +144,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }
                   `}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </Link>
+                  >
+
+                    <Icon className="w-5 h-5 shrink-0" />
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  </Link>
+                </Tooltip>
               )
             })}
           </nav>
@@ -153,24 +157,27 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {/* Footer */}
           <Separator className="bg-white/10" />
           <div className="p-2">
-            <Button
-              onClick={() => {
-                logout()
-                window.location.href = '/login'
-              }}
-              variant="ghost"
-              aria-label="Logout"
-              className={`
+            <Tooltip content="Logout" enabled={!isSidebarOpen}>
+              <Button
+                onClick={() => {
+                  logout()
+                  window.location.href = '/login'
+                }}
+                variant="ghost"
+                aria-label="Logout"
+                className={`
                 flex items-center gap-3 rounded-lg
                 transition-all duration-200
                 h-10 flex-shrink-0 overflow-hidden justify-start
                 text-white/70 hover:text-white hover:bg-white/10
                 ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
               `}
-            >
-              <LogOut className="w-5 h-5 mr-0.5" />
-              <span className="whitespace-nowrap">Logout</span>
-            </Button>
+              >
+
+                <LogOut className="w-5 h-5 mr-0.5" />
+                <span className="whitespace-nowrap">Logout</span>
+              </Button>
+            </Tooltip>
           </div>
         </div>
       </aside>
