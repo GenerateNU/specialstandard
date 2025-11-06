@@ -31,3 +31,17 @@ export function formatNumber(number?: number, appendString: string = '') {
     return appendString
   return Number(number?.toFixed()).toLocaleString()
 }
+
+// Deterministically pick a DiceBear avatar variant from an ID string
+export function getAvatarVariant(id: string): 'avataaars' | 'lorelei' | 'micah' | 'miniavs' | 'big-smile' | 'personas' {
+  const variants = ['avataaars', 'lorelei', 'micah', 'miniavs', 'big-smile', 'personas'] as const
+
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash) + id.charCodeAt(i)
+    // Convert to 32-bit integer
+    hash = hash & hash
+  }
+
+  return variants[Math.abs(hash) % variants.length]
+}

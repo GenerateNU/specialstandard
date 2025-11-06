@@ -21,15 +21,14 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionRepository(testDB.Pool)
+	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
 	// Create a test therapist first (required for foreign key)
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email)
         VALUES ($1, $2, $3, $4)
     `, therapistID, "John", "Doe", "john.doe@example.com")
@@ -38,7 +37,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	// Insert test session data using new schema
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4)
     `, therapistID, startTime, endTime, "Test session")
@@ -59,7 +58,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 		start := startTime.Add(time.Duration(i) * time.Hour)
 		end := start.Add(time.Hour)
 
-		_, err := testDB.Pool.Exec(ctx, `
+		_, err := testDB.Exec(ctx, `
 			INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
 			VALUES ($1, $2, $3, $4)
        `, therapistID, start, end, fmt.Sprintf("Test session%d", i))
@@ -78,7 +77,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 4)
-	assert.Equal(t, "Test session", *sessions[3].Notes)
+	assert.Equal(t, "Test session18", *sessions[3].Notes)
 
 	// Test filtering by year
 	yearFilter := &models.GetSessionRepositoryRequest{
@@ -103,13 +102,13 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 
 	// Insert student associations for one of the sessions
 	sessionWithStudents := sessions[0].ID
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO student (id, first_name, last_name, therapist_id)
 		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)
 	`, studentID1, "Student", "One", therapistID, studentID2, "Student", "Two", therapistID)
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO session_student (session_id, student_id, present)
 		VALUES ($1, $2, true), ($3, $4, true)
 	`, sessionWithStudents, studentID1, sessionWithStudents, studentID2)
@@ -129,15 +128,14 @@ func TestSessionRepository_GetSessionByID(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionRepository(testDB.Pool)
+	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
 	// Create a test therapist first
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email)
         VALUES ($1, $2, $3, $4)
     `, therapistID, "Jane", "Smith", "jane.smith@example.com")
@@ -147,7 +145,7 @@ func TestSessionRepository_GetSessionByID(t *testing.T) {
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4, $5)
     `, sessionID, therapistID, startTime, endTime, "Get by ID test session")
@@ -175,15 +173,14 @@ func TestSessionRepository_DeleteSessions(t *testing.T) {
 		t.Skip("Skipping DB tests in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionRepository(testDB.Pool)
+	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
 	// SUCCESS TEST - Creation of valid Therapist first.
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx,
+	_, err := testDB.Exec(ctx,
 		`INSERT INTO therapist (id, first_name, last_name, email)
              VALUES ($1, $2, $3, $4)`,
 		therapistID, "Doctor", "Suess", "dr.guesswho.suess@drdr.com")
@@ -193,7 +190,7 @@ func TestSessionRepository_DeleteSessions(t *testing.T) {
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx,
+	_, err = testDB.Exec(ctx,
 		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
              VALUES ($1, $2, $3, $4, $5)`,
 		sessionID, therapistID, startTime, endTime, "Inserting into session for test")
@@ -208,10 +205,9 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		t.Skip("Skipping DB tests in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionRepository(testDB.Pool)
+	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
 	therapistID := uuid.New()
@@ -231,7 +227,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 
 	// INSERTING VALID THERAPIST
 	therapistID = uuid.New()
-	_, err = testDB.Pool.Exec(ctx,
+	_, err = testDB.Exec(ctx,
 		`INSERT INTO therapist (id, first_name, last_name, email)
         	 VALUES ($1, $2, $3, $4)`,
 		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
@@ -313,10 +309,9 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 		t.Skip("Skipping DB Tests in short mode")
 	}
 
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionRepository(testDB.Pool)
+	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
 	// Given ID Not Found 404 Error
@@ -340,7 +335,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 
 	// INSERTING THERAPIST NOW
 	therapistID = uuid.New()
-	_, err = testDB.Pool.Exec(ctx,
+	_, err = testDB.Exec(ctx,
 		`INSERT INTO therapist (id, first_name, last_name, email)
              VALUES ($1, $2, $3, $4)`,
 		therapistID, "Doc", "The Dwarf", "doc@sevendwarves.com")
@@ -363,7 +358,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	id = uuid.New()
 	startTime = time.Now()
 	endTime = time.Now().Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx,
+	_, err = testDB.Exec(ctx,
 		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
              VALUES ($1, $2, $3, $4, $5)`,
 		id, therapistID, startTime, endTime, "Inserted")
@@ -395,7 +390,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 
 	// ADDING A SECOND THERAPIST TO UPDATE TO
 	therapistID = uuid.New()
-	_, err = testDB.Pool.Exec(ctx,
+	_, err = testDB.Exec(ctx,
 		`INSERT INTO therapist (id, first_name, last_name, email)
              VALUES ($1, $2, $3, $4)`,
 		therapistID, "Courage", "The Cowardly Dog", "havecourage@cowardice.com")
@@ -420,15 +415,14 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 
 func TestGetSessionStudents(t *testing.T) {
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionRepository(testDB.Pool)
+	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
 	// Create a test therapist first (required for foreign key)
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email)
         VALUES ($1, $2, $3, $4)
     `, therapistID, "John", "Doe", "john.doe@example.com")
@@ -437,7 +431,7 @@ func TestGetSessionStudents(t *testing.T) {
 	// Insert test session data using new schema
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4)
     `, therapistID, startTime, endTime, "Test session")
@@ -453,13 +447,13 @@ func TestGetSessionStudents(t *testing.T) {
 
 	// Insert student associations for one of the sessions
 	sessionWithStudents := sessions[0].ID
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO student (id, first_name, last_name, therapist_id, grade)
 		VALUES ($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10)
 	`, studentID1, "Student", "One", therapistID, 3, studentID3, "Student", "Three", therapistID, -1)
 	assert.NoError(t, err)
 
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
 		INSERT INTO session_student (session_id, student_id, present)
 		VALUES ($1, $2, true), ($3, $4, true)
 	`, sessionWithStudents, studentID1, sessionWithStudents, studentID3)

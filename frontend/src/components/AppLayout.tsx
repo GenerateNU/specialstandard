@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
 ]
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const pathname = usePathname()
   const { logout } = useAuthContext()
 
@@ -44,7 +44,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(true)
+        setIsSidebarOpen(false)
       }
     }
 
@@ -82,14 +82,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Actual Sidebar */}
       <aside
         className={`
-          bg-card border-r border-default
+          bg-black border-r border-default
           transition-all duration-300 ease-in-out
-          shadow-md
+          shadow-md 
           
-          /* Mobile: Fixed overlay modal */
-          fixed lg:sticky
+          /* Sticky sidebar on all screen sizes */
+          sticky
           top-0
-          h-full lg:h-screen
+          h-screen
           z-50 lg:z-auto
           
           /* Mobile: slide in/out from left */
@@ -102,7 +102,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex flex-col h-full">
           <div className="flex flex-row items-center justify-between p-2">
             <div className="font-bold text-xl flex items-center overflow-hidden">
-              <span className={`whitespace-nowrap ml-2 transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
+              <span className={`whitespace-nowrap ml-2 transition-opacity duration-200 text-white ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
                 The Special Standard
               </span>
             </div>
@@ -111,13 +111,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
               variant="secondary"
               size="icon"
               aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-              className="w-10 h-10 flex-shrink-0 p-0"
+              className="w-10 h-10 flex-shrink-0 p-0 bg-white/10 hover:bg-white/20 border-white/20"
             >
-              <PanelLeft className="w-5 h-5 transition-transform duration-300" />
+              <PanelLeft className="w-5 h-5 transition-transform duration-300 text-white" />
             </Button>
           </div>
 
-          <Separator />
+          <Separator className="bg-white/10" />
 
           {/* Navigation */}
           <nav className="flex-1 p-2 space-y-1">
@@ -136,8 +136,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
                     ${
                 isActive
-                  ? 'bg-accent text-white font-medium'
-                  : 'text-secondary hover:bg-card-hover hover:text-primary'
+                  ? 'bg-blue text-white font-medium'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }
                   `}
                 >
@@ -149,43 +149,32 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </nav>
 
           {/* Footer */}
-          <Separator />
+          <Separator className="bg-white/10" />
           <div className="p-2">
-            {isSidebarOpen
-              ? (
-                  <Button
-                    onClick={logout}
-                    variant="ghost"
-                    className="w-full justify-start gap-3 text-secondary hover:text-primary hover:bg-card-hover"
-                  >
-                    <LogOut className="w-5 h-5 flex-shrink-0" />
-                    <span className="whitespace-nowrap">Logout</span>
-                  </Button>
-                )
-              : (
-                  <Button
-                    onClick={logout}
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Logout"
-                    className="w-10 h-10 mx-auto text-secondary hover:text-primary"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </Button>
-                )}
+            <Button
+              onClick={() => {
+                logout()
+                window.location.href = '/login'
+              }}
+              variant="ghost"
+              aria-label="Logout"
+              className={`
+                flex items-center gap-3 rounded-lg
+                transition-all duration-200
+                h-10 flex-shrink-0 overflow-hidden justify-start
+                text-white/70 hover:text-white hover:bg-white/10
+                ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
+              `}
+            >
+              <LogOut className="w-5 h-5 mr-0.5" />
+              <span className="whitespace-nowrap">Logout</span>
+            </Button>
           </div>
-          {isSidebarOpen && (
-            <div className="p-4 pt-2">
-              <p className="text-xs text-muted text-center whitespace-nowrap">
-                The Special Standard © 2025
-              </p>
-            </div>
-          )}
         </div>
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Page content */}
         <main className="flex-1">
           {children}

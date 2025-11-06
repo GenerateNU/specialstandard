@@ -1,12 +1,15 @@
 'use client'
 
 import type { SlotInfo, View } from 'react-big-calendar'
+import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { ArrowLeft } from 'lucide-react'
 import moment from 'moment'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
+import AppLayout from '@/components/AppLayout'
 import { CreateSessionDialog } from '@/components/calendar/NewSessionModal'
+import SessionPreviewModal from '@/components/SessionPreviewModal'
 import { Button } from '@/components/ui/button'
 import { useSessions } from '@/hooks/useSessions'
 import { useStudents } from '@/hooks/useStudents'
@@ -20,6 +23,7 @@ interface CalendarEvent {
   title: string
   start: Date
   end: Date
+  resource: Session
 }
 
 // Hard coded therapist ID as requested (using existing therapist from database)
@@ -31,6 +35,9 @@ export default function MyCalendar() {
   const [view, setView] = useState<View>('week')
   const [newSessionOpen, setNewSessionOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date, end: Date } | null>(null)
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
+  const [modalPosition, setModalPosition] = useState<{ x: number, y: number } | null>(null)
+
   const getViewRange = () => {
     const startOfView = moment(date).startOf(view === 'day' ? 'day' : view === 'week' ? 'week' : 'month').toDate()
     const endOfView = moment(date).endOf(view === 'day' ? 'day' : view === 'week' ? 'week' : 'month').toDate()
@@ -49,6 +56,7 @@ export default function MyCalendar() {
     title: 'session',
     start: new Date(session.start_datetime),
     end: new Date(session.end_datetime),
+    resource: session,
   }))
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
@@ -62,6 +70,20 @@ export default function MyCalendar() {
   const handleCloseModal = () => {
     setNewSessionOpen(false)
     setSelectedSlot(null)
+  }
+
+  const handleSelectEvent = (event: CalendarEvent, e: React.SyntheticEvent) => {
+    const target = e.target as HTMLElement
+    // Find the actual event container for consistent positioning
+    const eventElement = target.closest('.rbc-event') as HTMLElement
+    const rect = eventElement?.getBoundingClientRect() || target.getBoundingClientRect()
+
+    // Position modal to the right of the event block with 10px gap
+    setModalPosition({
+      x: rect.right + 10,
+      y: rect.top,
+    })
+    setSelectedSession(event.resource)
   }
 
   if (isLoading) {
@@ -84,46 +106,60 @@ export default function MyCalendar() {
   }
 
   return (
-    <div>
-      {/* Back button */}
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-4 transition-colors group"
-      >
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        <span className="text-sm font-medium">Back to Home</span>
-      </Link>
+    <AppLayout>
+      <div>
+        {/* Back button */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-4 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm font-medium">Back to Home</span>
+        </Link>
 
-      <Button variant="default" onClick={() => setNewSessionOpen(true)}>
-        + New Session
-      </Button>
+        <Button variant="default" onClick={() => setNewSessionOpen(true)}>
+          + New Session
+        </Button>
 
-      <CreateSessionDialog
-        open={newSessionOpen}
-        therapistId={HARDCODED_THERAPIST_ID}
-        students={students}
-        setOpen={handleCloseModal}
-        onSubmit={async data => addSession(data)}
-        initialDateTime={selectedSlot ?? undefined}
-      />
-
-      <div className="flex items-center justify-center h-screen">
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: '80vh', width: '90vw' }}
-          date={date}
-          view={view}
-          onNavigate={setDate}
-          onView={setView}
-          views={['week', 'day', 'month']}
-          selectable
-          onSelectSlot={handleSelectSlot}
+        <CreateSessionDialog
+          open={newSessionOpen}
+          therapistId={HARDCODED_THERAPIST_ID}
+          students={students}
+          setOpen={handleCloseModal}
+          onSubmit={async data => addSession(data)}
+          initialDateTime={selectedSlot ?? undefined}
         />
-      </div>
-    </div>
 
+        <div className="flex items-center justify-center h-screen">
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: '80vh', width: '90vw' }}
+            date={date}
+            view={view}
+            onNavigate={setDate}
+            onView={setView}
+            onSelectEvent={handleSelectEvent}
+            views={['week', 'day', 'month']}
+            selectable
+            onSelectSlot={handleSelectSlot}
+          />
+        </div>
+
+        {/* Session preview modal */}
+        {selectedSession && modalPosition && (
+          <SessionPreviewModal
+            session={selectedSession}
+            position={modalPosition}
+            onClose={() => {
+              setSelectedSession(null)
+              setModalPosition(null)
+            }}
+          />
+        )}
+      </div>
+    </AppLayout>
   )
 }
