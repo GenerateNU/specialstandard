@@ -16,5 +16,5 @@ func (m *MockGameContentRepository) GetGameContents(ctx context.Context, req mod
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*models.GameContent), args.Error(1)
+	return args.Get(0).([]models.GameContent), args.Error(1)
 }
