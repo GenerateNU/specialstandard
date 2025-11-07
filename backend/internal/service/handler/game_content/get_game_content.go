@@ -1,14 +1,12 @@
 package game_content
 
 import (
-	"errors"
 	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"specialstandard/internal/xvalidator"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) GetGameContents(c *fiber.Ctx) error {
@@ -21,12 +19,8 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	gameContents, err := h.gameContentRepository.GetGameContent(c.Context(), getGameContentReq)
+	gameContents, err := h.gameContentRepository.GetGameContents(c.Context(), getGameContentReq)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return errs.NotFound("Game Contents Not Found")
-		}
-
 		req := getGameContentReq
 		// For all other database errors, return internal server error without exposing details
 		slog.Error("Failed to get game contents", "theme_id", req.ThemeID, "category",

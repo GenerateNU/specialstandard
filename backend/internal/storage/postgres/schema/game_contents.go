@@ -17,7 +17,7 @@ func NewGameContentRepository(db *pgxpool.Pool) *GameContentRepository {
 	}
 }
 
-func (r *GameContentRepository) GetGameContent(ctx context.Context, req models.GetGameContentRequest) (*models.GameContent, error) {
+func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.GetGameContentRequest) ([]models.GameContent, error) {
 	query := `SELECT id, category, level, 
        		  		 (SELECT array_agg(opt) FROM 
        		  				 (SELECT opt FROM unnest(gc.options) AS opt ORDER BY random() LIMIT $3) AS sampled)

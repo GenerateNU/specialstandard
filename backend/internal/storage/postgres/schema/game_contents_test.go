@@ -29,7 +29,7 @@ func TestGameContentRepository_GetGameContent(t *testing.T) {
 	}
 
 	// Empty DB
-	gameContent, err := repo.GetGameContent(ctx, input)
+	gameContent, err := repo.GetGameContents(ctx, input)
 	assert.Nil(t, gameContent)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
@@ -47,7 +47,7 @@ func TestGameContentRepository_GetGameContent(t *testing.T) {
     `, id, category, level, options, answer)
 	assert.NoError(t, err)
 
-	gameContent, err = repo.GetGameContent(ctx, input)
+	gameContent, err = repo.GetGameContents(ctx, input)
 	assert.NotNil(t, gameContent)
 	assert.NoError(t, err)
 
