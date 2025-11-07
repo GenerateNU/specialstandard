@@ -23,15 +23,14 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	repo := schema.NewSessionStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist (required for session foreign key)
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email)
         VALUES ($1, $2, $3, $4)
     `, therapistID, "Dr. Test", "Therapist", "test.therapist@example.com")
@@ -41,7 +40,7 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4, $5)
     `, sessionID, therapistID, startTime, endTime, "Test session for session-student")
@@ -49,7 +48,7 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 
 	// Create test student
 	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
     `, studentID, "Test", "Student", therapistID, 5)
@@ -110,15 +109,14 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	repo := schema.NewSessionStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email)
         VALUES ($1, $2, $3, $4)
     `, therapistID, "Dr. Delete", "Test", "delete.test@example.com")
@@ -128,7 +126,7 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4, $5)
     `, sessionID, therapistID, startTime, endTime, "Session for delete test")
@@ -136,14 +134,14 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
 
 	// Create test student
 	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
     `, studentID, "Delete", "Student", therapistID, 3)
 	assert.NoError(t, err)
 
 	// Create session-student relationship
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session_student (session_id, student_id, present, notes)
         VALUES ($1, $2, $3, $4)
     `, sessionID, studentID, true, "Initial relationship")
@@ -160,7 +158,7 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
 
 	// Verify deletion - should not exist anymore
 	var count int
-	err = testDB.Pool.QueryRow(ctx, `
+	err = testDB.QueryRow(ctx, `
         SELECT COUNT(*) FROM session_student 
         WHERE session_id = $1 AND student_id = $2
     `, sessionID, studentID).Scan(&count)
@@ -174,15 +172,14 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	repo := schema.NewSessionStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email)
         VALUES ($1, $2, $3, $4)
     `, therapistID, "Dr. Patch", "Test", "patch.test@example.com")
@@ -192,7 +189,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4, $5)
     `, sessionID, therapistID, startTime, endTime, "Session for patch test")
@@ -200,14 +197,14 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 
 	// Create test student
 	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
     `, studentID, "Patch", "Student", therapistID, 4)
 	assert.NoError(t, err)
 
 	// Create initial session-student relationship
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session_student (session_id, student_id, present, notes)
         VALUES ($1, $2, $3, $4)
     `, sessionID, studentID, true, "Original notes")
@@ -286,15 +283,14 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	repo := schema.NewSessionStudentRepository(testDB)
 	ctx := context.Background()
 
 	// Create test therapist
 	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO therapist (id, first_name, last_name, email)
         VALUES ($1, $2, $3, $4)
     `, therapistID, "Dr. Rate", "Test", "rate.test@example.com")
@@ -304,7 +300,7 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
         VALUES ($1, $2, $3, $4, $5)
     `, sessionID, therapistID, startTime, endTime, "Session for rating test")
@@ -312,14 +308,14 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 
 	// Create test student
 	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, therapist_id, grade)
         VALUES ($1, $2, $3, $4, $5)
     `, studentID, "Rating", "Student", therapistID, 5)
 	require.NoError(t, err)
 
 	// Create initial session-student relationship
-	_, err = testDB.Pool.Exec(ctx, `
+	_, err = testDB.Exec(ctx, `
         INSERT INTO session_student (session_id, student_id, present, notes)
         VALUES ($1, $2, $3, $4)
     `, sessionID, studentID, true, "Initial notes")

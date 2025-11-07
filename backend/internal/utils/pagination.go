@@ -17,6 +17,6 @@ func NewPagination() Pagination {
 	}
 }
 
-func (p *Pagination) GettOffset() int {
+func (p *Pagination) GetOffset() int {
 	return (p.Page - 1) * p.Limit
 }

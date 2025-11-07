@@ -21,10 +21,9 @@ func TestThemeRepository_CreateTheme(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewThemeRepository(testDB.Pool)
+	repo := schema.NewThemeRepository(testDB)
 	ctx := context.Background()
 
 	// Test successful creation
@@ -52,7 +51,7 @@ func TestThemeRepository_CreateTheme(t *testing.T) {
 	// Verify the theme was actually inserted into the database
 	if theme != nil {
 		var insertedTheme models.Theme
-		err = testDB.Pool.QueryRow(ctx, `
+		err = testDB.QueryRow(ctx, `
 			SELECT id, theme_name, month, year, created_at, updated_at 
 			FROM theme WHERE id = $1
 		`, theme.ID).Scan(
@@ -75,16 +74,15 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewThemeRepository(testDB.Pool)
+	repo := schema.NewThemeRepository(testDB)
 	ctx := context.Background()
 
 	// Insert test themes
 	theme1ID := uuid.New()
 	theme2ID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6), ($7, $8, $9, $10, $11, $12)
     `, theme1ID, "Spring 2024", 3, 2024, time.Now(), time.Now(),
@@ -98,16 +96,16 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, themes, 2)
 
-	// Themes should be ordered by year DESC, month DESC
-	// Both are 2024, so Summer (month 6) should come before Spring (month 3)
-	assert.Equal(t, "Summer 2024", themes[0].Name)
-	assert.Equal(t, "Spring 2024", themes[1].Name)
-	assert.Equal(t, theme2ID, themes[0].ID)
-	assert.Equal(t, theme1ID, themes[1].ID)
+	// Themes should be ordered by year ASC, month ASC
+	// Both are 2024, so Spring (month 3) should come before Summer (month 6)
+	assert.Equal(t, "Spring 2024", themes[0].Name)
+	assert.Equal(t, "Summer 2024", themes[1].Name)
+	assert.Equal(t, theme1ID, themes[0].ID)
+	assert.Equal(t, theme2ID, themes[1].ID)
 
 	// More Tests for Pagination Behaviour
 	for i := 3; i <= 12; i++ {
-		_, err := testDB.Pool.Exec(ctx, `
+		_, err := testDB.Exec(ctx, `
             INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6)
             `, uuid.New(), fmt.Sprintf("Spring 20%d", i), 4, 2024, time.Now(), time.Now())
@@ -129,7 +127,7 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	assert.Equal(t, "Spring 2012", themes[0].Name)
 
 	// Test empty result
-	_, err = testDB.Pool.Exec(ctx, "DELETE FROM theme")
+	_, err = testDB.Exec(ctx, "DELETE FROM theme")
 	assert.NoError(t, err)
 
 	themes, err = repo.GetThemes(ctx, utils.NewPagination(), nil)
@@ -143,10 +141,9 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewThemeRepository(testDB.Pool)
+	repo := schema.NewThemeRepository(testDB)
 	ctx := context.Background()
 
 	// Insert test themes
@@ -163,7 +160,7 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	}
 
 	for _, theme := range themes {
-		_, err := testDB.Pool.Exec(ctx, `
+		_, err := testDB.Exec(ctx, `
             INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6)
         `, uuid.New(), theme.name, theme.month, theme.year, time.Now(), time.Now())
@@ -177,9 +174,9 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	result, err := repo.GetThemes(ctx, utils.NewPagination(), monthFilter)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
-	// Should return both March themes ordered by year DESC
-	assert.Equal(t, "Spring 2024", result[0].Name)
-	assert.Equal(t, "Spring Activities", result[1].Name)
+	// Should return both March themes ordered by year ASC
+	assert.Equal(t, "Spring Activities", result[0].Name)
+	assert.Equal(t, "Spring 2024", result[1].Name)
 
 	// Test filter by year
 	yearFilter := &models.ThemeFilter{
@@ -188,10 +185,10 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	result, err = repo.GetThemes(ctx, utils.NewPagination(), yearFilter)
 	assert.NoError(t, err)
 	assert.Len(t, result, 3)
-	// Should return all 2024 themes ordered by month DESC
-	assert.Equal(t, "Fall 2024", result[0].Name)
+	// Should return all 2024 themes ordered by month ASC
+	assert.Equal(t, "Fall 2024", result[2].Name)
 	assert.Equal(t, "Summer 2024", result[1].Name)
-	assert.Equal(t, "Spring 2024", result[2].Name)
+	assert.Equal(t, "Spring 2024", result[0].Name)
 
 	// Test filter by search term (case insensitive)
 	searchFilter := &models.ThemeFilter{
@@ -268,9 +265,10 @@ func TestThemeRepository_GetThemes_WithFilters(t *testing.T) {
 	pagination := utils.Pagination{Page: 1, Limit: 2}
 	result, err = repo.GetThemes(ctx, pagination, paginatedFilter)
 	assert.NoError(t, err)
-	assert.Len(t, result, 2)                     // Should return first 2 of 3 2024 themes
-	assert.Equal(t, "Fall 2024", result[0].Name) // Ordered by month DESC
-	assert.Equal(t, "Summer 2024", result[1].Name)
+	assert.Len(t, result, 2) // Should return first 2 of 3 2024 themes
+	// Ordered by month ASC, so Spring (3) and Summer (6) come first
+	assert.Equal(t, "Spring 2024", result[0].Name) // Month 3
+	assert.Equal(t, "Summer 2024", result[1].Name) // Month 6
 }
 
 func TestThemeRepository_GetThemeByID(t *testing.T) {
@@ -279,16 +277,15 @@ func TestThemeRepository_GetThemeByID(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewThemeRepository(testDB.Pool)
+	repo := schema.NewThemeRepository(testDB)
 	ctx := context.Background()
 
 	// Insert test theme
 	themeID := uuid.New()
 	testTime := time.Now()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
     `, themeID, "Autumn 2024", 9, 2024, testTime, testTime)
@@ -321,16 +318,15 @@ func TestThemeRepository_PatchTheme(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewThemeRepository(testDB.Pool)
+	repo := schema.NewThemeRepository(testDB)
 	ctx := context.Background()
 
 	// Insert test theme
 	themeID := uuid.New()
 	testTime := time.Now()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
     `, themeID, "Winter 2024", 12, 2024, testTime, testTime)
@@ -389,15 +385,14 @@ func TestThemeRepository_DeleteTheme(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewThemeRepository(testDB.Pool)
+	repo := schema.NewThemeRepository(testDB)
 	ctx := context.Background()
 
 	// Insert test theme
 	themeID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
+	_, err := testDB.Exec(ctx, `
         INSERT INTO theme (id, theme_name, month, year, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
     `, themeID, "To Be Deleted", 5, 2024, time.Now(), time.Now())
@@ -409,7 +404,7 @@ func TestThemeRepository_DeleteTheme(t *testing.T) {
 
 	// Verify theme was deleted
 	var count int
-	err = testDB.Pool.QueryRow(ctx, `SELECT COUNT(*) FROM theme WHERE id = $1`, themeID).Scan(&count)
+	err = testDB.QueryRow(ctx, `SELECT COUNT(*) FROM theme WHERE id = $1`, themeID).Scan(&count)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, count)
 
@@ -429,10 +424,9 @@ func TestThemeRepository_DatabaseConstraints(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
+	testDB := testutil.SetupTestWithCleanup(t)
 
-	repo := schema.NewThemeRepository(testDB.Pool)
+	repo := schema.NewThemeRepository(testDB)
 	ctx := context.Background()
 
 	// Test month constraint (should be between 1-12)
