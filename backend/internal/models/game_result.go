@@ -7,15 +7,15 @@ import (
 )
 
 type GameResult struct {
-	ID             uuid.UUID  `json:"id" db:"id"`
-	SessionID      uuid.UUID  `json:"session_id" db:"session_id"`
-	StudentID      uuid.UUID  `json:"student_id" db:"student_id"`
-	ContentID      uuid.UUID  `json:"content_id" db:"content_id"`
-	TimeTaken      int        `json:"time_taken" db:"time_taken"`
-	Completed      bool       `json:"completed" db:"completed"`
-	IncorrectTries int        `json:"incorrect_tries" db:"incorrect_tries"`
-	CreatedAt      *time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt      *time.Time `json:"updated_at" db:"updated_at"`
+	ID                     uuid.UUID  `json:"id" db:"id"`
+	SessionStudentID       uuid.UUID  `json:"session_student_id" db:"session_student_id"`
+	ContentID              uuid.UUID  `json:"content_id" db:"content_id"`
+	TimeTakenSec           int        `json:"time_taken_sec" db:"time_taken_sec"`
+	Completed              bool       `json:"completed" db:"completed"`
+	CountIncorrectAttempts int        `json:"count_of_incorrect_attempts" db:"count_of_incorrect_attempts"`
+	IncorrectAttempts      *[]string  `json:"incorrect_attempts" db:"incorrect_attempts"`
+	CreatedAt              *time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt              *time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type GetGameResultQuery struct {
@@ -24,10 +24,10 @@ type GetGameResultQuery struct {
 }
 
 type PostGameResult struct {
-	SessionID      uuid.UUID `json:"session_id" validate:"required,uuid"`
-	StudentID      uuid.UUID `json:"student_id" validate:"required,uuid"`
-	ContentID      uuid.UUID `json:"content_id" validate:"required,uuid"`
-	TimeTaken      int       `json:"time_taken" validate:"required,gte=0"`
-	Completed      *bool     `json:"completed,omitempty"`
-	IncorrectTries *int      `json:"incorrect_tries,omitempty" validate:"omitempty,gte=0"`
+	SessionStudentID       uuid.UUID `json:"session_student_id" validate:"required,uuid"`
+	ContentID              uuid.UUID `json:"content_id" validate:"required,uuid"`
+	TimeTakenSec           int       `json:"time_taken_sec" validate:"required,gte=0"`
+	Completed              *bool     `json:"completed,omitempty"`
+	CountIncorrectAttempts *int      `json:"count_of_incorrect_attempts" validate:"required,gte=0"`
+	IncorrectAttempts      *[]string `json:"incorrect_attempts" db:"incorrect_attempts"`
 }

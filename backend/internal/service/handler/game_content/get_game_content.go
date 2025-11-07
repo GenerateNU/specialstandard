@@ -29,7 +29,7 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 
 		// For all other database errors, return internal server error without exposing details
 		slog.Error("Failed to get game contents", "category", getGameContentReq.Category, "level",
-			getGameContentReq.Level, "count", getGameContentReq.Count)
+			getGameContentReq.DifficultyLevel, "count", getGameContentReq.Count)
 		return errs.InternalServerError("Failed to retrieve game contents")
 	}
 

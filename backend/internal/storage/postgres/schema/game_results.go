@@ -68,7 +68,7 @@ func (r *GameResultRepository) PostGameResult(ctx context.Context, input models.
 			  VALUES ($1, $2, $3, $4, COALESCE($5, FALSE), COALESCE($6, 0))
 			  RETURNING id, session_id, student_id, content_id, time_taken, completed, incorrect_tries, created_at, updated_at;`
 
-	row := r.db.QueryRow(ctx, query, input.SessionID, input.StudentID, input.ContentID, input.TimeTaken, input.Completed, input.IncorrectTries)
+	row := r.db.QueryRow(ctx, query, input.SessionID, input.StudentID, input.ContentID, input.TimeTakenSec, input.Completed, input.IncorrectTries)
 
 	gameResult := &models.GameResult{}
 	if err := row.Scan(

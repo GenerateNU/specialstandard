@@ -115,7 +115,7 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 		SessionID:      uuid.New(),
 		StudentID:      uuid.New(),
 		ContentID:      uuid.New(),
-		TimeTaken:      90,
+		TimeTakenSec:   90,
 		Completed:      ptr.Bool(true),
 		IncorrectTries: ptr.Int(5),
 	}
@@ -173,7 +173,7 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 		SessionID:      sessionID,
 		StudentID:      studentID,
 		ContentID:      contentID,
-		TimeTaken:      -6,
+		TimeTakenSec:   -6,
 		Completed:      ptr.Bool(true),
 		IncorrectTries: ptr.Int(4),
 	}
@@ -182,7 +182,7 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 	assert.Nil(t, postedGameResult)
 	assert.Error(t, err)
 
-	input.TimeTaken = 91
+	input.TimeTakenSec = 91
 
 	postedGameResult, err = repo.PostGameResult(ctx, input)
 	assert.NotNil(t, postedGameResult)

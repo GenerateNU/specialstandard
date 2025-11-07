@@ -38,13 +38,13 @@ func TestHandler_GetGameContents(t *testing.T) {
 			url:  "?category=sequencing&level=5&count=100",
 			mockSetup: func(m *mocks.MockGameContentRepository) {
 				gameContent := &models.GameContent{
-					ID:        uuid.New(),
-					Category:  "sequencing",
-					Level:     5,
-					Options:   []string{"GeneRAT", "Meow", "Liepard", "Cat", "Dog", "Oink"},
-					Answer:    "Woof",
-					CreatedAt: ptr.Time(time.Now()),
-					UpdatedAt: ptr.Time(time.Now()),
+					ID:              uuid.New(),
+					Category:        "sequencing",
+					DifficultyLevel: 5,
+					Options:         []string{"GeneRAT", "Meow", "Liepard", "Cat", "Dog", "Oink"},
+					Answer:          "Woof",
+					CreatedAt:       ptr.Time(time.Now()),
+					UpdatedAt:       ptr.Time(time.Now()),
 				}
 				m.On("GetGameContent", mock.Anything, mock.AnythingOfType("models.GetGameContentRequest")).Return(gameContent, nil)
 			},
@@ -59,7 +59,7 @@ func TestHandler_GetGameContents(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name:           "Missing Level-Field in Query",
+			name:           "Missing DifficultyLevel-Field in Query",
 			url:            "?category=sequencing&count=100",
 			mockSetup:      func(m *mocks.MockGameContentRepository) {},
 			expectedStatus: 400,
@@ -77,13 +77,13 @@ func TestHandler_GetGameContents(t *testing.T) {
 			url:  "?category=sequencing&level=5&count=3",
 			mockSetup: func(m *mocks.MockGameContentRepository) {
 				gameContent := &models.GameContent{
-					ID:        uuid.New(),
-					Category:  "sequencing",
-					Level:     5,
-					Options:   []string{"GeneRAT", "Meow"},
-					Answer:    "Woof",
-					CreatedAt: ptr.Time(time.Now()),
-					UpdatedAt: ptr.Time(time.Now()),
+					ID:              uuid.New(),
+					Category:        "sequencing",
+					DifficultyLevel: 5,
+					Options:         []string{"GeneRAT", "Meow"},
+					Answer:          "Woof",
+					CreatedAt:       ptr.Time(time.Now()),
+					UpdatedAt:       ptr.Time(time.Now()),
 				}
 				m.On("GetGameContent", mock.Anything, mock.AnythingOfType("models.GetGameContentRequest")).Return(gameContent, nil)
 			},

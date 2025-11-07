@@ -23,9 +23,9 @@ func TestGameContentRepository_GetGameContent(t *testing.T) {
 	ctx := context.Background()
 
 	input := models.GetGameContentRequest{
-		Category: "sequencing",
-		Level:    5,
-		Count:    4,
+		Category:        "sequencing",
+		DifficultyLevel: 5,
+		Count:           4,
 	}
 
 	// Empty DB
@@ -53,7 +53,7 @@ func TestGameContentRepository_GetGameContent(t *testing.T) {
 
 	assert.Equal(t, gameContent.ID, id)
 	assert.Equal(t, gameContent.Category, category)
-	assert.Equal(t, gameContent.Level, level)
+	assert.Equal(t, gameContent.DifficultyLevel, level)
 	for _, word := range gameContent.Options {
 		assert.Contains(t, gameContent.Options, word)
 	}

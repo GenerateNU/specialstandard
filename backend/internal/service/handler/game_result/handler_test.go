@@ -217,11 +217,11 @@ func TestHandler_PostGameResult(t *testing.T) {
             }`, sessionID, studentID, contentID),
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				postGameResult := models.PostGameResult{
-					SessionID: sessionID,
-					StudentID: studentID,
-					ContentID: contentID,
-					TimeTaken: 93,
-					Completed: ptr.Bool(false),
+					SessionID:    sessionID,
+					StudentID:    studentID,
+					ContentID:    contentID,
+					TimeTakenSec: 93,
+					Completed:    ptr.Bool(false),
 				}
 
 				gameResult := &models.GameResult{
@@ -255,7 +255,7 @@ func TestHandler_PostGameResult(t *testing.T) {
 					SessionID:      sessionID,
 					StudentID:      studentID,
 					ContentID:      contentID,
-					TimeTaken:      93,
+					TimeTakenSec:   93,
 					Completed:      ptr.Bool(false),
 					IncorrectTries: ptr.Int(9),
 				}

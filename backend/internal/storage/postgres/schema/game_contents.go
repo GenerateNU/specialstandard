@@ -26,11 +26,11 @@ func (r *GameContentRepository) GetGameContent(ctx context.Context, req models.G
 			  FROM game_content gc
 			  WHERE category = $1 AND level = $2;`
 
-	row := r.db.QueryRow(ctx, query, req.Category, req.Level, req.Count-1)
+	row := r.db.QueryRow(ctx, query, req.Category, req.DifficultyLevel, req.Count-1)
 
 	var gc models.GameContent
 	if err := row.Scan(
-		&gc.ID, &gc.Category, &gc.Level, &gc.Options, &gc.Answer, &gc.CreatedAt, &gc.UpdatedAt,
+		&gc.ID, &gc.Category, &gc.DifficultyLevel, &gc.Options, &gc.Answer, &gc.CreatedAt, &gc.UpdatedAt,
 	); err != nil {
 		return nil, err
 	}

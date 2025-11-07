@@ -2241,13 +2241,13 @@ func TestEndpoint_PromoteStudents(t *testing.T) {
 func TestGetGameContentEndpoint(t *testing.T) {
 	mockRepo := new(mocks.MockGameContentRepository)
 	mockRepo.On("GetGameContent", mock.Anything, mock.Anything).Return(&models.GameContent{
-		ID:        uuid.New(),
-		Category:  "sequencing",
-		Level:     5,
-		Options:   []string{"Meow", "Wolf", "Animals"},
-		Answer:    "Zoology",
-		CreatedAt: ptr.Time(time.Now()),
-		UpdatedAt: ptr.Time(time.Now()),
+		ID:              uuid.New(),
+		Category:        "sequencing",
+		DifficultyLevel: 5,
+		Options:         []string{"Meow", "Wolf", "Animals"},
+		Answer:          "Zoology",
+		CreatedAt:       ptr.Time(time.Now()),
+		UpdatedAt:       ptr.Time(time.Now()),
 	}, nil)
 
 	repo := &storage.Repository{
