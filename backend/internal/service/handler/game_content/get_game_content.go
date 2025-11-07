@@ -21,17 +21,19 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	gameContent, err := h.gameContentRepository.GetGameContent(c.Context(), getGameContentReq)
+	gameContents, err := h.gameContentRepository.GetGameContent(c.Context(), getGameContentReq)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return errs.NotFound("Game Contents Not Found")
 		}
 
+		req := getGameContentReq
 		// For all other database errors, return internal server error without exposing details
-		slog.Error("Failed to get game contents", "category", getGameContentReq.Category, "level",
-			getGameContentReq.DifficultyLevel, "count", getGameContentReq.Count)
+		slog.Error("Failed to get game contents", "theme_id", req.ThemeID, "category",
+			req.Category, "question_type", req.QuestionType, "difficulty_level",
+			req.DifficultyLevel, "count", req.Count)
 		return errs.InternalServerError("Failed to retrieve game contents")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(gameContent)
+	return c.Status(fiber.StatusOK).JSON(gameContents)
 }
