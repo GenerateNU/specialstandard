@@ -26,15 +26,18 @@ type GetGameContentRequest struct {
 	Category        *string    `query:"category" validate:"omitempty,oneof=receptive_language expressive_language social_pragmatic_language speech"`
 	QuestionType    *string    `query:"question_type" validate:"omitempty,oneof=sequencing following_directions wh_questions true_false concepts_sorting fill_in_the_blank categorical_language emotions teamwork_talk express_excitement_interest fluency articulation_s articulation_l"`
 	DifficultyLevel *int       `query:"difficulty_level" validate:"omitempty,gte=1"`
-	Count           *int       `query:"count" validate:"omitempty,gte=2"`
+	QuestionCount   *int       `query:"question_count" validate:"omitempty,gte=2"`
+	WordsCount      *int       `query:"words_count" validate:"omitempty,gte=2"`
 }
 
 const (
-	defaultCount int = 4
+	defaultQuestionCount int = 5
+	defaultWordsCount    int = 4
 )
 
 func NewGetGameContentRequest() GetGameContentRequest {
 	return GetGameContentRequest{
-		Count: ptr.Int(defaultCount),
+		QuestionCount: ptr.Int(defaultQuestionCount),
+		WordsCount:    ptr.Int(defaultWordsCount),
 	}
 }

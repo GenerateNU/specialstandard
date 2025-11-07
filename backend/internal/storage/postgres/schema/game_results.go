@@ -22,8 +22,9 @@ func NewGameResultRepository(db *pgxpool.Pool) *GameResultRepository {
 }
 
 func (r *GameResultRepository) GetGameResults(ctx context.Context, inputQuery *models.GetGameResultQuery, pagination utils.Pagination) ([]models.GameResult, error) {
-	query := `SELECT id, session_id, student_id, content_id, time_taken, completed, incorrect_tries, created_at, updated_at 
-			  FROM game_result`
+	query := `SELECT gr.id, gr.session_student_id, gr.content_id, gr.time_taken_sec, gr.completed,
+       					gr.count_of_incorrect_attempts, gr.incorrect_attempts, gr.created_at, gr.updated_at
+			  FROM game_result gr JOIN session_student ss ON gr.session_student_id = ss.id`
 
 	var conditions []string
 	var args []interface{}
@@ -31,13 +32,13 @@ func (r *GameResultRepository) GetGameResults(ctx context.Context, inputQuery *m
 
 	if inputQuery != nil {
 		if inputQuery.SessionID != nil {
-			conditions = append(conditions, fmt.Sprintf("session_id = $%d", argCount))
+			conditions = append(conditions, fmt.Sprintf("ss.session_id = $%d", argCount))
 			args = append(args, inputQuery.SessionID)
 			argCount++
 		}
 
 		if inputQuery.StudentID != nil {
-			conditions = append(conditions, fmt.Sprintf("student_id = $%d", argCount))
+			conditions = append(conditions, fmt.Sprintf("ss.student_id = $%d", argCount))
 			args = append(args, inputQuery.StudentID)
 			argCount++
 		}
@@ -64,21 +65,22 @@ func (r *GameResultRepository) GetGameResults(ctx context.Context, inputQuery *m
 }
 
 func (r *GameResultRepository) PostGameResult(ctx context.Context, input models.PostGameResult) (*models.GameResult, error) {
-	query := `INSERT INTO game_result (session_id, student_id, content_id, time_taken, completed, incorrect_tries)
-			  VALUES ($1, $2, $3, $4, COALESCE($5, FALSE), COALESCE($6, 0))
-			  RETURNING id, session_id, student_id, content_id, time_taken, completed, incorrect_tries, created_at, updated_at;`
+	query := `INSERT INTO game_result (session_student_id, content_id, time_taken_sec, completed, count_of_incorrect_attempts, incorrect_attempts)
+			  VALUES ($1, $2, $3, COALESCE($4, FALSE), COALESCE($5, 0), COALESCE($6, '{}'))
+			  RETURNING id, student_session_id, content_id, time_taken_sec, completed, count_of_incorrect_attempts, incorrect_attempts, created_at, updated_at;`
 
-	row := r.db.QueryRow(ctx, query, input.SessionID, input.StudentID, input.ContentID, input.TimeTakenSec, input.Completed, input.IncorrectTries)
+	row := r.db.QueryRow(ctx, query, input.SessionStudentID, input.ContentID, input.TimeTakenSec,
+		input.Completed, input.CountIncorrectAttempts, input.IncorrectAttempts)
 
 	gameResult := &models.GameResult{}
 	if err := row.Scan(
 		&gameResult.ID,
-		&gameResult.SessionID,
-		&gameResult.StudentID,
+		&gameResult.SessionStudentID,
 		&gameResult.ContentID,
-		&gameResult.TimeTaken,
+		&gameResult.TimeTakenSec,
 		&gameResult.Completed,
-		&gameResult.IncorrectTries,
+		&gameResult.CountIncorrectAttempts,
+		&gameResult.IncorrectAttempts,
 		&gameResult.CreatedAt,
 		&gameResult.UpdatedAt,
 	); err != nil {

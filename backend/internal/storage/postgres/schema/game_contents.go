@@ -2,8 +2,11 @@ package schema
 
 import (
 	"context"
+	"fmt"
 	"specialstandard/internal/models"
+	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,22 +21,55 @@ func NewGameContentRepository(db *pgxpool.Pool) *GameContentRepository {
 }
 
 func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.GetGameContentRequest) ([]models.GameContent, error) {
-	query := `SELECT id, category, level, 
-       		  		 (SELECT array_agg(opt) FROM 
-       		  				 (SELECT opt FROM unnest(gc.options) AS opt ORDER BY random() LIMIT $3) AS sampled)
-       		  		     	 AS options, 
-       		  answer, created_at, updated_at 
-			  FROM game_content gc
-			  WHERE category = $1 AND level = $2;`
+	query := `SELECT id, theme_id, week, category, question_type, difficulty_level, question, 
+             (SELECT array_agg(opt) 
+              	FROM (SELECT opt FROM unnest(gc.options) AS opt ORDER BY random() LIMIT $1) AS sampled)
+              	AS options,
+    		 answer, created_at, updated_at
+       	     FROM game_content gc`
 
-	row := r.db.QueryRow(ctx, query, req.Category, req.DifficultyLevel, req.Count-1)
+	var conditions []string
+	var args []interface{}
+	args = append(args, req.WordsCount)
+	argCount := 2
 
-	var gc models.GameContent
-	if err := row.Scan(
-		&gc.ID, &gc.Category, &gc.DifficultyLevel, &gc.Options, &gc.Answer, &gc.CreatedAt, &gc.UpdatedAt,
-	); err != nil {
+	if req.ThemeID != nil {
+		conditions = append(conditions, fmt.Sprintf("theme_id = $%d", argCount))
+		args = append(args, req.ThemeID)
+		argCount++
+	}
+	if req.Category != nil {
+		conditions = append(conditions, fmt.Sprintf("category = $%d", argCount))
+		args = append(args, req.Category)
+		argCount++
+	}
+	if req.QuestionType != nil {
+		conditions = append(conditions, fmt.Sprintf("question_type = $%d", argCount))
+		args = append(args, req.QuestionType)
+		argCount++
+	}
+	if req.DifficultyLevel != nil {
+		conditions = append(conditions, fmt.Sprintf("difficulty_level = $%d", argCount))
+		args = append(args, req.DifficultyLevel)
+		argCount++
+	}
+
+	if len(conditions) > 0 {
+		query += ` WHERE ` + strings.Join(conditions, " AND ")
+	}
+	query += fmt.Sprintf(` ORDER BY random() LIMIT $%d `, argCount)
+	args = append(args, req.QuestionCount)
+	argCount++
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
 		return nil, err
 	}
 
-	return &gc, nil
+	gameContents, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.GameContent])
+	if err != nil {
+		return nil, err
+	}
+
+	return gameContents, nil
 }

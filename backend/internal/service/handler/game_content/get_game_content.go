@@ -10,7 +10,7 @@ import (
 )
 
 func (h *Handler) GetGameContents(c *fiber.Ctx) error {
-	var getGameContentReq models.GetGameContentRequest
+	getGameContentReq := models.NewGetGameContentRequest()
 	if err := c.QueryParser(&getGameContentReq); err != nil {
 		return errs.BadRequest("GameContent Query-Parameters Parsing Error")
 	}
@@ -25,7 +25,8 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 		// For all other database errors, return internal server error without exposing details
 		slog.Error("Failed to get game contents", "theme_id", req.ThemeID, "category",
 			req.Category, "question_type", req.QuestionType, "difficulty_level",
-			req.DifficultyLevel, "count", req.Count)
+			req.DifficultyLevel, "question_count", req.QuestionCount, "words_count",
+			req.WordsCount)
 		return errs.InternalServerError("Failed to retrieve game contents")
 	}
 
