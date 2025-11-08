@@ -27,7 +27,16 @@ export default function Home() {
 
   // Fetch therapists data
   const { therapists } = useTherapists()
-  const currentTherapist = therapists.find(t => t.id === userId)
+  const currentTherapist = therapists.find(t => t.id === userId) || therapists[0]
+
+  // Debug: Log userId and therapist IDs to help troubleshoot
+  useEffect(() => {
+    if (therapists.length > 0) {
+      console.log('Current userId:', userId)
+      console.log('Available therapist IDs:', therapists.map(t => t.id))
+      console.log('Current therapist:', currentTherapist)
+    }
+  }, [userId, therapists, currentTherapist])
 
   // Fetch all sessions for today (backend doesn't support therapist_id filtering yet)
   // TODO: Add therapist_id query param to backend API for better performance
@@ -311,7 +320,9 @@ export default function Home() {
           text-black transition p-4 rounded-2xl hover:bg-orange-disabled"
           >
             <div>
-              <h4 className="text-black">Mark Jones</h4>
+              <h4 className="text-black">
+                {currentTherapist ? `${currentTherapist.first_name} ${currentTherapist.last_name}` : 'Loading...'}
+              </h4>
               <p>My Profile</p>
             </div>
             <UserCircle size={36} strokeWidth={1} />
