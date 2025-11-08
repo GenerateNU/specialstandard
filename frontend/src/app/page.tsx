@@ -311,7 +311,7 @@ export default function Home() {
           text-black transition p-4 rounded-2xl hover:bg-orange-disabled"
           >
             <div>
-              <h4 className='text-black'>Mark Jones</h4>
+              <h4 className="text-black">Mark Jones</h4>
               <p>My Profile</p>
             </div>
             <UserCircle size={36} strokeWidth={1} />
