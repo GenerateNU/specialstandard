@@ -11,7 +11,6 @@ import (
 	"github.com/aws/smithy-go/ptr"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -25,28 +24,30 @@ func TestHandler_GetGameContents(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			name: "404 Not Found Error",
-			url:  "?category=following_directions&level=4&count=5",
+			name: "No Rows Present",
+			url:  "",
 			mockSetup: func(m *mocks.MockGameContentRepository) {
-				m.On("GetGameContent", mock.Anything, mock.AnythingOfType("models.GetGameContentRequest")).Return(nil, pgx.ErrNoRows)
+				m.On("GetGameContents", mock.Anything, mock.AnythingOfType("models.GetGameContentRequest")).Return([]models.GameContent{}, nil)
 			},
-			expectedStatus: 404,
-			wantErr:        true,
+			expectedStatus: 200,
+			wantErr:        false,
 		},
 		{
 			name: "Overboard word-count returns all options",
-			url:  "?category=sequencing&level=5&count=100",
+			url:  "?category=speech&level=5&count=100",
 			mockSetup: func(m *mocks.MockGameContentRepository) {
-				gameContent := &models.GameContent{
+				gameContent := models.GameContent{
 					ID:              uuid.New(),
-					Category:        "sequencing",
+					Category:        ptr.String("sequencing"),
 					DifficultyLevel: 5,
 					Options:         []string{"GeneRAT", "Meow", "Liepard", "Cat", "Dog", "Oink"},
 					Answer:          "Woof",
 					CreatedAt:       ptr.Time(time.Now()),
 					UpdatedAt:       ptr.Time(time.Now()),
 				}
-				m.On("GetGameContent", mock.Anything, mock.AnythingOfType("models.GetGameContentRequest")).Return(gameContent, nil)
+				m.On("GetGameContents", mock.Anything, mock.AnythingOfType("models.GetGameContentRequest")).Return([]models.GameContent{
+					gameContent,
+				}, nil)
 			},
 			expectedStatus: 200,
 			wantErr:        false,
@@ -74,18 +75,18 @@ func TestHandler_GetGameContents(t *testing.T) {
 		},
 		{
 			name: "Valid Case",
-			url:  "?category=sequencing&level=5&count=3",
+			url:  "?category=speech&level=5&count=3",
 			mockSetup: func(m *mocks.MockGameContentRepository) {
-				gameContent := &models.GameContent{
+				gameContent := models.GameContent{
 					ID:              uuid.New(),
-					Category:        "sequencing",
+					Category:        ptr.String("sequencing"),
 					DifficultyLevel: 5,
 					Options:         []string{"GeneRAT", "Meow"},
 					Answer:          "Woof",
 					CreatedAt:       ptr.Time(time.Now()),
 					UpdatedAt:       ptr.Time(time.Now()),
 				}
-				m.On("GetGameContent", mock.Anything, mock.AnythingOfType("models.GetGameContentRequest")).Return(gameContent, nil)
+				m.On("GetGameContents", mock.Anything, mock.AnythingOfType("models.GetGameContentRequest")).Return([]models.GameContent{gameContent}, nil)
 			},
 			expectedStatus: 200,
 			wantErr:        false,

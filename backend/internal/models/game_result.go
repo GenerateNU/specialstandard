@@ -8,7 +8,7 @@ import (
 
 type GameResult struct {
 	ID                     uuid.UUID  `json:"id" db:"id"`
-	SessionStudentID       uuid.UUID  `json:"session_student_id" db:"session_student_id"`
+	SessionStudentID       int        `json:"session_student_id" db:"session_student_id"`
 	ContentID              uuid.UUID  `json:"content_id" db:"content_id"`
 	TimeTakenSec           int        `json:"time_taken_sec" db:"time_taken_sec"`
 	Completed              bool       `json:"completed" db:"completed"`
@@ -24,7 +24,7 @@ type GetGameResultQuery struct {
 }
 
 type PostGameResult struct {
-	SessionStudentID       uuid.UUID `json:"session_student_id" validate:"required,uuid"`
+	SessionStudentID       int       `json:"session_student_id" validate:"required"`
 	ContentID              uuid.UUID `json:"content_id" validate:"required,uuid"`
 	TimeTakenSec           int       `json:"time_taken_sec" validate:"required,gte=0"`
 	Completed              *bool     `json:"completed,omitempty"`

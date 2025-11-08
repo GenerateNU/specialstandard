@@ -3,6 +3,7 @@ package game_result
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
@@ -19,8 +20,8 @@ import (
 )
 
 func TestHandler_GetGameResults(t *testing.T) {
-	studentID := uuid.MustParse("f4053a11-fc76-4551-b05e-b550dfea516d")
-	sessionID := uuid.MustParse("b6051b20-5426-428e-858e-adbe853244e3")
+	//studentID := uuid.MustParse("f4053a11-fc76-4551-b05e-b550dfea516d")
+	//sessionID := uuid.MustParse("b6051b20-5426-428e-858e-adbe853244e3")
 
 	tests := []struct {
 		name           string
@@ -64,15 +65,14 @@ func TestHandler_GetGameResults(t *testing.T) {
 			url:  "",
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				gameResult := models.GameResult{
-					ID:             uuid.New(),
-					SessionID:      uuid.New(),
-					StudentID:      uuid.New(),
-					ContentID:      uuid.New(),
-					TimeTaken:      40,
-					Completed:      true,
-					IncorrectTries: 3,
-					CreatedAt:      ptr.Time(time.Now()),
-					UpdatedAt:      ptr.Time(time.Now()),
+					ID:                     uuid.New(),
+					SessionStudentID:       rand.Int(),
+					ContentID:              uuid.New(),
+					TimeTakenSec:           40,
+					Completed:              true,
+					CountIncorrectAttempts: 3,
+					CreatedAt:              ptr.Time(time.Now()),
+					UpdatedAt:              ptr.Time(time.Now()),
 				}
 
 				m.On("GetGameResults", mock.Anything, mock.AnythingOfType("*models.GetGameResultQuery"), mock.AnythingOfType("utils.Pagination")).Return([]models.GameResult{
@@ -87,15 +87,14 @@ func TestHandler_GetGameResults(t *testing.T) {
 			url:  "?student_id=f4053a11-fc76-4551-b05e-b550dfea516d",
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				gameResult := models.GameResult{
-					ID:             uuid.New(),
-					SessionID:      uuid.New(),
-					StudentID:      studentID,
-					ContentID:      uuid.New(),
-					TimeTaken:      40,
-					Completed:      true,
-					IncorrectTries: 3,
-					CreatedAt:      ptr.Time(time.Now()),
-					UpdatedAt:      ptr.Time(time.Now()),
+					ID:                     uuid.New(),
+					SessionStudentID:       rand.Int(),
+					ContentID:              uuid.New(),
+					TimeTakenSec:           40,
+					Completed:              true,
+					CountIncorrectAttempts: 3,
+					CreatedAt:              ptr.Time(time.Now()),
+					UpdatedAt:              ptr.Time(time.Now()),
 				}
 
 				m.On("GetGameResults", mock.Anything, mock.AnythingOfType("*models.GetGameResultQuery"), mock.AnythingOfType("utils.Pagination")).Return([]models.GameResult{
@@ -110,15 +109,14 @@ func TestHandler_GetGameResults(t *testing.T) {
 			url:  "?session_id=b6051b20-5426-428e-858e-adbe853244e3",
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				gameResult := models.GameResult{
-					ID:             uuid.New(),
-					SessionID:      sessionID,
-					StudentID:      uuid.New(),
-					ContentID:      uuid.New(),
-					TimeTaken:      40,
-					Completed:      true,
-					IncorrectTries: 3,
-					CreatedAt:      ptr.Time(time.Now()),
-					UpdatedAt:      ptr.Time(time.Now()),
+					ID:                     uuid.New(),
+					SessionStudentID:       rand.Int(),
+					ContentID:              uuid.New(),
+					TimeTakenSec:           40,
+					Completed:              true,
+					CountIncorrectAttempts: 3,
+					CreatedAt:              ptr.Time(time.Now()),
+					UpdatedAt:              ptr.Time(time.Now()),
 				}
 
 				m.On("GetGameResults", mock.Anything, mock.AnythingOfType("*models.GetGameResultQuery"), mock.AnythingOfType("utils.Pagination")).Return([]models.GameResult{
@@ -168,7 +166,7 @@ func TestHandler_PostGameResult(t *testing.T) {
 				"session_id": "%s",
 				"student_id": "%s",
 				"content_id": "%s",
-				"time_taken": 93,
+				"time_taken_sec": 93,
 				"completed": true,
 				"incorrect_tries": 1,
             }`, sessionID, studentID, contentID),
@@ -179,13 +177,12 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Invalid Time-Taken",
 			payload: fmt.Sprintf(`{
-				"session_id": "%s",
-				"student_id": "%s",
+				"session_student_id": "%d",
 				"content_id": "%s",
-				"time_taken": -93,
+				"time_taken_sec": -93,
 				"completed": true,
 				"incorrect_tries": 1
-            }`, sessionID, studentID, contentID),
+            }`, 5, contentID),
 			mockSetup:      func(m *mocks.MockGameResultRepository) {},
 			expectedStatus: 400,
 			wantErr:        true,
@@ -193,13 +190,12 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Foreign Key Reference Error",
 			payload: fmt.Sprintf(`{
-				"session_id": "%s",
-				"student_id": "%s",
+				"session_student_id": "%d",
 				"content_id": "%s",
-				"time_taken": 93,
+				"time_taken_sec": 93,
 				"completed": true,
 				"incorrect_tries": 1
-            }`, sessionID, studentID, contentID),
+            }`, 9, contentID),
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				m.On("PostGameResult", mock.Anything, mock.AnythingOfType("PostGameResult")).Return(nil, errors.New("foreign key"))
 			},
@@ -209,31 +205,28 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Valid without Optional Parameter",
 			payload: fmt.Sprintf(`{
-				"session_id": "%s",
-				"student_id": "%s",
+				"student_session_id": "%d",
 				"content_id": "%s",
-				"time_taken": 93,
+				"time_taken_sec": 93,
 				"completed": false
-            }`, sessionID, studentID, contentID),
+            }`, 56, contentID),
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				postGameResult := models.PostGameResult{
-					SessionID:    sessionID,
-					StudentID:    studentID,
-					ContentID:    contentID,
-					TimeTakenSec: 93,
-					Completed:    ptr.Bool(false),
+					SessionStudentID: 56,
+					ContentID:        contentID,
+					TimeTakenSec:     93,
+					Completed:        ptr.Bool(false),
 				}
 
 				gameResult := &models.GameResult{
-					ID:             uuid.New(),
-					SessionID:      sessionID,
-					StudentID:      studentID,
-					ContentID:      contentID,
-					TimeTaken:      93,
-					Completed:      false,
-					IncorrectTries: 0,
-					CreatedAt:      ptr.Time(time.Now()),
-					UpdatedAt:      ptr.Time(time.Now()),
+					ID:                     uuid.New(),
+					SessionStudentID:       56,
+					ContentID:              contentID,
+					TimeTakenSec:           93,
+					Completed:              false,
+					CountIncorrectAttempts: 0,
+					CreatedAt:              ptr.Time(time.Now()),
+					UpdatedAt:              ptr.Time(time.Now()),
 				}
 				m.On("PostGameResult", mock.Anything, postGameResult).Return(gameResult, nil)
 			},
@@ -243,33 +236,30 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Valid with Optional Parameters",
 			payload: fmt.Sprintf(`{
-				"session_id": "%s",
-				"student_id": "%s",
+				"session_student_id": "%d",
 				"content_id": "%s",
-				"time_taken": 93,
+				"time_taken_sec": 93,
 				"completed": false,
 				"incorrect_tries": 9
-            }`, sessionID, studentID, contentID),
+            }`, 29, contentID),
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				postGameResult := models.PostGameResult{
-					SessionID:      sessionID,
-					StudentID:      studentID,
-					ContentID:      contentID,
-					TimeTakenSec:   93,
-					Completed:      ptr.Bool(false),
-					IncorrectTries: ptr.Int(9),
+					SessionStudentID:       29,
+					ContentID:              contentID,
+					TimeTakenSec:           93,
+					Completed:              ptr.Bool(false),
+					CountIncorrectAttempts: ptr.Int(9),
 				}
 
 				gameResult := &models.GameResult{
-					ID:             uuid.New(),
-					SessionID:      sessionID,
-					StudentID:      studentID,
-					ContentID:      contentID,
-					TimeTaken:      93,
-					Completed:      false,
-					IncorrectTries: 9,
-					CreatedAt:      ptr.Time(time.Now()),
-					UpdatedAt:      ptr.Time(time.Now()),
+					ID:                     uuid.New(),
+					SessionStudentID:       29,
+					ContentID:              contentID,
+					TimeTakenSec:           93,
+					Completed:              false,
+					CountIncorrectAttempts: 9,
+					CreatedAt:              ptr.Time(time.Now()),
+					UpdatedAt:              ptr.Time(time.Now()),
 				}
 				m.On("PostGameResult", mock.Anything, postGameResult).Return(gameResult, nil)
 			},
