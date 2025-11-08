@@ -29,25 +29,15 @@ export default function Home() {
   const { therapists } = useTherapists()
   const currentTherapist = therapists.find(t => t.id === userId) || therapists[0]
 
-  // Debug: Log userId and therapist IDs to help troubleshoot
-  useEffect(() => {
-    if (therapists.length > 0) {
-      console.log('Current userId:', userId)
-      console.log('Available therapist IDs:', therapists.map(t => t.id))
-      console.log('Current therapist:', currentTherapist)
-    }
-  }, [userId, therapists, currentTherapist])
-
   // Fetch all sessions for today (backend doesn't support therapist_id filtering yet)
-  // TODO: Add therapist_id query param to backend API for better performance
+  // TODO: Add therapist_id query param to backend API for better performance d
   const { sessions: allSessions, isLoading: sessionsLoading } = useSessions({
     startdate: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(), // Today at midnight
   })
 
-  // Filter sessions by current therapist and limit to 5
-  const sessions = currentTherapist
-    ? allSessions.filter(s => s.therapist_id === currentTherapist.id).slice(0, 5)
-    : allSessions.slice(0, 5)
+  // Show all upcoming sessions (limit to 5)
+  // TODO: Re-enable therapist filtering once auth assigns c orrect therapist IDs
+  const sessions = allSessions.slice(0, 5)
 
   const [selectedSession, setSelectedSession] = useState<Session | null>(null)
   const [openSection, setOpenSection] = useState<'students' | 'curriculum' | 'calendar' | null>('students')

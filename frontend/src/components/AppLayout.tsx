@@ -129,9 +129,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
               const isActive = pathname === item.href
 
               return (
-                <Tooltip content={item.label} enabled={!isSidebarOpen}>
+                <Tooltip key={item.href} content={item.label} enabled={!isSidebarOpen}>
                   <Link
-                    key={item.href}
                     href={item.href}
                     className={`
                     flex items-center gap-3 rounded-lg
@@ -168,7 +167,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 className={`
                 flex items-center gap-3 rounded-lg
                 transition-all duration-200
-                h-10 flex-shrink-0 overflow-hidden justify-start
+                h-10 shrink-0 overflow-hidden justify-start
                 text-white/70 hover:text-white hover:bg-white/10
                 ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
               `}
