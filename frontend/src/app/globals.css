@@ -61,8 +61,8 @@
     /* Dark Theme */
     --background: var(--color-black);
     --foreground: var(--color-white);
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --card-hover: rgba(255, 255, 255, 0.08);
+    --card-bg: #3a3a3a; /* Light gray for dark mode */
+    --card-hover: #454545;
     --border: rgba(255, 255, 255, 0.1);
     --border-hover: rgba(255, 255, 255, 0.2);
 
@@ -208,6 +208,10 @@ h6 {
 /* Black/White Classes */
 .bg-black {
   background-color: var(--color-black);
+}
+
+.bg-card {
+  background-color: var(--card-bg);
 }
 
 .bg-white {

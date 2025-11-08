@@ -54,7 +54,7 @@ export default function Tooltip({ content, children, enabled = true }: TooltipPr
           <div
             role="tooltip"
             className={`pointer-events-none fixed whitespace-nowrap 
-                rounded-lg bg-foreground text-white text-sm px-3 
+                rounded-lg bg-black border-white text-white text-sm px-3 
                 py-1.5 z-50 shadow-lg -translate-y-1/2 transition-opacity 
                 duration-200 ${isMounted ? 'opacity-100' : 'opacity-0'}`}
             style={{

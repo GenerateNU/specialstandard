@@ -15,6 +15,7 @@ import { useRecentlyViewedStudents } from '@/hooks/useRecentlyViewedStudents'
 import { useSessions } from '@/hooks/useSessions'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { useTherapists } from '@/hooks/useTherapists'
+import { formatDateString, formatTime, getTherapistName } from '@/lib/utils'
 
 export default function Home() {
   const { isAuthenticated, isLoading, userId } = useAuthContext()
@@ -46,30 +47,6 @@ export default function Home() {
   const { students: sessionStudents, isLoading: studentsLoading } = useSessionStudentsForSession(
     selectedSession?.id || '',
   )
-
-  // Helper function to get therapist name
-  const getTherapistName = (therapistId: string) => {
-    const therapist = therapists.find(t => t.id === therapistId)
-    return therapist ? `${therapist.first_name} ${therapist.last_name}` : 'Unknown Therapist'
-  }
-
-  // Helper function to format time
-  const formatTime = (datetime: string) => {
-    return new Date(datetime).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })
-  }
-
-  // Helper function to format date
-  const formatDate = (datetime: string) => {
-    return new Date(datetime).toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric',
-    })
-  }
 
   // Set first session as selected by default
   useEffect(() => {
@@ -149,7 +126,7 @@ export default function Home() {
                               sessionName="Session Name"
                               startTime={formatTime(session.start_datetime)}
                               endTime={formatTime(session.end_datetime)}
-                              date={formatDate(session.start_datetime)}
+                              date={formatDateString(session.start_datetime)}
                             />
                           </div>
                         ))
@@ -170,7 +147,7 @@ export default function Home() {
                               Session Name
                             </strong>
                             <strong>
-                              {getTherapistName(selectedSession.therapist_id)}
+                              {getTherapistName(selectedSession.therapist_id, therapists)}
                             </strong>
                           </div>
                           <div className="flex flex-col flex-1">
@@ -181,7 +158,7 @@ export default function Home() {
                               {formatTime(selectedSession.end_datetime)}
                             </span>
                             <span>
-                              {formatDate(selectedSession.start_datetime)}
+                              {formatDateString(selectedSession.start_datetime)}
                             </span>
                           </div>
                         </div>
@@ -328,20 +305,21 @@ export default function Home() {
           </div>
         </div>
         {/* Sidebar */}
-        <div className="flex flex-col p-10 w-3/10 h-screen bg-orange sticky space-y-6 top-0">
+        <div className="flex flex-col p-10 w-3/10  h-screen bg-orange sticky space-y-6 top-0">
           <div className="flex flex-row justify-between items-center
-          hover:shadow-md hover:-translate-y-1 cursor-pointer transition p-4 rounded-2xl hover:bg-orange-disabled"
+          hover:shadow-md hover:-translate-y-1 cursor-pointer
+          text-black transition p-4 rounded-2xl hover:bg-orange-disabled"
           >
             <div>
-              <h4>Mark Jones</h4>
+              <h4 className='text-black'>Mark Jones</h4>
               <p>My Profile</p>
             </div>
             <UserCircle size={36} strokeWidth={1} />
           </div>
-          <div className="w-full bg-white rounded-xl">
+          <div className="w-full bg-card rounded-xl">
             <MiniCalendar />
           </div>
-          <div className="flex flex-col w-full p-6 flex-1 bg-white rounded-xl gap-4">
+          <div className="flex flex-col w-full p-6 flex-1 bg-card rounded-xl gap-4">
             <div>
               <h3>Students</h3>
               <p className="text-sm text-muted-foreground">Recently Viewed</p>
