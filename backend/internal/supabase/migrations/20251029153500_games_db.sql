@@ -1,6 +1,3 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- GameType ENUM
 CREATE TYPE game_category AS ENUM (
     'receptive_language',
@@ -40,7 +37,7 @@ CREATE TABLE game_content (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
 
-    FOREIGN KEY (theme_id) REFERENCES theme(theme_id) ON DELETE RESTRICT
+    FOREIGN KEY (theme_id) REFERENCES theme(id) ON DELETE RESTRICT
 );
 
 -- Create GameResult Table

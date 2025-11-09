@@ -2169,9 +2169,10 @@ paths:
           description: The Game Content (corresponding category and level)
           content:
             application/json:
-              type: array
-              items:
-                  $ref: '#/components/schemas/GameContent'
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/GameContent'
         "400":
           description: Bad Request (e.g., validation errors)
           content:
@@ -3313,10 +3314,9 @@ components:
         - count_of_incorrect_attempts
       properties:
         session_student_id:
-          type: string
-          format: uuid
-          description: ID of the Session-Student associated with the gameplay
-          example: "123e4567-e89b-12d3-a456-426614174646"
+          type: integer
+          description: Serial-ID of the Session-Student associated with the gameplay
+          example: 2
         content_id:
           type: string
           format: uuid

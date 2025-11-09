@@ -35,22 +35,22 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 
 	if req.ThemeID != nil {
 		conditions = append(conditions, fmt.Sprintf("theme_id = $%d", argCount))
-		args = append(args, req.ThemeID)
+		args = append(args, *req.ThemeID)
 		argCount++
 	}
 	if req.Category != nil {
 		conditions = append(conditions, fmt.Sprintf("category = $%d", argCount))
-		args = append(args, req.Category)
+		args = append(args, *req.Category)
 		argCount++
 	}
 	if req.QuestionType != nil {
 		conditions = append(conditions, fmt.Sprintf("question_type = $%d", argCount))
-		args = append(args, req.QuestionType)
+		args = append(args, *req.QuestionType)
 		argCount++
 	}
 	if req.DifficultyLevel != nil {
 		conditions = append(conditions, fmt.Sprintf("difficulty_level = $%d", argCount))
-		args = append(args, req.DifficultyLevel)
+		args = append(args, *req.DifficultyLevel)
 		argCount++
 	}
 
@@ -58,7 +58,7 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 		query += ` WHERE ` + strings.Join(conditions, " AND ")
 	}
 	query += fmt.Sprintf(` ORDER BY random() LIMIT $%d `, argCount)
-	args = append(args, req.QuestionCount)
+	args = append(args, *req.QuestionCount)
 	argCount++
 
 	rows, err := r.db.Query(ctx, query, args...)
