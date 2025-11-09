@@ -20,9 +20,6 @@ import (
 )
 
 func TestHandler_GetGameResults(t *testing.T) {
-	//studentID := uuid.MustParse("f4053a11-fc76-4551-b05e-b550dfea516d")
-	//sessionID := uuid.MustParse("b6051b20-5426-428e-858e-adbe853244e3")
-
 	tests := []struct {
 		name           string
 		url            string
@@ -149,8 +146,6 @@ func TestHandler_GetGameResults(t *testing.T) {
 }
 
 func TestHandler_PostGameResult(t *testing.T) {
-	sessionID := uuid.New()
-	studentID := uuid.New()
 	contentID := uuid.New()
 
 	tests := []struct {
@@ -163,13 +158,12 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Parsing Error",
 			payload: fmt.Sprintf(`{
-				"session_id": "%s",
-				"student_id": "%s",
+				"session_student_id": %d,
 				"content_id": "%s",
 				"time_taken_sec": 93,
 				"completed": true,
-				"incorrect_tries": 1,
-            }`, sessionID, studentID, contentID),
+				"count_of_incorrect_attempts": 1,
+            }`, 9, contentID),
 			mockSetup:      func(m *mocks.MockGameResultRepository) {},
 			expectedStatus: 400,
 			wantErr:        true,
@@ -177,11 +171,11 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Invalid Time-Taken",
 			payload: fmt.Sprintf(`{
-				"session_student_id": "%d",
+				"session_student_id": %d,
 				"content_id": "%s",
 				"time_taken_sec": -93,
 				"completed": true,
-				"incorrect_tries": 1
+				"count_of_incorrect_attempts": 1
             }`, 5, contentID),
 			mockSetup:      func(m *mocks.MockGameResultRepository) {},
 			expectedStatus: 400,
@@ -190,11 +184,11 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Foreign Key Reference Error",
 			payload: fmt.Sprintf(`{
-				"session_student_id": "%d",
+				"session_student_id": %d,
 				"content_id": "%s",
 				"time_taken_sec": 93,
 				"completed": true,
-				"incorrect_tries": 1
+				"count_of_incorrect_attempts": 1
             }`, 9, contentID),
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				m.On("PostGameResult", mock.Anything, mock.AnythingOfType("PostGameResult")).Return(nil, errors.New("foreign key"))
@@ -205,17 +199,17 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Valid without Optional Parameter",
 			payload: fmt.Sprintf(`{
-				"student_session_id": "%d",
+				"session_student_id": %d,
 				"content_id": "%s",
 				"time_taken_sec": 93,
-				"completed": false
+				"count_of_incorrect_attempts": 10
             }`, 56, contentID),
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				postGameResult := models.PostGameResult{
-					SessionStudentID: 56,
-					ContentID:        contentID,
-					TimeTakenSec:     93,
-					Completed:        ptr.Bool(false),
+					SessionStudentID:       56,
+					ContentID:              contentID,
+					TimeTakenSec:           93,
+					CountIncorrectAttempts: 10,
 				}
 
 				gameResult := &models.GameResult{
@@ -236,11 +230,11 @@ func TestHandler_PostGameResult(t *testing.T) {
 		{
 			name: "Valid with Optional Parameters",
 			payload: fmt.Sprintf(`{
-				"session_student_id": "%d",
+				"session_student_id": %d,
 				"content_id": "%s",
 				"time_taken_sec": 93,
 				"completed": false,
-				"incorrect_tries": 9
+				"count_of_incorrect_attempts": 9
             }`, 29, contentID),
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				postGameResult := models.PostGameResult{
@@ -248,7 +242,7 @@ func TestHandler_PostGameResult(t *testing.T) {
 					ContentID:              contentID,
 					TimeTakenSec:           93,
 					Completed:              ptr.Bool(false),
-					CountIncorrectAttempts: ptr.Int(9),
+					CountIncorrectAttempts: 9,
 				}
 
 				gameResult := &models.GameResult{
