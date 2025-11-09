@@ -1,25 +1,32 @@
-import type { GetGameContentsCategory } from '@/lib/api/theSpecialStandardAPI.schemas'
+import type { QueryObserverResult } from '@tanstack/react-query'
+import type { GameContent } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { useQuery } from '@tanstack/react-query'
 import { getGameContent } from '@/lib/api/game-content'
 
-export function useGameContents(category: GetGameContentsCategory, level: number, count: number) {
+interface UseGameContentsReturn {
+  gameContents: GameContent[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<QueryObserverResult<GameContent[], Error>>
+}
+
+export function useGameContents(): UseGameContentsReturn {
   const api = getGameContent()
 
   const {
-    data: gameContentsData = [],
+    data: gameContentsResponse,
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['game-contents', category, level, count],
-    queryFn: () => api.getGameContents({ category, level, count }),
-    staleTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: false,
+    queryKey: ['game-contents'],
+    queryFn: () => api.getGameContents(),
   })
 
+  const gameContents = gameContentsResponse ?? []
+
   return {
-    gameContentsData,
+    gameContents,
     isLoading,
     error: error?.message || null,
     refetch,

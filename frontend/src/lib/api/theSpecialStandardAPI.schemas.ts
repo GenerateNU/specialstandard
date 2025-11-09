@@ -566,24 +566,56 @@ export type GameContentCategory =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const GameContentCategory = {
+  receptive_language: "receptive_language",
+  expressive_language: "expressive_language",
+  social_pragmatic_language: "social_pragmatic_language",
+  speech: "speech",
+} as const;
+
+/**
+ * The type of the question being asked in the game
+ */
+export type GameContentQuestionType =
+  (typeof GameContentQuestionType)[keyof typeof GameContentQuestionType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GameContentQuestionType = {
   sequencing: "sequencing",
   following_directions: "following_directions",
   wh_questions: "wh_questions",
   true_false: "true_false",
   concepts_sorting: "concepts_sorting",
+  fill_in_the_blank: "fill_in_the_blank",
+  categorical_language: "categorical_language",
+  emotions: "emotions",
+  teamwork_talk: "teamwork_talk",
+  express_excitement_interest: "express_excitement_interest",
+  fluency: "fluency",
+  articulation_s: "articulation_s",
+  articulation_l: "articulation_l",
 } as const;
 
 export interface GameContent {
   /** ID of a Game Content. */
   id: string;
+  /** The UUID of the Theme associated with the game's content */
+  theme_id: string;
+  /**
+   * The Week of the Content in the session
+   * @minimum 1
+   */
+  week: number;
   /** The category of the game */
   category: GameContentCategory;
+  /** The type of the question being asked in the game */
+  question_type: GameContentQuestionType;
   /**
-   * The corresponding grade level for this game's content
-   * @minimum 0
-   * @maximum 12
+   * The corresponding level of content for this game's content
+   * @minimum 1
    */
-  level: number;
+  difficulty_level: number;
+  /** The question being asked in the game */
+  question: string;
   /** The list of wrong-words that are given for the game. */
   options: string[];
   /** The answer to the game. */
@@ -597,21 +629,21 @@ export interface GameContent {
 export interface GameResult {
   /** ID of the Game Result. */
   id: string;
-  /** ID of the Session the game was played */
-  session_id: string;
-  /** ID of the Student who played the game */
-  student_id: string;
+  /** ID of the Student-Session associated with the Game. */
+  session_student_id: string;
   /** ID of the Content of the Game */
   content_id: string;
   /** Number of seconds it takes to complete the game */
-  time_taken: number;
+  time_taken_sec: number;
   /** Whether or not the game was completed or not */
   completed: boolean;
   /**
    * The number of incorrect attempts made during the game
    * @minimum 0
    */
-  incorrect_tries: number;
+  count_of_incorrect_attempts: number;
+  /** The actual incorrect answers chosen during the game */
+  incorrect_attempts: string[];
   /** When the game-content was created */
   created_at: string;
   /** When the game-content was last updated */
@@ -619,21 +651,21 @@ export interface GameResult {
 }
 
 export interface PostGameResultInput {
-  /** ID of the Session the game was played */
-  session_id: string;
-  /** ID of the Student who played the game */
-  student_id: string;
+  /** Serial-ID of the Session-Student associated with the gameplay */
+  session_student_id: number;
   /** ID of the Content of the Game */
   content_id: string;
   /** Number of seconds it takes to complete the game */
-  time_taken: number;
-  /** Whether or not the game was completed or not */
+  time_taken_sec: number;
+  /** Whether or not the game was completed */
   completed?: boolean;
   /**
    * The number of incorrect attempts made during the game
    * @minimum 0
    */
-  incorrect_tries?: number;
+  count_of_incorrect_attempts: number;
+  /** The actual incorrect options selected in the course of the game */
+  incorrect_attempts?: string[];
 }
 
 export type PostAuthSignupBody = {
@@ -991,20 +1023,32 @@ export type DeleteThemesId200 = {
 
 export type GetGameContentsParams = {
   /**
-   * Category of the type of game
+   * Theme ID associated with the game's contents
    */
-  category: GetGameContentsCategory;
+  theme_id?: string;
   /**
-   * The Level of the game content (0-12; corresponding to grade-level)
-   * @minimum 0
-   * @maximum 12
+   * The category associated with the game
    */
-  level: number;
+  category?: GetGameContentsCategory;
   /**
-   * Number of options/words to choose from
+   * The type of question being asked in the game
+   */
+  question_type?: GetGameContentsQuestionType;
+  /**
+   * The difficulty level of the game
+   * @minimum 1
+   */
+  difficulty_level?: number;
+  /**
+   * Refers to the number of questions that should be returned through sampling
    * @minimum 2
    */
-  count: number;
+  question_count?: number;
+  /**
+   * The number of words that need to be retrieved as correct answer and wrong options
+   * @minimum 2
+   */
+  words_count?: number;
 };
 
 export type GetGameContentsCategory =
@@ -1012,11 +1056,30 @@ export type GetGameContentsCategory =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const GetGameContentsCategory = {
+  receptive_language: "receptive_language",
+  expressive_language: "expressive_language",
+  social_pragmatic_language: "social_pragmatic_language",
+  speech: "speech",
+} as const;
+
+export type GetGameContentsQuestionType =
+  (typeof GetGameContentsQuestionType)[keyof typeof GetGameContentsQuestionType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameContentsQuestionType = {
   sequencing: "sequencing",
   following_directions: "following_directions",
   wh_questions: "wh_questions",
   true_false: "true_false",
   concepts_sorting: "concepts_sorting",
+  fill_in_the_blank: "fill_in_the_blank",
+  categorical_language: "categorical_language",
+  emotions: "emotions",
+  teamwork_talk: "teamwork_talk",
+  express_excitement_interest: "express_excitement_interest",
+  fluency: "fluency",
+  articulation_s: "articulation_s",
+  articulation_l: "articulation_l",
 } as const;
 
 export type GetGameResultsParams = {

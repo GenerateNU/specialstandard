@@ -16,8 +16,8 @@ export function getGameContent() {
    * Get all Game Contents for given category and level with a certain number of words
    * @summary Get Game Contents
    */
-  const getGameContents = (params: GetGameContentsParams) => {
-    return customAxios<GameContent>({
+  const getGameContents = (params?: GetGameContentsParams) => {
+    return customAxios<GameContent[]>({
       url: `/game-contents`,
       method: 'GET',
       params,
