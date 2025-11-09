@@ -30,7 +30,7 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 
 	var conditions []string
 	var args []interface{}
-	args = append(args, req.WordsCount)
+	args = append(args, *req.WordsCount-1)
 	argCount := 2
 
 	if req.ThemeID != nil {

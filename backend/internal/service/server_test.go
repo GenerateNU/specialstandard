@@ -2277,7 +2277,7 @@ func TestGetGameResultsEndpoint(t *testing.T) {
 	mockRepo.On("GetGameResults", mock.Anything, mock.Anything, mock.Anything).Return([]models.GameResult{
 		{
 			ID:                     uuid.New(),
-			SessionStudentID:       rand.Int(),
+			SessionStudentID:       rand.Intn(10),
 			ContentID:              uuid.New(),
 			TimeTakenSec:           50,
 			Completed:              true,

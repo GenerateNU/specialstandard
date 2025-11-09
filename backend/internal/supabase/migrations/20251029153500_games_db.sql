@@ -38,7 +38,7 @@ CREATE TABLE game_content (
     options TEXT[] NOT NULL,
     answer TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    updated_at TIMESTAMPTZ DEFAULT now(),
 
     FOREIGN KEY (theme_id) REFERENCES theme(theme_id) ON DELETE RESTRICT
 );

@@ -253,7 +253,7 @@ func createAllTables(pool *pgxpool.Pool) error {
 			'articulation_l'
 		);`,
 
-		`CREATE TABLE game_content (
+		`CREATE TABLE IF NOT EXISTS game_content (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			theme_id UUID NOT NULL,
 			week INT NOT NULL CHECK ( week >= 0 AND week <= 6 ),
@@ -264,12 +264,12 @@ func createAllTables(pool *pgxpool.Pool) error {
 			options TEXT[] NOT NULL,
 			answer TEXT NOT NULL,
 			created_at TIMESTAMPTZ DEFAULT now(),
-			updated_at TIMESTAMPTZ DEFAULT now()
+			updated_at TIMESTAMPTZ DEFAULT now(),
 		
-			FOREIGN KEY (theme_id) REFERENCES theme(theme_id) ON DELETE RESTRICT
+			FOREIGN KEY (theme_id) REFERENCES theme(id) ON DELETE RESTRICT
 		);`,
 
-		`CREATE TABLE game_result (
+		`CREATE TABLE IF NOT EXISTS game_result (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			session_student_id INT NOT NULL,
 			content_id UUID NOT NULL,

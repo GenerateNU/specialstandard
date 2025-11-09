@@ -66,11 +66,11 @@ func (r *GameResultRepository) GetGameResults(ctx context.Context, inputQuery *m
 
 func (r *GameResultRepository) PostGameResult(ctx context.Context, input models.PostGameResult) (*models.GameResult, error) {
 	query := `INSERT INTO game_result (session_student_id, content_id, time_taken_sec, completed, count_of_incorrect_attempts, incorrect_attempts)
-			  VALUES ($1, $2, $3, COALESCE($4, FALSE), COALESCE($5, 0), COALESCE($6, '{}'))
-			  RETURNING id, student_session_id, content_id, time_taken_sec, completed, count_of_incorrect_attempts, incorrect_attempts, created_at, updated_at;`
+			  VALUES ($1, $2, $3, COALESCE($4, FALSE), COALESCE($5, 0), COALESCE($6, ARRAY[]::text[]))
+			  RETURNING id, session_student_id, content_id, time_taken_sec, completed, count_of_incorrect_attempts, incorrect_attempts, created_at, updated_at;`
 
 	row := r.db.QueryRow(ctx, query, input.SessionStudentID, input.ContentID, input.TimeTakenSec,
-		input.Completed, input.CountIncorrectAttempts, input.IncorrectAttempts)
+		input.Completed, input.CountIncorrectAttempts, &input.IncorrectAttempts)
 
 	gameResult := &models.GameResult{}
 	if err := row.Scan(

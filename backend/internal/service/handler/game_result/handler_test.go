@@ -63,7 +63,7 @@ func TestHandler_GetGameResults(t *testing.T) {
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				gameResult := models.GameResult{
 					ID:                     uuid.New(),
-					SessionStudentID:       rand.Int(),
+					SessionStudentID:       rand.Intn(10),
 					ContentID:              uuid.New(),
 					TimeTakenSec:           40,
 					Completed:              true,
@@ -85,7 +85,7 @@ func TestHandler_GetGameResults(t *testing.T) {
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				gameResult := models.GameResult{
 					ID:                     uuid.New(),
-					SessionStudentID:       rand.Int(),
+					SessionStudentID:       rand.Intn(10),
 					ContentID:              uuid.New(),
 					TimeTakenSec:           40,
 					Completed:              true,
@@ -107,11 +107,11 @@ func TestHandler_GetGameResults(t *testing.T) {
 			mockSetup: func(m *mocks.MockGameResultRepository) {
 				gameResult := models.GameResult{
 					ID:                     uuid.New(),
-					SessionStudentID:       rand.Int(),
+					SessionStudentID:       rand.Intn(10),
 					ContentID:              uuid.New(),
 					TimeTakenSec:           40,
 					Completed:              true,
-					CountIncorrectAttempts: 3,
+					CountIncorrectAttempts: 7,
 					CreatedAt:              ptr.Time(time.Now()),
 					UpdatedAt:              ptr.Time(time.Now()),
 				}
