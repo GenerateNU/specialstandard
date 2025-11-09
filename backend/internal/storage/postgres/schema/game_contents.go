@@ -59,7 +59,8 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 	}
 	query += fmt.Sprintf(` ORDER BY random() LIMIT $%d `, argCount)
 	args = append(args, *req.QuestionCount)
-	argCount++
+	// argCount++
+	// (Commented out because linter says "ineffectual" but if we add arguments below this, PLEASE UNCOMMENT THAT LINE! Otherwise, number will be off by one.
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
