@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"specialstandard/internal/errs"
@@ -2240,14 +2241,20 @@ func TestEndpoint_PromoteStudents(t *testing.T) {
 
 func TestGetGameContentEndpoint(t *testing.T) {
 	mockRepo := new(mocks.MockGameContentRepository)
-	mockRepo.On("GetGameContent", mock.Anything, mock.Anything).Return(&models.GameContent{
-		ID:              uuid.New(),
-		Category:        "sequencing",
-		DifficultyLevel: 5,
-		Options:         []string{"Meow", "Wolf", "Animals"},
-		Answer:          "Zoology",
-		CreatedAt:       ptr.Time(time.Now()),
-		UpdatedAt:       ptr.Time(time.Now()),
+	mockRepo.On("GetGameContents", mock.Anything, mock.Anything).Return([]models.GameContent{
+		{
+			ID:              uuid.New(),
+			ThemeID:         uuid.New(),
+			Week:            3,
+			Category:        ptr.String("speech"),
+			QuestionType:    "sequencing",
+			DifficultyLevel: 5,
+			Question:        "How many animals are there?",
+			Options:         []string{"Meow", "Wolf", "Animals"},
+			Answer:          "Zoology",
+			CreatedAt:       ptr.Time(time.Now()),
+			UpdatedAt:       ptr.Time(time.Now()),
+		},
 	}, nil)
 
 	repo := &storage.Repository{
@@ -2257,7 +2264,7 @@ func TestGetGameContentEndpoint(t *testing.T) {
 		TestMode: true,
 	}, repo, &s3_client.Client{})
 
-	req := httptest.NewRequest("GET", "/api/v1/game-contents?category=sequencing&level=5&count=4", nil)
+	req := httptest.NewRequest("GET", "/api/v1/game-contents?category=speech&level=5&count=4", nil)
 	res, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
@@ -2269,15 +2276,15 @@ func TestGetGameResultsEndpoint(t *testing.T) {
 	mockRepo := new(mocks.MockGameResultRepository)
 	mockRepo.On("GetGameResults", mock.Anything, mock.Anything, mock.Anything).Return([]models.GameResult{
 		{
-			ID:             uuid.New(),
-			SessionID:      uuid.New(),
-			StudentID:      uuid.New(),
-			ContentID:      uuid.New(),
-			TimeTaken:      50,
-			Completed:      true,
-			IncorrectTries: 7,
-			CreatedAt:      ptr.Time(time.Now()),
-			UpdatedAt:      ptr.Time(time.Now()),
+			ID:                     uuid.New(),
+			SessionStudentID:       rand.Int(),
+			ContentID:              uuid.New(),
+			TimeTakenSec:           50,
+			Completed:              true,
+			CountIncorrectAttempts: 7,
+			IncorrectAttempts:      &[]string{"Meow", "Koorkodile"},
+			CreatedAt:              ptr.Time(time.Now()),
+			UpdatedAt:              ptr.Time(time.Now()),
 		},
 	}, nil)
 
@@ -2298,19 +2305,16 @@ func TestGetGameResultsEndpoint(t *testing.T) {
 
 func TestPostGameResultEndpoint(t *testing.T) {
 	mockRepo := new(mocks.MockGameResultRepository)
-	sessionID := uuid.New()
-	studentID := uuid.New()
 	contentID := uuid.New()
 	mockRepo.On("PostGameResult", mock.Anything, mock.Anything).Return(&models.GameResult{
-		ID:             uuid.New(),
-		SessionID:      sessionID,
-		StudentID:      studentID,
-		ContentID:      contentID,
-		TimeTaken:      50,
-		Completed:      false,
-		IncorrectTries: 0,
-		CreatedAt:      ptr.Time(time.Now()),
-		UpdatedAt:      ptr.Time(time.Now()),
+		ID:                     uuid.New(),
+		SessionStudentID:       5,
+		ContentID:              contentID,
+		TimeTakenSec:           50,
+		Completed:              false,
+		CountIncorrectAttempts: 0,
+		CreatedAt:              ptr.Time(time.Now()),
+		UpdatedAt:              ptr.Time(time.Now()),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -2321,11 +2325,11 @@ func TestPostGameResultEndpoint(t *testing.T) {
 	}, repo, &s3_client.Client{})
 
 	payload := fmt.Sprintf(`{
-		"session_id": "%s",
-		"student_id": "%s",
+		"session_student_id": %d,
 		"content_id": "%s",
-		"time_taken": 50
-	}`, sessionID, studentID, contentID)
+		"time_taken_sec": 50,
+		"count_of_incorrect_attempts": 5 
+	}`, 5, contentID)
 	req := httptest.NewRequest("POST", "/api/v1/game-results", strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	res, err := app.Test(req, -1)
