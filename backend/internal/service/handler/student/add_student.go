@@ -48,6 +48,7 @@ func (h *Handler) AddStudent(c *fiber.Ctx) error {
 		LastName:    req.LastName,
 		DOB:         dob,
 		TherapistID: therapistID,
+		SchoolID:    req.SchoolID,
 		Grade:       req.Grade, // Now *int as expected by the model
 		IEP:         req.IEP,
 	}

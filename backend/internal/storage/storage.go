@@ -31,7 +31,7 @@ type SessionStudentRepository interface {
 }
 
 type StudentRepository interface {
-	GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error)
+	GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, schoolID *int, name string, pagination utils.Pagination) ([]models.Student, error)
 	GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error)
 	AddStudent(ctx context.Context, student models.Student) (models.Student, error)
 	UpdateStudent(ctx context.Context, student models.Student) (models.Student, error)

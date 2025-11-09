@@ -150,6 +150,17 @@ func createAllTables(pool *pgxpool.Pool) error {
 
 	// Create tables in dependency order
 	tableDefinitions := []string{
+		`CREATE TABLE IF NOT EXISTS district (
+  			id SERIAL PRIMARY KEY,
+ 	 		name TEXT NOT NULL UNIQUE
+		)`,
+
+		`CREATE TABLE IF NOT EXISTS school (
+			id SERIAL PRIMARY KEY,
+			name TEXT NOT NULL,
+			district_id INTEGER NOT NULL REFERENCES district(id)
+		)`,
+
 		`CREATE TABLE IF NOT EXISTS therapist (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 			first_name VARCHAR(100) NOT NULL,
@@ -157,7 +168,9 @@ func createAllTables(pool *pgxpool.Pool) error {
 			email VARCHAR(255) UNIQUE NOT NULL,
 			active BOOLEAN DEFAULT TRUE,
 			created_at TIMESTAMPTZ DEFAULT now(),
-			updated_at TIMESTAMPTZ DEFAULT now()
+			updated_at TIMESTAMPTZ DEFAULT now(),
+			schools INTEGER[],
+			district_id INTEGER NOT NULL REFERENCES district(id)
 		)`,
 
 		`CREATE TABLE IF NOT EXISTS theme (
@@ -175,6 +188,7 @@ func createAllTables(pool *pgxpool.Pool) error {
 			last_name VARCHAR(100) NOT NULL,
 			dob DATE,
 			therapist_id UUID NOT NULL REFERENCES therapist(id),
+			school_id INTEGER NOT NULL REFERENCES school(id),
 			grade INTEGER CHECK (grade >= -1 AND grade <= 12),
 			iep TEXT,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -303,7 +317,9 @@ func (db *SharedTestDB) CleanupTestData(t testing.TB) {
 			student,
 			session,
 			theme,
-			therapist
+			therapist,
+			school,
+			district
 		RESTART IDENTITY CASCADE
 	`)
 
