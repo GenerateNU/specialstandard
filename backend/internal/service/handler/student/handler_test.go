@@ -431,7 +431,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "update IEP only",
 			studentID:   studentID.String(),
-			requestBody: `{"iep": "Updated IEP with math accommodations"}`,
+			requestBody: `{"iep": ["Updated IEP with math accommodations"]}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
 					ID:          studentID,
@@ -663,7 +663,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"dob": "2010-05-15",
 				"therapist_id": "` + therapistID.String() + `",
 				"grade": 5,
-				"iep": "Active IEP with speech therapy goals"
+				"iep": ["Active IEP with speech therapy goals"]
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
@@ -689,7 +689,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"dob": "2012-03-22",
 				"therapist_id": "` + therapistID.String() + `",
 				"grade": 3,
-				"iep": "Math accommodations and extended time"
+				"iep": ["Math accommodations and extended time"]
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
@@ -773,7 +773,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"dob": "2000-02-29",
 				"therapist_id": "` + therapistID.String() + `",
 				"grade": 12,
-				"iep": "Graduation accommodations"
+				"iep": ["Graduation accommodations"]
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
