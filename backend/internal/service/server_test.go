@@ -65,122 +65,139 @@ func TestHealthEndpoint(t *testing.T) {
 }
 
 func TestGetSessionsEndpoint(t *testing.T) {
-    testTherapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	testTherapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	
+	tests := []struct {
+		name           string
+		url            string
+		mockSetup      func(*mocks.MockSessionRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful get sessions and default pagination",
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()), // ADD THIS
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				sessions := []models.Session{
+					{
+						ID:            uuid.New(),
+						TherapistID:   testTherapistID,
+						StartDateTime: time.Now(),
+						EndDateTime:   time.Now().Add(time.Hour),
+						Notes:         ptrString("Test session"),
+						CreatedAt:     ptrTime(time.Now()),
+						UpdatedAt:     ptrTime(time.Now()),
+					},
+				}
+				// Now with 4 parameters: ctx, pagination, filter, therapistID
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(sessions, nil)			
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+		{
+			name:           "Missing therapist ID",
+			url:            "",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid therapist ID format",
+			url:            "?therapist_id=invalid-uuid",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            fmt.Sprintf("?therapist_id=%s&page=0&limit=-1", testTherapistID.String()),
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			url:            fmt.Sprintf("?therapist_id=%s&page=abc&limit=-1", testTherapistID.String()),
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name: "Pagination with parameters",
+			url:  fmt.Sprintf("?therapist_id=%s&page=2&limit=5", testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetSessions", mock.Anything, pagination, (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "With date filters",
+			url:  fmt.Sprintf("?therapist_id=%s&month=11&year=2024", testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				month := 11
+				year := 2024
+				filter := &models.GetSessionRepositoryRequest{
+					Month: &month,
+					Year:  &year,
+				}
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), filter, testTherapistID).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "With student IDs filter",
+			url:  fmt.Sprintf("?therapist_id=%s&student_ids[]=%s&student_ids[]=%s", testTherapistID.String(), uuid.New().String(), uuid.New().String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				// For student IDs, we expect the filter to have StudentIDs populated
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.MatchedBy(func(filter *models.GetSessionRepositoryRequest) bool {
+					return filter != nil && filter.StudentIDs != nil && len(*filter.StudentIDs) == 2
+				}), testTherapistID).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+	}
 
-    tests := []struct {
-        name           string
-        url            string
-        mockSetup      func(*mocks.MockSessionRepository)
-        expectedStatus int
-        wantErr        bool
-    }{
-        {
-            name: "successful get sessions and default pagination",
-            url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()),
-            mockSetup: func(m *mocks.MockSessionRepository) {
-                sessions := []models.Session{
-                    {
-                        ID:            uuid.New(),
-                        TherapistID:   testTherapistID,
-                        StartDateTime: time.Now(),
-                        EndDateTime:   time.Now().Add(time.Hour),
-                        Notes:         ptrString("Test session"),
-                        CreatedAt:     ptrTime(time.Now()),
-                        UpdatedAt:     ptrTime(time.Now()),
-                    },
-                }
-                // LOOSER mock: match any filter pointer
-                m.On("GetSessions", mock.Anything, mock.Anything, mock.Anything, testTherapistID).Return(sessions, nil)
-            },
-            expectedStatus: fiber.StatusOK,
-            wantErr:        false,
-        },
-        {
-            name: "repository error",
-            url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()),
-            mockSetup: func(m *mocks.MockSessionRepository) {
-                m.On("GetSessions", mock.Anything, mock.Anything, mock.Anything, testTherapistID).
-                    Return(nil, errors.New("database error"))
-            },
-            expectedStatus: fiber.StatusInternalServerError,
-            wantErr:        true,
-        },
-        {
-            name:           "Missing therapist ID",
-            url:            "",
-            mockSetup:      func(m *mocks.MockSessionRepository) {},
-            expectedStatus: fiber.StatusBadRequest,
-            wantErr:        true,
-        },
-        {
-            name:           "Invalid therapist ID format",
-            url:            "?therapist_id=invalid-uuid",
-            mockSetup:      func(m *mocks.MockSessionRepository) {},
-            expectedStatus: fiber.StatusBadRequest,
-            wantErr:        true,
-        },
-        {
-            name:           "Violating Pagination Arguments Constraints",
-            url:            fmt.Sprintf("?therapist_id=%s&page=0&limit=-1", testTherapistID.String()),
-            mockSetup:      func(m *mocks.MockSessionRepository) {},
-            expectedStatus: fiber.StatusBadRequest,
-            wantErr:        true,
-        },
-        {
-            name: "Pagination with parameters",
-            url:  fmt.Sprintf("?therapist_id=%s&page=2&limit=5", testTherapistID.String()),
-            mockSetup: func(m *mocks.MockSessionRepository) {
-                m.On("GetSessions", mock.Anything, mock.Anything, mock.Anything, testTherapistID).
-                    Return([]models.Session{}, nil)
-            },
-            expectedStatus: fiber.StatusOK,
-            wantErr:        false,
-        },
-        {
-            name: "With date filters",
-            url:  fmt.Sprintf("?therapist_id=%s&month=11&year=2024", testTherapistID.String()),
-            mockSetup: func(m *mocks.MockSessionRepository) {
-                m.On("GetSessions", mock.Anything, mock.Anything, mock.Anything, testTherapistID).
-                    Return([]models.Session{}, nil)
-            },
-            expectedStatus: fiber.StatusOK,
-            wantErr:        false,
-        },
-        {
-            name: "With student IDs filter",
-            url:  fmt.Sprintf("?therapist_id=%s&student_ids[]=%s&student_ids[]=%s", testTherapistID.String(), uuid.New().String(), uuid.New().String()),
-            mockSetup: func(m *mocks.MockSessionRepository) {
-                // Looser match: only check filter pointer exists
-                m.On("GetSessions", mock.Anything, mock.Anything, mock.MatchedBy(func(filter *models.GetSessionRepositoryRequest) bool {
-                    return filter != nil
-                }), testTherapistID).Return([]models.Session{}, nil)
-            },
-            expectedStatus: fiber.StatusOK,
-            wantErr:        false,
-        },
-    }
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			mockSessionRepo := new(mocks.MockSessionRepository)
+			tt.mockSetup(mockSessionRepo)
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            mockSessionRepo := new(mocks.MockSessionRepository)
-            tt.mockSetup(mockSessionRepo)
+			repo := &storage.Repository{
+				Session: mockSessionRepo,
+			}
 
-            repo := &storage.Repository{
-                Session: mockSessionRepo,
-            }
+			app := service.SetupApp(config.Config{
+				TestMode: true,
+			}, repo, &s3_client.Client{})
 
-            app := service.SetupApp(config.Config{TestMode: true}, repo, &s3_client.Client{})
+			// Test
+			req := httptest.NewRequest("GET", "/api/v1/sessions"+tt.url, nil)
+			resp, err := app.Test(req, -1)
 
-            req := httptest.NewRequest("GET", "/api/v1/sessions"+tt.url, nil)
-            resp, err := app.Test(req, -1)
-
-            assert.NoError(t, err)
-            assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-            mockSessionRepo.AssertExpectations(t)
-        })
-    }
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockSessionRepo.AssertExpectations(t)
+		})
+	}
 }
-
 // Student Integration Tests
 func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
