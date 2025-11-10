@@ -143,7 +143,7 @@ export default function LoginPage() {
               </label>
             </div>
 
-            <Button type="submit" disabled={isLoading} size="long">
+            <Button variant="secondary" type="submit" disabled={isLoading} size="long">
               {isLoading
                 ? (
                     <>

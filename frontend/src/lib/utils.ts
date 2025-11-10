@@ -45,3 +45,30 @@ export function getAvatarVariant(id: string): 'avataaars' | 'lorelei' | 'micah' 
 
   return variants[Math.abs(hash) % variants.length]
 }
+
+// Format ISO datetime string to time (e.g., "2:30 PM")
+export function formatTime(datetime: string) {
+  return new Date(datetime).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
+
+// Format ISO datetime string to date (e.g., "11/06/2025")
+export function formatDateString(datetime: string) {
+  return new Date(datetime).toLocaleDateString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+  })
+}
+
+// Get therapist full name from therapist list by ID
+export function getTherapistName(
+  therapistId: string,
+  therapists: Array<{ id: string, first_name: string, last_name: string }>,
+) {
+  const therapist = therapists.find(t => t.id === therapistId)
+  return therapist ? `${therapist.first_name} ${therapist.last_name}` : 'Unknown Therapist'
+}

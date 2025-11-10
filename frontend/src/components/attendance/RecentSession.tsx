@@ -33,7 +33,7 @@ export default function RecentSession({ studentId }: RecentSessionProps) {
   )
 
   return (
-    <div className="h-full overflow-y-auto space-y-2 text-background w-full">
+    <div className="h-full  overflow-y-auto space-y-2 text-background w-full">
       {sortedSessions.map((session) => {
         const startMoment = moment(session.start_datetime)
         const endMoment = moment(session.end_datetime)
@@ -41,7 +41,7 @@ export default function RecentSession({ studentId }: RecentSessionProps) {
         return (
           <div
             key={session.id}
-            className="p-4 border-b border-background/20 rounded-2xl flex flex-col justify-center h-20 bg-background w-full text-primary last:border-b-0"
+            className="p-4 bg-background border-b border-background/20 rounded-2xl flex flex-col justify-center h-20 w-full text-primary last:border-b-0"
           >
             {/* Session title and date */}
             <div className="w-full flex justify-between items-center">
