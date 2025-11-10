@@ -305,10 +305,10 @@ export default function Home() {
           </div>
         </div>
         {/* Sidebar */}
-        <div className="flex flex-col p-10 w-3/10  h-screen bg-orange sticky space-y-6 top-0">
+        <div className="flex flex-col p-10 w-3/10 h-screen bg-orange sticky top-0 space-y-6">
           <div className="flex flex-row justify-between items-center
           hover:shadow-md hover:-translate-y-1 cursor-pointer
-          text-black transition p-4 rounded-2xl hover:bg-orange-disabled"
+          text-black transition p-4 rounded-2xl hover:bg-orange-disabled shrink-0"
           >
             <div>
               <h4 className="text-black">
@@ -318,15 +318,15 @@ export default function Home() {
             </div>
             <UserCircle size={36} strokeWidth={1} />
           </div>
-          <div className="w-full bg-card rounded-xl">
+          <div className="w-full bg-card rounded-xl shrink-0">
             <MiniCalendar />
           </div>
-          <div className="flex flex-col w-full p-6 flex-1 bg-card rounded-xl gap-4">
+          <div className="flex flex-col w-full p-6 bg-card rounded-xl gap-4 min-h-0 flex-1 overflow-hidden">
             <div>
               <h3>Students</h3>
               <p className="text-sm text-muted-foreground">Recently Viewed</p>
             </div>
-            <div className="w-full flex-1 flex flex-col gap-2">
+            <div className="w-full flex-1 flex flex-col gap-2 overflow-y-auto min-h-0">
               {recentStudents.length > 0
                 ? (
                     recentStudents.map((student, index) => (
@@ -351,7 +351,7 @@ export default function Home() {
                   )}
             </div>
             <Button
-              className="w-full"
+              className="w-full shrink-0"
               onClick={() => router.push('/students')}
             >
               View All Students

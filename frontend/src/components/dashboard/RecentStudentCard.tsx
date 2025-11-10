@@ -25,7 +25,7 @@ export default function RecentStudentCard({
     <button
       onClick={() => router.push(`/student/${id}`)}
       className={cn(
-        'w-full flex items-center gap-3 p-3 cursor-pointer rounded-lg hover:bg-pink-disabled transition-colors text-left',
+        'w-full flex items-center gap-3 p-2 cursor-pointer rounded-lg hover:bg-pink-disabled transition-colors text-left',
         className,
       )}
     >
