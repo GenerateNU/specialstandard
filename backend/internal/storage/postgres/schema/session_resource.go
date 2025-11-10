@@ -1,5 +1,43 @@
+package schema
+
+import (
+	"context"
+	"specialstandard/internal/models"
+	"specialstandard/internal/utils"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type SessionResourceRepository struct {
+	db *pgxpool.Pool
+}
+
+func (sr *SessionResourceRepository) PostSessionResource(ctx context.Context, sessionResource models.CreateSessionResource) (*models.SessionResource, error) {
+	var newSessionResource models.SessionResource
+	query := `INSERT INTO session_resource (session_id, resource_id)
+				VALUES ($1, $2)
+				RETURNING session_id, resource_id, created_at, updated_at`
+
+	err := sr.db.QueryRow(ctx, query, sessionResource.SessionID, sessionResource.ResourceID).Scan(&newSessionResource.SessionID, &newSessionResource.ResourceID, &newSessionResource.CreatedAt, &newSessionResource.UpdatedAt)
+
+	if err != nil {
+		return nil, err
+	}
+	return &newSessionResource, nil
+}
+
+func (sr *SessionResourceRepository) DeleteSessionResource(ctx context.Context, sessionResource models.DeleteSessionResource) error {
+	query := `DELETE FROM session_resource WHERE session_id = $1 AND resource_id = $2`
+	_, err := sr.db.Exec(ctx, query, sessionResource.SessionID, sessionResource.ResourceID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error) {
-    // enforce default pagination
+    // enforce default pagination cuz it keeps erroring
     if pagination.Limit == 0 {
         pagination.Limit = 10
     }
@@ -38,6 +76,7 @@ func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context
 
     return resources, nil
 }
+
 
 func NewSessionResourceRepository(db *pgxpool.Pool) *SessionResourceRepository {
 	return &SessionResourceRepository{
