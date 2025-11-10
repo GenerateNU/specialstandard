@@ -30,6 +30,8 @@ func ptrTime(t time.Time) *time.Time {
 }
 
 func TestHandler_GetSessions(t *testing.T) {
+	testTherapistID := uuid.New() // Generate a test therapist ID
+	
 	tests := []struct {
 		name           string
 		url            string
@@ -39,12 +41,12 @@ func TestHandler_GetSessions(t *testing.T) {
 	}{
 		{
 			name: "successful get sessions with default pagination",
-			url:  "",
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()), // Add therapist_id
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				sessions := []models.Session{
 					{
 						ID:            uuid.New(),
-						TherapistID:   uuid.New(),
+						TherapistID:   testTherapistID,
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
 						Notes:         ptrString("Test session"),
@@ -52,50 +54,65 @@ func TestHandler_GetSessions(t *testing.T) {
 						UpdatedAt:     ptrTime(time.Now()),
 					},
 				}
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(sessions, nil)
+				// Updated mock call with 4 parameters
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(sessions, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "repository error",
-			url:  "/",
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()), // Add therapist_id
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
 		},
-		// ------- Pagination Cases -------
+		{
+			name:           "Missing therapist ID",
+			url:            "", // No therapist_id provided
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid therapist ID format",
+			url:            "?therapist_id=invalid-uuid",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
 		{
 			name:           "Violating Pagination Arguments Constraints",
-			url:            "?page=0&limit=-1",
+			url:            fmt.Sprintf("?therapist_id=%s&page=0&limit=-1", testTherapistID.String()),
 			mockSetup:      func(m *mocks.MockSessionRepository) {},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
 		},
 		{
 			name:           "Bad Pagination Arguments",
-			url:            "?page=abc&limit=-1",
+			url:            fmt.Sprintf("?therapist_id=%s&page=abc&limit=-1", testTherapistID.String()),
 			mockSetup:      func(m *mocks.MockSessionRepository) {},
-			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
 		},
 		{
 			name: "Pagination Parameters",
-			url:  "?page=2&limit=5",
+			url:  fmt.Sprintf("?therapist_id=%s&page=2&limit=5", testTherapistID.String()),
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				pagination := utils.Pagination{
 					Page:  2,
 					Limit: 5,
 				}
-				m.On("GetSessions", mock.Anything, pagination).Return([]models.Session{}, nil)
+				m.On("GetSessions", mock.Anything, pagination, (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return([]models.Session{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 	}
 
+	// Rest of test implementation...
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
@@ -130,7 +147,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "Successful Delete Session",
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSession", mock.Anything, id).Return("deleted", nil)
+				m.On("DeleteSession", mock.Anything, id).Return(nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -139,7 +156,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "internal server error",
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSession", mock.Anything, id).Return(nil, errors.New("database error"))
+				m.On("DeleteSession", mock.Anything, id).Return(errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,

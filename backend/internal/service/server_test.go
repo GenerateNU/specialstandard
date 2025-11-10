@@ -76,7 +76,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 	}{
 		{
 			name: "successful get sessions and default pagination",
-			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()),
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()), // ADD THIS
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				sessions := []models.Session{
 					{
@@ -90,7 +90,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 					},
 				}
 				// Now with 4 parameters: ctx, pagination, filter, therapistID
-				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(sessions, nil)
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(sessions, nil)			
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -684,7 +684,7 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 			name:      "Success",
 			sessionID: uuid.New(),
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSession", mock.Anything, id).Return("deleted", nil)
+				m.On("DeleteSession", mock.Anything, id).Return(nil)
 			},
 			expectedStatusCode: 200,
 		},
