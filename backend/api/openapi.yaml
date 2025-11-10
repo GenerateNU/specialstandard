@@ -2316,7 +2316,6 @@ components:
         - first_name
         - last_name
         - email
-        - district_id
         - active
         - created_at
         - updated_at

@@ -160,7 +160,7 @@ func createAllTables(pool *pgxpool.Pool) error {
 		`CREATE TABLE IF NOT EXISTS school (
 			id SERIAL PRIMARY KEY,
 			name TEXT NOT NULL,
-			district_id INTEGER NOT NULL REFERENCES district(id),
+			district_id INTEGER REFERENCES district(id),
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
@@ -174,7 +174,7 @@ func createAllTables(pool *pgxpool.Pool) error {
 			created_at TIMESTAMPTZ DEFAULT now(),
 			updated_at TIMESTAMPTZ DEFAULT now(),
 			schools INTEGER[],
-			district_id INTEGER NOT NULL REFERENCES district(id)
+			district_id INTEGER REFERENCES district(id)
 		)`,
 
 		`CREATE TABLE IF NOT EXISTS theme (

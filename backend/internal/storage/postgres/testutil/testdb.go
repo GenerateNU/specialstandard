@@ -73,7 +73,31 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 
-	// Create therapist table first (parent table for foreign key)
+	// District first -- foreign key to therapist
+	_, err = pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS district (
+  			id SERIAL PRIMARY KEY,
+ 	 		name TEXT NOT NULL UNIQUE,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = pool.Exec(ctx,
+		`CREATE TABLE IF NOT EXISTS school (
+			id SERIAL PRIMARY KEY,
+			name TEXT NOT NULL,
+			district_id INTEGER REFERENCES district(id),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create therapist table (parent table for foreign key)
 	_, err = pool.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS therapist (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

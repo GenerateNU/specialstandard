@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS district (
 CREATE TABLE IF NOT EXISTS school (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
-  district_id INTEGER NOT NULL REFERENCES district(id),
+  district_id INTEGER REFERENCES district(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -23,7 +23,7 @@ ADD COLUMN school_id INTEGER NOT NULL DEFAULT 1 REFERENCES school(id);
 
 ALTER TABLE therapist 
 ADD COLUMN schools INTEGER[],
-ADD COLUMN district_id INTEGER NOT NULL DEFAULT 1 REFERENCES district(id);
+ADD COLUMN district_id INTEGER DEFAULT 1 REFERENCES district(id);
 
 -- Remove default (used when backfilling)
 ALTER TABLE student
