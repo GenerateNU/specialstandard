@@ -44,7 +44,7 @@ type GetSessionRequest struct {
 	Month       *int       `query:"month" validate:"omitempty,gte=1,lte=12"`
 	Year        *int       `query:"year" validate:"omitempty,gte=1776,lte=2200"`
 	StudentIDs  *[]string  `query:"id" validate:"omitempty"`
-	TherapistID string     `query:"therapistId" validate:"required,uuid"`
+	TherapistID string     `query:"therapist_id" validate:"required,uuid"`
 }
 
 // This is what repository uses
