@@ -106,10 +106,10 @@ export interface Student {
    */
   grade?: number | null;
   /**
-   * Individualized Education Program details
+   * List of Individualized Education Program goals
    * @nullable
    */
-  iep?: string | null;
+  iep?: string[] | null;
   /** Timestamp when the student record was created */
   created_at: string;
   /** Timestamp when the student record was last updated */
@@ -136,10 +136,10 @@ export interface CreateStudentInput {
    */
   grade?: number | null;
   /**
-   * Individualized Education Program details (optional)
+   * List of Individualized Education Program goals (optional)
    * @nullable
    */
-  iep?: string | null;
+  iep?: string[] | null;
 }
 
 /**
@@ -165,10 +165,10 @@ export interface UpdateStudentInput {
    */
   grade?: number | null;
   /**
-   * Updated IEP details (can be set to null)
+   * Updated list of IEP goals (can be set to null or empty array)
    * @nullable
    */
-  iep?: string | null;
+  iep?: string[] | null;
 }
 
 export interface Theme {

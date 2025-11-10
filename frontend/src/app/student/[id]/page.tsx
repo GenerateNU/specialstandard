@@ -25,22 +25,8 @@ function StudentPage() {
 
   // Initialize IEP goals from student data
   useEffect(() => {
-    if (student?.iep) {
-      try {
-        // Try to parse as JSON array
-        const parsed = JSON.parse(student.iep)
-        if (Array.isArray(parsed)) {
-          setIepGoals(parsed)
-        }
-        else {
-          // If it's a string, split by newlines or treat as single goal
-          setIepGoals([student.iep])
-        }
-      }
-      catch {
-        // If parsing fails, treat as plain text (split by newlines)
-        setIepGoals(student.iep.split('\n').filter(g => g.trim()))
-      }
+    if (student?.iep && Array.isArray(student.iep)) {
+      setIepGoals(student.iep)
     }
     else {
       setIepGoals([])
@@ -63,9 +49,8 @@ function StudentPage() {
 
     setIsSaving(true)
     try {
-      // Save IEP goals as JSON string
-      const iepString = JSON.stringify(filteredGoals)
-      await updateStudent(student.id, { iep: iepString })
+      // Save IEP goals as array
+      await updateStudent(student.id, { iep: filteredGoals })
       setIepGoals(filteredGoals)
       setEdit(false)
     }
@@ -79,14 +64,8 @@ function StudentPage() {
 
   const handleCancel = () => {
     // Reset to original data
-    if (student?.iep) {
-      try {
-        const parsed = JSON.parse(student.iep)
-        setIepGoals(Array.isArray(parsed) ? parsed : [student.iep])
-      }
-      catch {
-        setIepGoals(student.iep.split('\n').filter(g => g.trim()))
-      }
+    if (student?.iep && Array.isArray(student.iep)) {
+      setIepGoals(student.iep)
     }
     else {
       setIepGoals([])

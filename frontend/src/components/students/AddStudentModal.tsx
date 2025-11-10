@@ -43,8 +43,9 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
   const [open, setOpen] = useState(false)
   const { addStudent } = useStudents()
 
-  type CreateStudentFormInput = Omit<CreateStudentInput, 'grade'> & {
+  type CreateStudentFormInput = Omit<CreateStudentInput, 'grade' | 'iep'> & {
     grade?: string
+    iep?: string // Keep as string for textarea input
   }
 
   const form = useForm<CreateStudentFormInput>({
@@ -67,7 +68,8 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
         dob: data.dob || undefined,
         therapist_id: HARDCODED_THERAPIST_ID, // Use the proper UUID
         grade: data.grade, // Convert K to 0, numbers to numbers
-        iep: data.iep || undefined,
+        // Convert IEP string to array (split by newlines for multiple goals)
+        iep: data.iep ? data.iep.split('\n').filter((goal: string) => goal.trim()) : undefined,
       }
 
       // Add the student using the hook with converted data
@@ -187,11 +189,11 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
                     <FileText className="w-4 h-4" />
-                    IEP Notes
+                    IEP Goals
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Any relevant IEP information or special notes..."
+                      placeholder="Enter IEP goals (one per line)&#10;Example:&#10;Improve articulation of /r/ sound&#10;Increase expressive vocabulary by 20 words"
                       rows={3}
                       {...field}
                       value={field.value ?? ''}

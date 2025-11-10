@@ -10,11 +10,11 @@ import type {
   Resource,
   ResourceWithPresignURL,
   UpdateResourceBody,
-} from './theSpecialStandardAPI.schemas'
+} from "./theSpecialStandardAPI.schemas";
 
-import { customAxios } from './apiClient'
+import { customAxios } from "./apiClient";
 
-export function getResources() {
+export const getResources = () => {
   /**
    * Retrieve all resources from the database
    * @summary Get all resources
@@ -22,10 +22,10 @@ export function getResources() {
   const getResources = (params?: GetResourcesParams) => {
     return customAxios<ResourceWithPresignURL[]>({
       url: `/resources`,
-      method: 'GET',
+      method: "GET",
       params,
-    })
-  }
+    });
+  };
   /**
    * Create a new resource in the database
    * @summary Create a new resource
@@ -33,11 +33,11 @@ export function getResources() {
   const postResources = (createResourceBody: CreateResourceBody) => {
     return customAxios<Resource>({
       url: `/resources`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       data: createResourceBody,
-    })
-  }
+    });
+  };
   /**
    * Retrieve a specific resource by its ID
    * @summary Get resource by ID
@@ -45,9 +45,9 @@ export function getResources() {
   const getResourcesId = (id: string) => {
     return customAxios<ResourceWithPresignURL>({
       url: `/resources/${id}`,
-      method: 'GET',
-    })
-  }
+      method: "GET",
+    });
+  };
   /**
    * Update an existing resource in the database
    * @summary Update a resource
@@ -58,38 +58,38 @@ export function getResources() {
   ) => {
     return customAxios<Resource>({
       url: `/resources/${id}`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       data: updateResourceBody,
-    })
-  }
+    });
+  };
   /**
    * Delete an existing resource from the database
    * @summary Delete a resource
    */
   const deleteResourcesId = (id: string) => {
-    return customAxios<void>({ url: `/resources/${id}`, method: 'DELETE' })
-  }
+    return customAxios<void>({ url: `/resources/${id}`, method: "DELETE" });
+  };
   return {
     getResources,
     postResources,
     getResourcesId,
     patchResourcesId,
     deleteResourcesId,
-  }
-}
+  };
+};
 export type GetResourcesResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getResources>['getResources']>>
->
+  Awaited<ReturnType<ReturnType<typeof getResources>["getResources"]>>
+>;
 export type PostResourcesResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getResources>['postResources']>>
->
+  Awaited<ReturnType<ReturnType<typeof getResources>["postResources"]>>
+>;
 export type GetResourcesIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getResources>['getResourcesId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getResources>["getResourcesId"]>>
+>;
 export type PatchResourcesIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getResources>['patchResourcesId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getResources>["patchResourcesId"]>>
+>;
 export type DeleteResourcesIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getResources>['deleteResourcesId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getResources>["deleteResourcesId"]>>
+>;

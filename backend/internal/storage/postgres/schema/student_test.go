@@ -593,7 +593,7 @@ func TestStudentRepository_AddStudent(t *testing.T) {
 		DOB:         ptrTime(testDOB),
 		TherapistID: therapistID,
 		Grade:       ptrInt(2),
-		IEP:         ptrString("IEP Goals: Fluency and articulation"),
+		IEP:         []string{"IEP Goals: Fluency and articulation"},
 	}
 
 	// Test - get the database-generated student
@@ -659,7 +659,7 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 		DOB:         ptrTime(testDOB),
 		TherapistID: therapistID,
 		Grade:       ptrInt(5),
-		IEP:         ptrString("Updated IEP Goals: Advanced speech therapy"),
+		IEP:         []string{"Updated IEP Goals: Advanced speech therapy"},
 	}
 
 	// Test

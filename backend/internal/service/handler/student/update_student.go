@@ -80,12 +80,9 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 		existingStudent.Grade = req.Grade
 	}
 	if req.IEP != nil {
-		if *req.IEP == "" {
-			// Empty string means set to NULL
-			existingStudent.IEP = nil
-		} else {
-			existingStudent.IEP = req.IEP
-		}
+		// IEP is now []string, so we just assign it directly
+		// Empty array or nil array will be handled by the database
+		existingStudent.IEP = req.IEP
 	}
 
 	// Save updated student - let this call handle "student not found" errors

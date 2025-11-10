@@ -10,11 +10,11 @@ import type {
   GetTherapistsParams,
   Therapist,
   UpdateTherapistInput,
-} from './theSpecialStandardAPI.schemas'
+} from "./theSpecialStandardAPI.schemas";
 
-import { customAxios } from './apiClient'
+import { customAxios } from "./apiClient";
 
-export function getTherapists() {
+export const getTherapists = () => {
   /**
    * Retrieve all therapists from the database
    * @summary Get all therapists
@@ -22,10 +22,10 @@ export function getTherapists() {
   const getTherapists = (params?: GetTherapistsParams) => {
     return customAxios<Therapist[]>({
       url: `/therapists`,
-      method: 'GET',
+      method: "GET",
       params,
-    })
-  }
+    });
+  };
   /**
    * Create a new therapist for school districts
    * @summary Create a new therapist
@@ -33,18 +33,18 @@ export function getTherapists() {
   const postTherapists = (createTherapistInput: CreateTherapistInput) => {
     return customAxios<Therapist>({
       url: `/therapists`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       data: createTherapistInput,
-    })
-  }
+    });
+  };
   /**
    * Retrieve a specific therapist from the database
    * @summary Get therapist by ID
    */
   const getTherapistsId = (id: string) => {
-    return customAxios<Therapist>({ url: `/therapists/${id}`, method: 'GET' })
-  }
+    return customAxios<Therapist>({ url: `/therapists/${id}`, method: "GET" });
+  };
   /**
    * Update a specific field within a therapist object in the database
    * @summary Update therapist
@@ -55,11 +55,11 @@ export function getTherapists() {
   ) => {
     return customAxios<Therapist>({
       url: `/therapists/${id}`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       data: updateTherapistInput,
-    })
-  }
+    });
+  };
   /**
    * Get the specific therapist corresponding to the given ID and delete it
    * @summary Delete therapist
@@ -67,29 +67,29 @@ export function getTherapists() {
   const deleteTherapistsId = (id: string) => {
     return customAxios<DeleteTherapistsId200>({
       url: `/therapists/${id}`,
-      method: 'DELETE',
-    })
-  }
+      method: "DELETE",
+    });
+  };
   return {
     getTherapists,
     postTherapists,
     getTherapistsId,
     patchTherapistsId,
     deleteTherapistsId,
-  }
-}
+  };
+};
 export type GetTherapistsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getTherapists>['getTherapists']>>
->
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["getTherapists"]>>
+>;
 export type PostTherapistsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getTherapists>['postTherapists']>>
->
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["postTherapists"]>>
+>;
 export type GetTherapistsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getTherapists>['getTherapistsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["getTherapistsId"]>>
+>;
 export type PatchTherapistsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getTherapists>['patchTherapistsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["patchTherapistsId"]>>
+>;
 export type DeleteTherapistsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getTherapists>['deleteTherapistsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getTherapists>["deleteTherapistsId"]>>
+>;
