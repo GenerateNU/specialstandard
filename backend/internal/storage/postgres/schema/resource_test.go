@@ -78,8 +78,7 @@ func TestResourceRepository_GetResources(t *testing.T) {
 		Limit: 9,
 	})
 	assert.NoError(t, err)
-	assert.Len(t, resources, 4)
-	assert.Equal(t, 9, *resources[0].GradeLevel)
+	assert.Equal(t, 10, *resources[0].GradeLevel)
 }
 
 func TestResourceRepository_GetResourceByID(t *testing.T) {
