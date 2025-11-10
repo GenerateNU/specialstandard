@@ -39,10 +39,10 @@ func (sr *SessionResourceRepository) DeleteSessionResource(ctx context.Context, 
 func (sr *SessionResourceRepository) GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error) {
     // enforce default pagination cuz it keeps erroring
     if pagination.Limit == 0 {
-    	pagination.Limit = utils.NewPagination().Limit
+    	pagination.Limit = 10
 	}
 	if pagination.Page == 0 {
-    	pagination.Page = utils.NewPagination().Page
+    	pagination.Page = 1
 	}
     resources := make([]models.Resource, 0)
 
