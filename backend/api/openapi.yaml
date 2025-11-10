@@ -2132,6 +2132,164 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /game-contents:
+    get:
+      summary: Get Game Contents
+      description: Get all Game Contents for given category and level with a certain number of words
+      tags: [GameContent]
+      parameters:
+        - name: theme_id
+          in: query
+          description: Theme ID associated with the game's contents
+          schema:
+            type: string
+            format: uuid
+        - name: category
+          in: query
+          description: The category associated with the game
+          schema:
+            type: string
+            enum: [receptive_language, expressive_language, social_pragmatic_language, speech]
+        - name: question_type
+          in: query
+          description: The type of question being asked in the game
+          schema:
+            type: string
+            enum: [sequencing, following_directions, wh_questions, true_false, concepts_sorting, fill_in_the_blank, categorical_language, emotions, teamwork_talk, express_excitement_interest, fluency, articulation_s, articulation_l]
+        - name: difficulty_level
+          in: query
+          description: The difficulty level of the game
+          schema:
+            type: integer
+            minimum: 1
+        - name: question_count
+          in: query
+          description: Refers to the number of questions that should be returned through sampling
+          schema:
+            type: integer
+            minimum: 2
+        - name: words_count
+          in: query
+          description: The number of words that need to be retrieved as correct answer and wrong options
+          schema:
+            type: integer
+            minimum: 2
+      responses:
+        "200":
+          description: The Game Content (corresponding category and level)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/GameContent'
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad Request"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                message: "Internal Server Error"
+
+  /game-results:
+    get:
+      summary: Gets the Game Results
+      description: Gets the Game Results that were asked for..? Filter available by session and student.
+      tags: [GameResult]
+      parameters:
+        - name: session_id
+          in: query
+          description: The SessionID of the session whose game results you seek
+          schema: 
+            type: string
+            format: uuid
+        - name: student_id
+          in: query
+          description: The StudentID of the student whose game results you seek
+          schema: 
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page Number of pagination
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of Items per page in pagination
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: The Game Results you requested
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GameResult'
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad Request"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                message: "Internal Server Error"
+
+    post:
+      summary: Creates a new game result
+      description: Creates a new result entry for a game result
+      tags: [GameResult]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostGameResultInput'
+      responses:
+        "201":
+          description: Game Result created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResult'
+        "400":
+          description: Bad request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   schemas:
     Error:
@@ -3090,3 +3248,168 @@ components:
             type: string
             format: uuid
           description: List of Students this Therapist will not be promoting...
+
+    GameContent:
+      type: object
+      required:
+        - id
+        - theme_id
+        - week
+        - category
+        - question_type
+        - difficulty_level
+        - question
+        - options
+        - answer
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of a Game Content.
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        theme_id:
+          type: string
+          format: uuid
+          description: The UUID of the Theme associated with the game's content
+          example: "123e4567-e89b-12d3-a456-426614174001"
+        week:
+          type: integer
+          minimum: 1
+          description: The Week of the Content in the session
+          example: 2
+        category:
+          type: string
+          enum: [ receptive_language, expressive_language, social_pragmatic_language, speech ]
+          description: The category of the game
+          example: "speech"
+        question_type:
+          type: string
+          enum: [ sequencing, following_directions, wh_questions, true_false, concepts_sorting, fill_in_the_blank, categorical_language, emotions, teamwork_talk, express_excitement_interest, fluency, articulation_s, articulation_l ]
+          description: The type of the question being asked in the game
+          example: "fluency"
+        difficulty_level:
+          type: integer
+          minimum: 1
+          description: The corresponding level of content for this game's content
+          example: 4
+        question:
+          type: string
+          description: The question being asked in the game
+          example: "What type of reptile is Swampy?"
+        options:
+          type: array
+          items:
+            type: string
+          description: The list of wrong-words that are given for the game.
+          example: ["Crocorokodile", "Krookodile", "Koorkodile"]
+        answer:
+          type: string
+          description: The answer to the game.
+          example: "Crocodile"
+        created_at:
+          type: string
+          format: date-time
+          description: When the game-content was created
+          example: "2025-09-13T17:19:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the game-content was last updated
+          example: "2025-09-13T17:19:00Z"
+
+    GameResult:
+      type: object
+      required:
+        - id
+        - session_student_id
+        - content_id
+        - time_taken_sec
+        - completed
+        - count_of_incorrect_attempts
+        - incorrect_attempts
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of the Game Result.
+          example: "123e4567-e89b-12d3-a456-426614174946"
+        session_student_id:
+          type: string
+          format: uuid
+          description: ID of the Student-Session associated with the Game.
+          example: "123e4567-e89b-12d3-a456-426614174946"
+        content_id:
+          type: string
+          format: uuid
+          description: ID of the Content of the Game
+          example: "123e4567-e89b-12d3-a456-426614174cid"
+        time_taken_sec:
+          type: integer
+          description: Number of seconds it takes to complete the game
+          example: 93
+        completed:
+          type: boolean
+          description: Whether or not the game was completed or not
+          example: true
+        count_of_incorrect_attempts:
+          type: integer
+          minimum: 0
+          description: The number of incorrect attempts made during the game
+          example: 1
+        incorrect_attempts:
+          type: array
+          items:
+            type: string
+          description: The actual incorrect answers chosen during the game
+          example: [ "Kroookodiley" ]
+        created_at:
+          type: string
+          format: date-time
+          description: When the game-content was created
+          example: "2025-09-13T17:19:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the game-content was last updated
+          example: "2025-09-13T17:19:00Z"
+
+    PostGameResultInput:
+      type: object
+      required:
+        - session_student_id
+        - content_id
+        - time_taken_sec
+        - count_of_incorrect_attempts
+      properties:
+        session_student_id:
+          type: integer
+          description: Serial-ID of the Session-Student associated with the gameplay
+          example: 2
+        content_id:
+          type: string
+          format: uuid
+          description: ID of the Content of the Game
+          example: "123e4567-e89b-12d3-a456-426614174394"
+        time_taken_sec:
+          type: integer
+          description: Number of seconds it takes to complete the game
+          example: 93
+        completed:
+          type: boolean
+          description: Whether or not the game was completed
+          example: true
+        count_of_incorrect_attempts:
+          type: integer
+          minimum: 0
+          description: The number of incorrect attempts made during the game
+          example: 3
+        incorrect_attempts:
+          type: array
+          items:
+            type: string
+          description: The actual incorrect options selected in the course of the game
+          example: [ "Lijard", "Leopaard", "BARES" ]

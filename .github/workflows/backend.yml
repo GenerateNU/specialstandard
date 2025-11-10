@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.backend == 'true'
-    continue-on-error: true  # Tests won't block PR
+    continue-on-error: false  # Tests block PR
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -51,7 +51,7 @@ jobs:
       - name: Run Tests
         run: |
           cd backend
-          make test-ci || echo "TESTS_FAILED=true" >> $GITHUB_ENV
+          make test-ci
       
       # Generate coverage using Makefile target
       - name: Generate Coverage Report
