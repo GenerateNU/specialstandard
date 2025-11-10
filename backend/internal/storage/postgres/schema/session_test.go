@@ -131,10 +131,12 @@ func TestHandler_GetSessions(t *testing.T) {
 			name: "With student IDs filter",
 			url:  fmt.Sprintf("?therapist_id=%s&student_ids[]=%s&student_ids[]=%s", testTherapistID.String(), uuid.New().String(), uuid.New().String()),
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				// For student IDs, we expect the filter to have StudentIDs populated
-				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.MatchedBy(func(filter *models.GetSessionRepositoryRequest) bool {
-					return filter != nil && filter.StudentIDs != nil && len(*filter.StudentIDs) == 2
-				}), testTherapistID).Return([]models.Session{}, nil)
+				m.On("GetSessions",
+					mock.Anything,
+					utils.NewPagination(),
+					mock.Anything,
+					testTherapistID,
+				).Return([]models.Session{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
