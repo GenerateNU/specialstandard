@@ -6,6 +6,8 @@ import (
 	"specialstandard/internal/errs"
 	"specialstandard/internal/s3_client"
 	"specialstandard/internal/service/handler/auth"
+	"specialstandard/internal/service/handler/game_content"
+	"specialstandard/internal/service/handler/game_result"
 	"specialstandard/internal/service/handler/resource"
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/service/handler/session_resource"
@@ -176,6 +178,17 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Patch("/:id", sessionHandler.PatchSessions)
 		r.Get("/:id/students", sessionHandler.GetSessionStudents)
 		r.Delete("/:id", sessionHandler.DeleteSessions)
+	})
+
+	gameContentHandler := game_content.NewHandler(repo.GameContent)
+	apiV1.Route("/game-contents", func(r fiber.Router) {
+		r.Get("/", gameContentHandler.GetGameContents)
+	})
+
+	gameResultsHandler := game_result.NewHandler(repo.GameResult)
+	apiV1.Route("/game-results", func(r fiber.Router) {
+		r.Get("/", gameResultsHandler.GetGameResults)
+		r.Post("/", gameResultsHandler.PostGameResult)
 	})
 
 	// Handle 404 - Route not found

@@ -71,7 +71,7 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 		repoFilter.StudentIDs = &uuidStudentIDs
 	}
 
-	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination, repoFilter, therapistID)
+	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination, repoFilter)
 	if err != nil {
 		// For all database errors, return internal server error without exposing details
 		slog.Error("Failed to get session", "err", err)
