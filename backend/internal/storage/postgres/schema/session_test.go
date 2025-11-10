@@ -1,466 +1,542 @@
 package schema_test
 
 import (
-	"context"
+	"errors"
 	"fmt"
+	"net/http/httptest"
+	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"specialstandard/internal/utils"
+	"strings"
 	"testing"
 	"time"
 
-	"specialstandard/internal/storage/postgres/schema"
-	"specialstandard/internal/storage/postgres/testutil"
+	"specialstandard/internal/service/handler/session"
+	"specialstandard/internal/storage/mocks"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestSessionRepository_GetSessions(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping database test in short mode")
-	}
-
-	// Setup
-	testDB := testutil.SetupTestWithCleanup(t)
-
-	repo := schema.NewSessionRepository(testDB)
-	ctx := context.Background()
-
-	// Create a test therapist first (required for foreign key)
-	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "John", "Doe", "john.doe@example.com")
-	assert.NoError(t, err)
-
-	// Insert test session data using new schema
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Exec(ctx, `
-        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, startTime, endTime, "Test session")
-	assert.NoError(t, err)
-
-	// Test
-	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
-
-	// Assert
-	assert.NoError(t, err)
-	assert.Len(t, sessions, 1)
-	assert.Equal(t, "Test session", *sessions[0].Notes)
-	assert.Equal(t, therapistID, sessions[0].TherapistID)
-	assert.True(t, sessions[0].EndDateTime.After(sessions[0].StartDateTime))
-
-	// More Tests for Pagination Behaviour
-	for i := 1; i <= 18; i++ {
-		start := startTime.Add(time.Duration(i) * time.Hour)
-		end := start.Add(time.Hour)
-
-		_, err := testDB.Exec(ctx, `
-			INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
-			VALUES ($1, $2, $3, $4)
-       `, therapistID, start, end, fmt.Sprintf("Test session%d", i))
-		assert.NoError(t, err)
-	}
-
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), nil)
-
-	assert.NoError(t, err)
-	assert.Len(t, sessions, 10)
-
-	sessions, err = repo.GetSessions(ctx, utils.Pagination{
-		Page:  4,
-		Limit: 5,
-	}, nil)
-
-	assert.NoError(t, err)
-	assert.Len(t, sessions, 4)
-	assert.Equal(t, "Test session18", *sessions[3].Notes)
-
-	// Test filtering by year
-	yearFilter := &models.GetSessionRepositoryRequest{
-		Year: ptrInt(startTime.Year()),
-	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), yearFilter)
-	assert.NoError(t, err)
-	assert.Equal(t, 10, len(sessions))
-
-	// Test filtering by month and year
-	monthYearFilter := &models.GetSessionRepositoryRequest{
-		Month: ptrInt(int(startTime.Month())),
-		Year:  ptrInt(startTime.Year()),
-	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), monthYearFilter)
-	assert.NoError(t, err)
-	assert.Equal(t, 10, len(sessions))
-
-	// Test filtering by student IDs
-	studentID1 := uuid.New()
-	studentID2 := uuid.New()
-
-	// Insert student associations for one of the sessions
-	sessionWithStudents := sessions[0].ID
-	_, err = testDB.Exec(ctx, `
-		INSERT INTO student (id, first_name, last_name, therapist_id)
-		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)
-	`, studentID1, "Student", "One", therapistID, studentID2, "Student", "Two", therapistID)
-	assert.NoError(t, err)
-
-	_, err = testDB.Exec(ctx, `
-		INSERT INTO session_student (session_id, student_id, present)
-		VALUES ($1, $2, true), ($3, $4, true)
-	`, sessionWithStudents, studentID1, sessionWithStudents, studentID2)
-	assert.NoError(t, err)
-
-	studentFilter := &models.GetSessionRepositoryRequest{
-		StudentIDs: &[]uuid.UUID{studentID1, studentID2},
-	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), studentFilter)
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(sessions))
+func ptrString(s string) *string {
+	return &s
 }
 
-func TestSessionRepository_GetSessionByID(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping database test in short mode")
-	}
-
-	// Setup
-	testDB := testutil.SetupTestWithCleanup(t)
-
-	repo := schema.NewSessionRepository(testDB)
-	ctx := context.Background()
-
-	// Create a test therapist first
-	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "Jane", "Smith", "jane.smith@example.com")
-	assert.NoError(t, err)
-
-	// Insert test session and capture the generated ID
-	sessionID := uuid.New()
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Exec(ctx, `
-        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4, $5)
-    `, sessionID, therapistID, startTime, endTime, "Get by ID test session")
-	assert.NoError(t, err)
-
-	// Test
-	session, err := repo.GetSessionByID(ctx, sessionID.String())
-
-	// Assert
-	assert.NoError(t, err)
-	assert.NotNil(t, session)
-	assert.Equal(t, sessionID, session.ID)
-	assert.Equal(t, therapistID, session.TherapistID)
-	assert.Equal(t, "Get by ID test session", *session.Notes)
-
-	// Test not found
-	nonExistentID := uuid.New()
-	session, err = repo.GetSessionByID(ctx, nonExistentID.String())
-	assert.Error(t, err)
-	assert.Nil(t, session)
+func ptrTime(t time.Time) *time.Time {
+	return &t
 }
 
-func TestSessionRepository_DeleteSessions(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping DB tests in short mode")
-	}
-
-	testDB := testutil.SetupTestWithCleanup(t)
-
-	repo := schema.NewSessionRepository(testDB)
-	ctx := context.Background()
-
-	// SUCCESS TEST - Creation of valid Therapist first.
-	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-             VALUES ($1, $2, $3, $4)`,
-		therapistID, "Doctor", "Suess", "dr.guesswho.suess@drdr.com")
-	assert.NoError(t, err)
-
-	// Inserting test session into the DB.
-	sessionID := uuid.New()
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-             VALUES ($1, $2, $3, $4, $5)`,
-		sessionID, therapistID, startTime, endTime, "Inserting into session for test")
-	assert.NoError(t, err)
-
-	err = repo.DeleteSession(ctx, sessionID)
-	assert.NoError(t, err)
-}
-
-func TestSessionRepository_PostSessions(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping DB tests in short mode")
-	}
-
-	testDB := testutil.SetupTestWithCleanup(t)
-
-	repo := schema.NewSessionRepository(testDB)
-	ctx := context.Background()
-
-	therapistID := uuid.New()
-	startTime := time.Now()
-	endTime := time.Now().Add(time.Hour)
-	notes := ptrString("foreign key violation")
-	postSession := &models.PostSessionInput{
-		StartTime:   startTime,
-		EndTime:     endTime,
-		TherapistID: therapistID,
-		Notes:       notes,
-	}
-	db := repo.GetDB()
-	postedSession, err := repo.PostSession(ctx, db, postSession)
-	assert.Error(t, err)
-	assert.Nil(t, postedSession)
-
-	// INSERTING VALID THERAPIST
-	therapistID = uuid.New()
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-        	 VALUES ($1, $2, $3, $4)`,
-		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
-	assert.NoError(t, err)
-
-	startTime = time.Now()
-	endTime = time.Now().Add(-time.Hour)
-	notes = ptrString("check constraint violation")
-	postSession = &models.PostSessionInput{
-		StartTime:   startTime,
-		EndTime:     endTime,
-		TherapistID: therapistID,
-		Notes:       notes,
-	}
-	postedSession, err = repo.PostSession(ctx, db, postSession)
-	assert.Error(t, err)
-	assert.Nil(t, postedSession)
-	assert.False(t, endTime.After(startTime))
-
-	startTime = time.Now()
-	endTime = time.Now().Add(time.Hour)
-	notes = ptrString("success")
-	postSession = &models.PostSessionInput{
-		StartTime:   startTime,
-		EndTime:     endTime,
-		TherapistID: therapistID,
-		Notes:       notes,
-	}
-	postedSessions, err := repo.PostSession(ctx, db, postSession)
-	assert.NoError(t, err)
-	assert.NotNil(t, postedSessions)
-	for _, postedSession := range *postedSessions {
-		assert.Equal(t, postedSession.TherapistID, therapistID)
-		assert.Equal(t, postedSession.Notes, notes)
-		assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
-	}
-
-	recurEnd := startTime.AddDate(0, 0, 20) // 3 weeks later
-	postSession = &models.PostSessionInput{
-		StartTime:   startTime,
-		EndTime:     endTime,
-		TherapistID: therapistID,
-		Notes:       ptrString("recurring sessions"),
-		Repetition: &models.Repetition{
-			EveryNWeeks: 1,
-			RecurEnd:    recurEnd,
+func TestHandler_GetSessions(t *testing.T) {
+	// Generate a test therapist ID to use across tests
+	testTherapistID := uuid.New()
+	
+	tests := []struct {
+		name           string
+		url            string
+		mockSetup      func(*mocks.MockSessionRepository)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			name: "successful get sessions with default pagination",
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				sessions := []models.Session{
+					{
+						ID:            uuid.New(),
+						TherapistID:   testTherapistID,
+						StartDateTime: time.Now(),
+						EndDateTime:   time.Now().Add(time.Hour),
+						Notes:         ptrString("Test session"),
+						CreatedAt:     ptrTime(time.Now()),
+						UpdatedAt:     ptrTime(time.Now()),
+					},
+				}
+				// Updated to include filter (nil) and therapistID parameters
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(sessions, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "repository error",
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(nil, errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+		// ------- Pagination Cases -------
+		{
+			name:           "Missing therapist ID",
+			url:            "?page=1&limit=10",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid therapist ID format",
+			url:            "?therapist_id=invalid-uuid",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Violating Pagination Arguments Constraints",
+			url:            fmt.Sprintf("?therapist_id=%s&page=0&limit=-1", testTherapistID.String()),
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Bad Pagination Arguments",
+			url:            fmt.Sprintf("?therapist_id=%s&page=abc&limit=-1", testTherapistID.String()),
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			wantErr:        true,
+		},
+		{
+			name: "Pagination Parameters",
+			url:  fmt.Sprintf("?therapist_id=%s&page=2&limit=5", testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				pagination := utils.Pagination{
+					Page:  2,
+					Limit: 5,
+				}
+				m.On("GetSessions", mock.Anything, pagination, (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "With date filters",
+			url:  fmt.Sprintf("?therapist_id=%s&month=11&year=2024", testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				month := 11
+				year := 2024
+				filter := &models.GetSessionRepositoryRequest{
+					Month: &month,
+					Year:  &year,
+				}
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), filter, testTherapistID).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "With student IDs filter",
+			url:  fmt.Sprintf("?therapist_id=%s&student_ids[]=%s&student_ids[]=%s", testTherapistID.String(), uuid.New().String(), uuid.New().String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				// For student IDs, we expect the filter to have StudentIDs populated
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.MatchedBy(func(filter *models.GetSessionRepositoryRequest) bool {
+					return filter != nil && filter.StudentIDs != nil && len(*filter.StudentIDs) == 2
+				}), testTherapistID).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
 		},
 	}
 
-	repeatedSessions, err := repo.PostSession(ctx, db, postSession)
-	assert.NoError(t, err)
-	assert.NotNil(t, repeatedSessions)
-	assert.Equal(t, len(*repeatedSessions), 3)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockSessionRepository)
+			tt.mockSetup(mockRepo)
 
-	for _, s := range *repeatedSessions {
-		assert.Equal(t, s.TherapistID, therapistID)
-		assert.Contains(t, *s.Notes, "recurring")
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
+			app.Get("/sessions", handler.GetSessions)
+
+			req := httptest.NewRequest("GET", "/sessions"+tt.url, nil)
+			resp, _ := app.Test(req, -1)
+
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
 	}
+}
 
-	postSession = &models.PostSessionInput{
-		StartTime:   startTime,
-		EndTime:     endTime,
-		TherapistID: therapistID,
-		Notes:       ptrString("invalid repetition end"),
-		Repetition: &models.Repetition{
-			EveryNWeeks: 1,
-			RecurStart:  startTime,
-			RecurEnd:    startTime.AddDate(0, 0, -7), // 1 week before start
+func TestHandler_DeleteSessions(t *testing.T) {
+	tests := []struct {
+		id             uuid.UUID
+		name           string
+		mockSetup      func(*mocks.MockSessionRepository, uuid.UUID)
+		expectedStatus int
+		wantErr        bool
+	}{
+		{
+			id:   uuid.New(),
+			name: "Successful Delete Session",
+			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
+				m.On("DeleteSession", mock.Anything, id).Return(nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			id:   uuid.New(),
+			name: "internal server error",
+			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
+				m.On("DeleteSession", mock.Anything, id).Return(errors.New("database error"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
 		},
 	}
 
-	invalidRepeatSessions, err := repo.PostSession(ctx, db, postSession)
-	assert.Error(t, err)
-	assert.Nil(t, invalidRepeatSessions)
+	t.Run("Bad UUID Request", func(t *testing.T) {
+		app := fiber.New(fiber.Config{
+			ErrorHandler: errs.ErrorHandler,
+		})
+		mockRepo := new(mocks.MockSessionRepository)
+		mockRepoSSR := new(mocks.MockSessionStudentRepository)
+
+		handler := session.NewHandler(mockRepo, mockRepoSSR)
+		app.Delete("/sessions/:id", handler.DeleteSessions)
+
+		req := httptest.NewRequest("DELETE", "/sessions/1234", nil)
+		res, _ := app.Test(req, -1)
+
+		assert.Equal(t, fiber.StatusBadRequest, res.StatusCode)
+		mockRepo.AssertExpectations(t)
+	})
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockSessionRepository)
+			tt.mockSetup(mockRepo, tt.id)
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
+
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
+			app.Delete("/sessions/:id", handler.DeleteSessions)
+
+			req := httptest.NewRequest("DELETE", fmt.Sprintf("/sessions/%s", tt.id.String()), nil)
+			res, _ := app.Test(req, -1)
+
+			assert.Equal(t, tt.expectedStatus, res.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
 }
 
-func TestSessionRepository_PatchSessions(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping DB Tests in short mode")
+func TestHandler_PostSessions(t *testing.T) {
+	testTherapistID := uuid.New()
+	
+	tests := []struct {
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockSessionRepository, *mocks.MockSessionStudentRepository)
+		expectedStatusCode int
+	}{
+		{
+			name: "Missing Items, Invalid JSON",
+			payload: `{
+				"start_datetime": "2025-09-14T10:00:00Z",
+				"end_datetime": "2025-09-14T11:00:00Z"
+			}`,
+			mockSetup:          func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Empty Values that are Required",
+			payload: `{
+				"start_datetime": "",
+				"end_datetime": "",
+				"therapist_id": "00000000-0000-0000-0000-000000000000",
+				"notes": ""
+			}`,
+			mockSetup:          func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			name: "Foreign Key Violation: Therapist ID doesn't exist",
+			payload: fmt.Sprintf(`{
+				"start_datetime": "2025-09-14T10:00:00Z",
+				"end_datetime": "2025-09-14T11:00:00Z",
+				"therapist_id": "%s",
+				"notes": "Test FK"
+			}`, uuid.New().String()),
+			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
+				m.On("PostSession", mock.Anything, mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).
+					Return(nil, errors.New("foreign key violation"))
+				m.On("GetDB").Return(nil)
+			},
+			expectedStatusCode: fiber.StatusInternalServerError,
+		},
+		{
+			name: "Start time and end time (check constraint violation)",
+			payload: fmt.Sprintf(`{
+				"start_datetime": "2025-09-14T11:00:00Z",
+				"end_datetime": "2025-09-14T10:00:00Z",
+				"therapist_id": "%s",
+				"notes": "Check violation"
+			}`, testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
+				m.On("PostSession", mock.Anything, mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).
+					Return(nil, errors.New("check constraint violation"))
+				m.On("GetDB").Return(nil)
+			},
+			expectedStatusCode: fiber.StatusInternalServerError,
+		},
+		{
+			name: "Success!",
+			payload: fmt.Sprintf(`{
+				"start_datetime": "2025-09-14T10:00:00Z",
+				"end_datetime": "2025-09-14T11:00:00Z",
+				"therapist_id": "%s",
+				"notes": "Test Session"
+			}`, testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
+				sessions := []models.Session{
+					{
+						ID:            uuid.New(),
+						TherapistID:   testTherapistID,
+						StartDateTime: time.Now(),
+						EndDateTime:   time.Now().Add(time.Hour),
+						Notes:         ptrString("Test Session"),
+						CreatedAt:     ptrTime(time.Now()),
+						UpdatedAt:     ptrTime(time.Now()),
+					},
+				}
+				m.On("PostSession", mock.Anything, mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).
+					Return(&sessions, nil)
+				m.On("GetDB").Return(nil)
+			},
+			expectedStatusCode: fiber.StatusCreated,
+		},
+		{
+			name: "Database Connection Refused",
+			payload: fmt.Sprintf(`{
+				"start_datetime": "2025-09-14T10:00:00Z",
+				"end_datetime": "2025-09-14T11:00:00Z",
+				"therapist_id": "%s",
+				"notes": "DB connection test"
+			}`, testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
+				m.On("PostSession", mock.Anything, mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).
+					Return(nil, errors.New("connection refused"))
+				m.On("GetDB").Return(nil)
+			},
+			expectedStatusCode: fiber.StatusInternalServerError,
+		},
 	}
 
-	testDB := testutil.SetupTestWithCleanup(t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockSessionRepository)
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
+			tt.mockSetup(mockRepo, mockRepoSSR)
 
-	repo := schema.NewSessionRepository(testDB)
-	ctx := context.Background()
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
+			app.Post("/sessions", handler.PostSessions)
 
-	// Given ID Not Found 404 Error
-	badID := uuid.New()
-	patch := &models.PatchSessionInput{
-		Notes: ptrString("404 NOT FOUND ERROR"),
+			req := httptest.NewRequest("POST", "/sessions", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+
+			res, _ := app.Test(req, -1)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
 	}
-	patchedSession, err := repo.PatchSession(ctx, badID, patch)
-	assert.Error(t, err)
-	assert.Nil(t, patchedSession)
-
-	// Foreign Key Violation
-	id := uuid.New()
-	therapistID := uuid.New()
-	patch = &models.PatchSessionInput{
-		TherapistID: &therapistID,
-	}
-	patchedSession, err = repo.PatchSession(ctx, id, patch)
-	assert.Error(t, err)
-	assert.Nil(t, patchedSession)
-
-	// INSERTING THERAPIST NOW
-	therapistID = uuid.New()
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-             VALUES ($1, $2, $3, $4)`,
-		therapistID, "Doc", "The Dwarf", "doc@sevendwarves.com")
-	assert.NoError(t, err)
-
-	startTime := time.Now()
-	endTime := time.Now().Add(-time.Hour)
-	notes := ptrString("check constraint violation")
-	patch = &models.PatchSessionInput{
-		StartTime: &startTime,
-		EndTime:   &endTime,
-		Notes:     notes,
-	}
-	patchedSession, err = repo.PatchSession(ctx, id, patch)
-	assert.Error(t, err)
-	assert.Nil(t, patchedSession)
-	assert.False(t, endTime.After(startTime))
-
-	// INSERT ACTUAL SESSION TO EDIT
-	id = uuid.New()
-	startTime = time.Now()
-	endTime = time.Now().Add(time.Hour)
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-             VALUES ($1, $2, $3, $4, $5)`,
-		id, therapistID, startTime, endTime, "Inserted")
-	assert.NoError(t, err)
-
-	notes = ptrString("success with one change")
-	patch = &models.PatchSessionInput{
-		Notes: notes,
-	}
-	patchedSession, err = repo.PatchSession(ctx, id, patch)
-	assert.NoError(t, err)
-	assert.NotNil(t, patchedSession)
-	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
-	assert.Equal(t, patchedSession.TherapistID, therapistID)
-	assert.Equal(t, patchedSession.Notes, notes)
-
-	startTime = time.Now()
-	endTime = time.Now().Add(time.Hour)
-	patch = &models.PatchSessionInput{
-		StartTime: &startTime,
-		EndTime:   &endTime,
-	}
-	patchedSession, err = repo.PatchSession(ctx, id, patch)
-	assert.NoError(t, err)
-	assert.NotNil(t, patchedSession)
-	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
-	assert.Equal(t, patchedSession.TherapistID, therapistID)
-	assert.Equal(t, patchedSession.Notes, notes)
-
-	// ADDING A SECOND THERAPIST TO UPDATE TO
-	therapistID = uuid.New()
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-             VALUES ($1, $2, $3, $4)`,
-		therapistID, "Courage", "The Cowardly Dog", "havecourage@cowardice.com")
-	assert.NoError(t, err)
-
-	startTime = time.Now()
-	endTime = time.Now().Add(time.Hour)
-	notes = ptrString("New Note")
-	patch = &models.PatchSessionInput{
-		StartTime:   &startTime,
-		EndTime:     &endTime,
-		TherapistID: &therapistID,
-		Notes:       notes,
-	}
-	patchedSession, err = repo.PatchSession(ctx, id, patch)
-	assert.NoError(t, err)
-	assert.NotNil(t, patchedSession)
-	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
-	assert.Equal(t, patchedSession.TherapistID, therapistID)
-	assert.Equal(t, patchedSession.Notes, notes)
 }
 
-func TestGetSessionStudents(t *testing.T) {
-	// Setup
-	testDB := testutil.SetupTestWithCleanup(t)
+func TestHandler_PatchSessions(t *testing.T) {
+	tests := []struct {
+		id                 uuid.UUID
+		name               string
+		payload            string
+		mockSetup          func(*mocks.MockSessionRepository, uuid.UUID)
+		expectedStatusCode int
+	}{
+		{
+			id:                 uuid.New(),
+			name:               "Parsing PatchInputSession Error",
+			payload:            `{"notes": "Missing quote}`,
+			mockSetup:          func(m *mocks.MockSessionRepository, id uuid.UUID) {},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			id:      uuid.New(),
+			name:    "Given ID not found",
+			payload: `{"notes": "Trying to update non-existent"}`,
+			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
+				patch := &models.PatchSessionInput{
+					Notes: ptrString("Trying to update non-existent"),
+				}
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, pgx.ErrNoRows)
+			},
+			expectedStatusCode: fiber.StatusNotFound,
+		},
+		{
+			id:      uuid.New(),
+			name:    "foreign key violation - therapist doesn't exist",
+			payload: `{"therapist_id": "00000000-0000-0000-0000-000000000999"}`,
+			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
+				therapistID := uuid.MustParse("00000000-0000-0000-0000-000000000999")
+				patch := &models.PatchSessionInput{
+					TherapistID: &therapistID,
+				}
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, errors.New("foreign key"))
+			},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			id:      uuid.New(),
+			name:    "check constraint violation",
+			payload: `{"start_datetime": "2025-09-14T14:00:00Z", "end_datetime": "2025-09-14T12:00:00Z"}`,
+			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
+				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T14:00:00Z")
+				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T12:00:00Z")
+				patch := &models.PatchSessionInput{
+					StartTime: &startTime,
+					EndTime:   &endTime,
+				}
+				m.On("PatchSession", mock.Anything, id, patch).Return(nil, errors.New("check constraint"))
+			},
+			expectedStatusCode: fiber.StatusBadRequest,
+		},
+		{
+			id:      uuid.New(),
+			name:    "Successfully changed 1 field",
+			payload: `{"notes": "The child seeks to be seen more than they wish to be heard"}`,
+			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
+				notes := ptrString("The child seeks to be seen more than they wish to be heard")
+				createdAt := time.Now().Add(-24 * time.Hour)
+				now := time.Now()
 
-	repo := schema.NewSessionRepository(testDB)
-	ctx := context.Background()
+				patch := &models.PatchSessionInput{
+					Notes: notes,
+				}
 
-	// Create a test therapist first (required for foreign key)
-	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "John", "Doe", "john.doe@example.com")
-	assert.NoError(t, err)
+				patchedSession := &models.Session{
+					ID:            id,
+					StartDateTime: time.Now(),
+					EndDateTime:   time.Now().Add(time.Hour),
+					TherapistID:   uuid.New(),
+					Notes:         notes,
+					CreatedAt:     &createdAt,
+					UpdatedAt:     &now,
+				}
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			id:      uuid.New(),
+			name:    "Successfully changed multiple fields",
+			payload: `{"start_datetime": "2025-09-14T12:00:00Z", "end_datetime": "2025-09-14T13:00:00Z"}`,
+			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
+				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T12:00:00Z")
+				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T13:00:00Z")
+				createdAt := time.Now().Add(-24 * time.Hour)
+				now := time.Now()
 
-	// Insert test session data using new schema
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Exec(ctx, `
-        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, startTime, endTime, "Test session")
-	assert.NoError(t, err)
+				patch := &models.PatchSessionInput{
+					StartTime: &startTime,
+					EndTime:   &endTime,
+				}
 
-	// Test filtering by student IDs
-	studentID1 := uuid.New()
-	studentID3 := uuid.New() // graduated
+				patchedSession := &models.Session{
+					ID:            id,
+					StartDateTime: startTime,
+					EndDateTime:   endTime,
+					TherapistID:   uuid.New(),
+					Notes:         ptrString("Rescheduled for convenience"),
+					CreatedAt:     &createdAt,
+					UpdatedAt:     &now,
+				}
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+		{
+			id:   uuid.New(),
+			name: "Successfully changed all patchable fields",
+			payload: `{
+				"start_datetime": "2025-09-14T12:00:00Z", 
+				"end_datetime": "2025-09-14T13:00:00Z", 
+				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d", 
+				"notes": "Starting Over"
+			}`,
+			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
+				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T12:00:00Z")
+				endTime, _ := time.Parse(time.RFC3339, "2025-09-14T13:00:00Z")
+				therapistID := uuid.MustParse("28eedfdc-81e1-44e5-a42c-022dc4c3b64d")
+				notes := ptrString("Starting Over")
+				createdAt := time.Now().Add(-24 * time.Hour)
+				now := time.Now()
 
-	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
-	assert.NoError(t, err)
-	assert.Len(t, sessions, 1)
+				patch := &models.PatchSessionInput{
+					StartTime:   &startTime,
+					EndTime:     &endTime,
+					TherapistID: &therapistID,
+					Notes:       notes,
+				}
 
-	// Insert student associations for one of the sessions
-	sessionWithStudents := sessions[0].ID
-	_, err = testDB.Exec(ctx, `
-		INSERT INTO student (id, first_name, last_name, therapist_id, grade)
-		VALUES ($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10)
-	`, studentID1, "Student", "One", therapistID, 3, studentID3, "Student", "Three", therapistID, -1)
-	assert.NoError(t, err)
+				patchedSession := &models.Session{
+					ID:            id,
+					StartDateTime: startTime,
+					EndDateTime:   endTime,
+					TherapistID:   therapistID,
+					Notes:         notes,
+					CreatedAt:     &createdAt,
+					UpdatedAt:     &now,
+				}
+				m.On("PatchSession", mock.Anything, id, patch).Return(patchedSession, nil)
+			},
+			expectedStatusCode: fiber.StatusOK,
+		},
+	}
 
-	_, err = testDB.Exec(ctx, `
-		INSERT INTO session_student (session_id, student_id, present)
-		VALUES ($1, $2, true), ($3, $4, true)
-	`, sessionWithStudents, studentID1, sessionWithStudents, studentID3)
-	assert.NoError(t, err)
+	t.Run("Bad UUID Request", func(t *testing.T) {
+		app := fiber.New(fiber.Config{
+			ErrorHandler: errs.ErrorHandler,
+		})
+		mockRepo := new(mocks.MockSessionRepository)
+		mockRepoSSR := new(mocks.MockSessionStudentRepository)
 
-	students, err := repo.GetSessionStudents(ctx, sessionWithStudents, utils.NewPagination())
+		handler := session.NewHandler(mockRepo, mockRepoSSR)
+		app.Patch("/sessions/:id", handler.PatchSessions)
 
-	assert.NoError(t, err)
-	assert.Len(t, students, 1) // returns the one student that has not graduated.
+		req := httptest.NewRequest("PATCH", "/sessions/0345", nil)
+		req.Header.Set("Content-Type", "application/json")
+		res, _ := app.Test(req, -1)
+
+		assert.Equal(t, fiber.StatusBadRequest, res.StatusCode)
+		mockRepo.AssertExpectations(t)
+	})
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockSessionRepository)
+			tt.mockSetup(mockRepo, tt.id)
+
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
+			app.Patch("/sessions/:id", handler.PatchSessions)
+
+			req := httptest.NewRequest("PATCH", "/sessions/"+tt.id.String(), strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+
+			res, _ := app.Test(req, -1)
+			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
 }

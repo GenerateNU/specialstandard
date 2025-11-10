@@ -14,10 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrString(s string) *string {
-	return &s
-}
-
 func ptrInt(i int) *int {
 	return &i
 }

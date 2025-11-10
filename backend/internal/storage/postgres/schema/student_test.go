@@ -15,10 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrTime(t time.Time) *time.Time {
-	return &t
-}
-
 func PtrInt(i int) *int { return &i }
 
 func TestStudentRepository_GetStudents(t *testing.T) {
