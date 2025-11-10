@@ -477,7 +477,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		"dob": "2010-05-15",
 		"therapist_id": "%s",
 		"grade": 5,
-		"iep": "Active IEP with speech therapy goals"
+		"iep": ["Active IEP with speech therapy goals"]
 	}`, testTherapistID.String())
 
 	req := httptest.NewRequest("POST", "/api/v1/students", strings.NewReader(body))
@@ -531,7 +531,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 
 	body := `{
 		"grade": 5,
-		"iep": "Updated IEP with math accommodations"
+		"iep": ["Updated IEP with math accommodations"]
 	}`
 
 	req := httptest.NewRequest("PATCH", "/api/v1/students/"+studentID.String(), strings.NewReader(body))
