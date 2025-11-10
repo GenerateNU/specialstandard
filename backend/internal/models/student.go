@@ -29,7 +29,7 @@ type CreateStudentInput struct {
 	TherapistID string  `json:"therapist_id" validate:"required,uuid"`
 	Grade       *int    `json:"grade,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	IEP         *string `json:"iep,omitempty"`
-	SchoolID    int     `json:"school_id" validate:"required"`
+	SchoolID    int     `json:"school_id" validate:"required,min=1"`
 }
 
 type GetStudentsQuery struct {
