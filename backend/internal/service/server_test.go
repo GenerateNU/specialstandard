@@ -1016,14 +1016,19 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 	// Setup
 	mockTherapistRepo := new(mocks.MockTherapistRepository)
 
-	mockTherapistRepo.On("CreateTherapist", mock.Anything).Return(&models.Therapist{
-		ID:        uuid.New(),
-		FirstName: "Kevin",
-		LastName:  "Matula",
-		Email:     "matulakevin91@gmail.com",
-		Active:    true,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	therapistID := uuid.New()
+	districtID := 1
+
+	mockTherapistRepo.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(&models.Therapist{
+		ID:         therapistID,
+		FirstName:  "Kevin",
+		LastName:   "Matula",
+		Email:      "matulakevin91@gmail.com",
+		Schools:    []int{1, 2},
+		DistrictID: &districtID,
+		Active:     true,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -1038,8 +1043,10 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 		"id": "%s",
 		"first_name": "Kevin",
 		"last_name": "Matula",
-		"email": "matulakevin91@gmail.com"
-	}`, uuid.New())
+		"email": "matulakevin91@gmail.com",
+		"schools": [1, 2],
+		"district_id": 1
+	}`, therapistID)
 
 	req := httptest.NewRequest("POST", "/api/v1/therapists", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
