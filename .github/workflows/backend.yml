@@ -51,7 +51,7 @@ jobs:
       - name: Run Tests
         run: |
           cd backend
-          make test-ci || echo "TESTS_FAILED=true" >> $GITHUB_ENV
+          make test-ci
       
       # Generate coverage using Makefile target
       - name: Generate Coverage Report
