@@ -445,14 +445,20 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 func TestCreateStudentEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
+
+	studentID := uuid.New()
+	therapistID := uuid.New()
+	schoolID := 1
+
 	mockStudentRepo.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
-		ID:          uuid.New(),
+		ID:          studentID,
 		FirstName:   "John",
 		LastName:    "Doe",
+		DOB:         ptrTime(time.Date(2010, 1, 1, 0, 0, 0, 0, time.UTC)),
+		TherapistID: therapistID,
+		SchoolID:    schoolID,
 		Grade:       ptrInt(5),
-		TherapistID: uuid.New(),
-		DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
-		IEP:         ptrString("Active IEP with speech therapy goals"),
+		IEP:         ptrString("Test IEP"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -465,16 +471,15 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		TestMode: true,
 	}, repo, &s3_client.Client{})
 
-	testTherapistID := uuid.New()
-
 	body := fmt.Sprintf(`{
 		"first_name": "John",
 		"last_name": "Doe",
-		"dob": "2010-05-15",
+		"dob": "2010-01-01",
 		"therapist_id": "%s",
+		"school_id": %d,
 		"grade": 5,
-		"iep": "Active IEP with speech therapy goals"
-	}`, testTherapistID.String())
+		"iep": "Test IEP"
+	}`, therapistID, schoolID)
 
 	req := httptest.NewRequest("POST", "/api/v1/students", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -2093,7 +2098,7 @@ func TestHandler_Signup(t *testing.T) {
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
-				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(therapist, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 			wantErr:            false,

@@ -135,7 +135,7 @@ func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models
 	query := `
         INSERT INTO therapist (id, first_name, last_name, schools, district_id, email)
         VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, first_name, last_name, email, active, created_at, updated_At`
+        RETURNING id, first_name, last_name, schools, district_id, email, active, created_at, updated_At`
 
 	row := r.db.QueryRow(ctx, query, input.ID, input.FirstName, input.LastName, input.Schools, input.DistrictID, input.Email)
 
@@ -144,6 +144,8 @@ func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models
 		&therapist.ID,
 		&therapist.FirstName,
 		&therapist.LastName,
+		&therapist.Schools,
+		&therapist.DistrictID,
 		&therapist.Email,
 		&therapist.Active,
 		&therapist.CreatedAt,

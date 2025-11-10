@@ -56,7 +56,7 @@ func TestHandler_SignUp(t *testing.T) {
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
-				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(therapist, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 			wantErr:            false,

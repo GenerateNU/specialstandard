@@ -12,8 +12,68 @@ import (
 	"specialstandard/internal/storage/postgres/testutil"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 )
+
+// CreateSessionTestTherapist creates a therapist with all required fields for session tests
+func CreateSessionTestTherapist(t *testing.T, db *pgxpool.Pool, ctx context.Context, name string) uuid.UUID {
+	// Ensure district and school exist
+	districtID := 1
+	_, err := db.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES ($1, $2, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, districtID, "Test District")
+	assert.NoError(t, err)
+
+	schoolID := 1
+	_, err = db.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES ($1, $2, $3, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, schoolID, "Test School", districtID)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	email := fmt.Sprintf("%s_%s@example.com", name, therapistID.String()[:8])
+	_, err = db.Exec(ctx, `
+		INSERT INTO therapist (id, first_name, last_name, email, schools, district_id, active, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+	`, therapistID, name, "Therapist", email, []int{schoolID}, districtID, true)
+	assert.NoError(t, err)
+
+	return therapistID
+}
+
+// CreateSessionTestStudent creates a student for session tests
+func CreateSessionTestStudent(t *testing.T, db *pgxpool.Pool, ctx context.Context, therapistID uuid.UUID, name string, grade int) uuid.UUID {
+	// Ensure school exists for student
+	districtID := 1
+	_, err := db.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES ($1, $2, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, districtID, "Test District")
+	assert.NoError(t, err)
+
+	schoolID := 1
+	_, err = db.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES ($1, $2, $3, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, schoolID, "Test School", districtID)
+	assert.NoError(t, err)
+
+	studentID := uuid.New()
+	_, err = db.Exec(ctx, `
+		INSERT INTO student (id, first_name, last_name, therapist_id, school_id, grade, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+	`, studentID, name, "Student", therapistID, schoolID, grade)
+	assert.NoError(t, err)
+
+	return studentID
+}
 
 func TestSessionRepository_GetSessions(t *testing.T) {
 	if testing.Short() {
@@ -22,24 +82,18 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 
 	// Setup
 	testDB := testutil.SetupTestWithCleanup(t)
-
 	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
-	// Create a test therapist first (required for foreign key)
-	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "John", "Doe", "john.doe@example.com")
-	assert.NoError(t, err)
+	// Create a test therapist using helper
+	therapistID := CreateSessionTestTherapist(t, testDB, ctx, "John")
 
 	// Insert test session data using new schema
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Exec(ctx, `
-        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4)
+	_, err := testDB.Exec(ctx, `
+        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
     `, therapistID, startTime, endTime, "Test session")
 	assert.NoError(t, err)
 
@@ -59,8 +113,8 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 		end := start.Add(time.Hour)
 
 		_, err := testDB.Exec(ctx, `
-			INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
-			VALUES ($1, $2, $3, $4)
+			INSERT INTO session (therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, NOW(), NOW())
        `, therapistID, start, end, fmt.Sprintf("Test session%d", i))
 		assert.NoError(t, err)
 	}
@@ -97,20 +151,14 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.Equal(t, 10, len(sessions))
 
 	// Test filtering by student IDs
-	studentID1 := uuid.New()
-	studentID2 := uuid.New()
+	studentID1 := CreateSessionTestStudent(t, testDB, ctx, therapistID, "Student1", 5)
+	studentID2 := CreateSessionTestStudent(t, testDB, ctx, therapistID, "Student2", 5)
 
 	// Insert student associations for one of the sessions
 	sessionWithStudents := sessions[0].ID
 	_, err = testDB.Exec(ctx, `
-		INSERT INTO student (id, first_name, last_name, therapist_id)
-		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)
-	`, studentID1, "Student", "One", therapistID, studentID2, "Student", "Two", therapistID)
-	assert.NoError(t, err)
-
-	_, err = testDB.Exec(ctx, `
-		INSERT INTO session_student (session_id, student_id, present)
-		VALUES ($1, $2, true), ($3, $4, true)
+		INSERT INTO session_student (session_id, student_id, present, created_at, updated_at)
+		VALUES ($1, $2, true, NOW(), NOW()), ($3, $4, true, NOW(), NOW())
 	`, sessionWithStudents, studentID1, sessionWithStudents, studentID2)
 	assert.NoError(t, err)
 
@@ -129,25 +177,19 @@ func TestSessionRepository_GetSessionByID(t *testing.T) {
 
 	// Setup
 	testDB := testutil.SetupTestWithCleanup(t)
-
 	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
-	// Create a test therapist first
-	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "Jane", "Smith", "jane.smith@example.com")
-	assert.NoError(t, err)
+	// Create a test therapist using helper
+	therapistID := CreateSessionTestTherapist(t, testDB, ctx, "Jane")
 
 	// Insert test session and capture the generated ID
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Exec(ctx, `
-        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4, $5)
+	_, err := testDB.Exec(ctx, `
+        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
     `, sessionID, therapistID, startTime, endTime, "Get by ID test session")
 	assert.NoError(t, err)
 
@@ -174,25 +216,19 @@ func TestSessionRepository_DeleteSessions(t *testing.T) {
 	}
 
 	testDB := testutil.SetupTestWithCleanup(t)
-
 	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
-	// SUCCESS TEST - Creation of valid Therapist first.
-	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-             VALUES ($1, $2, $3, $4)`,
-		therapistID, "Doctor", "Suess", "dr.guesswho.suess@drdr.com")
-	assert.NoError(t, err)
+	// Create valid therapist using helper
+	therapistID := CreateSessionTestTherapist(t, testDB, ctx, "Doctor")
 
-	// Inserting test session into the DB.
+	// Inserting test session into the DB
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-             VALUES ($1, $2, $3, $4, $5)`,
+	_, err := testDB.Exec(ctx,
+		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
 		sessionID, therapistID, startTime, endTime, "Inserting into session for test")
 	assert.NoError(t, err)
 
@@ -206,10 +242,10 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	}
 
 	testDB := testutil.SetupTestWithCleanup(t)
-
 	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
+	// Test foreign key violation with non-existent therapist
 	therapistID := uuid.New()
 	startTime := time.Now()
 	endTime := time.Now().Add(time.Hour)
@@ -225,14 +261,10 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, postedSession)
 
-	// INSERTING VALID THERAPIST
-	therapistID = uuid.New()
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-        	 VALUES ($1, $2, $3, $4)`,
-		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
-	assert.NoError(t, err)
+	// Create valid therapist using helper
+	therapistID = CreateSessionTestTherapist(t, testDB, ctx, "Speech")
 
+	// Test check constraint violation
 	startTime = time.Now()
 	endTime = time.Now().Add(-time.Hour)
 	notes = ptrString("check constraint violation")
@@ -247,6 +279,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	assert.Nil(t, postedSession)
 	assert.False(t, endTime.After(startTime))
 
+	// Test successful session creation
 	startTime = time.Now()
 	endTime = time.Now().Add(time.Hour)
 	notes = ptrString("success")
@@ -265,6 +298,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		assert.True(t, postedSession.EndDateTime.After(postedSession.StartDateTime))
 	}
 
+	// Test recurring sessions
 	recurEnd := startTime.AddDate(0, 0, 20) // 3 weeks later
 	postSession = &models.PostSessionInput{
 		StartTime:   startTime,
@@ -287,6 +321,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 		assert.Contains(t, *s.Notes, "recurring")
 	}
 
+	// Test invalid repetition
 	postSession = &models.PostSessionInput{
 		StartTime:   startTime,
 		EndTime:     endTime,
@@ -310,11 +345,10 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	}
 
 	testDB := testutil.SetupTestWithCleanup(t)
-
 	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
-	// Given ID Not Found 404 Error
+	// Test 404 not found
 	badID := uuid.New()
 	patch := &models.PatchSessionInput{
 		Notes: ptrString("404 NOT FOUND ERROR"),
@@ -323,7 +357,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, patchedSession)
 
-	// Foreign Key Violation
+	// Test foreign key violation
 	id := uuid.New()
 	therapistID := uuid.New()
 	patch = &models.PatchSessionInput{
@@ -333,14 +367,10 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, patchedSession)
 
-	// INSERTING THERAPIST NOW
-	therapistID = uuid.New()
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-             VALUES ($1, $2, $3, $4)`,
-		therapistID, "Doc", "The Dwarf", "doc@sevendwarves.com")
-	assert.NoError(t, err)
+	// Create first therapist using helper
+	therapistID = CreateSessionTestTherapist(t, testDB, ctx, "Doc")
 
+	// Test check constraint violation
 	startTime := time.Now()
 	endTime := time.Now().Add(-time.Hour)
 	notes := ptrString("check constraint violation")
@@ -354,16 +384,17 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	assert.Nil(t, patchedSession)
 	assert.False(t, endTime.After(startTime))
 
-	// INSERT ACTUAL SESSION TO EDIT
+	// Insert actual session to edit
 	id = uuid.New()
 	startTime = time.Now()
 	endTime = time.Now().Add(time.Hour)
 	_, err = testDB.Exec(ctx,
-		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-             VALUES ($1, $2, $3, $4, $5)`,
+		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
 		id, therapistID, startTime, endTime, "Inserted")
 	assert.NoError(t, err)
 
+	// Test successful patch with notes only
 	notes = ptrString("success with one change")
 	patch = &models.PatchSessionInput{
 		Notes: notes,
@@ -375,6 +406,7 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	assert.Equal(t, patchedSession.TherapistID, therapistID)
 	assert.Equal(t, patchedSession.Notes, notes)
 
+	// Test patch with time update
 	startTime = time.Now()
 	endTime = time.Now().Add(time.Hour)
 	patch = &models.PatchSessionInput{
@@ -388,79 +420,63 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	assert.Equal(t, patchedSession.TherapistID, therapistID)
 	assert.Equal(t, patchedSession.Notes, notes)
 
-	// ADDING A SECOND THERAPIST TO UPDATE TO
-	therapistID = uuid.New()
-	_, err = testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-             VALUES ($1, $2, $3, $4)`,
-		therapistID, "Courage", "The Cowardly Dog", "havecourage@cowardice.com")
-	assert.NoError(t, err)
+	// Create second therapist using helper
+	therapistID2 := CreateSessionTestTherapist(t, testDB, ctx, "Courage")
 
+	// Test updating all fields
 	startTime = time.Now()
 	endTime = time.Now().Add(time.Hour)
 	notes = ptrString("New Note")
 	patch = &models.PatchSessionInput{
 		StartTime:   &startTime,
 		EndTime:     &endTime,
-		TherapistID: &therapistID,
+		TherapistID: &therapistID2,
 		Notes:       notes,
 	}
 	patchedSession, err = repo.PatchSession(ctx, id, patch)
 	assert.NoError(t, err)
 	assert.NotNil(t, patchedSession)
 	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
-	assert.Equal(t, patchedSession.TherapistID, therapistID)
+	assert.Equal(t, patchedSession.TherapistID, therapistID2)
 	assert.Equal(t, patchedSession.Notes, notes)
 }
 
 func TestGetSessionStudents(t *testing.T) {
 	// Setup
 	testDB := testutil.SetupTestWithCleanup(t)
-
 	repo := schema.NewSessionRepository(testDB)
 	ctx := context.Background()
 
-	// Create a test therapist first (required for foreign key)
-	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "John", "Doe", "john.doe@example.com")
-	assert.NoError(t, err)
+	// Create therapist using helper
+	therapistID := CreateSessionTestTherapist(t, testDB, ctx, "John")
 
-	// Insert test session data using new schema
+	// Insert test session
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Exec(ctx, `
-        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4)
+	_, err := testDB.Exec(ctx, `
+        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
     `, therapistID, startTime, endTime, "Test session")
 	assert.NoError(t, err)
-
-	// Test filtering by student IDs
-	studentID1 := uuid.New()
-	studentID3 := uuid.New() // graduated
 
 	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 1)
 
-	// Insert student associations for one of the sessions
+	// Create students using helper
+	studentID1 := CreateSessionTestStudent(t, testDB, ctx, therapistID, "Student1", 3)
+	studentID3 := CreateSessionTestStudent(t, testDB, ctx, therapistID, "Student3", -1) // graduated
+
+	// Insert student associations
 	sessionWithStudents := sessions[0].ID
 	_, err = testDB.Exec(ctx, `
-		INSERT INTO student (id, first_name, last_name, therapist_id, grade)
-		VALUES ($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10)
-	`, studentID1, "Student", "One", therapistID, 3, studentID3, "Student", "Three", therapistID, -1)
-	assert.NoError(t, err)
-
-	_, err = testDB.Exec(ctx, `
-		INSERT INTO session_student (session_id, student_id, present)
-		VALUES ($1, $2, true), ($3, $4, true)
+		INSERT INTO session_student (session_id, student_id, present, created_at, updated_at)
+		VALUES ($1, $2, true, NOW(), NOW()), ($3, $4, true, NOW(), NOW())
 	`, sessionWithStudents, studentID1, sessionWithStudents, studentID3)
 	assert.NoError(t, err)
 
 	students, err := repo.GetSessionStudents(ctx, sessionWithStudents, utils.NewPagination())
 
 	assert.NoError(t, err)
-	assert.Len(t, students, 1) // returns the one student that has not graduated.
+	assert.Len(t, students, 1) // returns the one student that has not graduated
 }

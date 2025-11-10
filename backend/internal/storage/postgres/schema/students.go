@@ -117,8 +117,8 @@ func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.St
 
 func (r *StudentRepository) AddStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	query := `
-	INSERT INTO student (first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, NOW())
+	INSERT INTO student (first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 	RETURNING id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at`
 
 	var createdStudent models.Student
