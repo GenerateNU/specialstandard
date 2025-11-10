@@ -17,7 +17,7 @@ type StudentRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, schoolID *int, name string, pagination utils.Pagination) ([]models.Student, error) {
+func (r *StudentRepository) GetStudents(ctx context.Context, grade, schoolID *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
 	queryString := `
 	SELECT s.id, s.first_name, s.last_name, s.dob, s.therapist_id, s.school_id, sch.name AS school_name, sch.district_id, s.grade, s.iep, s.created_at, s.updated_at
 	FROM student s

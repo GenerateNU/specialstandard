@@ -71,8 +71,8 @@ func (h *Handler) GetStudents(c *fiber.Ctx) error {
 	students, err := h.studentRepository.GetStudents(
 		c.Context(),
 		query.Grade, // Pass pointer directly - nil means no filter
-		therapistID,
 		query.SchoolID,
+		therapistID,
 		query.Name,
 		query.Pagination,
 	)

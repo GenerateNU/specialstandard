@@ -152,13 +152,17 @@ func createAllTables(pool *pgxpool.Pool) error {
 	tableDefinitions := []string{
 		`CREATE TABLE IF NOT EXISTS district (
   			id SERIAL PRIMARY KEY,
- 	 		name TEXT NOT NULL UNIQUE
+ 	 		name TEXT NOT NULL UNIQUE,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
 
 		`CREATE TABLE IF NOT EXISTS school (
 			id SERIAL PRIMARY KEY,
 			name TEXT NOT NULL,
-			district_id INTEGER NOT NULL REFERENCES district(id)
+			district_id INTEGER NOT NULL REFERENCES district(id),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
 
 		`CREATE TABLE IF NOT EXISTS therapist (

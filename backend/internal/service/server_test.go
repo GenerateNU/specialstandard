@@ -155,7 +155,7 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
 		{
 			ID:          uuid.New(),
 			FirstName:   "Emma",
@@ -185,8 +185,6 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 }
 
-// Add these tests to your server_test.go file
-
 func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
@@ -204,7 +202,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -246,7 +244,7 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -291,7 +289,7 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -331,7 +329,7 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), (*int)(nil), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -392,7 +390,7 @@ func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
 	}
 
 	// Empty string filters should be treated as no filter
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,

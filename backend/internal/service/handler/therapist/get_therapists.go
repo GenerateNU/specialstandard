@@ -21,7 +21,14 @@ func (h *Handler) GetTherapists(c *fiber.Ctx) error {
 	sessions, err := h.therapistRepository.GetTherapists(c.Context(), pagination)
 
 	if err != nil {
-		return err
+		if errStr := err.Error(); errStr == "therapists not found" {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Therapists not found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Internal server error",
+		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(sessions)
