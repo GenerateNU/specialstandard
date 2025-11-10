@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import Tooltip from '@/components/ui/tooltip'
 import { useAuthContext } from '@/contexts/authContext'
 
 interface AppLayoutProps {
@@ -84,26 +85,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
         className={`
           bg-black border-r border-default
           transition-all duration-300 ease-in-out
-          shadow-md 
-          
-          /* Sticky sidebar on all screen sizes */
-          sticky
-          top-0
+          shadow-md
           h-screen
           z-50 lg:z-auto
           
-          /* Mobile: slide in/out from left */
+          /* Mobile: fixed positioning, slide in/out from left */
+          fixed lg:sticky
+          top-0
+          left-0
+          
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           
           /* Desktop: toggle width */
-          ${isSidebarOpen ? 'w-70' : 'lg:w-14'}
+          ${isSidebarOpen ? 'w-2/3 lg:w-1/6' : 'lg:w-14'}
         `}
       >
         <div className="flex flex-col h-full">
           <div className="flex flex-row items-center justify-between p-2">
-            <div className="font-bold text-xl flex items-center overflow-hidden">
-              <span className={`whitespace-nowrap ml-2 transition-opacity duration-200 text-white ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
-                The Special Standard
+            <div className="font-bold text-lg font-serif flex items-center overflow-hidden h-full">
+              <span className={`whitespace-nowrap ml-2 text-white h-full transition-opacity duration-200 leading-tight ${isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
+                The Special
+                <br />
+                Standard
               </span>
             </div>
             <Button
@@ -111,7 +114,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               variant="secondary"
               size="icon"
               aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-              className="w-10 h-10 flex-shrink-0 p-0 bg-white/10 hover:bg-white/20 border-white/20"
+              className="w-10 h-10 flex shrink-0 p-0 bg-white/10 hover:bg-white/20 border-white/20"
             >
               <PanelLeft className="w-5 h-5 transition-transform duration-300 text-white" />
             </Button>
@@ -126,13 +129,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
               const isActive = pathname === item.href
 
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`
+                <Tooltip key={item.href} content={item.label} enabled={!isSidebarOpen}>
+                  <Link
+                    href={item.href}
+                    className={`
                     flex items-center gap-3 rounded-lg
                     transition-all duration-200
-                    h-10 flex-shrink-0 overflow-hidden justify-start
+                    h-10 shrink-0 overflow-hidden justify-start
                     ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
                     ${
                 isActive
@@ -140,10 +143,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }
                   `}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </Link>
+                  >
+
+                    <Icon className="w-5 h-5 shrink-0" />
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  </Link>
+                </Tooltip>
               )
             })}
           </nav>
@@ -151,32 +156,35 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {/* Footer */}
           <Separator className="bg-white/10" />
           <div className="p-2">
-            <Button
-              onClick={() => {
-                logout()
-                window.location.href = '/login'
-              }}
-              variant="ghost"
-              aria-label="Logout"
-              className={`
+            <Tooltip content="Logout" enabled={!isSidebarOpen}>
+              <Button
+                onClick={() => {
+                  logout()
+                  window.location.href = '/login'
+                }}
+                variant="ghost"
+                aria-label="Logout"
+                className={`
                 flex items-center gap-3 rounded-lg
                 transition-all duration-200
-                h-10 flex-shrink-0 overflow-hidden justify-start
+                h-10 shrink-0 overflow-hidden justify-start
                 text-white/70 hover:text-white hover:bg-white/10
                 ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
               `}
-            >
-              <LogOut className="w-5 h-5 mr-0.5" />
-              <span className="whitespace-nowrap">Logout</span>
-            </Button>
+              >
+
+                <LogOut className="w-5 h-5 mr-0.5" />
+                <span className="whitespace-nowrap">Logout</span>
+              </Button>
+            </Tooltip>
           </div>
         </div>
       </aside>
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      {/* Main content area - add left padding on desktop to account for sidebar */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto transition-all duration-300">
         {/* Page content */}
-        <main className="flex-1">
+        <main className="flex-1 w-full">
           {children}
         </main>
       </div>
