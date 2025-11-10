@@ -536,7 +536,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 
 			res, _ := app.Test(req, -1)
 			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
-			mockRepo.AssertExpectations(t)
+			mockRepo.AssertExpectations(t) //h
 		})
 	}
 }
