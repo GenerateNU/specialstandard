@@ -154,6 +154,7 @@ export default function Home() {
                               {formatTime(selectedSession.start_datetime)}
                               {' '}
                               –
+                              {' '}
                               {formatTime(selectedSession.end_datetime)}
                             </span>
                             <span>

@@ -67,6 +67,15 @@ export default function StudentSchedule({ studentId, initialView = 'day', classN
             .rbc-time-view .rbc-time-header {
               ${currentView === 'day' ? 'display: none;' : ''}
             }
+            .rbc-today {
+              background-color: rgba(59, 130, 246, 0.3) !important;
+            }
+            .rbc-current-time-indicator {
+              background-color: #3b82f6 !important;
+            }
+            .rbc-day-bg.rbc-today {
+              background-color: rgba(59, 130, 246, 0.05) !important;
+            }
           `}
         </style>
         <Calendar

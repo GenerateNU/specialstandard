@@ -78,7 +78,7 @@ export default function MiniCalendar({ className }: MiniCalendarProps) {
               'h-5 flex items-center justify-center text-sm rounded-full transition-colors select-none',
               day === null && 'invisible',
               day === currentDate && 'bg-pink text-background font-bold shadow-sm',
-              day !== null && day !== currentDate && 'text-foreground hover:bg-pink-disabled',
+              day !== null && day !== currentDate && 'text-foreground',
             )}
           >
             {day}
