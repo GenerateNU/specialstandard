@@ -69,7 +69,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
         therapist_id: HARDCODED_THERAPIST_ID, // Use the proper UUID
         grade: data.grade, // Convert K to 0, numbers to numbers
         // Convert IEP string to array (split by newlines for multiple goals)
-        iep: data.iep ? data.iep.split('\n').filter((goal: string) => goal.trim()) : undefined,
+        iep: data.iep ? data.iep.split('\n').map((goal: string) => goal.trim()).filter((goal: string) => goal) : undefined,
       }
 
       // Add the student using the hook with converted data
