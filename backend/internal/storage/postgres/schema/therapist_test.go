@@ -251,7 +251,7 @@ func TestSessionRepository_CreateTherapist(t *testing.T) {
 		LastName:   "Matula",
 		Email:      "matulakevin91@gmai.com",
 		Schools:    []int{1},
-		DistrictID: 1,
+		DistrictID: ptrInt(1),
 	}
 
 	therapist, err := repo.CreateTherapist(ctx, updated)

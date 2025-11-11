@@ -25,7 +25,7 @@ type CreateTherapistInput struct {
 	FirstName  string    `json:"first_name" validate:"required,min=1,max=255"`
 	LastName   string    `json:"last_name" validate:"required,min=1,max=255"`
 	Schools    []int     `json:"schools" validate:"required,dive,min=1"`
-	DistrictID int       `json:"district_id" validate:"required,min=1"`
+	DistrictID *int      `json:"district_id" validate:"omitempty,min=1"`
 	Email      string    `json:"email" validate:"required,min=1,max=255"`
 }
 
