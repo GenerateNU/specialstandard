@@ -91,7 +91,6 @@
 .rbc-toolbar button.rbc-active {
   background-color: var(--color-pink) !important;
   color: var(--color-white) !important;
-
 }
 
 /* Focus state */
