@@ -157,7 +157,7 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
 		{
 			ID:          uuid.New(),
 			FirstName:   "Emma",
@@ -187,8 +187,6 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 }
 
-// Add these tests to your server_test.go file
-
 func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
@@ -206,7 +204,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -248,7 +246,7 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -293,7 +291,7 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -333,7 +331,7 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), (*int)(nil), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -394,7 +392,7 @@ func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
 	}
 
 	// Empty string filters should be treated as no filter
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -449,14 +447,20 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 func TestCreateStudentEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
+
+	studentID := uuid.New()
+	therapistID := uuid.New()
+	schoolID := 1
+
 	mockStudentRepo.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
-		ID:          uuid.New(),
+		ID:          studentID,
 		FirstName:   "John",
 		LastName:    "Doe",
+		DOB:         ptrTime(time.Date(2010, 1, 1, 0, 0, 0, 0, time.UTC)),
+		TherapistID: therapistID,
+		SchoolID:    schoolID,
 		Grade:       ptrInt(5),
-		TherapistID: uuid.New(),
-		DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
-		IEP:         ptrString("Active IEP with speech therapy goals"),
+		IEP:         ptrString("Test IEP"),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -469,16 +473,15 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		TestMode: true,
 	}, repo, &s3_client.Client{})
 
-	testTherapistID := uuid.New()
-
 	body := fmt.Sprintf(`{
 		"first_name": "John",
 		"last_name": "Doe",
-		"dob": "2010-05-15",
+		"dob": "2010-01-01",
 		"therapist_id": "%s",
+		"school_id": %d,
 		"grade": 5,
-		"iep": "Active IEP with speech therapy goals"
-	}`, testTherapistID.String())
+		"iep": "Test IEP"
+	}`, therapistID, schoolID)
 
 	req := httptest.NewRequest("POST", "/api/v1/students", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -1020,14 +1023,19 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 	// Setup
 	mockTherapistRepo := new(mocks.MockTherapistRepository)
 
-	mockTherapistRepo.On("CreateTherapist", mock.Anything).Return(&models.Therapist{
-		ID:        uuid.New(),
-		FirstName: "Kevin",
-		LastName:  "Matula",
-		Email:     "matulakevin91@gmail.com",
-		Active:    true,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	therapistID := uuid.New()
+	districtID := 1
+
+	mockTherapistRepo.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(&models.Therapist{
+		ID:         therapistID,
+		FirstName:  "Kevin",
+		LastName:   "Matula",
+		Email:      "matulakevin91@gmail.com",
+		Schools:    []int{1, 2},
+		DistrictID: &districtID,
+		Active:     true,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -1042,8 +1050,10 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 		"id": "%s",
 		"first_name": "Kevin",
 		"last_name": "Matula",
-		"email": "matulakevin91@gmail.com"
-	}`, uuid.New())
+		"email": "matulakevin91@gmail.com",
+		"schools": [1, 2],
+		"district_id": 1
+	}`, therapistID)
 
 	req := httptest.NewRequest("POST", "/api/v1/therapists", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -2090,7 +2100,7 @@ func TestHandler_Signup(t *testing.T) {
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
-				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(therapist, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 			wantErr:            false,

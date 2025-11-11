@@ -31,7 +31,7 @@ func (m *MockTherapistRepository) GetTherapists(ctx context.Context, pagination 
 }
 
 func (m *MockTherapistRepository) CreateTherapist(ctx context.Context, therapist *models.CreateTherapistInput) (*models.Therapist, error) {
-	args := m.Called(ctx)
+	args := m.Called(ctx, therapist)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

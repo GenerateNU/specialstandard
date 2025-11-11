@@ -693,6 +693,13 @@ paths:
             type: string
             format: uuid
             example: "9dad94d8-6534-4510-90d7-e4e97c175a65"
+        - name: school_id
+          in: query
+          description: Filter students by school ID
+          required: false
+          schema:
+            type: integer
+            example: 2
         - name: name
           in: query
           description: Search students by name (case-insensitive, matches first or last name)
@@ -718,6 +725,9 @@ paths:
                       last_name: "Doe"
                       dob: "2010-05-15T00:00:00Z"
                       therapist_id: "9dad94d8-6534-4510-90d7-e4e97c175a65"
+                      school_id: 2
+                      district_id: 1
+                      school_name: "Generate Elementary"
                       grade: 5
                       iep: "Active IEP with speech therapy goals"
                       created_at: "2025-09-18T14:14:11.66268Z"
@@ -2325,6 +2335,26 @@ components:
           type: string
           format: email
           example: "email123@example.com"
+        schools:
+          type: array
+          items:
+            type: integer
+          description: List of school IDs associated with the therapist
+          example: [1, 2]
+        district_id:
+          type: integer
+          description: School district ID the therapist belongs to
+          example: 2
+        school_names:
+          type: array
+          items:
+            type: string
+          description: List of school names associated with the therapist
+          example: ["Generate High", "Sherman Center for Academic Excellence"]
+        district_name:
+          type: string
+          description: Name of the school district the therapist belongs to
+          example: "Generate Public Schools"
         active:
           type: boolean
           description: Whether the therapist is currently active
@@ -2344,6 +2374,7 @@ components:
         - first_name
         - last_name
         - email
+        - district_id
       properties:
         first_name:
           type: string
@@ -2353,6 +2384,16 @@ components:
           type: string
           description: Last name of the therapist
           example: "Matilda"
+        schools:
+          type: array
+          items:
+            type: integer
+          description: List of school IDs associated with the therapist
+          example: [1, 2]
+        district_id:
+          type: integer
+          description: School district ID the therapist belongs to
+          example: 2
         email:
           type: string
           format: email
@@ -2370,6 +2411,16 @@ components:
           type: string
           description: Last name of the therapist
           example: "Matilda"
+        schools:
+          type: array
+          items:
+            type: integer
+          description: List of school IDs associated with the therapist
+          example: [1, 2]
+        district_id:
+          type: integer
+          description: School district ID the therapist belongs to
+          example: 2
         email:
           type: string
           format: email
@@ -2451,6 +2502,14 @@ components:
 
     Student:
       type: object
+      required:
+        - id
+        - first_name
+        - last_name
+        - therapist_id
+        - school_id
+        - created_at
+        - updated_at
       properties:
         id:
           type: string
@@ -2475,6 +2534,20 @@ components:
           format: uuid
           description: UUID of the assigned therapist
           example: "9dad94d8-6534-4510-90d7-e4e97c175a65"
+        school_id:
+          type: integer
+          description: ID of the school the student attends
+          example: 3
+        school_name:
+          type: string
+          nullable: true
+          description: Name of the school the student attends
+          example: "Generate High"
+        district_id:
+          type: integer
+          nullable: true
+          description: ID of the school district the student belongs to
+          example: 2
         grade:
           type: integer
           nullable: true
@@ -2497,19 +2570,13 @@ components:
           format: date-time
           description: Timestamp when the student record was last updated
           example: "2025-09-18T14:14:11.66268Z"
-      required:
-        - id
-        - first_name
-        - last_name
-        - therapist_id
-        - created_at
-        - updated_at
     CreateStudentInput:
       type: object
       required:
         - first_name
         - last_name
         - therapist_id
+        - school_id
       properties:
         first_name:
           type: string
@@ -2525,6 +2592,10 @@ components:
           nullable: true
           description: Student's date of birth (YYYY-MM-DD format, optional)
           example: "2010-05-15"
+        school_id:
+          type: integer
+          description: ID of the school the student attends
+          example: 3
         therapist_id:
           type: string
           format: uuid

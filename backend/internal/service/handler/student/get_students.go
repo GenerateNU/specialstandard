@@ -14,6 +14,7 @@ type GetStudentsQuery struct {
 	Grade       *int   `query:"grade" validate:"omitempty,oneof=-1 0 1 2 3 4 5 6 7 8 9 10 11 12"`
 	TherapistID string `query:"therapist_id"`
 	Name        string `query:"name" validate:"omitempty"`
+	SchoolID    *int   `query:"school_id" validate:"omitempty,min=1"`
 	utils.Pagination
 }
 
@@ -70,6 +71,7 @@ func (h *Handler) GetStudents(c *fiber.Ctx) error {
 	students, err := h.studentRepository.GetStudents(
 		c.Context(),
 		query.Grade, // Pass pointer directly - nil means no filter
+		query.SchoolID,
 		therapistID,
 		query.Name,
 		query.Pagination,

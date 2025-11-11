@@ -26,112 +26,117 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	// Setup
 	testDB := testutil.SetupTestWithCleanup(t)
 
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapists
+	_, err := testDB.Exec(ctx, `
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Generate Public Schools")
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW()), ($4, $5, $6, NOW(), NOW());
+	`, 1, "Generate Elementary", 1, 2, "Sherman Center for Academic Excellence", 1)
+	assert.NoError(t, err)
+
 	therapistID1 := uuid.New()
 	therapistID2 := uuid.New()
 
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID1, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID1, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID2, "Jane", "Smith", "janesmith@gmail.com", true, time.Now(), time.Now())
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID2, "Jane", "Smith", "janesmith@gmail.com", true, []int{1, 2}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Create test students with different grades and therapists
 	studentID1 := uuid.New()
 	testDOB, _ := time.Parse("2006-01-02", "2010-05-15")
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, studentID1, "John", "Doe", testDOB, therapistID1, 5, "IEP Goals: Speech articulation", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, studentID1, "John", "Doe", testDOB, therapistID1, 1, 5, "IEP Goals: Speech articulation", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	studentID2 := uuid.New()
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, studentID2, "Jane", "Smith", testDOB, therapistID2, 3, "IEP Goals: Reading", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, studentID2, "Jane", "Smith", testDOB, therapistID2, 2, 3, "IEP Goals: Reading", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Test 1: Get all students (no filters)
-	students, err := repo.GetStudents(ctx, nil, uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 2)
 
-	// Test 2: Filter by grade
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Doe", students[0].LastName)
 	assert.Equal(t, studentID1, students[0].ID)
 
-	// Test 3: Filter by therapist
-	students, err = repo.GetStudents(ctx, nil, therapistID2, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, therapistID2, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Smith", students[0].LastName)
 	assert.Equal(t, therapistID2, students[0].TherapistID)
 
-	// Test 4: Filter by name (first name)
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "John", students[0].FirstName)
 
-	// Test 5: Filter by name (last name)
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "Smith", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "Smith", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Smith", students[0].LastName)
 
-	// Test 6: Multiple filters
-	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, therapistID1, "John", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "John", students[0].FirstName)
 	assert.Equal(t, 5, *students[0].Grade)
 
-	// Test 7: Filter that returns no results
-	students, err = repo.GetStudents(ctx, ptrInt(99), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(99), nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 
-	// More Tests for Pagination Behaviour
 	for i := 3; i <= 6; i++ {
 		testDOB, _ := time.Parse("2006-01-02", "2004-09-24")
 		_, err := testDB.Exec(ctx, `
-            INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            `, uuid.New(), "Student", fmt.Sprintf("Number%d", i), testDOB, therapistID1, i, "IEP: GOALS!!", time.Now(), time.Now())
+            INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `, uuid.New(), "Student", fmt.Sprintf("Number%d", i), testDOB, therapistID1, 1, i, "IEP: GOALS!!", time.Now(), time.Now())
 		assert.NoError(t, err)
 	}
 
-	// Test 8: Pagination - get all students
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 6) // 2 original + 4 new
+	assert.Len(t, students, 6)
 
-	// Test 9: Pagination - second page
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "", utils.Pagination{
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "", utils.Pagination{
 		Page:  2,
 		Limit: 5,
 	})
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
-}
 
-// Add these additional test functions to your student_test.go file in the schema package
+	students, err = repo.GetStudents(ctx, nil, PtrInt(1), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 5)
+
+	students, err = repo.GetStudents(ctx, nil, PtrInt(2), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 1)
+}
 
 func TestStudentRepository_GetStudents_FilterByGrade(t *testing.T) {
 	if testing.Short() {
@@ -143,58 +148,66 @@ func TestStudentRepository_GetStudents_FilterByGrade(t *testing.T) {
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist
-	therapistID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Test", "Therapist", "test@test.com", true, time.Now(), time.Now())
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Create students with different grades
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Test", "Therapist", "test@test.com", true, []int{1}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, uuid.New(), "John", "Doe", testDOB, therapistID, 5, "IEP Goals", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, uuid.New(), "John", "Doe", testDOB, therapistID, 1, 5, "IEP Goals", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, uuid.New(), "Jane", "Smith", testDOB, therapistID, 4, "IEP Goals", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, uuid.New(), "Jane", "Smith", testDOB, therapistID, 1, 4, "IEP Goals", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, uuid.New(), "Mike", "Johnson", testDOB, therapistID, 5, "IEP Goals", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, uuid.New(), "Mike", "Johnson", testDOB, therapistID, 1, 5, "IEP Goals", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Add a graduated student
 	_, err = testDB.Exec(ctx, ` 
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, uuid.New(), "Jack", "Douglas", testDOB, therapistID, -1, "IEP Goals", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, uuid.New(), "Jack", "Douglas", testDOB, therapistID, 1, -1, "IEP Goals", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	students, err := repo.GetStudents(ctx, nil, uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 3) // doesnt include graduated student
+	assert.Len(t, students, 3)
 
-	// Test: Filter by grade 5
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "", utils.NewPagination())
 
 	assert.NoError(t, err)
-	assert.Len(t, students, 2) // Should only return John and Mike
+	assert.Len(t, students, 2)
 	for _, student := range students {
 		assert.Equal(t, 5, *student.Grade)
 	}
 
-	students, err = repo.GetStudents(ctx, ptrInt(-1), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(-1), nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 1) // Should only return Jack
+	assert.Len(t, students, 1)
 	assert.Equal(t, -1, *students[0].Grade)
 
 }
@@ -209,57 +222,65 @@ func TestStudentRepository_GetStudents_FilterByTherapist(t *testing.T) {
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create two therapists
+	_, err := testDB.Exec(ctx, `
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
 	therapistID1 := uuid.New()
 	therapistID2 := uuid.New()
 
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID1, "Therapist", "One", "one@test.com", true, time.Now(), time.Now())
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID1, "Therapist", "One", "one@test.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID2, "Therapist", "Two", "two@test.com", true, time.Now(), time.Now())
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID2, "Therapist", "Two", "two@test.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Create students assigned to different therapists
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "Student", "One", testDOB, therapistID1, 5, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "Student", "One", testDOB, therapistID1, 1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "Student", "Two", testDOB, therapistID1, 4, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "Student", "Two", testDOB, therapistID1, 1, 4, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "Student", "Three", testDOB, therapistID2, 5, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "Student", "Three", testDOB, therapistID2, 1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Test: Filter by therapist 1
-	students, err := repo.GetStudents(ctx, nil, therapistID1, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, nil, therapistID1, "", utils.NewPagination())
 
 	assert.NoError(t, err)
-	assert.Len(t, students, 2) // Should only return students assigned to therapist 1
+	assert.Len(t, students, 2)
 	for _, student := range students {
 		assert.Equal(t, therapistID1, student.TherapistID)
 	}
 
-	// Test: Filter by therapist 2
-	students, err = repo.GetStudents(ctx, nil, therapistID2, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, therapistID2, "", utils.NewPagination())
 
 	assert.NoError(t, err)
-	assert.Len(t, students, 1) // Should only return student assigned to therapist 2
+	assert.Len(t, students, 1)
 	assert.Equal(t, therapistID2, students[0].TherapistID)
 }
 
@@ -273,55 +294,61 @@ func TestStudentRepository_GetStudents_FilterByName(t *testing.T) {
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist
-	therapistID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Test", "Therapist", "test@test.com", true, time.Now(), time.Now())
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Create students with different names
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Test", "Therapist", "test@test.com", true, []int{1}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "John", "Doe", testDOB, therapistID, 5, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "John", "Doe", testDOB, therapistID, 1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "Jane", "Johnson", testDOB, therapistID, 4, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "Jane", "Johnson", testDOB, therapistID, 1, 4, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "Michael", "Johns", testDOB, therapistID, 5, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "Michael", "Johns", testDOB, therapistID, 1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Test: Search by first name
-	students, err := repo.GetStudents(ctx, nil, uuid.Nil, "John", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, nil, uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 3) // Should find "John" and "Johnson"
+	assert.Len(t, students, 3)
 
-	// Test: Search by last name
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "Doe", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "Doe", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Doe", students[0].LastName)
 
-	// Test: Case insensitive search
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "JOHN", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "JOHN", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 3) // Should find "John", "Johnson", and "Johns"
+	assert.Len(t, students, 3)
 
-	// Test: Partial name search
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "oh", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "oh", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 3) // Should find "John", "Johnson", and "Johns"
+	assert.Len(t, students, 3)
 }
 
 func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
@@ -334,100 +361,98 @@ func TestStudentRepository_GetStudents_CombinedFilters(t *testing.T) {
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create two therapists
+	_, err := testDB.Exec(ctx, `
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
 	therapistID1 := uuid.New()
 	therapistID2 := uuid.New()
 
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID1, "Therapist", "One", "one@test.com", true, time.Now(), time.Now())
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID1, "Therapist", "One", "one@test.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID2, "Therapist", "Two", "two@test.com", true, time.Now(), time.Now())
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID2, "Therapist", "Two", "two@test.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Create diverse student data
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 
-	// Student 1: Therapist 1, Grade 5, Name John
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "John", "Doe", testDOB, therapistID1, 5, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "John", "Doe", testDOB, therapistID1, 1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Student 2: Therapist 1, Grade 4, Name Jane
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "Jane", "Smith", testDOB, therapistID1, 4, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "Jane", "Smith", testDOB, therapistID1, 1, 4, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Student 3: Therapist 2, Grade 5, Name John
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "John", "Wilson", testDOB, therapistID2, 5, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "John", "Wilson", testDOB, therapistID2, 1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Student 4: Therapist 1, Grade 5, Name Sarah
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "Sarah", "Johnson", testDOB, therapistID1, 5, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "Sarah", "Johnson", testDOB, therapistID1, 1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Test 1: Filter by grade only
-	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson
+	assert.Len(t, students, 3)
 	for _, student := range students {
 		assert.Equal(t, 5, *student.Grade)
 	}
 
-	// Test 2: Filter by therapist only
-	students, err = repo.GetStudents(ctx, nil, therapistID1, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, therapistID1, "", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 3) // John Doe, Jane Smith, Sarah Johnson
+	assert.Len(t, students, 3)
 	for _, student := range students {
 		assert.Equal(t, therapistID1, student.TherapistID)
 	}
 
-	// Test 3: Filter by name only
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson (has "John" in last name)
+	assert.Len(t, students, 3)
 
-	// Test 4: Combine grade + therapist
-	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, therapistID1, "", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 2) // John Doe, Sarah Johnson
+	assert.Len(t, students, 2)
 	for _, student := range students {
 		assert.Equal(t, 5, *student.Grade)
 		assert.Equal(t, therapistID1, student.TherapistID)
 	}
 
-	// Test 5: Combine grade + name
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "John", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 3) // John Doe, John Wilson, Sarah Johnson
+	assert.Len(t, students, 3)
 
-	// Test 6: Combine therapist + name
-	students, err = repo.GetStudents(ctx, nil, therapistID1, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, therapistID1, "John", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 2) // John Doe, Sarah Johnson
+	assert.Len(t, students, 2)
 
-	// Test 7: All filters combined
-	students, err = repo.GetStudents(ctx, ptrInt(5), therapistID1, "John", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, therapistID1, "John", utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, students, 2) // John Doe, Sarah Johnson
+	assert.Len(t, students, 2)
 
-	// Test 8: Filters that return no results
-	students, err = repo.GetStudents(ctx, ptrInt(12), uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, PtrInt(12), nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 }
@@ -442,36 +467,43 @@ func TestStudentRepository_GetStudents_CaseInsensitiveSearch(t *testing.T) {
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist
-	therapistID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Test", "Therapist", "test@test.com", true, time.Now(), time.Now())
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Create test student
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Test", "Therapist", "test@test.com", true, []int{1}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, uuid.New(), "John", "Smith", testDOB, therapistID, 5, time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, uuid.New(), "John", "Smith", testDOB, therapistID, 1, 5, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Test lowercase search
-	students, err := repo.GetStudents(ctx, nil, uuid.Nil, "john", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, nil, nil, uuid.Nil, "john", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "John", students[0].FirstName)
 
-	// Test uppercase search
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "SMITH", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "SMITH", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 	assert.Equal(t, "Smith", students[0].LastName)
 
-	// Test mixed case search
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "JoHn", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "JoHn", utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, students, 1)
 }
@@ -486,41 +518,47 @@ func TestStudentRepository_GetStudents_WithPagination(t *testing.T) {
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist
-	therapistID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Test", "Therapist", "test@test.com", true, time.Now(), time.Now())
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Create 6 students all with grade 5
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Test", "Therapist", "test@test.com", true, []int{1}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
 	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
 	for i := 1; i <= 6; i++ {
 		_, err = testDB.Exec(ctx, `
-            INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        `, uuid.New(), fmt.Sprintf("Student%d", i), "Test", testDOB, therapistID, 5, time.Now(), time.Now())
+            INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `, uuid.New(), fmt.Sprintf("Student%d", i), "Test", testDOB, therapistID, 1, 5, time.Now(), time.Now())
 		assert.NoError(t, err)
 	}
 
-	// Test: First page with limit 3
-	students, err := repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 1, Limit: 3})
+	students, err := repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "", utils.Pagination{Page: 1, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 3)
 
-	// Test: Second page with limit 3
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3})
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 3)
 
-	// Test: Third page with limit 3 (should be empty or partial)
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 3, Limit: 3})
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "", utils.Pagination{Page: 3, Limit: 3})
 	assert.NoError(t, err)
 	assert.Len(t, students, 0)
 
-	// Test: Get all with large limit
-	students, err = repo.GetStudents(ctx, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 1, Limit: 100})
+	students, err = repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "", utils.Pagination{Page: 1, Limit: 100})
 	assert.NoError(t, err)
 	assert.Len(t, students, 6)
 }
@@ -530,33 +568,40 @@ func TestStudentRepository_GetStudent(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	// Setup
 	testDB := testutil.SetupTestWithCleanup(t)
 
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist first
-	therapistID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Create test student
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
 	studentID := uuid.New()
 	testDOB, _ := time.Parse("2006-01-02", "2010-05-15")
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, studentID, "Jane", "Smith", testDOB, therapistID, 3, "IEP Goals: Language comprehension", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, studentID, "Jane", "Smith", testDOB, therapistID, 1, 3, "IEP Goals: Language comprehension", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Test
 	student, err := repo.GetStudent(ctx, studentID)
 
-	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, "Smith", student.LastName)
 	assert.Equal(t, "Jane", student.FirstName)
@@ -570,47 +615,55 @@ func TestStudentRepository_AddStudent(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	// Setup
 	testDB := testutil.SetupTestWithCleanup(t)
 
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist first
-	therapistID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Create test student data (no manual ID)
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
 	testDOB, _ := time.Parse("2006-01-02", "2012-08-20")
 	testStudent := models.Student{
-		// ID removed - let database generate it
 		FirstName:   "Alex",
 		LastName:    "Johnson",
 		DOB:         ptrTime(testDOB),
 		TherapistID: therapistID,
-		Grade:       ptrInt(2),
+		SchoolID:    1,
+		Grade:       PtrInt(2),
 		IEP:         ptrString("IEP Goals: Fluency and articulation"),
 	}
 
-	// Test - get the database-generated student
 	createdStudent, err := repo.AddStudent(ctx, testStudent)
 	assert.NoError(t, err)
 
-	// Verify student was inserted correctly using the returned ID
 	var insertedStudent models.Student
 	err = testDB.QueryRow(ctx, `
-		SELECT id, first_name, last_name, dob, therapist_id, grade, iep 
+		SELECT id, first_name, last_name, dob, therapist_id, school_id, grade, iep 
 		FROM student WHERE id = $1
-	`, createdStudent.ID).Scan( // Use the returned ID, not a manual one
+	`, createdStudent.ID).Scan(
 		&insertedStudent.ID,
 		&insertedStudent.FirstName,
 		&insertedStudent.LastName,
 		&insertedStudent.DOB,
 		&insertedStudent.TherapistID,
+		&insertedStudent.SchoolID,
 		&insertedStudent.Grade,
 		&insertedStudent.IEP,
 	)
@@ -618,7 +671,6 @@ func TestStudentRepository_AddStudent(t *testing.T) {
 	assert.Equal(t, testStudent.LastName, insertedStudent.LastName)
 	assert.Equal(t, testStudent.TherapistID, insertedStudent.TherapistID)
 
-	// Verify the ID was actually generated by the database
 	assert.NotEqual(t, uuid.Nil, createdStudent.ID)
 	assert.Equal(t, createdStudent.ID, insertedStudent.ID)
 }
@@ -628,50 +680,56 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	// Setup
 	testDB := testutil.SetupTestWithCleanup(t)
 
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist first
-	therapistID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Create test student
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
 	studentID := uuid.New()
 	testDOB, _ := time.Parse("2006-01-02", "2011-03-10")
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, studentID, "Sam", "Wilson", testDOB, therapistID, 4, "Initial IEP", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, studentID, "Sam", "Wilson", testDOB, therapistID, 1, 4, "Initial IEP", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Update student data
 	updatedStudent := models.Student{
 		ID:          studentID,
 		FirstName:   "Sam",
 		LastName:    "Wilson-Updated",
 		DOB:         ptrTime(testDOB),
 		TherapistID: therapistID,
-		Grade:       ptrInt(5),
+		SchoolID:    1,
+		Grade:       PtrInt(5),
 		IEP:         ptrString("Updated IEP Goals: Advanced speech therapy"),
 	}
 
-	// Test
 	_, err = repo.UpdateStudent(ctx, updatedStudent)
 
-	// Assert
 	assert.NoError(t, err)
 
-	// Verify student was updated correctly
 	var verifyStudent models.Student
 	err = testDB.QueryRow(ctx, `
-		SELECT id, first_name, last_name, dob, therapist_id, grade, iep 
+		SELECT id, first_name, last_name, dob, therapist_id, school_id, grade, iep 
 		FROM student WHERE id = $1
 	`, studentID).Scan(
 		&verifyStudent.ID,
@@ -679,6 +737,7 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 		&verifyStudent.LastName,
 		&verifyStudent.DOB,
 		&verifyStudent.TherapistID,
+		&verifyStudent.SchoolID,
 		&verifyStudent.Grade,
 		&verifyStudent.IEP,
 	)
@@ -692,36 +751,42 @@ func TestStudentRepository_DeleteStudent(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 
-	// Setup
 	testDB := testutil.SetupTestWithCleanup(t)
 
 	repo := schema.NewStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist first
-	therapistID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Create test student
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
 	studentID := uuid.New()
 	testDOB, _ := time.Parse("2006-01-02", "2009-12-25")
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, studentID, "Chris", "Brown", testDOB, therapistID, 6, "IEP Goals: Social communication", time.Now(), time.Now())
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, studentID, "Chris", "Brown", testDOB, therapistID, 1, 6, "IEP Goals: Social communication", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	// Test
 	err = repo.DeleteStudent(ctx, studentID)
 
-	// Assert
 	assert.NoError(t, err)
 
-	// Verify student was deleted
 	var count int
 	err = testDB.QueryRow(ctx, `SELECT COUNT(*) FROM student WHERE id = $1`, studentID).Scan(&count)
 	assert.NoError(t, err)
@@ -738,33 +803,43 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 	ctx := context.Background()
 	repo := schema.NewStudentRepository(testDB)
 
-	// Insert 2 Therapists
-	doctorWhoID := uuid.New()
-	doctorDoofenshmirtzID := uuid.New()
 	_, err := testDB.Exec(ctx, `
-		INSERT INTO therapist (id, first_name, last_name, email)
-		VALUES ($1, $2, $3, $4),
-		       ($5, $6, $7, $8);
-    `, doctorWhoID, "Doctor", "Who", "doc.who@guesswho.com",
-		doctorDoofenshmirtzID, "Heinz", "Doofenshmirtz", "doofy.balooney@gmail.com")
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Test District")
 	assert.NoError(t, err)
 
-	// Insert 5 Students
 	_, err = testDB.Exec(ctx, `
-		INSERT INTO student (first_name, last_name, dob, therapist_id, grade, iep, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, NOW()),
-		       ($7, $8, $3, $4, $9, $6, NOW()),
-		       ($10, $11, $3, $4, $12, $6, NOW()),
-		       ($13, $14, $3, $4, $15, $6, NOW()),
-		       ($16, $17, $3, $18, $5, $6, NOW());
-    `, "Michelle", "Li", "2005-01-31", doctorWhoID, 0, "IEP Content",
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW());
+	`, 1, "Test School", 1)
+	assert.NoError(t, err)
+
+	doctorWhoID := uuid.New()
+	doctorDoofenshmirtzID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+		INSERT INTO therapist (id, first_name, last_name, email, schools, district_id, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()),
+		       ($7, $8, $9, $10, $11, $12, NOW(), NOW());
+    `, doctorWhoID, "Doctor", "Who", "doc.who@guesswho.com", []int{1}, 1,
+		doctorDoofenshmirtzID, "Heinz", "Doofenshmirtz", "doofy.balooney@gmail.com", []int{1}, 1)
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+		INSERT INTO student (first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()),
+		       ($8, $9, $3, $4, $5, $10, $7, NOW()),
+		       ($11, $12, $3, $4, $5, $13, $7, NOW()),
+		       ($14, $15, $3, $4, $5, $16, $7, NOW()),
+		       ($17, $18, $3, $19, $5, $6, $7, NOW());
+    `, "Michelle", "Li", "2005-01-31", doctorWhoID, 1, 0, "IEP Content",
 		"Ally", "Descoteaux", 5,
 		"Luis", "Enrique Sarmiento", 12,
 		"Harsh", "Singh", -1,
 		"Stone", "Liu", doctorDoofenshmirtzID)
 	assert.NoError(t, err)
 
-	students, err := repo.GetStudents(ctx, PtrInt(5), uuid.Nil, "", utils.NewPagination())
+	students, err := repo.GetStudents(ctx, PtrInt(5), nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 
 	patch := models.PromoteStudentsInput{
@@ -773,7 +848,7 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 	}
 	err = repo.PromoteStudents(ctx, patch)
 	assert.NoError(t, err)
-	students, err = repo.GetStudents(ctx, nil, uuid.Nil, "", utils.NewPagination())
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "", utils.NewPagination())
 	assert.NoError(t, err)
 
 	for i := 0; i < len(students); i++ {
@@ -789,5 +864,128 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 		case "Stone":
 			assert.Equal(t, *students[i].Grade, 0)
 		}
+	}
+}
+
+func TestStudentRepository_GetStudents_FilterBySchoolAndDistrict(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+
+	testDB := testutil.SetupTestWithCleanup(t)
+
+	repo := schema.NewStudentRepository(testDB)
+	ctx := context.Background()
+
+	_, err := testDB.Exec(ctx, `
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW()), ($3, $4, NOW(), NOW());
+	`, 1, "District One", 2, "District Two")
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW()), ($4, $5, $6, NOW(), NOW()), ($7, $8, $9, NOW(), NOW());
+	`, 1, "School A", 1, 2, "School B", 1, 3, "School C", 2)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Test", "Therapist", "test@test.com", true, []int{1, 2, 3}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
+	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
+
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+        VALUES 
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9),
+        ($10, $11, $12, $4, $5, $13, $7, $8, $9),
+        ($14, $15, $16, $4, $5, $17, $7, $8, $9)
+    `, uuid.New(), "Student", "One", testDOB, therapistID, 1, 5, time.Now(), time.Now(),
+		uuid.New(), "Student", "Two", 2,
+		uuid.New(), "Student", "Three", 3)
+	assert.NoError(t, err)
+
+	students, err := repo.GetStudents(ctx, nil, PtrInt(1), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 1)
+	assert.Equal(t, "One", students[0].LastName)
+
+	students, err = repo.GetStudents(ctx, nil, PtrInt(2), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 1)
+	assert.Equal(t, "Two", students[0].LastName)
+
+	students, err = repo.GetStudents(ctx, nil, PtrInt(3), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 1)
+	assert.Equal(t, "Three", students[0].LastName)
+}
+
+func TestStudentRepository_GetStudents_MultipleSchoolsSameDistrict(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+
+	testDB := testutil.SetupTestWithCleanup(t)
+
+	repo := schema.NewStudentRepository(testDB)
+	ctx := context.Background()
+
+	_, err := testDB.Exec(ctx, `
+	INSERT INTO "district" (id, name, created_at, updated_at)
+	VALUES ($1, $2, NOW(), NOW());
+	`, 1, "Unified District")
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+	INSERT INTO "school" (id, name, district_id, created_at, updated_at) 
+	VALUES ($1, $2, $3, NOW(), NOW()), ($4, $5, $6, NOW(), NOW()), ($7, $8, $9, NOW(), NOW());
+	`, 1, "Elementary School", 1, 2, "Middle School", 1, 3, "High School", 1)
+	assert.NoError(t, err)
+
+	therapistID := uuid.New()
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "District", "Therapist", "therapist@district.com", true, []int{1, 2, 3}, 1, time.Now(), time.Now())
+	assert.NoError(t, err)
+
+	testDOB := time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)
+	for i := 1; i <= 3; i++ {
+		for j := 1; j <= 2; j++ {
+			_, err = testDB.Exec(ctx, `
+                INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `, uuid.New(), fmt.Sprintf("School%d", i), fmt.Sprintf("Student%d", j), testDOB, therapistID, i, i*2, time.Now(), time.Now())
+			assert.NoError(t, err)
+		}
+	}
+
+	students, err := repo.GetStudents(ctx, nil, PtrInt(1), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 2)
+
+	students, err = repo.GetStudents(ctx, nil, PtrInt(2), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 2)
+
+	students, err = repo.GetStudents(ctx, nil, PtrInt(3), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 2)
+
+	students, err = repo.GetStudents(ctx, nil, nil, uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 6)
+
+	students, err = repo.GetStudents(ctx, PtrInt(2), PtrInt(1), uuid.Nil, "", utils.NewPagination())
+	assert.NoError(t, err)
+	assert.Len(t, students, 2)
+	for _, student := range students {
+		assert.Equal(t, 2, *student.Grade)
+		assert.Equal(t, 1, student.SchoolID)
 	}
 }
