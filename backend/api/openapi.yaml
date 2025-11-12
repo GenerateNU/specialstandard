@@ -625,6 +625,13 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: therapist_id
+          in: query
+          description: Filter students by therapist UUID
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
       responses:
         "200":
           description: List of students with session relationship details

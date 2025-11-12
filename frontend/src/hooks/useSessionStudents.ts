@@ -27,7 +27,7 @@ export function useSessionStudentsForSession(sessionId: string) {
     queryKey: ["sessions", sessionId, "students", therapistId],
     queryFn: () =>
       sessionsApi.getSessionsSessionIdStudents(sessionId, {
-        therapistId: therapistId!,
+        therapist_id: therapistId!,
       }),
     enabled: !!sessionId && !!therapistId,
   });
