@@ -29,12 +29,19 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 	repo := schema.NewGameResultRepository(testDB)
 	ctx := context.Background()
 
+	schoolID := 1
+	_, err := testDB.Exec(ctx,
+		`INSERT INTO school (id, name)
+	   	 VALUES ($1, $2)`,
+		schoolID, "Special Standard School")
+	assert.NoError(t, err)
+
 	// Inserting Valid Therapist
 	therapistID := uuid.New()
-	_, err := testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-       	 VALUES ($1, $2, $3, $4)`,
-		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
+	_, err = testDB.Exec(ctx,
+		`INSERT INTO therapist (id, first_name, last_name, email, schools)
+       	 VALUES ($1, $2, $3, $4, $5)`,
+		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com", []int{schoolID})
 	assert.NoError(t, err)
 
 	// Create test session
@@ -50,9 +57,9 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 	// Create test student
 	studentID := uuid.New()
 	_, err = testDB.Exec(ctx, `
-       INSERT INTO student (id, first_name, last_name, therapist_id, grade)
-       VALUES ($1, $2, $3, $4, $5)
-   `, studentID, "Test", "Student", therapistID, 5)
+       INSERT INTO student (id, first_name, last_name, therapist_id, school_id, grade)
+       VALUES ($1, $2, $3, $4, $5, $6)
+   `, studentID, "Test", "Student", therapistID, schoolID, 5)
 	assert.NoError(t, err)
 
 	// Inserting SessionStudent
@@ -138,12 +145,19 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 	assert.Nil(t, postedGameResult)
 	assert.Error(t, err)
 
+	schoolID := 1
+	_, err = testDB.Exec(ctx,
+		`INSERT INTO school (id, name)
+	   	 VALUES ($1, $2)`,
+		schoolID, "Special Standard School")
+	assert.NoError(t, err)
+
 	// Inserting Valid Therapist
 	therapistID := uuid.New()
 	_, err = testDB.Exec(ctx,
-		`INSERT INTO therapist (id, first_name, last_name, email)
-       	 VALUES ($1, $2, $3, $4)`,
-		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com")
+		`INSERT INTO therapist (id, first_name, last_name, email, schools)
+       	 VALUES ($1, $2, $3, $4, $5)`,
+		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com", []int{schoolID})
 	assert.NoError(t, err)
 
 	// Create test session
@@ -159,9 +173,9 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 	// Create test student
 	studentID := uuid.New()
 	_, err = testDB.Exec(ctx, `
-       INSERT INTO student (id, first_name, last_name, therapist_id, grade)
-       VALUES ($1, $2, $3, $4, $5)
-   `, studentID, "Test", "Student", therapistID, 5)
+       INSERT INTO student (id, first_name, last_name, therapist_id, school_id, grade)
+       VALUES ($1, $2, $3, $4, $5, $6)
+   `, studentID, "Test", "Student", therapistID, schoolID, 5)
 	assert.NoError(t, err)
 
 	// Inserting SessionStudent

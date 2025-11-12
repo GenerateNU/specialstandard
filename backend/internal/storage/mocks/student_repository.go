@@ -13,8 +13,8 @@ type MockStudentRepository struct {
 	mock.Mock
 }
 
-func (m *MockStudentRepository) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
-	args := m.Called(ctx, grade, therapistID, name, pagination)
+func (m *MockStudentRepository) GetStudents(ctx context.Context, grade, schoolID *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
+	args := m.Called(ctx, grade, schoolID, therapistID, name, pagination)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

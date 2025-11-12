@@ -52,13 +52,14 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:    "Student",
 						DOB:         ptrTime(time.Now().AddDate(-10, 0, 0)),
 						TherapistID: uuid.New(),
+						SchoolID:    1,
 						Grade:       ptrInt(99),
 						IEP:         ptrString("Test IEP"),
 						CreatedAt:   time.Now(),
 						UpdatedAt:   time.Now(),
 					},
 				}
-				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -67,7 +68,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "empty students list",
 			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -76,7 +77,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "repository error",
 			url:  "",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return(nil, errors.New("database error"))
+				m.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -100,7 +101,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "Pagination Parameters",
 			url:  "?page=2&limit=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 5}).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 5}).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -117,7 +118,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						Grade:     ptrInt(5),
 					},
 				}
-				m.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -135,7 +136,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						TherapistID: therapistID,
 					},
 				}
-				m.On("GetStudents", mock.Anything, (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -151,14 +152,14 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:  "Doe",
 					},
 				}
-				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "successful get students with all filters",
-			url:  "?grade=5&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&page=1&limit=5",
+			url:  "?grade=5&therapist_id=123e4567-e89b-12d3-a456-426614174000&name=John&school_id=1&page=1&limit=5",
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				therapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 				students := []models.Student{
@@ -167,10 +168,11 @@ func TestHandler_GetStudents(t *testing.T) {
 						FirstName:   "John",
 						LastName:    "Doe",
 						Grade:       ptrInt(5),
+						SchoolID:    1,
 						TherapistID: therapistID,
 					},
 				}
-				m.On("GetStudents", mock.Anything, ptrInt(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), ptrInt(1), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -179,7 +181,7 @@ func TestHandler_GetStudents(t *testing.T) {
 			name: "empty results with filters",
 			url:  "?grade=12&name=Nonexistent",
 			mockSetup: func(m *mocks.MockStudentRepository) {
-				m.On("GetStudents", mock.Anything, ptrInt(12), uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(12), (*int)(nil), uuid.Nil, "Nonexistent", mock.AnythingOfType("utils.Pagination")).Return([]models.Student{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -195,7 +197,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						LastName:  "Doe",
 					},
 				}
-				m.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+				m.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "JOHN", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -212,9 +214,26 @@ func TestHandler_GetStudents(t *testing.T) {
 						Grade:     ptrInt(5),
 					},
 				}
-				m.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
+				m.On("GetStudents", mock.Anything, ptrInt(5), (*int)(nil), uuid.Nil, "", utils.Pagination{Page: 2, Limit: 3}).Return(students, nil)
 			},
 			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "filter by school",
+			url:  "?school_id=1",
+			mockSetup: func(m *mocks.MockStudentRepository) {
+				students := []models.Student{
+					{
+						ID:        uuid.New(),
+						FirstName: "Student",
+						LastName:  "AtSchool",
+						SchoolID:  1,
+					},
+				}
+				m.On("GetStudents", mock.Anything, mock.Anything, ptrInt(1), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(students, nil)
+			},
+			expectedStatus: 200,
 			wantErr:        false,
 		},
 	}
@@ -665,6 +684,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"first_name": "John",
 				"last_name": "Doe",
 				"dob": "2010-05-15",
+				"school_id": 1,
 				"therapist_id": "` + therapistID.String() + `",
 				"grade": 5,
 				"iep": "Active IEP with speech therapy goals"
@@ -675,6 +695,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					FirstName:   "John",
 					LastName:    "Doe",
 					Grade:       ptrInt(5),
+					SchoolID:    1,
 					IEP:         ptrString("Active IEP with speech therapy goals"),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
@@ -692,6 +713,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"last_name": "Johnson", 
 				"dob": "2012-03-22",
 				"therapist_id": "` + therapistID.String() + `",
+				"school_id": 1,
 				"grade": 3,
 				"iep": "Math accommodations and extended time"
 			}`,
@@ -701,6 +723,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					FirstName:   "Emma",
 					LastName:    "Johnson",
 					Grade:       ptrInt(3),
+					SchoolID:    1,
 					IEP:         ptrString("Math accommodations and extended time"),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2012, 3, 22, 0, 0, 0, 0, time.UTC)),
@@ -761,6 +784,7 @@ func TestHandler_AddStudent(t *testing.T) {
 			requestBody: `{
 				"first_name": "John",
 				"last_name": "Doe",
+				"school_id": 1,
 				"therapist_id": "` + therapistID.String() + `"
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
@@ -775,6 +799,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"first_name": "Test",
 				"last_name": "Student",
 				"dob": "2000-02-29",
+				"school_id": 1,
 				"therapist_id": "` + therapistID.String() + `",
 				"grade": 12,
 				"iep": "Graduation accommodations"
@@ -785,6 +810,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					FirstName:   "Test",
 					LastName:    "Student",
 					Grade:       ptrInt(12),
+					SchoolID:    1,
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2000, 2, 29, 0, 0, 0, 0, time.UTC)),
 					IEP:         ptrString("Graduation accommodations"),

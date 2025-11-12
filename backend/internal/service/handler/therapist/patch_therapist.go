@@ -5,6 +5,7 @@ import (
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"specialstandard/internal/xvalidator"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -38,8 +39,33 @@ func (h *Handler) PatchTherapist(c *fiber.Ctx) error {
 
 	// Here we parse the bad request which is recieved
 	if err != nil {
-		slog.Error("Error updating document", "error", err)
-		return errs.BadRequest("There was an error parsing the given id!")
+		// Here we parse the bad request which is recieved
+		slog.Error("Failed to patch therapist", "therapist_id", therapistID, "err", err)
+		errStr := err.Error()
+		switch {
+		case strings.Contains(errStr, "no rows affected") ||
+			strings.Contains(errStr, "not found") ||
+			strings.Contains(errStr, "no rows in result set"):
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Therapist not found",
+			})
+		case strings.Contains(errStr, "foreign key"):
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid Reference",
+			})
+		case strings.Contains(errStr, "check constraint"):
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Violated a check constraint",
+			})
+		case strings.Contains(errStr, "connection refused"):
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Database Connection Error",
+			})
+		default:
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to Update Therapist",
+			})
+		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(therapist)

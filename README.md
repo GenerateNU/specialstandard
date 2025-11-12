@@ -18,8 +18,6 @@ The Special Standard revolutionizes speech-language therapy in educational setti
 - **Multi-Platform Support**: Web-based platform accessible on any device
 - **Secure Data Management**: FERPA and HIPAA compliant data handling
 
-Here's a modular section you can drop into your README:
-
 ## 🛠️ Development
 
 ### Quick Start

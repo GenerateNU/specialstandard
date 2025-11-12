@@ -17,37 +17,45 @@ type StudentRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *StudentRepository) GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
+func (r *StudentRepository) GetStudents(ctx context.Context, grade, schoolID *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error) {
 	queryString := `
-	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
-	FROM student WHERE 1 = 1`
+	SELECT s.id, s.first_name, s.last_name, s.dob, s.therapist_id, s.school_id, sch.name AS school_name, sch.district_id, s.grade, s.iep, s.created_at, s.updated_at
+	FROM student s
+	JOIN school sch ON s.school_id = sch.id
+	WHERE 1 = 1`
 
 	args := []interface{}{}
 	argNum := 1
 
 	// Add filters if provided (nil means no grade filter)
 	if grade != nil {
-		queryString += fmt.Sprintf(" AND grade = $%d", argNum)
+		queryString += fmt.Sprintf(" AND s.grade = $%d", argNum)
 		args = append(args, *grade)
 		argNum++
 	} else {
-		queryString += " AND grade != -1" // Exclude graduated students by default
+		queryString += " AND s.grade != -1" // Exclude graduated students by default
 	}
 
 	if therapistID != uuid.Nil {
-		queryString += fmt.Sprintf(" AND therapist_id = $%d", argNum)
+		queryString += fmt.Sprintf(" AND s.therapist_id = $%d", argNum)
 		args = append(args, therapistID)
 		argNum++
 	}
 
 	if name != "" {
-		queryString += fmt.Sprintf(" AND (first_name ILIKE $%d OR last_name ILIKE $%d OR CONCAT(first_name, ' ', last_name) ILIKE $%d)", argNum, argNum, argNum)
+		queryString += fmt.Sprintf(" AND (s.first_name ILIKE $%d OR s.last_name ILIKE $%d OR CONCAT(s.first_name, ' ', s.last_name) ILIKE $%d)", argNum, argNum, argNum)
 		searchPattern := "%" + name + "%"
 		args = append(args, searchPattern)
 		argNum++
 	}
 
-	queryString += " ORDER BY first_name ASC, last_name ASC, dob ASC"
+	if schoolID != nil {
+		queryString += fmt.Sprintf(" AND s.school_id = $%d", argNum)
+		args = append(args, *schoolID)
+		argNum++
+	}
+
+	queryString += " ORDER BY sch.name ASC, s.first_name ASC, s.last_name ASC, s.dob ASC"
 
 	// Add pagination
 	queryString += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argNum, argNum+1)
@@ -78,9 +86,9 @@ func (r *StudentRepository) DeleteStudent(ctx context.Context, id uuid.UUID) err
 func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	query := `
 	UPDATE student
-	SET first_name = $1, last_name = $2, dob = $3, therapist_id = $4, grade = $5, iep = $6
-	WHERE id = $7
-	RETURNING id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at`
+	SET first_name = $1, last_name = $2, dob = $3, therapist_id = $4, school_id = $5, grade = $6, iep = $7
+	WHERE id = $8
+	RETURNING id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at`
 
 	var updatedStudent models.Student
 	err := r.db.QueryRow(ctx, query,
@@ -88,6 +96,7 @@ func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.St
 		student.LastName,
 		student.DOB,
 		student.TherapistID,
+		student.SchoolID,
 		student.Grade,
 		student.IEP,
 		student.ID,
@@ -97,6 +106,7 @@ func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.St
 		&updatedStudent.LastName,
 		&updatedStudent.DOB,
 		&updatedStudent.TherapistID,
+		&updatedStudent.SchoolID,
 		&updatedStudent.Grade,
 		&updatedStudent.IEP,
 		&updatedStudent.CreatedAt,
@@ -107,9 +117,9 @@ func (r *StudentRepository) UpdateStudent(ctx context.Context, student models.St
 
 func (r *StudentRepository) AddStudent(ctx context.Context, student models.Student) (models.Student, error) {
 	query := `
-	INSERT INTO student (first_name, last_name, dob, therapist_id, grade, iep, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, NOW())
-	RETURNING id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at`
+	INSERT INTO student (first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+	RETURNING id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at`
 
 	var createdStudent models.Student
 	err := r.db.QueryRow(ctx, query,
@@ -117,6 +127,7 @@ func (r *StudentRepository) AddStudent(ctx context.Context, student models.Stude
 		student.LastName,
 		student.DOB,
 		student.TherapistID,
+		student.SchoolID,
 		student.Grade,
 		student.IEP,
 	).Scan(
@@ -125,6 +136,7 @@ func (r *StudentRepository) AddStudent(ctx context.Context, student models.Stude
 		&createdStudent.LastName,
 		&createdStudent.DOB,
 		&createdStudent.TherapistID,
+		&createdStudent.SchoolID,
 		&createdStudent.Grade,
 		&createdStudent.IEP,
 		&createdStudent.CreatedAt,
@@ -136,9 +148,9 @@ func (r *StudentRepository) AddStudent(ctx context.Context, student models.Stude
 
 func (r *StudentRepository) GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error) {
 	query := `
-	SELECT id, first_name, last_name, dob, therapist_id, grade, iep, created_at, updated_at
-	FROM student
-	WHERE id = $1`
+	SELECT s.id, s.first_name, s.last_name, s.dob, s.therapist_id, s.school_id, sch.name AS school_name, sch.district_id, s.grade, s.iep, s.created_at, s.updated_at
+	FROM student s JOIN school sch ON s.school_id = sch.id
+	WHERE s.id = $1`
 
 	var student models.Student
 	err := r.db.QueryRow(ctx, query, id).Scan(
@@ -147,6 +159,9 @@ func (r *StudentRepository) GetStudent(ctx context.Context, id uuid.UUID) (model
 		&student.LastName,
 		&student.DOB,
 		&student.TherapistID,
+		&student.SchoolID,
+		&student.SchoolName,
+		&student.DistrictID,
 		&student.Grade,
 		&student.IEP,
 		&student.CreatedAt,
