@@ -48,7 +48,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
         limit: params?.limit ?? 100,
         startdate: params?.startdate,
         enddate: params?.enddate,
-        therapistId: therapistId!, // exclamation point essentially says "yo, this is confirmed to exist and not be null"
+        therapist_id: therapistId!, // exclamation point essentially says "yo, this is confirmed to exist and not be null"
       }),
     // we technically dont need this line but it is just defensive programming!!
     enabled: !!therapistId,
