@@ -24,6 +24,14 @@ export interface Therapist {
   first_name: string;
   last_name: string;
   email: string;
+  /** List of school IDs associated with the therapist */
+  schools?: number[];
+  /** School district ID the therapist belongs to */
+  district_id?: number;
+  /** List of school names associated with the therapist */
+  school_names?: string[];
+  /** Name of the school district the therapist belongs to */
+  district_name?: string;
   /** Whether the therapist is currently active */
   active: boolean;
   created_at: string;
@@ -35,6 +43,10 @@ export interface CreateTherapistInput {
   first_name: string;
   /** Last name of the therapist */
   last_name: string;
+  /** List of school IDs associated with the therapist */
+  schools?: number[];
+  /** School district ID the therapist belongs to */
+  district_id: number;
   /** Email of the therapist */
   email: string;
 }
@@ -44,6 +56,10 @@ export interface UpdateTherapistInput {
   first_name?: string;
   /** Last name of the therapist */
   last_name?: string;
+  /** List of school IDs associated with the therapist */
+  schools?: number[];
+  /** School district ID the therapist belongs to */
+  district_id?: number;
   /** Email of the therapist */
   email?: string;
   /** Whether the therapist is active */
@@ -98,6 +114,18 @@ export interface Student {
   dob?: string;
   /** UUID of the assigned therapist */
   therapist_id: string;
+  /** ID of the school the student attends */
+  school_id: number;
+  /**
+   * Name of the school the student attends
+   * @nullable
+   */
+  school_name?: string | null;
+  /**
+   * ID of the school district the student belongs to
+   * @nullable
+   */
+  district_id?: number | null;
   /**
    * Student's current grade level. -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
    * @minimum -1
@@ -126,6 +154,8 @@ export interface CreateStudentInput {
    * @nullable
    */
   dob?: string | null;
+  /** ID of the school the student attends */
+  school_id: number;
   /** ID of the assigned therapist */
   therapist_id: string;
   /**
@@ -751,7 +781,11 @@ export type GetSessionsParams = {
   /**
    * Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
    */
-  id?: string[];
+  student_ids?: string[];
+  /**
+   * Filter sessions by therapist UUID
+   */
+  therapist_id?: string;
 };
 
 export type PostSessionsBodyRepetition = {
@@ -809,6 +843,10 @@ export type GetSessionsSessionIdStudentsParams = {
    * @minimum 1
    */
   limit?: number;
+  /**
+   * Filter students by therapist UUID
+   */
+  therapist_id?: string;
 };
 
 export type GetStudentsParams = {
@@ -833,6 +871,10 @@ export type GetStudentsParams = {
    * Filter students by therapist UUID
    */
   therapist_id?: string;
+  /**
+   * Filter students by school ID
+   */
+  school_id?: number;
   /**
    * Search students by name (case-insensitive, matches first or last name)
    */

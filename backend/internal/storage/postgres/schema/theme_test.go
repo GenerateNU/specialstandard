@@ -15,6 +15,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func ptrString(s string) *string {
+	return &s
+}
+
+func ptrTime(t time.Time) *time.Time {
+	return &t
+}
+
 func TestThemeRepository_CreateTheme(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
@@ -115,7 +123,7 @@ func TestThemeRepository_GetThemes(t *testing.T) {
 	themes, err = repo.GetThemes(ctx, utils.NewPagination(), nil)
 
 	assert.NoError(t, err)
-	assert.Len(t, themes, 10)
+	assert.Len(t, themes, 12)
 
 	themes, err = repo.GetThemes(ctx, utils.Pagination{
 		Page:  2,

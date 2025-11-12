@@ -262,7 +262,7 @@ paths:
             minimum: 1776
             maximum: 2200
           example: 2025
-        - name: id
+        - name: student_ids
           in: query
           description: Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
           schema:
@@ -273,6 +273,15 @@ paths:
           style: form
           explode: true
           example: ["550e8400-e29b-41d4-a716-446655440000"]
+        - name: therapist_id
+          in: query
+          description: Filter sessions by therapist UUID
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+          example: "550e8400-e29b-41d4-a716-446655440000"
       responses:
         "200":
           description: List of therapy sessions matching the filters
@@ -616,6 +625,13 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: therapist_id
+          in: query
+          description: Filter students by therapist UUID
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
       responses:
         "200":
           description: List of students with session relationship details
