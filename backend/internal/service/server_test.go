@@ -28,6 +28,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -66,7 +67,7 @@ func TestHealthEndpoint(t *testing.T) {
 
 func TestGetSessionsEndpoint(t *testing.T) {
 	testTherapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
-	
+
 	tests := []struct {
 		name           string
 		url            string
@@ -90,7 +91,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 					},
 				}
 				// Now with 4 parameters: ctx, pagination, filter, therapistID
-				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(sessions, nil)			
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(sessions, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -198,6 +199,7 @@ func TestGetSessionsEndpoint(t *testing.T) {
 		})
 	}
 }
+
 // Student Integration Tests
 func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
@@ -1378,7 +1380,21 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
 
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+				// Add GetDB mock if your repository has this method
+				m.On("GetDB").Return(&pgxpool.Pool{}) // Return actual pool or nil based on your needs
+
+				// Fix the CreateSessionStudent mock - check the actual method signature
+				// Based on the error, it seems like it expects (context, pool, input)
+				m.On("CreateSessionStudent",
+					mock.Anything, // context
+					mock.Anything, // pool
+					mock.MatchedBy(func(input *models.CreateSessionStudentInput) bool {
+						return len(input.SessionIDs) == 1 &&
+							len(input.StudentIDs) == 1 &&
+							input.SessionIDs[0] == sessionID &&
+							input.StudentIDs[0] == studentID &&
+							input.Present == true
+					})).Return(&[]models.SessionStudent{
 					{
 						SessionID: sessionID,
 						StudentID: studentID,
@@ -1394,7 +1410,7 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 		{
 			name: "Missing session ID",
 			payload: `{
-				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"student_ids": ["987fcdeb-51a2-43d1-9c4f-123456789abc"],
 				"present": true
 			}`,
 			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
@@ -1403,8 +1419,8 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 		{
 			name: "Invalid JSON format",
 			payload: `{
-				"session_id": "123e4567-e89b-12d3-a456-426614174000",
-				"student_id": /* missing comma */
+				"session_ids": "123e4567-e89b-12d3-a456-426614174000",
+				"student_ids": 
 			}`,
 			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
 			expectedStatusCode: fiber.StatusBadRequest,
@@ -1418,7 +1434,14 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 				"notes": "Duplicate entry"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
+				// Add GetDB mock
+				m.On("GetDB").Return(&pgxpool.Pool{})
+
+				m.On("CreateSessionStudent",
+					mock.Anything,
+					mock.Anything,
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(nil, errors.New("duplicate key value violates unique constraint"))
 			},
 			expectedStatusCode: fiber.StatusConflict,
 		},
@@ -1432,14 +1455,15 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 			repo := &storage.Repository{
 				SessionStudent: mockSessionStudentRepo,
 			}
+
 			app := service.SetupApp(config.Config{
 				TestMode: true,
 			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("POST", "/api/v1/session_students", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
-			res, err := app.Test(req, -1)
 
+			res, err := app.Test(req, -1)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
 			mockSessionStudentRepo.AssertExpectations(t)

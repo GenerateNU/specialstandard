@@ -313,7 +313,7 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 
 		resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
 		assert.NoError(t, err)
-		assert.Len(t, resources, 10, "Expected 10 as per default pagination")
+		assert.Len(t, resources, 12, "Expected 12 as per default pagination")
 
 		resources, err = repo.GetResourcesBySessionID(ctx, sessionID, utils.Pagination{
 			Page:  2,

@@ -63,5 +63,9 @@ func (m *MockSessionRepository) PatchSession(ctx context.Context, id uuid.UUID, 
 }
 
 func (m *MockSessionRepository) GetDB() *pgxpool.Pool {
-	return nil
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(*pgxpool.Pool)
 }

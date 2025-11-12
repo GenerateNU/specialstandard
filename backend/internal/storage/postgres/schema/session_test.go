@@ -21,18 +21,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func ptrString(s string) *string {
-	return &s
-}
-
-func ptrTime(t time.Time) *time.Time {
-	return &t
-}
-
 func TestHandler_GetSessions(t *testing.T) {
 	// Generate a test therapist ID to use across tests
 	testTherapistID := uuid.New()
-	
+
 	tests := []struct {
 		name           string
 		url            string
@@ -163,6 +155,67 @@ func TestHandler_GetSessions(t *testing.T) {
 	}
 }
 
+func TestHandler_GetSessionByID(t *testing.T) {
+	tests := []struct {
+		name           string
+		sessionID      string
+		mockSetup      func(*mocks.MockSessionRepository)
+		expectedStatus int
+	}{
+		{
+			name:      "successful get session by valid UUID",
+			sessionID: uuid.New().String(),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				session := &models.Session{
+					ID:            uuid.New(),
+					TherapistID:   uuid.New(),
+					StartDateTime: time.Now(),
+					EndDateTime:   time.Now().Add(time.Hour),
+					Notes:         ptrString("Test session"),
+					CreatedAt:     ptrTime(time.Now()),
+					UpdatedAt:     ptrTime(time.Now()),
+				}
+				m.On("GetSessionByID", mock.Anything, mock.AnythingOfType("string")).Return(session, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name:           "bad request for invalid UUID",
+			sessionID:      "invalid-uuid",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+		},
+		{
+			name:      "session not found",
+			sessionID: uuid.New().String(),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				m.On("GetSessionByID", mock.Anything, mock.AnythingOfType("string")).Return(nil, pgx.ErrNoRows)
+			},
+			expectedStatus: fiber.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New(fiber.Config{
+				ErrorHandler: errs.ErrorHandler,
+			})
+			mockRepo := new(mocks.MockSessionRepository)
+			tt.mockSetup(mockRepo)
+
+			mockRepoSSR := new(mocks.MockSessionStudentRepository)
+			handler := session.NewHandler(mockRepo, mockRepoSSR)
+			app.Get("/sessions/:id", handler.GetSessionByID)
+
+			req := httptest.NewRequest("GET", "/sessions/"+tt.sessionID, nil)
+			resp, _ := app.Test(req, -1)
+
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
 func TestHandler_DeleteSessions(t *testing.T) {
 	tests := []struct {
 		id             uuid.UUID
@@ -231,7 +284,7 @@ func TestHandler_DeleteSessions(t *testing.T) {
 
 func TestHandler_PostSessions(t *testing.T) {
 	testTherapistID := uuid.New()
-	
+
 	tests := []struct {
 		name               string
 		payload            string
@@ -267,11 +320,27 @@ func TestHandler_PostSessions(t *testing.T) {
 				"notes": "Test FK"
 			}`, uuid.New().String()),
 			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
-				m.On("PostSession", mock.Anything, mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).
-					Return(nil, errors.New("foreign key violation"))
-				m.On("GetDB").Return(nil)
+				// Create a proper mock pool and transaction
+				mockPool := new(mocks.MockPool)
+				mockTx := new(mocks.MockTx)
+
+				// Setup GetDB to return the mock pool
+				m.On("GetDB").Return(mockPool)
+
+				// Setup pool.Begin to return the mock transaction
+				mockPool.On("Begin", mock.Anything).Return(mockTx, nil)
+
+				// Setup the PostSession call with the mock transaction
+				m.On("PostSession",
+					mock.Anything,
+					mockTx,
+					mock.AnythingOfType("*models.PostSessionInput"),
+				).Return(nil, errors.New("foreign key violation"))
+
+				// Setup transaction rollback
+				mockTx.On("Rollback", mock.Anything).Return(nil)
 			},
-			expectedStatusCode: fiber.StatusInternalServerError,
+			expectedStatusCode: fiber.StatusBadRequest,
 		},
 		{
 			name: "Start time and end time (check constraint violation)",
@@ -282,11 +351,21 @@ func TestHandler_PostSessions(t *testing.T) {
 				"notes": "Check violation"
 			}`, testTherapistID.String()),
 			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
-				m.On("PostSession", mock.Anything, mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).
-					Return(nil, errors.New("check constraint violation"))
-				m.On("GetDB").Return(nil)
+				mockPool := new(mocks.MockPool)
+				mockTx := new(mocks.MockTx)
+
+				m.On("GetDB").Return(mockPool)
+				mockPool.On("Begin", mock.Anything).Return(mockTx, nil)
+
+				m.On("PostSession",
+					mock.Anything,
+					mockTx,
+					mock.AnythingOfType("*models.PostSessionInput"),
+				).Return(nil, errors.New("check constraint violation"))
+
+				mockTx.On("Rollback", mock.Anything).Return(nil)
 			},
-			expectedStatusCode: fiber.StatusInternalServerError,
+			expectedStatusCode: fiber.StatusBadRequest,
 		},
 		{
 			name: "Success!",
@@ -308,9 +387,20 @@ func TestHandler_PostSessions(t *testing.T) {
 						UpdatedAt:     ptrTime(time.Now()),
 					},
 				}
-				m.On("PostSession", mock.Anything, mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).
-					Return(&sessions, nil)
-				m.On("GetDB").Return(nil)
+
+				mockPool := new(mocks.MockPool)
+				mockTx := new(mocks.MockTx)
+
+				m.On("GetDB").Return(mockPool)
+				mockPool.On("Begin", mock.Anything).Return(mockTx, nil)
+
+				m.On("PostSession",
+					mock.Anything,
+					mockTx,
+					mock.AnythingOfType("*models.PostSessionInput"),
+				).Return(&sessions, nil)
+
+				mockTx.On("Commit", mock.Anything).Return(nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 		},
@@ -323,9 +413,19 @@ func TestHandler_PostSessions(t *testing.T) {
 				"notes": "DB connection test"
 			}`, testTherapistID.String()),
 			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
-				m.On("PostSession", mock.Anything, mock.Anything, mock.AnythingOfType("*models.PostSessionInput")).
-					Return(nil, errors.New("connection refused"))
-				m.On("GetDB").Return(nil)
+				mockPool := new(mocks.MockPool)
+				mockTx := new(mocks.MockTx)
+
+				m.On("GetDB").Return(mockPool)
+				mockPool.On("Begin", mock.Anything).Return(mockTx, nil)
+
+				m.On("PostSession",
+					mock.Anything,
+					mockTx,
+					mock.AnythingOfType("*models.PostSessionInput"),
+				).Return(nil, errors.New("connection refused"))
+
+				mockTx.On("Rollback", mock.Anything).Return(nil)
 			},
 			expectedStatusCode: fiber.StatusInternalServerError,
 		},
@@ -536,7 +636,7 @@ func TestHandler_PatchSessions(t *testing.T) {
 
 			res, _ := app.Test(req, -1)
 			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
-			mockRepo.AssertExpectations(t) // ?
+			mockRepo.AssertExpectations(t)
 		})
 	}
 }

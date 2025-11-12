@@ -16,6 +16,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -41,7 +42,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"notes": "Student participated well in group activities"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(&[]models.SessionStudent{
 					{
 						SessionID: sessionID,
 						StudentID: studentID,
@@ -63,7 +69,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": false
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(&[]models.SessionStudent{
 					{
 						SessionID: sessionID,
 						StudentID: studentID,
@@ -108,7 +119,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 			name:        "invalid_session_id_format",
 			requestBody: `{"student_ids": ["` + studentID.String() + `"], "present": true, "session_ids": "not-a-uuid"}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// No mock setup needed - JSON parsing should succeed but UUID validation should fail
+				// No mock setup needed - JSON parsing should fail on invalid UUID format
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -117,7 +128,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 			name:        "invalid_student_id_format",
 			requestBody: `{"session_ids": ["` + sessionID.String() + `"], "present": true, "student_ids": "not-a-uuid"}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// No mock setup needed - JSON parsing should succeed but UUID validation should fail
+				// No mock setup needed - JSON parsing should fail on invalid UUID format
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -126,13 +137,11 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 			name: "empty_session_id_nil_uuid",
 			requestBody: `{
 				"session_ids": ["00000000-0000-0000-0000-000000000000"],
-				"student_ids": ["` + studentID.String() + `"],
+				"student_ids": ["42a36e4a-1a3e-4a08-aac0-a1ca769e79d1"],
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// The nil UUID should be caught by validation before repository call
-				// But add .Maybe() in case validation logic changes
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("invalid session")).Maybe()
+				// The handler validates zero UUIDs before calling repository, so no mock needed
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -145,9 +154,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// The nil UUID should be caught by validation before repository call
-				// But add .Maybe() in case validation logic changes
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("invalid student")).Maybe()
+				// The handler validates zero UUIDs before calling repository, so no mock needed
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -161,7 +168,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"notes": "Duplicate entry"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(nil, errors.New("duplicate key value violates unique constraint"))
 			},
 			expectedStatus: fiber.StatusConflict,
 			wantErr:        true,
@@ -174,7 +186,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("database connection failed"))
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(nil, errors.New("database connection failed"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -196,8 +213,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).
-					Return(nil, errors.New("pq: unique_violation: duplicate student in session"))
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(nil, errors.New("pq: unique_violation: duplicate student in session"))
 			},
 			expectedStatus: fiber.StatusConflict,
 			wantErr:        true,
@@ -210,7 +231,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(&[]models.SessionStudent{
 					{
 						SessionID: sessionID,
 						StudentID: studentID,

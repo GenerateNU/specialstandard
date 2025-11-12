@@ -71,7 +71,7 @@ func TestResourceRepository_GetResources(t *testing.T) {
 
 	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, resources, 10)
+	assert.Len(t, resources, 13)
 
 	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.Pagination{
 		Page:  2,

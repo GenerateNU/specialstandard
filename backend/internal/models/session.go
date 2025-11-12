@@ -43,7 +43,7 @@ type GetSessionRequest struct {
 	EndTime     *time.Time `query:"enddate" validate:"omitempty"`
 	Month       *int       `query:"month" validate:"omitempty,gte=1,lte=12"`
 	Year        *int       `query:"year" validate:"omitempty,gte=1776,lte=2200"`
-	StudentIDs  *[]string  `query:"id" validate:"omitempty"`
+	StudentIDs  *[]string  `query:"student_ids" validate:"omitempty"`
 	TherapistID string     `query:"therapist_id" validate:"required,uuid"`
 }
 
