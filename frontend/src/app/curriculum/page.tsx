@@ -65,6 +65,10 @@ export default function Curriculum() {
             </p>
           </header>
 
+          <Link href="/games" className="text-primary hover:text-blue transition-colors">
+            Games
+          </Link>
+
           {/* Resource list */}
           {resources.length === 0
             ? (
