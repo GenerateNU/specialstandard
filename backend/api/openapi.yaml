@@ -1218,15 +1218,6 @@ paths:
               example:
                 code: 400
                 message: "Invalid UUID format"
-        "404":
-          description: Student not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 404
-                message: "Student not found"
         "500":
           description: Internal server error
           content:
