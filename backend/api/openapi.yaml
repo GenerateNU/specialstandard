@@ -1170,6 +1170,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /students/{student_id}/attendance:
+    get:
+      summary: Get attendance records for a student
+      description: Retrieve all attendance records for a specific student
+      tags: [Students]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          description: UUID of the student
+          schema:
+            type: string
+            format: uuid
+            example: "0711034b-18b9-4f41-9b61-467ce9a373d5"
+      responses:
+        "200":
+          description: List of attendance records for the student
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceRecord"
+        "400":
+          description: Bad request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Student not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /students/promote:
     patch:
@@ -3182,6 +3229,26 @@ components:
           items:
             $ref: "#/components/schemas/SessionRating"
           description: List of ratings given to the student during the session
+    AttendanceRecord:
+      type: object
+      required:
+        - student_id
+        - present_sessions
+        - total_sessions
+      properties:
+        student_id:
+          type: string
+          format: uuid
+          description: UUID of the student
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        present_sessions:
+          type: integer
+          description: Number of sessions the student was present
+          example: 15
+        total_sessions:
+          type: integer
+          description: Total number of sessions held
+          example: 20
 
     SessionWithStudentInfo:
       allOf:
