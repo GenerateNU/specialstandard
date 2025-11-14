@@ -140,3 +140,20 @@ func (r *SessionStudentRepository) RateStudentSession(ctx context.Context, input
 
 	return sessionStudent, ratings, nil
 }
+
+func (r *SessionStudentRepository) GetStudentAttendance(ctx context.Context, params models.GetStudentAttendanceParams) (*int, *int, error) {
+	query := `
+		SELECT 
+			COUNT(*) FILTER (WHERE present = true) AS present_count,
+			COUNT(*) AS total_count
+		FROM session_student ss JOIN session s ON ss.session_id = s.id
+		WHERE ss.student_id = $1 AND s.end_datetime BETWEEN $2 AND $3`
+
+	var presentCount, totalCount int
+	err := r.db.QueryRow(ctx, query, params.StudentID, params.DateFrom, params.DateTo).Scan(&presentCount, &totalCount)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &presentCount, &totalCount, nil
+}

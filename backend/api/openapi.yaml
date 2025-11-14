@@ -1184,6 +1184,22 @@ paths:
             type: string
             format: uuid
             example: "0711034b-18b9-4f41-9b61-467ce9a373d5"
+        - name: date_from
+          in: query
+          required: false
+          description: Filter attendance records on or after this date (YYYY-MM-DD format), default is no lower limit
+          schema:
+            type: string
+            format: date
+            example: "2025-09-01"
+        - name: date_to
+          in: query
+          required: false
+          description: Filter attendance records on or before this date (YYYY-MM-DD format), default to today
+          schema:
+            type: string
+            format: date
+            example: "2025-11-14"
       responses:
         "200":
           description: List of attendance records for the student
