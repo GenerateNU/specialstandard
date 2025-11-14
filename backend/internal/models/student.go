@@ -46,7 +46,7 @@ type UpdateStudentInput struct {
 	TherapistID *string  `json:"therapist_id,omitempty"`
 	SchoolID    *int     `json:"school_id,omitempty"`
 	Grade       *int     `json:"grade,omitempty" validate:"omitempty,oneof=-1 0 1 2 3 4 5 6 7 8 9 10 11 12"`
-	IEP         []string `json:"iep,omitempty"`
+	IEP         *[]string `json:"iep,omitempty"`
 }
 
 type PromoteStudentsInput struct {
