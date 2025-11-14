@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { BookOpen, Brain, ChevronRight, Gamepad2, RotateCw } from 'lucide-react'
+import { BookOpen, Brain, ChevronRight, Gamepad2, RotateCw, Check } from 'lucide-react'
 import { useThemes } from '@/hooks/useThemes'
 import { useGameContents } from '@/hooks/useGameContents'
 import { 
@@ -67,15 +67,24 @@ interface FlashcardProps {
   answer: string
   isFlipped: boolean
   onFlip: () => void
+  onMarkCorrect?: () => void
+  timeTaken?: number
 }
 
 interface FlashcardGameInterfaceProps {
-  sessionStudentId?: number
-  sessionId?: string
-  studentId?: string
+  session_student_id?: number
+  session_id?: string
+  student_id?: string
 }
 
-const Flashcard: React.FC<FlashcardProps> = ({ question, answer, isFlipped, onFlip }) => {
+const Flashcard: React.FC<FlashcardProps> = ({ 
+  question, 
+  answer, 
+  isFlipped, 
+  onFlip,
+  onMarkCorrect,
+  timeTaken
+}) => {
   return (
     <div 
       className="relative w-full h-64 cursor-pointer preserve-3d transition-transform duration-700"
@@ -95,22 +104,39 @@ const Flashcard: React.FC<FlashcardProps> = ({ question, answer, isFlipped, onFl
       
       {/* Back of card */}
       <div 
-        className="absolute inset-0 w-full h-full bg-blue rounded-xl shadow-lg p-8 flex items-center justify-center backface-hidden"
+        className="absolute inset-0 w-full h-full bg-blue rounded-xl shadow-lg p-8 flex flex-col items-center justify-center backface-hidden"
         style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
       >
-        <div className="text-center">
-          <p className="text-white/80 text-sm mb-2">Answer</p>
+        <div className="text-center flex-1 flex items-center">
           <p className="text-2xl font-bold text-white">{answer}</p>
         </div>
+        
+        {onMarkCorrect && (
+          <div className="mt-4 flex items-center gap-3 text-white/70 text-sm">
+            {timeTaken !== undefined && (
+              <span>{timeTaken}s</span>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onMarkCorrect()
+              }}
+              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              title="Mark as correct"
+            >
+              <Check className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 export default function FlashcardGameInterface({ 
-  sessionStudentId, 
-  sessionId, 
-  studentId 
+  session_student_id, 
+  session_id, 
+  student_id 
 }: FlashcardGameInterfaceProps) {
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<GetGameContentsCategory | null>(null)
@@ -118,6 +144,8 @@ export default function FlashcardGameInterface({
   const [selectedGame, setSelectedGame] = useState<'flashcards' | 'memory' | 'quiz' | null>(null)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set())
+  const [cardStartTime, setCardStartTime] = useState<number | null>(null)
+  const [timeTaken, setTimeTaken] = useState(0)
 
   const { themes, isLoading: themesLoading, error: themesError, refetch: refetchThemes } = useThemes()
   const { gameContents, isLoading: contentsLoading, error: contentsError } = useGameContents({
@@ -127,11 +155,46 @@ export default function FlashcardGameInterface({
     question_count: 10,
   })
 
-  const gameResultsHook = sessionStudentId ? useGameResults({
-    sessionStudentId,
-    sessionId,
-    studentId
+  const gameResultsHook = session_student_id ? useGameResults({
+    session_student_id,
+    session_id,
+    student_id
   }) : null
+
+  const startCard = gameResultsHook?.startCard;
+
+  // Initialize timer when card loads
+  useEffect(() => {
+    if (selectedGame === 'flashcards' && gameContents[currentCardIndex]) {
+      setCardStartTime(Date.now())
+      setFlippedCards(new Set())
+      setTimeTaken(0)
+      startCard?.(gameContents[currentCardIndex])
+    }
+  }, [currentCardIndex, selectedGame, gameContents])
+
+  // Update timer display
+  useEffect(() => {
+    if (cardStartTime === null) return
+    
+    const interval = setInterval(() => {
+      setTimeTaken(Math.floor((Date.now() - cardStartTime) / 1000))
+    }, 100)
+    
+    return () => clearInterval(interval)
+  }, [cardStartTime])
+
+  const handleMarkCorrect = () => {
+    if (!gameResultsHook || !gameContents[currentCardIndex]) return
+    
+    const finalTime = Math.floor((Date.now() - (cardStartTime || Date.now())) / 1000)
+    gameResultsHook.completeCard(gameContents[currentCardIndex].id, finalTime)
+    
+    // Move to next card
+    setCurrentCardIndex(prev => prev + 1)
+    
+    setCardStartTime(null)
+  }
 
   const resetSelection = () => {
     setSelectedTheme(null)
@@ -140,6 +203,8 @@ export default function FlashcardGameInterface({
     setSelectedGame(null)
     setCurrentCardIndex(0)
     setFlippedCards(new Set())
+    setCardStartTime(null)
+    setTimeTaken(0)
   }
 
   const handleCardFlip = (index: number) => {
@@ -149,21 +214,10 @@ export default function FlashcardGameInterface({
         newSet.delete(index)
       } else {
         newSet.add(index)
-        // Mark as completed when first flipped
-        if (gameResultsHook && gameContents[index]) {
-          gameResultsHook.completeCard(gameContents[index].id)
-        }
       }
       return newSet
     })
   }
-
-  useEffect(() => {
-    if (selectedGame === 'flashcards' && gameContents[currentCardIndex] && gameResultsHook) {
-      gameResultsHook.startCard(gameContents[currentCardIndex])
-    }
-  }, [currentCardIndex, gameContents, selectedGame, gameResultsHook])
-
 
   // Error state
   if (themesError && !selectedTheme) {
@@ -379,6 +433,8 @@ export default function FlashcardGameInterface({
             onClick={() => {
               setCurrentCardIndex(0)
               setFlippedCards(new Set())
+              setCardStartTime(null)
+              setTimeTaken(0)
             }}
             className="flex items-center gap-2 text-secondary hover:text-primary transition-colors"
           >
@@ -407,12 +463,12 @@ export default function FlashcardGameInterface({
         <div className="mb-8">
           <div className="flex items-center justify-between text-sm text-secondary mb-2">
             <span>Card {currentCardIndex + 1} of {gameContents.length}</span>
-            <span>{Math.round(((currentCardIndex + 1) / gameContents.length) * 100)}% Complete</span>
+            <span>{Math.round((currentCardIndex / gameContents.length) * 100)}% Complete</span>
           </div>
           <div className="w-full bg-card rounded-full h-2 border border-default">
             <div 
               className="bg-blue h-full rounded-full transition-all duration-300"
-              style={{ width: `${((currentCardIndex + 1) / gameContents.length) * 100}%` }}
+              style={{ width: `${(currentCardIndex / gameContents.length) * 100}%` }}
             />
           </div>
         </div>
@@ -425,6 +481,8 @@ export default function FlashcardGameInterface({
               answer={gameContents[currentCardIndex].answer}
               isFlipped={flippedCards.has(currentCardIndex)}
               onFlip={() => handleCardFlip(currentCardIndex)}
+              onMarkCorrect={gameResultsHook ? handleMarkCorrect : undefined}
+              timeTaken={flippedCards.has(currentCardIndex) ? timeTaken : undefined}
             />
             <p className="text-center text-muted mt-4 text-sm">Click card to flip</p>
           </div>
@@ -473,7 +531,7 @@ export default function FlashcardGameInterface({
           </button>
         </div>
 
-        {currentCardIndex === gameContents.length - 1 && (
+        {currentCardIndex >= gameContents.length && (
           <div className="mt-8 p-6 bg-blue-light border border-blue rounded-lg text-center">
             <p className="text-blue font-semibold">Great job! You've completed all flashcards!</p>
             <div className="mt-4 flex gap-3 justify-center">
@@ -481,6 +539,8 @@ export default function FlashcardGameInterface({
                 onClick={() => {
                   setCurrentCardIndex(0)
                   setFlippedCards(new Set())
+                  setCardStartTime(null)
+                  setTimeTaken(0)
                 }}
                 className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover transition-colors"
               >
@@ -506,7 +566,6 @@ export default function FlashcardGameInterface({
           </div>
         )}
 
-        // Show existing results indicator (optional)
         {gameResultsHook && selectedGame === 'flashcards' && gameContents[currentCardIndex] && (
           <div className="text-center mt-2">
             {(() => {

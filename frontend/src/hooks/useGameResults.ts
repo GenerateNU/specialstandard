@@ -10,28 +10,29 @@ import type {
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 
 interface GameResultTracker {
-  contentId: string
-  startTime: number
-  endTime?: number
+  content_id: string
+  start_time: number
+  end_time?: number
+  time_taken_sec?: number
   completed: boolean
-  incorrectAttempts: string[]
+  incorrect_attempts: string[]
 }
 
 interface UseGameResultsProps {
-  sessionStudentId: number
-  sessionId?: string
-  studentId?: string
+  session_student_id: number
+  session_id?: string
+  student_id?: string
 }
 
-export function useGameResults({ sessionStudentId, sessionId, studentId }: UseGameResultsProps) {
+export function useGameResults({ session_student_id, session_id, student_id }: UseGameResultsProps) {
   const queryClient = useQueryClient()
   const api = getGameResult()
   const [results, setResults] = useState<Map<string, GameResultTracker>>(new Map())
 
-  // Query to get existing game results
+  // Query existing results
   const queryParams: GetGameResultsParams = {}
-  if (sessionId) queryParams.session_id = sessionId
-  if (studentId) queryParams.student_id = studentId
+  if (session_id) queryParams.session_id = session_id
+  if (student_id) queryParams.student_id = student_id
 
   const { 
     data: existingResults, 
@@ -43,32 +44,34 @@ export function useGameResults({ sessionStudentId, sessionId, studentId }: UseGa
       const response = await api.getGameResults(queryParams)
       return response
     },
-    enabled: !!sessionId || !!studentId,
+    enabled: !!session_id || !!student_id,
   })
 
-  // Start tracking a card
+  // Start tracking a game
   const startCard = useCallback((content: GameContent) => {
     setResults(prev => {
       const newMap = new Map(prev)
       newMap.set(content.id, {
-        contentId: content.id,
-        startTime: Date.now(),
+        content_id: content.id,
+        start_time: Date.now(),
         completed: false,
-        incorrectAttempts: []
+        incorrect_attempts: []
       })
       return newMap
     })
   }, [])
 
-  // Complete a card
-  const completeCard = useCallback((contentId: string) => {
+  // Mark game complete with optional time override
+  const completeCard = useCallback((content_id: string, time_taken_sec?: number) => {
     setResults(prev => {
       const newMap = new Map(prev)
-      const result = newMap.get(contentId)
+      const result = newMap.get(content_id)
       if (result) {
-        newMap.set(contentId, {
+        const calculatedTime = time_taken_sec ?? Math.max(0, Math.floor((Date.now() - result.start_time) / 1000))
+        newMap.set(content_id, {
           ...result,
-          endTime: Date.now(),
+          end_time: Date.now(),
+          time_taken_sec: calculatedTime,
           completed: true
         })
       }
@@ -76,22 +79,22 @@ export function useGameResults({ sessionStudentId, sessionId, studentId }: UseGa
     })
   }, [])
 
-  // Track incorrect attempt (for quiz mode)
-  const trackIncorrectAttempt = useCallback((contentId: string, attempt: string) => {
+  // Track incorrect attempts
+  const trackIncorrectAttempt = useCallback((content_id: string, attempt: string) => {
     setResults(prev => {
       const newMap = new Map(prev)
-      const result = newMap.get(contentId)
+      const result = newMap.get(content_id)
       if (result) {
-        newMap.set(contentId, {
+        newMap.set(content_id, {
           ...result,
-          incorrectAttempts: [...result.incorrectAttempts, attempt]
+          incorrect_attempts: [...result.incorrect_attempts, attempt]
         })
       }
       return newMap
     })
   }, [])
 
-  // Mutation to save a single result
+  // Mutation for saving single result
   const saveResultMutation = useMutation({
     mutationFn: async (input: PostGameResultInput) => {
       const response = await api.postGameResults(input)
@@ -102,37 +105,45 @@ export function useGameResults({ sessionStudentId, sessionId, studentId }: UseGa
     }
   })
 
-  // Save all results
+  // Save all tracked results
   const saveAllResults = useCallback(async () => {
     const allResults = Array.from(results.values())
+    console.warn("🧠 Saving all results:", allResults)
+
     const savePromises = allResults.map(result => {
-      const timeTaken = result.endTime 
-        ? Math.floor((result.endTime - result.startTime) / 1000)
-        : 0
-      
+      const time_taken_sec = result.time_taken_sec ?? (result.end_time
+        ? Math.max(0, Math.floor((result.end_time - result.start_time) / 1000))
+        : 0)
+
+      const incorrectAttempts = result.incorrect_attempts && result.incorrect_attempts.length > 0 
+        ? result.incorrect_attempts 
+        : undefined
+
       const input: PostGameResultInput = {
-        session_student_id: sessionStudentId,
-        content_id: result.contentId,
-        time_taken_sec: timeTaken,
-        completed: result.completed,
-        count_of_incorrect_attempts: result.incorrectAttempts.length,
-        incorrect_attempts: result.incorrectAttempts
+        session_student_id,
+        content_id: result.content_id,
+        time_taken_sec,
+        completed: true,
+        count_of_incorrect_attempts: result.incorrect_attempts.length,
+        incorrect_attempts: incorrectAttempts
       }
-      
+
+      console.warn("📤 Sending result:", input)
+      console.warn("📤 JSON would be:", JSON.stringify(input))
       return saveResultMutation.mutateAsync(input)
     })
-    
+
     try {
       await Promise.all(savePromises)
-      setResults(new Map()) // Clear tracked results after successful save
+      setResults(new Map()) // Clear after success
     } catch (error) {
       console.error('Error saving game results:', error)
     }
-  }, [results, sessionStudentId, saveResultMutation])
+  }, [results, session_student_id, saveResultMutation])
 
-  // Get result for a specific content
-  const getResultForContent = useCallback((contentId: string) => {
-    return existingResults?.find(result => result.content_id === contentId)
+  // Get existing result for specific content
+  const getResultForContent = useCallback((content_id: string) => {
+    return existingResults?.find(result => result.content_id === content_id)
   }, [existingResults])
 
   return {
@@ -148,7 +159,7 @@ export function useGameResults({ sessionStudentId, sessionId, studentId }: UseGa
     refetchResults,
     getResultForContent,
     
-    // Current session tracking
+    // Current in-session results
     currentResults: results,
     
     // Save status

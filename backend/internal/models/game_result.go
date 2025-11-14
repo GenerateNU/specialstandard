@@ -24,10 +24,10 @@ type GetGameResultQuery struct {
 }
 
 type PostGameResult struct {
-	SessionStudentID       int       `json:"session_student_id" validate:"required"`
+	SessionStudentID       int       `json:"session_student_id" validate:"gte=0"` // Remove validate:"required"
 	ContentID              uuid.UUID `json:"content_id" validate:"required,uuid"`
-	TimeTakenSec           int       `json:"time_taken_sec" validate:"required,gte=0"`
+	TimeTakenSec           int       `json:"time_taken_sec" validate:"gte=0"` // Remove required
 	Completed              *bool     `json:"completed,omitempty"`
-	CountIncorrectAttempts int       `json:"count_of_incorrect_attempts" validate:"required,gte=0"`
+	CountIncorrectAttempts int       `json:"count_of_incorrect_attempts" validate:"gte=0"` // Remove required
 	IncorrectAttempts      *[]string `json:"incorrect_attempts,omitempty" validate:"omitempty,dive"`
 }
