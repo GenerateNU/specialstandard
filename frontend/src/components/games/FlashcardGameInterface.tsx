@@ -49,7 +49,8 @@ interface FlashcardGameInterfaceProps {
   session_student_id?: number
   session_id?: string
   student_id?: string
-  themeId: string
+  themeId: string,
+  themeName: string,
   difficulty: number
   category: string
   questionType: string
@@ -116,6 +117,7 @@ export default function FlashcardGameInterface({
   session_id, 
   student_id,
   themeId,
+  themeName,
   difficulty,
   category,
   questionType
@@ -239,6 +241,8 @@ export default function FlashcardGameInterface({
         {/* Display selected options */}
         <div className="bg-card rounded-lg p-4 mb-6 border border-default">
           <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-muted">Theme:</span>
+            <span className="font-medium text-primary">{themeName}</span>
             <span className="text-muted">Difficulty:</span>
             <span className="font-medium text-primary">Level {difficulty}</span>
             <span className="text-muted mx-2">•</span>
