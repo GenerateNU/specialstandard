@@ -84,7 +84,7 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 		existingStudent.SchoolID = *req.SchoolID
 	}
 	if req.IEP != nil {
-		// IEP is now []string, so we just assign it directly
+		// IEP is []string, so we assign it directly
 		// Empty array or nil array will be handled by the database
 		existingStudent.IEP = req.IEP
 	}
