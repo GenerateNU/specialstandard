@@ -1,20 +1,22 @@
+import { useAuthContext } from "@/contexts/authContext";
+import { getSessionStudents as getSessionStudentsApi } from "@/lib/api/session-students";
+import { getSessions } from "@/lib/api/sessions";
 import type {
   CreateSessionStudentInput,
   DeleteSessionStudentsBody,
   StudentWithSessionInfo,
   UpdateSessionStudentInput,
-} from '@/lib/api/theSpecialStandardAPI.schemas'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getSessionStudents as getSessionStudentsApi } from '@/lib/api/session-students'
-import { getSessions } from '@/lib/api/sessions'
-import { gradeToDisplay } from '@/lib/gradeUtils'
+} from "@/lib/api/theSpecialStandardAPI.schemas";
+import { gradeToDisplay } from "@/lib/gradeUtils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export type SessionStudentBody = Omit<StudentWithSessionInfo, 'grade'> & {
-  grade: string
-}
+export type SessionStudentBody = Omit<StudentWithSessionInfo, "grade"> & {
+  grade: string;
+};
 
 export function useSessionStudentsForSession(sessionId: string) {
-  const sessionsApi = getSessions()
+  const sessionsApi = getSessions();
+  const { userId: therapistId } = useAuthContext();
 
   const {
     data: studentsData,
@@ -22,10 +24,13 @@ export function useSessionStudentsForSession(sessionId: string) {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['sessions', sessionId, 'students'],
-    queryFn: () => sessionsApi.getSessionsSessionIdStudents(sessionId),
-    enabled: !!sessionId,
-  })
+    queryKey: ["sessions", sessionId, "students", therapistId],
+    queryFn: () =>
+      sessionsApi.getSessionsSessionIdStudents(sessionId, {
+        therapist_id: therapistId!,
+      }),
+    enabled: !!sessionId && !!therapistId,
+  });
 
   // Flatten the nested student structure
   // Note: API returns nested structure but TypeScript type doesn't reflect this
@@ -40,19 +45,19 @@ export function useSessionStudentsForSession(sessionId: string) {
     updated_at: item.updated_at,
     // Override grade with display format
     grade: gradeToDisplay(item.student?.grade ?? item.grade),
-  }))
+  }));
 
   return {
     students,
     isLoading,
     error: error?.message || null,
     refetch,
-  }
+  };
 }
 
 export function useSessionStudents() {
-  const queryClient = useQueryClient()
-  const api = getSessionStudentsApi()
+  const queryClient = useQueryClient();
+  const api = getSessionStudentsApi();
 
   const addStudentToSessionMutation = useMutation({
     mutationFn: (input: CreateSessionStudentInput) =>
@@ -61,35 +66,35 @@ export function useSessionStudents() {
       if (variables.session_ids) {
         variables.session_ids.forEach((id: string) => {
           queryClient.invalidateQueries({
-            queryKey: ['sessions', id, 'students'],
-          })
-        })
+            queryKey: ["sessions", id, "students"],
+          });
+        });
       }
 
-      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
-  })
+  });
 
   const removeStudentFromSessionMutation = useMutation({
     mutationFn: (input: DeleteSessionStudentsBody) =>
       api.deleteSessionStudents(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['sessions', variables.session_id, 'students'],
-      })
-      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+        queryKey: ["sessions", variables.session_id, "students"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
-  })
+  });
 
   const updateSessionStudentMutation = useMutation({
     mutationFn: (input: UpdateSessionStudentInput) =>
       api.patchSessionStudents(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['sessions', variables.session_id, 'students'],
-      })
+        queryKey: ["sessions", variables.session_id, "students"],
+      });
     },
-  })
+  });
 
   return {
     addStudentToSession: (input: CreateSessionStudentInput) =>
@@ -104,5 +109,5 @@ export function useSessionStudents() {
     addError: addStudentToSessionMutation.error?.message || null,
     removeError: removeStudentFromSessionMutation.error?.message || null,
     updateError: updateSessionStudentMutation.error?.message || null,
-  }
+  };
 }

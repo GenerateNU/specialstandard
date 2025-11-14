@@ -7,11 +7,11 @@
 import type {
   GameContent,
   GetGameContentsParams,
-} from './theSpecialStandardAPI.schemas'
+} from "./theSpecialStandardAPI.schemas";
 
-import { customAxios } from './apiClient'
+import { customAxios } from "./apiClient";
 
-export function getGameContent() {
+export const getGameContent = () => {
   /**
    * Get all Game Contents for given category and level with a certain number of words
    * @summary Get Game Contents
@@ -19,12 +19,12 @@ export function getGameContent() {
   const getGameContents = (params?: GetGameContentsParams) => {
     return customAxios<GameContent[]>({
       url: `/game-contents`,
-      method: 'GET',
+      method: "GET",
       params,
-    })
-  }
-  return { getGameContents }
-}
+    });
+  };
+  return { getGameContents };
+};
 export type GetGameContentsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getGameContent>['getGameContents']>>
->
+  Awaited<ReturnType<ReturnType<typeof getGameContent>["getGameContents"]>>
+>;

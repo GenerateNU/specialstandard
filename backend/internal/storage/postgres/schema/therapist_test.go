@@ -26,14 +26,29 @@ func TestSessionRepository_GetTherapistByID(t *testing.T) {
 	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
+	// First, create district and school for foreign key constraints
+	_, err := testDB.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES (1, 'Test District', NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES (1, 'Test School', 1, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
 	// Generate a UUID for therapist_id
 	therapistID := uuid.New()
 
-	// Insert test data with UUID
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	// Insert test data with UUID - including schools and district_id
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Test
@@ -42,7 +57,7 @@ func TestSessionRepository_GetTherapistByID(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, "Matula", therapist.LastName)
-	assert.Equal(t, therapistID, therapist.ID) // Optional: verify the therapist ID matches
+	assert.Equal(t, therapistID, therapist.ID)
 }
 
 func TestSessionRepository_GetTherapists(t *testing.T) {
@@ -56,14 +71,29 @@ func TestSessionRepository_GetTherapists(t *testing.T) {
 	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
+	// First, create district and school for foreign key constraints
+	_, err := testDB.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES (1, 'Test District', NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES (1, 'Test School', 1, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
 	// Generate a UUID for therapist_id
 	therapistID := uuid.New()
 
 	// Insert test data with UUID
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Test
@@ -72,15 +102,15 @@ func TestSessionRepository_GetTherapists(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, "Matula", therapists[0].LastName)
-	assert.Equal(t, therapistID, therapists[0].ID) // Optional: verify the therapist ID matches
+	assert.Equal(t, therapistID, therapists[0].ID)
 
 	// More Tests for Pagination Behaviour
 	for i := 2; i <= 10; i++ {
 		_, err := testDB.Exec(ctx, `
-            INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             `, uuid.New(), "Doctor", fmt.Sprintf("Person %d", i), fmt.Sprintf("doctor%d@doctor.com", i),
-			(i%2 == 0), time.Now(), time.Now())
+			(i%2 == 0), []int{1}, 1, time.Now(), time.Now())
 		assert.NoError(t, err)
 	}
 
@@ -110,14 +140,29 @@ func TestSessionRepository_PatchTherapist(t *testing.T) {
 	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
+	// First, create district and school for foreign key constraints
+	_, err := testDB.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES (1, 'Test District', NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES (1, 'Test School', 1, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
 	// Generate a UUID for therapist_id
 	therapistID := uuid.New()
 
 	// Insert test data with UUID
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	newLastName := "Matula"
@@ -129,7 +174,7 @@ func TestSessionRepository_PatchTherapist(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, "Matula", therapist.LastName)
-	assert.Equal(t, therapistID, therapist.ID) // Optional: verify the therapist ID matches
+	assert.Equal(t, therapistID, therapist.ID)
 }
 
 func TestSessionRepository_DeleteTherapist(t *testing.T) {
@@ -143,21 +188,35 @@ func TestSessionRepository_DeleteTherapist(t *testing.T) {
 	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
+	// First, create district and school for foreign key constraints
+	_, err := testDB.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES (1, 'Test District', NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES (1, 'Test School', 1, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
 	// Generate a UUID for therapist_id
 	therapistID := uuid.New()
 
 	// Insert test data with UUID
-	_, err := testDB.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, time.Now(), time.Now())
+	_, err = testDB.Exec(ctx, `
+        INSERT INTO therapist (id, first_name, last_name, email, active, schools, district_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, therapistID, "Kevin", "Matula", "matulakevin91@gmail.com", true, []int{1}, 1, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	err = repo.DeleteTherapist(ctx, therapistID.String())
 
 	// Assert
 	assert.NoError(t, err)
-	//assert.Equal(t, "User " + therapistID.String() + " was deleted successfully!", mes)
 }
 
 func TestSessionRepository_CreateTherapist(t *testing.T) {
@@ -171,11 +230,28 @@ func TestSessionRepository_CreateTherapist(t *testing.T) {
 	repo := schema.NewTherapistRepository(testDB)
 	ctx := context.Background()
 
+	// First, ensure district and school exist
+	_, err := testDB.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES (1, 'Test District', NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
+	_, err = testDB.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES (1, 'Test School', 1, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`)
+	assert.NoError(t, err)
+
 	updated := &models.CreateTherapistInput{
-		ID:        uuid.New(),
-		FirstName: "Kevin",
-		LastName:  "Matula",
-		Email:     "matulakevin91@gmai.com",
+		ID:         uuid.New(),
+		FirstName:  "Kevin",
+		LastName:   "Matula",
+		Email:      "matulakevin91@gmai.com",
+		Schools:    []int{1},
+		DistrictID: ptrInt(1),
 	}
 
 	therapist, err := repo.CreateTherapist(ctx, updated)
@@ -184,4 +260,7 @@ func TestSessionRepository_CreateTherapist(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Matula", therapist.LastName)
 	assert.Equal(t, "matulakevin91@gmai.com", therapist.Email)
+	assert.Equal(t, []int{1}, therapist.Schools)
+	assert.NotNil(t, therapist.DistrictID)
+	assert.Equal(t, 1, *therapist.DistrictID)
 }

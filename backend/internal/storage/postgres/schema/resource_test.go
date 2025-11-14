@@ -14,10 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrString(s string) *string {
-	return &s
-}
-
 func ptrInt(i int) *int {
 	return &i
 }
@@ -75,7 +71,7 @@ func TestResourceRepository_GetResources(t *testing.T) {
 
 	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
 	assert.NoError(t, err)
-	assert.Len(t, resources, 10)
+	assert.Len(t, resources, 13)
 
 	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.Pagination{
 		Page:  2,

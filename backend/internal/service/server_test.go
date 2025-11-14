@@ -28,6 +28,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -65,6 +66,8 @@ func TestHealthEndpoint(t *testing.T) {
 }
 
 func TestGetSessionsEndpoint(t *testing.T) {
+	testTherapistID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+
 	tests := []struct {
 		name           string
 		url            string
@@ -74,12 +77,12 @@ func TestGetSessionsEndpoint(t *testing.T) {
 	}{
 		{
 			name: "successful get sessions and default pagination",
-			url:  "",
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()), // ADD THIS
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				sessions := []models.Session{
 					{
 						ID:            uuid.New(),
-						TherapistID:   uuid.New(),
+						TherapistID:   testTherapistID,
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
 						Notes:         ptrString("Test session"),
@@ -87,44 +90,85 @@ func TestGetSessionsEndpoint(t *testing.T) {
 						UpdatedAt:     ptrTime(time.Now()),
 					},
 				}
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(sessions, nil)
+				// Now with 4 parameters: ctx, pagination, filter, therapistID
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(sessions, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
 		},
 		{
 			name: "repository error",
-			url:  "/",
+			url:  fmt.Sprintf("?therapist_id=%s", testTherapistID.String()),
 			mockSetup: func(m *mocks.MockSessionRepository) {
-				m.On("GetSessions", mock.Anything, utils.NewPagination()).Return(nil, errors.New("database error"))
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
 		},
-		// ------- Pagination Cases -------
+		{
+			name:           "Missing therapist ID",
+			url:            "",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid therapist ID format",
+			url:            "?therapist_id=invalid-uuid",
+			mockSetup:      func(m *mocks.MockSessionRepository) {},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
 		{
 			name:           "Violating Pagination Arguments Constraints",
-			url:            "?page=0&limit=-1",
+			url:            fmt.Sprintf("?therapist_id=%s&page=0&limit=-1", testTherapistID.String()),
 			mockSetup:      func(m *mocks.MockSessionRepository) {},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
 		},
 		{
 			name:           "Bad Pagination Arguments",
-			url:            "?page=abc&limit=-1",
+			url:            fmt.Sprintf("?therapist_id=%s&page=abc&limit=-1", testTherapistID.String()),
 			mockSetup:      func(m *mocks.MockSessionRepository) {},
-			expectedStatus: fiber.StatusBadRequest, // QueryParser Fails
+			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
 		},
 		{
-			name: "Default Pagination",
-			url:  "?page=2&limit=5",
+			name: "Pagination with parameters",
+			url:  fmt.Sprintf("?therapist_id=%s&page=2&limit=5", testTherapistID.String()),
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				pagination := utils.Pagination{
 					Page:  2,
 					Limit: 5,
 				}
-				m.On("GetSessions", mock.Anything, pagination).Return([]models.Session{}, nil)
+				m.On("GetSessions", mock.Anything, pagination, (*models.GetSessionRepositoryRequest)(nil), testTherapistID).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "With date filters",
+			url:  fmt.Sprintf("?therapist_id=%s&month=11&year=2024", testTherapistID.String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				month := 11
+				year := 2024
+				filter := &models.GetSessionRepositoryRequest{
+					Month: &month,
+					Year:  &year,
+				}
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), filter, testTherapistID).Return([]models.Session{}, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name: "With student IDs filter",
+			url:  fmt.Sprintf("?therapist_id=%s&student_ids[]=%s&student_ids[]=%s", testTherapistID.String(), uuid.New().String(), uuid.New().String()),
+			mockSetup: func(m *mocks.MockSessionRepository) {
+				// For student IDs, we expect the filter to have StudentIDs populated
+				m.On("GetSessions", mock.Anything, utils.NewPagination(), mock.MatchedBy(func(filter *models.GetSessionRepositoryRequest) bool {
+					return filter != nil && filter.StudentIDs != nil && len(*filter.StudentIDs) == 2
+				}), testTherapistID).Return([]models.Session{}, nil)
 			},
 			expectedStatus: fiber.StatusOK,
 			wantErr:        false,
@@ -133,20 +177,24 @@ func TestGetSessionsEndpoint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Setup
 			mockSessionRepo := new(mocks.MockSessionRepository)
 			tt.mockSetup(mockSessionRepo)
 
 			repo := &storage.Repository{
 				Session: mockSessionRepo,
 			}
+
 			app := service.SetupApp(config.Config{
 				TestMode: true,
 			}, repo, &s3_client.Client{})
 
+			// Test
 			req := httptest.NewRequest("GET", "/api/v1/sessions"+tt.url, nil)
-			res, _ := app.Test(req, -1)
+			resp, err := app.Test(req, -1)
 
-			assert.Equal(t, tt.expectedStatus, res.StatusCode)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
 			mockSessionRepo.AssertExpectations(t)
 		})
 	}
@@ -157,7 +205,7 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", utils.NewPagination()).Return([]models.Student{
 		{
 			ID:          uuid.New(),
 			FirstName:   "Emma",
@@ -187,8 +235,6 @@ func TestGetStudentsEndpoint(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 }
 
-// Add these tests to your server_test.go file
-
 func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 	mockStudentRepo := new(mocks.MockStudentRepository)
 
@@ -206,7 +252,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -248,7 +294,7 @@ func TestGetStudentsEndpoint_WithTherapistFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), therapistID, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -293,7 +339,7 @@ func TestGetStudentsEndpoint_WithNameFilter(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "John", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -333,7 +379,7 @@ func TestGetStudentsEndpoint_WithCombinedFilters(t *testing.T) {
 		},
 	}
 
-	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, ptrInt(5), (*int)(nil), therapistID, "John", utils.Pagination{Page: 1, Limit: 5}).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -394,7 +440,7 @@ func TestGetStudentsEndpoint_EmptyFiltersIgnored(t *testing.T) {
 	}
 
 	// Empty string filters should be treated as no filter
-	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
+	mockStudentRepo.On("GetStudents", mock.Anything, (*int)(nil), (*int)(nil), uuid.Nil, "", mock.AnythingOfType("utils.Pagination")).Return(expectedStudents, nil)
 
 	repo := &storage.Repository{
 		Student: mockStudentRepo,
@@ -449,14 +495,20 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 func TestCreateStudentEndpoint(t *testing.T) {
 	// Setup
 	mockStudentRepo := new(mocks.MockStudentRepository)
+
+	studentID := uuid.New()
+	therapistID := uuid.New()
+	schoolID := 1
+
 	mockStudentRepo.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
-		ID:          uuid.New(),
+		ID:          studentID,
 		FirstName:   "John",
 		LastName:    "Doe",
+		DOB:         ptrTime(time.Date(2010, 1, 1, 0, 0, 0, 0, time.UTC)),
+		TherapistID: therapistID,
+		SchoolID:    schoolID,
 		Grade:       ptrInt(5),
-		TherapistID: uuid.New(),
-		DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
-		IEP:         []string{"Active IEP with speech therapy goals"},
+		IEP:         []string{"Test IEP"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -469,16 +521,15 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		TestMode: true,
 	}, repo, &s3_client.Client{})
 
-	testTherapistID := uuid.New()
-
 	body := fmt.Sprintf(`{
 		"first_name": "John",
 		"last_name": "Doe",
-		"dob": "2010-05-15",
+		"dob": "2010-01-01",
 		"therapist_id": "%s",
+		"school_id": %d,
 		"grade": 5,
-		"iep": ["Active IEP with speech therapy goals"]
-	}`, testTherapistID.String())
+		"iep": ["Test IEP"]
+	}`, therapistID, schoolID)
 
 	req := httptest.NewRequest("POST", "/api/v1/students", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -638,7 +689,7 @@ func TestDeleteSessionsEndpoint(t *testing.T) {
 			name:      "Success",
 			sessionID: uuid.New(),
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
-				m.On("DeleteSession", mock.Anything, id).Return("deleted", nil)
+				m.On("DeleteSession", mock.Anything, id).Return(nil)
 			},
 			expectedStatusCode: 200,
 		},
@@ -1020,14 +1071,19 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 	// Setup
 	mockTherapistRepo := new(mocks.MockTherapistRepository)
 
-	mockTherapistRepo.On("CreateTherapist", mock.Anything).Return(&models.Therapist{
-		ID:        uuid.New(),
-		FirstName: "Kevin",
-		LastName:  "Matula",
-		Email:     "matulakevin91@gmail.com",
-		Active:    true,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	therapistID := uuid.New()
+	districtID := 1
+
+	mockTherapistRepo.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(&models.Therapist{
+		ID:         therapistID,
+		FirstName:  "Kevin",
+		LastName:   "Matula",
+		Email:      "matulakevin91@gmail.com",
+		Schools:    []int{1, 2},
+		DistrictID: &districtID,
+		Active:     true,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}, nil)
 
 	repo := &storage.Repository{
@@ -1042,8 +1098,10 @@ func TestCreateTherapistEndpoint(t *testing.T) {
 		"id": "%s",
 		"first_name": "Kevin",
 		"last_name": "Matula",
-		"email": "matulakevin91@gmail.com"
-	}`, uuid.New())
+		"email": "matulakevin91@gmail.com",
+		"schools": [1, 2],
+		"district_id": 1
+	}`, therapistID)
 
 	req := httptest.NewRequest("POST", "/api/v1/therapists", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -1332,7 +1390,21 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 				sessionID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 				studentID := uuid.MustParse("987fcdeb-51a2-43d1-9c4f-123456789abc")
 
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+				// Add GetDB mock if your repository has this method
+				m.On("GetDB").Return(&pgxpool.Pool{}) // Return actual pool or nil based on your needs
+
+				// Fix the CreateSessionStudent mock - check the actual method signature
+				// Based on the error, it seems like it expects (context, pool, input)
+				m.On("CreateSessionStudent",
+					mock.Anything, // context
+					mock.Anything, // pool
+					mock.MatchedBy(func(input *models.CreateSessionStudentInput) bool {
+						return len(input.SessionIDs) == 1 &&
+							len(input.StudentIDs) == 1 &&
+							input.SessionIDs[0] == sessionID &&
+							input.StudentIDs[0] == studentID &&
+							input.Present == true
+					})).Return(&[]models.SessionStudent{
 					{
 						SessionID: sessionID,
 						StudentID: studentID,
@@ -1348,7 +1420,7 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 		{
 			name: "Missing session ID",
 			payload: `{
-				"student_id": "987fcdeb-51a2-43d1-9c4f-123456789abc",
+				"student_ids": ["987fcdeb-51a2-43d1-9c4f-123456789abc"],
 				"present": true
 			}`,
 			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
@@ -1357,8 +1429,8 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 		{
 			name: "Invalid JSON format",
 			payload: `{
-				"session_id": "123e4567-e89b-12d3-a456-426614174000",
-				"student_id": /* missing comma */
+				"session_ids": "123e4567-e89b-12d3-a456-426614174000",
+				"student_ids": 
 			}`,
 			mockSetup:          func(m *mocks.MockSessionStudentRepository) {},
 			expectedStatusCode: fiber.StatusBadRequest,
@@ -1372,7 +1444,14 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 				"notes": "Duplicate entry"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
+				// Add GetDB mock
+				m.On("GetDB").Return(&pgxpool.Pool{})
+
+				m.On("CreateSessionStudent",
+					mock.Anything,
+					mock.Anything,
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(nil, errors.New("duplicate key value violates unique constraint"))
 			},
 			expectedStatusCode: fiber.StatusConflict,
 		},
@@ -1386,14 +1465,15 @@ func TestCreateSessionStudentEndpoint(t *testing.T) {
 			repo := &storage.Repository{
 				SessionStudent: mockSessionStudentRepo,
 			}
+
 			app := service.SetupApp(config.Config{
 				TestMode: true,
 			}, repo, &s3_client.Client{})
 
 			req := httptest.NewRequest("POST", "/api/v1/session_students", strings.NewReader(tt.payload))
 			req.Header.Set("Content-Type", "application/json")
-			res, err := app.Test(req, -1)
 
+			res, err := app.Test(req, -1)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedStatusCode, res.StatusCode)
 			mockSessionStudentRepo.AssertExpectations(t)
@@ -2090,7 +2170,7 @@ func TestHandler_Signup(t *testing.T) {
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
-				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(therapist, nil)
+				m.On("CreateTherapist", mock.Anything, mock.AnythingOfType("*models.CreateTherapistInput")).Return(therapist, nil)
 			},
 			expectedStatusCode: fiber.StatusCreated,
 			wantErr:            false,

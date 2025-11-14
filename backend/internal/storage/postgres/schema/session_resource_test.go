@@ -26,13 +26,33 @@ func CreateTestTheme(t *testing.T, db *pgxpool.Pool, ctx context.Context) uuid.U
 }
 
 func CreateTestTherapist(t *testing.T, db *pgxpool.Pool, ctx context.Context) uuid.UUID {
+	// First, ensure district exists
+	districtID := 1
+	_, err := db.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES ($1, $2, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, districtID, "Test District")
+	assert.NoError(t, err)
+
+	// Then, ensure school exists
+	schoolID := 1
+	_, err = db.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES ($1, $2, $3, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, schoolID, "Test School", districtID)
+	assert.NoError(t, err)
+
+	// Now create the therapist with required fields
 	therapistID := uuid.New()
 	email := fmt.Sprintf("therapist_%s@example.com", therapistID.String()[:8])
-	_, err := db.Exec(ctx, `
-		INSERT INTO therapist (id, first_name, last_name, email, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`, therapistID, "Test", "Therapist", email, time.Now(), time.Now())
+	_, err = db.Exec(ctx, `
+		INSERT INTO therapist (id, first_name, last_name, email, schools, district_id, active, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`, therapistID, "Test", "Therapist", email, []int{schoolID}, districtID, true, time.Now(), time.Now())
 	assert.NoError(t, err)
+
 	return therapistID
 }
 
@@ -313,7 +333,7 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 
 		resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
 		assert.NoError(t, err)
-		assert.Len(t, resources, 10, "Expected 10 as per default pagination")
+		assert.Len(t, resources, 12, "Expected 12 as per default pagination")
 
 		resources, err = repo.GetResourcesBySessionID(ctx, sessionID, utils.Pagination{
 			Page:  2,

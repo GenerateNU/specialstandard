@@ -15,18 +15,18 @@ import type {
   Student,
   StudentRatingEntry,
   UpdateStudentInput,
-} from './theSpecialStandardAPI.schemas'
+} from "./theSpecialStandardAPI.schemas";
 
-import { customAxios } from './apiClient'
+import { customAxios } from "./apiClient";
 
-export function getStudents() {
+export const getStudents = () => {
   /**
    * Retrieve a paginated list of students with optional filtering by grade, therapist, and name
    * @summary Get all students
    */
   const getStudents = (params?: GetStudentsParams) => {
-    return customAxios<Student[]>({ url: `/students`, method: 'GET', params })
-  }
+    return customAxios<Student[]>({ url: `/students`, method: "GET", params });
+  };
   /**
    * Create a new student record
    * @summary Create a new student
@@ -34,18 +34,18 @@ export function getStudents() {
   const postStudents = (createStudentInput: CreateStudentInput) => {
     return customAxios<Student>({
       url: `/students`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       data: createStudentInput,
-    })
-  }
+    });
+  };
   /**
    * Retrieve a specific student by their ID
    * @summary Get student by ID
    */
   const getStudentsId = (id: string) => {
-    return customAxios<Student>({ url: `/students/${id}`, method: 'GET' })
-  }
+    return customAxios<Student>({ url: `/students/${id}`, method: "GET" });
+  };
   /**
    * Update an existing student's information (partial update)
    * @summary Update student
@@ -56,18 +56,18 @@ export function getStudents() {
   ) => {
     return customAxios<Student>({
       url: `/students/${id}`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       data: updateStudentInput,
-    })
-  }
+    });
+  };
   /**
    * Delete a student record
    * @summary Delete student
    */
   const deleteStudentsId = (id: string) => {
-    return customAxios<void>({ url: `/students/${id}`, method: 'DELETE' })
-  }
+    return customAxios<void>({ url: `/students/${id}`, method: "DELETE" });
+  };
   /**
    * Retrieve all sessions associated with a specific student, including bridge table information.
    *
@@ -90,10 +90,10 @@ export function getStudents() {
   ) => {
     return customAxios<SessionWithStudentInfo[]>({
       url: `/students/${studentId}/sessions`,
-      method: 'GET',
+      method: "GET",
       params,
-    })
-  }
+    });
+  };
   /**
    * Retrieve all session ratings for a specific student
    * @summary Get ratings for a student
@@ -104,10 +104,10 @@ export function getStudents() {
   ) => {
     return customAxios<StudentRatingEntry[]>({
       url: `/students/${studentId}/ratings`,
-      method: 'GET',
+      method: "GET",
       params,
-    })
-  }
+    });
+  };
   /**
    * Promotes all of a therapist's students other than the ones that are not moving up.
    * @summary Promotes all of a therapist's students
@@ -115,11 +115,11 @@ export function getStudents() {
   const patchStudentsPromote = (promoteStudentsInput: PromoteStudentsInput) => {
     return customAxios<PatchStudentsPromote200>({
       url: `/students/promote`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       data: promoteStudentsInput,
-    })
-  }
+    });
+  };
   return {
     getStudents,
     postStudents,
@@ -129,33 +129,33 @@ export function getStudents() {
     getStudentsStudentIdSessions,
     getStudentsStudentIdRatings,
     patchStudentsPromote,
-  }
-}
+  };
+};
 export type GetStudentsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getStudents>['getStudents']>>
->
+  Awaited<ReturnType<ReturnType<typeof getStudents>["getStudents"]>>
+>;
 export type PostStudentsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getStudents>['postStudents']>>
->
+  Awaited<ReturnType<ReturnType<typeof getStudents>["postStudents"]>>
+>;
 export type GetStudentsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getStudents>['getStudentsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getStudents>["getStudentsId"]>>
+>;
 export type PatchStudentsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getStudents>['patchStudentsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getStudents>["patchStudentsId"]>>
+>;
 export type DeleteStudentsIdResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getStudents>['deleteStudentsId']>>
->
+  Awaited<ReturnType<ReturnType<typeof getStudents>["deleteStudentsId"]>>
+>;
 export type GetStudentsStudentIdSessionsResult = NonNullable<
   Awaited<
-    ReturnType<ReturnType<typeof getStudents>['getStudentsStudentIdSessions']>
+    ReturnType<ReturnType<typeof getStudents>["getStudentsStudentIdSessions"]>
   >
->
+>;
 export type GetStudentsStudentIdRatingsResult = NonNullable<
   Awaited<
-    ReturnType<ReturnType<typeof getStudents>['getStudentsStudentIdRatings']>
+    ReturnType<ReturnType<typeof getStudents>["getStudentsStudentIdRatings"]>
   >
->
+>;
 export type PatchStudentsPromoteResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getStudents>['patchStudentsPromote']>>
->
+  Awaited<ReturnType<ReturnType<typeof getStudents>["patchStudentsPromote"]>>
+>;

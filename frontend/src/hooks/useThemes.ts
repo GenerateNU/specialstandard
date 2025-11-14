@@ -1,10 +1,11 @@
-import type { QueryObserverResult } from '@tanstack/react-query'
+import { useAuthContext } from '@/contexts/authContext'
+import { getThemes as getThemesApi } from '@/lib/api/themes'
 import type {
   CreateThemeInput,
   Theme,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
+import type { QueryObserverResult } from '@tanstack/react-query'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getThemes as getThemesApi } from '@/lib/api/themes'
 
 interface UseThemesReturn {
   themes: Theme[]
@@ -17,6 +18,7 @@ interface UseThemesReturn {
 export function useThemes(): UseThemesReturn {
   const queryClient = useQueryClient()
   const api = getThemesApi()
+  const { userId: therapistId } = useAuthContext()
 
   const {
     data: themesResponse,
@@ -24,7 +26,7 @@ export function useThemes(): UseThemesReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['themes'],
+    queryKey: ['themes', therapistId],
     queryFn: () => api.getThemes(),
   })
 
@@ -33,7 +35,7 @@ export function useThemes(): UseThemesReturn {
   const addThemeMutation = useMutation({
     mutationFn: (input: CreateThemeInput) => api.postThemes(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['themes'] })
+      queryClient.invalidateQueries({ queryKey: ['themes', therapistId] })
     },
   })
 

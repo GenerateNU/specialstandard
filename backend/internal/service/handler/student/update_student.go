@@ -1,6 +1,7 @@
 package student
 
 import (
+	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
 	"specialstandard/internal/xvalidator"
@@ -79,6 +80,9 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 		// Grade is now *int, so just assign it directly
 		existingStudent.Grade = req.Grade
 	}
+	if req.SchoolID != nil {
+		existingStudent.SchoolID = *req.SchoolID
+	}
 	if req.IEP != nil {
 		// IEP is now []string, so we just assign it directly
 		// Empty array or nil array will be handled by the database
@@ -94,6 +98,7 @@ func (h *Handler) UpdateStudent(c *fiber.Ctx) error {
 				"error": "Student not found",
 			})
 		}
+		slog.Error(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Database error",
 		})

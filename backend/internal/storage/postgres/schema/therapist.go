@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
@@ -18,32 +19,94 @@ type TherapistRepository struct {
 
 func (r *TherapistRepository) GetTherapistByID(ctx context.Context, therapistID string) (*models.Therapist, error) {
 	query := `
-	SELECT id, first_name, last_name, email, active, created_at, updated_at
-	FROM therapist
-	WHERE id=$1`
+	WITH therapist_data AS (
+		SELECT 
+			t.id, 
+			t.first_name, 
+			t.last_name,
+			t.email, 
+			t.active, 
+			t.schools, 
+			t.district_id, 
+			d.name as district_name,
+			t.created_at, 
+			t.updated_at
+		FROM therapist t
+		LEFT JOIN district d ON t.district_id = d.id
+		WHERE t.id = $1
+	),
+	school_data AS (
+		SELECT 
+			td.id as therapist_id,
+			COALESCE(
+				json_agg(
+					json_build_object(
+						'id', s.id,
+						'name', s.name
+					) ORDER BY s.name
+				) FILTER (WHERE s.id IS NOT NULL), 
+				'[]'::json
+			) as schools_json
+		FROM therapist_data td
+		LEFT JOIN school s ON s.id = ANY(td.schools)
+		GROUP BY td.id
+	)
+	SELECT 
+		td.*,
+		sd.schools_json
+	FROM therapist_data td
+	JOIN school_data sd ON td.id = sd.therapist_id`
 
-	row, err := r.db.Query(ctx, query, therapistID)
+	var therapist models.Therapist
+	var schoolsJSON []byte
+	var schools []int
+
+	err := r.db.QueryRow(ctx, query, therapistID).Scan(
+		&therapist.ID,
+		&therapist.FirstName,
+		&therapist.LastName,
+		&therapist.Email,
+		&therapist.Active,
+		&schools,
+		&therapist.DistrictID,
+		&therapist.DistrictName,
+		&therapist.CreatedAt,
+		&therapist.UpdatedAt,
+		&schoolsJSON,
+	)
 
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, errs.NotFound("Therapist not found with given ID")
+		}
 		return nil, err
 	}
 
-	defer row.Close()
+	therapist.Schools = schools
 
-	// Here i am using CollectExactlyOneRow because the DB should not have duplicate therapists!
-	therapist, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[models.Therapist])
-
-	if err != nil {
-		return nil, errs.NotFound("Error querying database for given ID")
+	// school names in a separate slice
+	var schoolData []struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
 	}
+
+	if err := json.Unmarshal(schoolsJSON, &schoolData); err != nil {
+		return nil, err
+	}
+
+	schoolNames := make([]string, 0, len(schoolData))
+	for _, s := range schoolData {
+		schoolNames = append(schoolNames, s.Name)
+	}
+	therapist.SchoolNames = &schoolNames
 
 	return &therapist, nil
 }
 
 func (r *TherapistRepository) GetTherapists(ctx context.Context, pagination utils.Pagination) ([]models.Therapist, error) {
 	query := `
-	SELECT id, first_name, last_name, email, active, created_at, updated_at
-	FROM therapist
+	SELECT t.id, t.first_name, t.last_name, t.email, t.active, t.schools, t.district_id, t.created_at, t.updated_at
+	FROM therapist t
 	ORDER BY first_name ASC, last_name ASC
 	LIMIT $1 OFFSET $2`
 
@@ -70,17 +133,19 @@ func (r *TherapistRepository) CreateTherapist(ctx context.Context, input *models
 	therapist := &models.Therapist{}
 
 	query := `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, first_name, last_name, email, active, created_at, updated_At`
+        INSERT INTO therapist (id, first_name, last_name, schools, district_id, email)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, first_name, last_name, schools, district_id, email, active, created_at, updated_At`
 
-	row := r.db.QueryRow(ctx, query, input.ID, input.FirstName, input.LastName, input.Email)
+	row := r.db.QueryRow(ctx, query, input.ID, input.FirstName, input.LastName, input.Schools, input.DistrictID, input.Email)
 
 	// Scan into the therapist object
 	if err := row.Scan(
 		&therapist.ID,
 		&therapist.FirstName,
 		&therapist.LastName,
+		&therapist.Schools,
+		&therapist.DistrictID,
 		&therapist.Email,
 		&therapist.Active,
 		&therapist.CreatedAt,
@@ -135,6 +200,18 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 		argCount++
 	}
 
+	if updatedValue.Schools != nil {
+		updates = append(updates, fmt.Sprintf("schools = $%d", argCount))
+		args = append(args, *updatedValue.Schools)
+		argCount++
+	}
+
+	if updatedValue.DistrictID != nil {
+		updates = append(updates, fmt.Sprintf("district_id = $%d", argCount))
+		args = append(args, *updatedValue.DistrictID)
+		argCount++
+	}
+
 	if updatedValue.Active != nil {
 		updates = append(updates, fmt.Sprintf("active = $%d", argCount))
 		args = append(args, *updatedValue.Active)
@@ -149,7 +226,7 @@ func (r *TherapistRepository) PatchTherapist(ctx context.Context, therapistID st
 	query += fmt.Sprintf(" WHERE id = $%d", argCount)
 	args = append(args, therapistID)
 
-	query += " RETURNING id, first_name, last_name, email, active, created_at, updated_At"
+	query += " RETURNING id, first_name, last_name, email, schools, district_id, active, created_at, updated_At"
 
 	rows, err := r.db.Query(ctx, query, args...)
 

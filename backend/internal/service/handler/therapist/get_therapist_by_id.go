@@ -3,13 +3,13 @@ package therapist
 import (
 	"log/slog"
 	"specialstandard/internal/errs"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
-// This is our function to send a request to our GetTgeraoustByID function
-// We check for pretty errors in this function
+// This is our function to send a request to our GetTherapistByID function
 func (h *Handler) GetTherapistByID(c *fiber.Ctx) error {
 	therapistID := c.Params("id")
 
@@ -22,10 +22,24 @@ func (h *Handler) GetTherapistByID(c *fiber.Ctx) error {
 
 	therapist, err := h.therapistRepository.GetTherapistByID(c.Context(), therapistID)
 
-	// Here we parse the bad request which is recieved
 	if err != nil {
-		slog.Error("Error updating document", "error", err)
-		return errs.BadRequest("Failed to parse given request")
+		slog.Error("Failed to get therapist by ID", "therapist_id", therapistID, "err", err)
+		errStr := strings.ToLower(err.Error())
+		switch {
+		case strings.Contains(errStr, "not found") ||
+			strings.Contains(errStr, "no rows in result set"):
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Therapist not found",
+			})
+		case strings.Contains(errStr, "connection refused"):
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+				"error": "Service unavailable",
+			})
+		default:
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Internal server error",
+			})
+		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(therapist)
