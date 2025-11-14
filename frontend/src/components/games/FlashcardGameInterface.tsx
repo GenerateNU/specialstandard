@@ -5,8 +5,7 @@ import { Check, RotateCw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useGameContents } from '@/hooks/useGameContents'
 import type { 
-  GetGameContentsQuestionType,
-  Theme
+  GetGameContentsQuestionType
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { 
   GetGameContentsCategory
