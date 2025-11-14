@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { BookOpen, Brain, ChevronRight, Gamepad2, RotateCw, Check } from 'lucide-react'
+import { BookOpen, Brain, Check, ChevronRight, Gamepad2, RotateCw } from 'lucide-react'
 import { useThemes } from '@/hooks/useThemes'
 import { useGameContents } from '@/hooks/useGameContents'
 import { 
