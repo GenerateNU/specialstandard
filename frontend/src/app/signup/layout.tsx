@@ -6,7 +6,7 @@ import { Check } from 'lucide-react'
 
 const steps = [
   { id: 'welcome', path: '/signup/welcome' },
-  { id: 'speciality', path: '/signup/speciality' },
+  { id: 'link', path: '/signup/link' },
   { id: 'students', path: '/signup/students' },
   { id: 'sessions', path: '/signup/sessions' },
 ]
@@ -64,7 +64,7 @@ export default function OnboardingLayout({
                   <div className="flex flex-col items-center">
                     {/* Step indicator */}
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-medium
-                    ${isCompleted ? 'bg-accent border-gray-200 text-white' : ''}
+                    ${isCompleted ? 'bg-accent border-2 border-gray-200 text-white' : ''}
                     ${isCurrent ? 'bg-accent text-amber-400 border-2 border-amber-400' : ''}
                     ${isUpcoming ? 'border-gray-200 border-2 text-white' : ''}
                     ${!isCompleted && !isCurrent && !isUpcoming ? 'text-primary' : ''}

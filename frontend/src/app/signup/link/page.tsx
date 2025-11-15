@@ -13,7 +13,7 @@ import CustomAlert from '@/components/ui/CustomAlert'
 export default function ProfilePage() {
   const router = useRouter()
   const { schools, districts, isLoading: isLoadingSchools } = useSchools()
-  const { addTherapist } = useTherapists()
+  const { updateTherapist } = useTherapists()
   
   const [selectedDistrict, setSelectedDistrict] = useState<string>('')
   const [selectedSchools, setSelectedSchools] = useState<string[]>([])
@@ -92,9 +92,9 @@ export default function ProfilePage() {
       }
 
       // Create therapist profile
-      await addTherapist({
-        id: userId,
-        first_name: therapistData.firstName,
+      await updateTherapist(
+        userId,
+        { first_name: therapistData.firstName,
         last_name: therapistData.lastName,
         email: therapistData.email,
         district_id: Number(selectedDistrict),
@@ -188,7 +188,7 @@ export default function ProfilePage() {
               }))}
               value={selectedDistrict}
               placeholder="Select District"
-              className="w-full min-w-5[rem]"
+              className="w-full min-w-30[rem]"
             />
           </div>
           
