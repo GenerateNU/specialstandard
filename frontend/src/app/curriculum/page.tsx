@@ -5,6 +5,7 @@ import Link from 'next/link'
 import AppLayout from '@/components/AppLayout'
 import { useResources } from '@/hooks/useResources'
 import { ResourceButton } from '@/components/curriculum/resourceButton'
+import { Button } from '@/components/ui/button'
 
 // Group resources by theme, then by week
 function groupByThemeAndWeek(resources: any[]) {
@@ -102,7 +103,7 @@ export default function Curriculum() {
   return (
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
-        <div className="w-full p-10 flex flex-col gap-10 overflow-y-scroll">
+        <div className="w-full p-10 flex flex-col overflow-y-scroll">
           {/* Header */}
           <header className="mb-8">
             <Link
@@ -113,9 +114,17 @@ export default function Curriculum() {
               <span className="text-sm font-medium">Back to Home</span>
             </Link>
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-between w-full">
+                <div className='flex flex-row items-center gap-2'>
                 <FileText className="w-8 h-8 text-accent" />
                 <h1 className="text-3xl font-bold text-primary">Curriculum Calendar</h1>
+                </div>
+                <Link href="/games">
+                  <Button variant={'outline'} className='px-10 py-5 items-center text-xl font-serif font-bold'>
+                    <Gamepad2 size={36} className='!h-6 !w-6 text-xl' />
+                    Games
+                  </Button>
+                </Link>
               </div>
             </div>
             <p className="text-secondary">
