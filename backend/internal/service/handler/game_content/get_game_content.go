@@ -32,14 +32,15 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 	}
 
 	// Generate presigned URLs for answer field
-	for i := range gameContents {
-		if gameContents[i].Answer != "" {
-			presignedURL, err := h.s3Client.GeneratePresignedURL(context.Background(), gameContents[i].Answer, time.Hour)
-			if err != nil {
-				slog.Warn("Failed to generate presigned URL", "key", gameContents[i].Answer, "error", err)
-				// Continue without failing the whole request
-			} else {
-				gameContents[i].Answer = presignedURL
+	if h.s3Client != nil {
+		for i := range gameContents {
+			if gameContents[i].Answer != "" {
+				presignedURL, err := h.s3Client.GeneratePresignedURL(context.Background(), gameContents[i].Answer, time.Hour)
+				if err != nil {
+					slog.Warn("Failed to generate presigned URL", "key", gameContents[i].Answer, "error", err)
+				} else {
+					gameContents[i].Answer = presignedURL
+				}
 			}
 		}
 	}

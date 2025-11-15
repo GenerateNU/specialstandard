@@ -2328,8 +2328,13 @@ func TestEndpoint_PromoteStudents(t *testing.T) {
 }
 
 func TestGetGameContentEndpoint(t *testing.T) {
-	mockRepo := new(mocks.MockGameContentRepository)
-	mockRepo.On("GetGameContents", mock.Anything, mock.Anything).Return([]models.GameContent{
+	// Create mock for GameContent (the one we're actually testing)
+	mockGameContentRepo := new(mocks.MockGameContentRepository)
+
+	mockGameContentRepo.On("GetGameContents",
+		mock.Anything, // context
+		mock.Anything, // *models.GetGameContentRequest
+	).Return([]models.GameContent{
 		{
 			ID:              uuid.New(),
 			ThemeID:         uuid.New(),
@@ -2345,19 +2350,47 @@ func TestGetGameContentEndpoint(t *testing.T) {
 		},
 	}, nil)
 
+	// Create mock repositories for all other dependencies that SetupApp needs
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockSessionRepo := new(mocks.MockSessionRepository)
+	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+	mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockThemeRepo := new(mocks.MockThemeRepository)
+	mockGameResultRepo := new(mocks.MockGameResultRepository)
+
+	// SetupApp requires all repositories to be non-nil
 	repo := &storage.Repository{
-		GameContent: mockRepo,
+		GameContent:     mockGameContentRepo,
+		Resource:        mockResourceRepo,
+		Session:         mockSessionRepo,
+		Student:         mockStudentRepo,
+		Therapist:       mockTherapistRepo,
+		SessionStudent:  mockSessionStudentRepo,
+		SessionResource: mockSessionResourceRepo,
+		Theme:           mockThemeRepo,
+		GameResult:      mockGameResultRepo,
 	}
+
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo, &s3_client.Client{})
+	}, repo, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/game-contents?category=speech&level=5&count=4", nil)
 	res, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	mockRepo.AssertExpectations(t)
+
+	// Verify response body
+	var gameContents []models.GameContent
+	err = json.NewDecoder(res.Body).Decode(&gameContents)
+	assert.NoError(t, err)
+	assert.Len(t, gameContents, 1)
+	assert.Equal(t, "speech", *gameContents[0].Category)
+
+	mockGameContentRepo.AssertExpectations(t)
 }
 
 func TestGetGameResultsEndpoint(t *testing.T) {

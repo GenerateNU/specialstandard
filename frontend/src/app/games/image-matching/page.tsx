@@ -258,12 +258,12 @@ function ImageMatchingGameContent() {
                 </div>
 
                 {showFeedback === 'correct' && answerUrl === currentQuestion?.answer && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-20 rounded-lg">
+                  <div className="absolute inset-0 flex items-center justify-center bg-green-500 opacity-20">
                     <CheckCircle className="w-16 h-16 text-green-500" />
                   </div>
                 )}
                 {showFeedback === 'incorrect' && answerUrl !== currentQuestion?.answer && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-20 rounded-lg">
+                  <div className="absolute inset-0 flex items-center justify-center bg-red-500 opacity-20">
                     <XCircle className="w-16 h-16 text-red-500" />
                   </div>
                 )}
