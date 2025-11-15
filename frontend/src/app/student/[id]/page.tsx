@@ -187,19 +187,18 @@ function StudentPage() {
             </div>
           </div>
           {/* Attendance */}
-          <div className={`bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex-shrink-0 ${attendance?.total_count === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className={`bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex-shrink-0`}>
             {attendanceLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-sm text-muted-foreground">Loading attendance...</div>
               </div>
-            ) : attendance && attendance.total_count > 0 ? (
-              <CustomPieChart
-                percentage={Math.round((attendance.present_count / attendance.total_count) * 100)}
-                title="Attendance"
-              />
             ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-sm text-muted-foreground">No attendance data</div>
+              <div className={attendance?.total_count === 0 ? 'opacity-50 pointer-events-none' : ''}>
+                <CustomPieChart
+                  percentage={attendance && attendance.total_count > 0 ? Math.round((attendance.present_count / attendance.total_count) * 100) : 0}
+                  title="Attendance"
+                  showPlaceholder={!attendance || attendance.total_count === 0}
+                />
               </div>
             )}
           </div>

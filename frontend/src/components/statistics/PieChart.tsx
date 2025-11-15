@@ -6,6 +6,7 @@ interface CustomPieChartProps {
   color?: string
   className?: string
   size?: number
+  showPlaceholder?: boolean
 }
 
 export default function CustomPieChart({
@@ -14,6 +15,7 @@ export default function CustomPieChart({
   color = 'var(--color-orange)',
   className = '',
   size = 120,
+  showPlaceholder = false,
 }: CustomPieChartProps) {
     const data = [
         { name: 'Completed', value: percentage },
@@ -51,7 +53,7 @@ export default function CustomPieChart({
             </div>
             )}
             <div className="text-4xl font-bold text-primary">
-            {percentage}%
+            {showPlaceholder ? '-' : `${percentage}%`}
             </div>
         </div>
         </div>
