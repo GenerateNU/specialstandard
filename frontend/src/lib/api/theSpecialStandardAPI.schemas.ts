@@ -782,6 +782,18 @@ export type PostAuthLogin200 = {
   error?: unknown;
 };
 
+export type PostAuthForgotPasswordBody = {
+  /** Email registered to the account that's trying to reset password */
+  email?: string;
+};
+
+export type PutAuthUpdatePasswordBody = {
+  type?: unknown;
+  format?: unknown;
+  description?: unknown;
+  example?: unknown;
+};
+
 export type GetSessionsParams = {
   /**
    * Page Number of pagination

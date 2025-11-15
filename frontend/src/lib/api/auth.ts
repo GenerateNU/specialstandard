@@ -5,10 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type {
+  PostAuthForgotPasswordBody,
   PostAuthLogin200,
   PostAuthLoginBody,
   PostAuthSignup201,
   PostAuthSignupBody,
+  PutAuthUpdatePasswordBody,
 } from "./theSpecialStandardAPI.schemas";
 
 import { customAxios } from "./apiClient";
@@ -38,11 +40,64 @@ export const getAuth = () => {
       data: postAuthLoginBody,
     });
   };
-  return { postAuthSignup, postAuthLogin };
+  /**
+   * Forgot Password? Reset it here!
+   * @summary Forgot Password Feature
+   */
+  const postAuthForgotPassword = (
+    postAuthForgotPasswordBody: PostAuthForgotPasswordBody,
+  ) => {
+    return customAxios<void>({
+      url: `/auth/forgot-password`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: postAuthForgotPasswordBody,
+    });
+  };
+  /**
+   * Update your password for your account
+   * @summary Updating Password Feature
+   */
+  const putAuthUpdatePassword = (
+    putAuthUpdatePasswordBody: PutAuthUpdatePasswordBody,
+  ) => {
+    return customAxios<void>({
+      url: `/auth/update-password`,
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      data: putAuthUpdatePasswordBody,
+    });
+  };
+  /**
+   * Delete your Account here! Resigning? Fired? We're here for you.
+   * @summary Delete Account Feature
+   */
+  const deleteAuthDeleteAccountId = (id: string) => {
+    return customAxios<void>({
+      url: `/auth/delete-account/${id}`,
+      method: "DELETE",
+    });
+  };
+  return {
+    postAuthSignup,
+    postAuthLogin,
+    postAuthForgotPassword,
+    putAuthUpdatePassword,
+    deleteAuthDeleteAccountId,
+  };
 };
 export type PostAuthSignupResult = NonNullable<
   Awaited<ReturnType<ReturnType<typeof getAuth>["postAuthSignup"]>>
 >;
 export type PostAuthLoginResult = NonNullable<
   Awaited<ReturnType<ReturnType<typeof getAuth>["postAuthLogin"]>>
+>;
+export type PostAuthForgotPasswordResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getAuth>["postAuthForgotPassword"]>>
+>;
+export type PutAuthUpdatePasswordResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getAuth>["putAuthUpdatePassword"]>>
+>;
+export type DeleteAuthDeleteAccountIdResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getAuth>["deleteAuthDeleteAccountId"]>>
 >;
