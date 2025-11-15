@@ -37,7 +37,7 @@ export default function CustomPieChart({
                 strokeWidth={0}
                 >
                 <Cell fill={color} />
-                <Cell fill={'--color-white-hover'} />
+                <Cell fill={'var(--color-white-hover)'} />
                 </Pie>
             </PieChart>
             </ResponsiveContainer>
