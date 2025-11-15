@@ -129,35 +129,31 @@ export default function AppLayout({ children }: AppLayoutProps) {
               const isActive = pathname === item.href
 
               return (
-                <Link
-                  href={item.href}
-                  className={`
+                <Tooltip key={item.href} content={item.label} enabled={!isSidebarOpen}>
+                  <Link
+                    href={item.href}
+                    className={`
     flex flex-row items-center rounded-lg
-    transition-[width,background-color,gap,translate] duration-300
+    transition-[width,background-color,gap] duration-300
     h-10 shrink-0 overflow-hidden
-    ${isSidebarOpen ? 'gap-3 w-full px-2.5 justify-start' : ''}
+    ${isSidebarOpen ? 'gap-3 w-full px-2.5 justify-start' : 'lg:gap-0 lg:w-10 w-full gap-3 px-2.5 lg:px-2.5 lg:justify-center justify-start'}
     ${
                 isActive
                   ? 'bg-blue text-white font-medium'
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }
   `}
-                >
-                  <Tooltip
-                    content={item.label}
-                    enabled={!isSidebarOpen}
-                    wrapperClassName="pl-[10px] pr-[12px] flex items-center justify-center h-full"
                   >
                     <Icon className="w-5 h-5 shrink-0" />
-                  </Tooltip>
-                  <span
-                    className={`whitespace-nowrap transition-opacity duration-300 ${
-                      isSidebarOpen ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                </Link>
+                    <span
+                      className={`whitespace-nowrap transition-all duration-300 ${
+                        isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:overflow-hidden'
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </Link>
+                </Tooltip>
               )
             })}
           </nav>
@@ -165,30 +161,32 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {/* Footer */}
           <Separator className="bg-white/10" />
           <div className="p-2">
-            <Button
-              onClick={() => {
-                logout()
-                window.location.href = '/login'
-              }}
-              variant="ghost"
-              aria-label="Logout"
-              className={`
+            <Tooltip content="Logout" enabled={!isSidebarOpen}>
+              <Button
+                onClick={() => {
+                  logout()
+                  window.location.href = '/login'
+                }}
+                variant="ghost"
+                aria-label="Logout"
+                className={`
     flex items-center gap-3 rounded-lg
     transition-all duration-200
     h-10 shrink-0 overflow-hidden
     text-white/70 hover:text-white hover:bg-white/10
     ${isSidebarOpen ? 'w-full px-2.5 justify-start' : 'lg:w-10 w-full px-2.5 lg:px-2.5 lg:justify-center justify-start'}
   `}
-            >
-              <LogOut className="w-5 h-5 shrink-0" />
-              <span
-                className={`whitespace-nowrap transition-opacity duration-200 ${
-                  isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:hidden'
-                }`}
               >
-                Logout
-              </span>
-            </Button>
+                <LogOut className="w-5 h-5 shrink-0" />
+                <span
+                  className={`whitespace-nowrap transition-opacity duration-200 ${
+                    isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:hidden'
+                  }`}
+                >
+                  Logout
+                </span>
+              </Button>
+            </Tooltip>
           </div>
         </div>
       </aside>

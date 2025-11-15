@@ -3,7 +3,7 @@
 import type { SlotInfo } from 'react-big-calendar'
 import { motion } from 'motion/react'
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useEffect } from 'react'
+import React, { Suspense, useEffect } from 'react'
 import AppLayout from '@/components/AppLayout'
 import CalendarHeader from '@/components/calendar/calendarHeader'
 import CalendarView from '@/components/calendar/calendarView'
@@ -72,13 +72,9 @@ function CalendarPage() {
     setSelectedSession(event.resource)
   }
 
-  // Don't render if user is not loaded yet
+  // Show nothing while auth is loading - let Suspense handle the loading state
   if (authLoading || !userId) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div>Loading...</div>
-      </div>
-    )
+    return null
   }
 
   return (
@@ -160,11 +156,35 @@ function CalendarPage() {
 }
 
 export default function MyCalendar() {
+  const [mounted, setMounted] = React.useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <AppLayout>
+        <div className="flex justify-center">
+          <div style={{ width: '90vw', maxHeight: 'calc(115vh - 100px)' }} className="pt-10 flex flex-col gap-6 overflow-hidden">
+            <div className="flex justify-center items-center" style={{ minHeight: '400px' }}>
+              <div>Loading...</div>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
+
   return (
     <AppLayout>
       <Suspense fallback={
-        <div className="flex justify-center items-center h-screen">
-          <div>Loading...</div>
+        <div className="flex justify-center">
+          <div style={{ width: '90vw', maxHeight: 'calc(115vh - 100px)' }} className="pt-10 flex flex-col gap-6 overflow-hidden">
+            <div className="flex justify-center items-center" style={{ minHeight: '400px' }}>
+              <div>Loading...</div>
+            </div>
+          </div>
         </div>
       }>
         <CalendarPage />
