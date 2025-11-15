@@ -8,15 +8,20 @@ export default function SchoolTag({schoolName}: SchoolTagProps) {
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash)
     }
-    
-    // Get index from 0-2 for three colors
-    const colorIndex = Math.abs(hash) % 3
+  
     
     const colors = [
       'bg-blue text-black',
       'bg-orange text-black',
       'bg-pink text-black',
+      'bg-blue-light text-black',
+      'bg-orange-light text-black',
+      'bg-pink-light text-black',
+
+
     ]
+
+    const colorIndex = Math.abs(hash) % colors.length
     
     return colors[colorIndex]
   }
