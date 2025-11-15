@@ -48,7 +48,7 @@ export default function SessionsPage() {
   }
   
   const handleAddSession = () => {
-    router.push('/signup/sessions-add')
+    router.push('/signup/sessions/add')
   }
   
   const handleFinish = () => {
@@ -188,7 +188,7 @@ export default function SessionsPage() {
                     startTime={formatTime(session.start_datetime)}
                     endTime={formatTime(session.end_datetime)}
                     date={formatDateString(session.start_datetime)}
-                    className="bg-accent text-white"
+                    className="text-white"
                   />
                 ))}
               </div>
@@ -205,7 +205,7 @@ export default function SessionsPage() {
               
               <Button
                 onClick={handleFinish}
-                className="flex-1 bg-accent hover:bg-accent-hover text-white"
+                className="flex-1 hover:bg-accent-hover text-white"
               >
                 Finish
               </Button>
