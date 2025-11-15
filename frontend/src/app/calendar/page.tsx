@@ -3,7 +3,7 @@
 import type { SlotInfo } from 'react-big-calendar'
 import { motion } from 'motion/react'
 import { useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import AppLayout from '@/components/AppLayout'
 import CalendarHeader from '@/components/calendar/calendarHeader'
 import CalendarView from '@/components/calendar/calendarView'
@@ -13,9 +13,7 @@ import SessionPreviewModal from '@/components/SessionPreviewModal'
 import { useCalendarData, useCalendarState } from '@/hooks/useCalendar'
 import { useAuthContext } from '@/contexts/authContext'
 
-export const dynamic = 'force-dynamic'
-
-export default function MyCalendar() {
+function CalendarPage() {
   const { userId, isLoading: authLoading } = useAuthContext()
   const searchParams = useSearchParams()
   
@@ -77,90 +75,100 @@ export default function MyCalendar() {
   // Don't render if user is not loaded yet
   if (authLoading || !userId) {
     return (
-      <AppLayout>
-        <div className="flex justify-center items-center h-screen">
-          <div>Loading...</div>
-        </div>
-      </AppLayout>
+      <div className="flex justify-center items-center h-screen">
+        <div>Loading...</div>
+      </div>
     )
   }
 
   return (
-    <AppLayout>
-      <div className="flex justify-center">
-        <div style={{ width: '90vw', maxHeight: 'calc(115vh - 100px)' }} className="pt-10 flex flex-col gap-6 overflow-hidden">
-          <CreateSessionDialog
-            open={newSessionOpen}
-            therapistId={userId}
-            students={students}
-            setOpen={handleCloseModal}
-            onSubmit={async data => addSession(data)}
-            initialDateTime={selectedSlot ?? undefined}
+    <div className="flex justify-center">
+      <div style={{ width: '90vw', maxHeight: 'calc(115vh - 100px)' }} className="pt-10 flex flex-col gap-6 overflow-hidden">
+        <CreateSessionDialog
+          open={newSessionOpen}
+          therapistId={userId}
+          students={students}
+          setOpen={handleCloseModal}
+          onSubmit={async data => addSession(data)}
+          initialDateTime={selectedSlot ?? undefined}
+        />
+
+        <CalendarHeader
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onAddSession={() => setNewSessionOpen(true)}
+          date={date}
+          view={view}
+          onNavigate={setDate}
+          onViewChange={setView}
+        />
+
+        {viewMode === 'card'
+          ? (
+              <motion.div
+                key="card-view"
+                initial={{ opacity: 0, y: 60 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 60 }}
+                transition={{ type: 'spring', damping: 30 }}
+              >
+                <CardView
+                  date={date}
+                  events={events}
+                  onSelectSession={(session, position) => {
+                    setSelectedSession(session)
+                    setModalPosition(position)
+                  }}
+                />
+              </motion.div>
+            )
+          : (
+              <motion.div
+                key="calendar-view"
+                initial={{ opacity: 0, y: 60 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 60 }}
+                transition={{ type: 'spring', damping: 30 }}
+              >
+                <CalendarView
+                  date={date}
+                  view={view}
+                  events={events}
+                  isLoading={isLoading}
+                  error={error}
+                  onNavigate={setDate}
+                  onViewChange={setView}
+                  onSelectEvent={handleSelectEvent}
+                  onSelectSlot={handleSelectSlot}
+                />
+              </motion.div>
+            )}
+
+        {selectedSession && modalPosition && (
+          <SessionPreviewModal
+            session={selectedSession}
+            position={modalPosition}
+            onClose={() => {
+              setSelectedSession(null)
+              setModalPosition(null)
+            }}
           />
-
-          <CalendarHeader
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            onAddSession={() => setNewSessionOpen(true)}
-            date={date}
-            view={view}
-            onNavigate={setDate}
-            onViewChange={setView}
-          />
-
-          {viewMode === 'card'
-            ? (
-                <motion.div
-                  key="card-view"
-                  initial={{ opacity: 0, y: 60 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 60 }}
-                  transition={{ type: 'spring', damping: 30 }}
-                >
-                  <CardView
-                    date={date}
-                    events={events}
-                    onSelectSession={(session, position) => {
-                      setSelectedSession(session)
-                      setModalPosition(position)
-                    }}
-                  />
-                </motion.div>
-              )
-            : (
-                <motion.div
-                  key="calendar-view"
-                  initial={{ opacity: 0, y: 60 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 60 }}
-                  transition={{ type: 'spring', damping: 30 }}
-                >
-                  <CalendarView
-                    date={date}
-                    view={view}
-                    events={events}
-                    isLoading={isLoading}
-                    error={error}
-                    onNavigate={setDate}
-                    onViewChange={setView}
-                    onSelectEvent={handleSelectEvent}
-                    onSelectSlot={handleSelectSlot}
-                  />
-                </motion.div>
-              )}
-
-          {selectedSession && modalPosition && (
-            <SessionPreviewModal
-              session={selectedSession}
-              position={modalPosition}
-              onClose={() => {
-                setSelectedSession(null)
-                setModalPosition(null)
-              }}
-            />
-          )}
-        </div>
+        )}
       </div>
+    </div>
+  )
+}
+
+export default function MyCalendar() {
+  return (
+    <AppLayout>
+      <Suspense fallback={
+        <div className="flex justify-center items-center h-screen">
+          <div>Loading...</div>
+        </div>
+      }>
+        <CalendarPage />
+      </Suspense>
     </AppLayout>
   )
 }
