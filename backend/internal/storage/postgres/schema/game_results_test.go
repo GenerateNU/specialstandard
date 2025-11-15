@@ -76,7 +76,7 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 		UPDATE session
 		SET start_datetime = $1, end_datetime = $2
 		WHERE id = $3
-	`, startTime, endTime, sessionID)
+	`, startDate, endDate, sessionID)
 	assert.NoError(t, err)
 	// Create test student
 	studentID := uuid.New()
