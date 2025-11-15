@@ -1,19 +1,30 @@
+import { useMemo } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 
-export default function SessionStudents({ sessionId }: { sessionId: string }) {
+export default function CardViewSessionStudents({ sessionId }: { sessionId: string }) {
   const { students, isLoading } = useSessionStudentsForSession(sessionId)
 
-  if (isLoading || students.length === 0) {
+  const sortedStudents = useMemo(() => {
+    if (!students)
+      return []
+    return [...students].sort((a, b) => {
+      const nameA = (a.first_name || '').toLowerCase()
+      const nameB = (b.first_name || '').toLowerCase()
+      return nameA.localeCompare(nameB)
+    })
+  }, [students])
+
+  if (isLoading || sortedStudents.length === 0) {
     return null
   }
 
   return (
     <div className="grid grid-cols-2 gap-1 px-1">
-      {students.map((student, index) => {
+      {sortedStudents.map((student, index) => {
         const avatarVariant = getAvatarVariant(student.id)
-        const isLastAndOdd = index === students.length - 1 && students.length % 2 !== 0
+        const isLastAndOdd = index === sortedStudents.length - 1 && sortedStudents.length % 2 !== 0
         return (
           <div
             key={student.id}

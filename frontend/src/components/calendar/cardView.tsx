@@ -1,8 +1,10 @@
 import type { CalendarEvent } from '@/hooks/useCalendar'
 import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
+
 import { Clock } from 'lucide-react'
 import moment from 'moment'
-import SessionStudents from './sessionStudents'
+import CardBookBg from './CardBookBg'
+import CardViewSessionStudents from './cardViewSessionStudents'
 
 interface CardViewProps {
   date: Date
@@ -54,29 +56,32 @@ export default function CardView({ date, events, onSelectSession }: CardViewProp
                     </div>
                   )
                 : (
+                    // Map through sessions for the day
                     daySessions.map(event => (
-                      <div key={event.id} className="flex flex-col gap-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onSelectSession(event.resource, {
-                              x: window.innerWidth / 2,
-                              y: window.innerHeight / 2,
-                            })
-                          }}
-                          className="flex flex-col items-start gap-1 p-3 rounded-lg border-0 cursor-pointer transition-all hover:scale-103"
-                          style={{
-                            backgroundColor: 'var(--color-blue)',
-                            color: 'var(--color-white)',
-                          }}
-                        >
-                          <div className="text-sm font-semibold">Session</div>
-                          <div className="flex items-center gap-1.5 text-xs font-medium">
-                            <Clock size={14} />
-                            {moment(event.start).format('h:mm A')}
-                          </div>
-                        </button>
-                        <SessionStudents sessionId={event.id} />
+                      <div key={event.id} className="flex flex-col gap-1 items-center">
+                        <CardBookBg className="hover:scale-102 transition" size="md" color={(['blue', 'yellow', 'pink'] as const)[Math.floor(Math.random() * 3)]}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onSelectSession(event.resource, {
+                                x: window.innerWidth / 2,
+                                y: window.innerHeight / 2,
+                              })
+                            }}
+                            className="flex flex-col items-start gap-1 p-4 rounded-lg border-0 cursor-pointer transition-transform text-black transition-inherit focus:outline-none bg-transparent shadow-none w-full h-full min-h-[120px]"
+                            style={{ background: 'none' }}
+                          >
+                            <div className="text-sm font-semibold">Session Name</div>
+                            <div className="text-sm">School A</div>
+                            <br />
+                            <div className="text-sm">{moment(event.start).format('D, MMM, YYYY')}</div>
+                            <div className="flex items-center gap-1.5 text-xs font-medium">
+                              <Clock size={14} />
+                              {moment(event.start).format('h:mm A')}
+                            </div>
+                          </button>
+                        </CardBookBg>
+                        <CardViewSessionStudents sessionId={event.id} />
                       </div>
                     ))
                   )}

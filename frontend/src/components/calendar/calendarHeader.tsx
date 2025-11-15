@@ -1,5 +1,5 @@
 import type { View } from 'react-big-calendar'
-import { Book, Plus } from 'lucide-react'
+import { Book, Calendar, Plus } from 'lucide-react'
 import moment from 'moment'
 import CustomToolbar from './customToolbar'
 
@@ -56,12 +56,14 @@ export default function CalendarHeader({
           <button
             type="button"
             onClick={() => onViewModeChange(viewMode === 'calendar' ? 'card' : 'calendar')}
-            className="inline-flex items-center gap-2 px-4 py-2 text-secondary hover:text-primary border border-secondary/20 hover:border-primary/30 rounded-lg cursor-pointer transition-all"
+            className="inline-flex items-center gap-2 text-pink hover:text-primary-hover cursor-pointer transition-colors group"
           >
-            <span className="font-medium">
+            <span className="font-bold text-pink hover:inherit">
               {viewMode === 'calendar' ? 'Card View' : 'Calendar View'}
             </span>
-            <Book size={18} />
+            <span className="group-hover:scale-110 transition will-change-transform">
+              {viewMode === 'card' ? <Calendar /> : <Book />}
+            </span>
           </button>
           <button
             type="button"
