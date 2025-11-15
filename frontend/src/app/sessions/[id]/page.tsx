@@ -4,7 +4,6 @@ import {
     ArrowLeft,
     Calendar,
     Clock, FilePen,
-    FolderPen,
     MapPin,
     NotepadText,
     Pencil,

@@ -1,7 +1,7 @@
 import type { RepetitionConfig } from './repetition-selector'
 import type { StudentBody } from '@/hooks/useStudents'
 import type { PostSessionsBody } from '@/lib/api/theSpecialStandardAPI.schemas'
-import { Calendar, Clock, FileText, MapPin, User } from 'lucide-react'
+import {Calendar, Clock, FileText, MapPin, User} from 'lucide-react'
 import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -266,7 +266,7 @@ export function CreateSessionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
-                    <FileText className="w-4 h-4" /> Session Location
+                    <MapPin className="w-4 h-4" /> Session Location
                   </FormLabel>
                   <FormControl>
                     <Input
