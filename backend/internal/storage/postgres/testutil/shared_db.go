@@ -194,7 +194,7 @@ func createAllTables(pool *pgxpool.Pool) error {
 			therapist_id UUID NOT NULL REFERENCES therapist(id),
 			school_id INTEGER NOT NULL REFERENCES school(id),
 			grade INTEGER CHECK (grade >= -1 AND grade <= 12),
-			iep TEXT,
+			iep TEXT[],
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
