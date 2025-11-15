@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"specialstandard/internal/models"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -37,24 +38,17 @@ func (r *SchoolRepository) GetSchools(ctx context.Context) ([]models.School, err
 	}
 	defer rows.Close()
 	
-	var schools []models.School
-	for rows.Next() {
-		var school models.School
-		err := rows.Scan(
-			&school.ID,
-			&school.Name,
-			&school.DistrictID,
-			&school.CreatedAt,
-			&school.UpdatedAt,
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.School, error) {
+		var s models.School
+		err := row.Scan(
+			&s.ID,
+			&s.Name,
+			&s.DistrictID,
+			&s.CreatedAt,
+			&s.UpdatedAt,
 		)
-		if err != nil {
-			fmt.Printf("Error scanning school row: %v\n", err)
-			return nil, err
-		}
-		schools = append(schools, school)
-	}
-	
-	return schools, nil
+		return s, err
+	})
 }
 
 // GetSchoolsByDistrict retrieves all schools for a specific district
@@ -72,21 +66,15 @@ func (r *SchoolRepository) GetSchoolsByDistrict(ctx context.Context, districtID 
 	}
 	defer rows.Close()
 	
-	var schools []models.School
-	for rows.Next() {
-		var school models.School
-		err := rows.Scan(
-			&school.ID,
-			&school.Name,
-			&school.DistrictID,
-			&school.CreatedAt,
-			&school.UpdatedAt,
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.School, error) {
+		var s models.School
+		err := row.Scan(
+			&s.ID,
+			&s.Name,
+			&s.DistrictID,
+			&s.CreatedAt,
+			&s.UpdatedAt,
 		)
-		if err != nil {
-			return nil, err
-		}
-		schools = append(schools, school)
-	}
-	
-	return schools, nil
+		return s, err
+	})
 }

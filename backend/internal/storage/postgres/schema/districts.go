@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"specialstandard/internal/models"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -31,22 +32,16 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context) ([]models.Distric
 	}
 	defer rows.Close()
 	
-	var districts []models.District
-	for rows.Next() {
-		var district models.District
-		err := rows.Scan(
-			&district.ID,
-			&district.Name,
-			&district.CreatedAt,
-			&district.UpdatedAt,
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.District, error) {
+		var d models.District
+		err := row.Scan(
+			&d.ID,
+			&d.Name,
+			&d.CreatedAt,
+			&d.UpdatedAt,
 		)
-		if err != nil {
-			return nil, err
-		}
-		districts = append(districts, district)
-	}
-	
-	return districts, nil
+		return d, err
+	})
 }
 
 // GetDistrictByID retrieves a single district by ID
