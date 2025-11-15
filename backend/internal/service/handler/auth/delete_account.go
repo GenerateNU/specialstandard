@@ -9,7 +9,9 @@ import (
 )
 
 // DeleteAccount handler to revoke session, delete the account and clear cookies
-func (h *Handler) DeleteAccount(c *fiber.Ctx, id string) error {
+func (h *Handler) DeleteAccount(c *fiber.Ctx) error {
+	id := c.Params("id")
+
 	// Retrieve the JWT token from cookies
 	accessToken := c.Cookies("jwt")
 	if accessToken == "" {
