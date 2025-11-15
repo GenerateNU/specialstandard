@@ -90,8 +90,8 @@ export default function CardView({ date, events, onSelectSession }: CardViewProp
                             className="flex flex-col items-start gap-1 p-4 rounded-lg border-0 cursor-pointer transition-transform text-black transition-inherit focus:outline-none bg-transparent shadow-none w-full h-full min-h-[120px]"
                             style={{ background: 'none' }}
                           >
-                            <div className="text-sm font-semibold">{event.resource.session_name}</div>
-                            <div className="text-sm">{event.resource.location ?? ''}</div>
+                            <div className="text-sm font-semibold">Session Name</div>
+                            <div className="text-sm">School A</div>
                             <br />
                             <div className="text-sm">{moment(event.start).format('D MMM YYYY')}</div>
                             <div className="flex items-center gap-1.5 text-xs font-medium">
