@@ -69,6 +69,8 @@ export interface UpdateTherapistInput {
 export interface Session {
   /** Unique identifier for the session */
   id: string;
+  /** Name of the Session */
+  session_name: string;
   /** Start date and time of the session */
   start_datetime: string;
   /** End date and time of the session */
@@ -80,6 +82,11 @@ export interface Session {
    * @nullable
    */
   notes?: string | null;
+  /**
+   * Session location (optional)
+   * @nullable
+   */
+  location?: string | null;
   /**
    * When the session record was created
    * @nullable
@@ -93,6 +100,8 @@ export interface Session {
 }
 
 export interface UpdateSessionInput {
+  /** Name of the Session */
+  session_name?: string;
   /** Start date and time of the session */
   start_datetime?: string;
   /** End date and time of the session */
@@ -101,6 +110,8 @@ export interface UpdateSessionInput {
   therapist_id?: string;
   /** Optional notes about the session */
   notes?: string;
+  /** Optional location information about the session */
+  location?: string;
 }
 
 export interface Student {
@@ -805,6 +816,8 @@ export type PostSessionsBodyRepetition = {
 };
 
 export type PostSessionsBody = {
+  /** Name of the Session */
+  session_name: string;
   /** Start date and time of the session */
   start_datetime: string;
   /** End date and time of the session */
@@ -813,6 +826,8 @@ export type PostSessionsBody = {
   therapist_id: string;
   /** Optional notes about the session */
   notes?: string;
+  /** Optional location information of the session */
+  location?: string;
   repetition?: PostSessionsBodyRepetition;
   /** List of Student IDs of the students that are being added to this Session. */
   student_ids?: string[];

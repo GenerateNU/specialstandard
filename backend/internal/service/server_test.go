@@ -82,10 +82,12 @@ func TestGetSessionsEndpoint(t *testing.T) {
 				sessions := []models.Session{
 					{
 						ID:            uuid.New(),
+						SessionName:   "successful get sessions and default pagination",
 						TherapistID:   testTherapistID,
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
 						Notes:         ptrString("Test session"),
+						Location:      ptrString("123 Oz St."),
 						CreatedAt:     ptrTime(time.Now()),
 						UpdatedAt:     ptrTime(time.Now()),
 					},
@@ -630,6 +632,7 @@ func TestGetSessionByIDEndpoint(t *testing.T) {
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				session := models.Session{
 					ID:          uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
+					SessionName: "successful get session by valid UUID",
 					TherapistID: uuid.New(),
 					Notes:       ptrString("Test session"),
 				}
@@ -746,6 +749,7 @@ func TestHandler_PostSessions(t *testing.T) {
 	}, repo, &s3_client.Client{})
 
 	body := fmt.Sprintf(`{
+		"session_name": "post session for server",
 		"start_datetime": "2025-09-14T14:00:00Z",
 		"end_datetime": "2025-09-14T16:00:00Z",
 		"therapist_id": "%s",
@@ -874,10 +878,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "Successfully changed all patchable fields",
 			payload: `{
+				"session_name": "all success",
 				"start_datetime": "2025-09-14T12:00:00Z", 
 				"end_datetime": "2025-09-14T13:00:00Z", 
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d", 
-				"notes": "Starting Over"
+				"notes": "Starting Over",
+				"location": "Temperature Zero"
 			}`,
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T12:00:00Z")
@@ -888,10 +894,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 				now := time.Now()
 
 				patch := &models.PatchSessionInput{
+					SessionName: ptrString("all success"),
 					StartTime:   &startTime,
 					EndTime:     &endTime,
 					TherapistID: &therapistID,
 					Notes:       notes,
+					Location:    ptrString("Temperature Zero"),
 				}
 
 				patchedSession := &models.Session{

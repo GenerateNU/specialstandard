@@ -50,10 +50,12 @@ func TestHandler_GetSessions(t *testing.T) {
 				sessions := []models.Session{
 					{
 						ID:            uuid.New(),
+						SessionName:   "successful get sessions with default pagination",
 						TherapistID:   therapistID,
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
 						Notes:         ptrString("Test session"),
+						Location:      ptrString("#4 Privet Drive"),
 						CreatedAt:     ptrTime(time.Now()),
 						UpdatedAt:     ptrTime(time.Now()),
 					},
@@ -253,10 +255,12 @@ func TestHandler_PostSessions(t *testing.T) {
 		{
 			name: "Empty Values that are Required",
 			payload: `{
+				"session_name": "",
 				"start_datetime": "",
 				"end_datetime": "",
 				"therapist_id": "550e8400-e29b-41d4-a716-446655440000",
-				"notes": ""
+				"notes": "",
+				"location": ""
 			}`,
 			mockSetup:          func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {},
 			expectedStatusCode: fiber.StatusBadRequest,
@@ -264,10 +268,12 @@ func TestHandler_PostSessions(t *testing.T) {
 		{
 			name: "Foreign Key Violation: Therapist ID doesn't exist. DOCTOR WHO?!",
 			payload: `{
+				"session_name": "FK Violation",
 				"start_datetime": "2025-09-14T10:00:00Z",
 				"end_datetime": "2025-09-14T11:00:00Z",
 				"therapist_id": "550e8400-e29b-41d4-a716-446655440000",
-				"notes": "Test FK"
+				"notes": "Test FK",
+				"location": "SOME_WHERE_OUT_THERE (Musically spoken)"
 			}`,
 			mockSetup: func(m *mocks.MockSessionRepository, ms *mocks.MockSessionStudentRepository) {
 				// Mock GetDB to return nil (simulate that transaction can't be started)
@@ -285,6 +291,7 @@ func TestHandler_PostSessions(t *testing.T) {
 		{
 			name: "Start time and end time (check constraint violation)",
 			payload: `{
+				"session_name": "check constraint violation",
 				"start_datetime": "2025-09-14T11:00:00Z",
 				"end_datetime": "2025-09-14T10:00:00Z",
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d",
@@ -306,6 +313,7 @@ func TestHandler_PostSessions(t *testing.T) {
 		{
 			name: "Success!",
 			payload: `{
+				"session_name": "success",
 				"start_datetime": "2025-09-14T10:00:00Z",
 				"end_datetime": "2025-09-14T11:00:00Z",
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d",
@@ -321,6 +329,7 @@ func TestHandler_PostSessions(t *testing.T) {
 				createdSessions := []models.Session{
 					{
 						ID:            uuid.New(),
+						SessionName:   "success",
 						TherapistID:   uuid.MustParse("28eedfdc-81e1-44e5-a42c-022dc4c3b64d"),
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
@@ -340,6 +349,7 @@ func TestHandler_PostSessions(t *testing.T) {
 		{
 			name: "Database Connection Refused",
 			payload: `{
+				"session_name": "DB Connection Refused",
 				"start_datetime": "2025-09-14T10:00:00Z",
 				"end_datetime": "2025-09-14T11:00:00Z",
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d",
@@ -445,10 +455,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 
 				patchedSession := &models.Session{
 					ID:            id,
+					SessionName:   "some name",
 					StartDateTime: time.Now(),
 					EndDateTime:   time.Now().Add(time.Hour),
 					TherapistID:   uuid.New(),
 					Notes:         notes,
+					Location:      ptrString("I am homesick"),
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
@@ -473,10 +485,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 
 				patchedSession := &models.Session{
 					ID:            id,
+					SessionName:   "success on multiple fields",
 					StartDateTime: startTime,
 					EndDateTime:   endTime,
 					TherapistID:   uuid.New(),
 					Notes:         ptrString("Rescheduled for convenience"),
+					Location:      ptrString("The place from where I fell"),
 					CreatedAt:     &createdAt,
 					UpdatedAt:     &now,
 				}
@@ -488,10 +502,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "Successfully changed all patchable fields",
 			payload: `{
+				"session_name": "All Success",
 				"start_datetime": "2025-09-14T12:00:00Z", 
 				"end_datetime": "2025-09-14T13:00:00Z", 
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d", 
-				"notes": "Starting Over"
+				"notes": "Starting Over",
+				"location": "Somewhere you will never find me"
 			}`,
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T12:00:00Z")
@@ -502,10 +518,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 				now := time.Now()
 
 				patch := &models.PatchSessionInput{
+					SessionName: ptrString("All Success"),
 					StartTime:   &startTime,
 					EndTime:     &endTime,
 					TherapistID: &therapistID,
 					Notes:       notes,
+					Location:    ptrString("Somewhere you will never find me"),
 				}
 
 				patchedSession := &models.Session{

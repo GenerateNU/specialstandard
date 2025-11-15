@@ -62,7 +62,8 @@ export function useCalendarData(date: Date, view: View) {
     () =>
       sessions.map(session => ({
         id: session.id,
-        title: 'session',
+        title: session.session_name,
+        location: session.location,
         start: new Date(session.start_datetime),
         end: new Date(session.end_datetime),
         resource: session,

@@ -327,10 +327,15 @@ paths:
             schema:
               type: object
               required:
+                - session_name
                 - start_datetime
                 - end_datetime
                 - therapist_id
               properties:
+                session_name:
+                  type: string
+                  description: Name of the Session
+                  example: "Grammar say what?!"
                 start_datetime:
                   type: string
                   format: date-time
@@ -350,6 +355,10 @@ paths:
                   type: string
                   description: Optional notes about the session
                   example: "Daily Affirmation: My luck is so good that even four-leaf clovers ask for my autograph"
+                location:
+                  type: string
+                  description: Optional location information of the session
+                  example: "Home is where the heart is, the heart is where the spark is..."
                 repetition:
                   type: object
                   required:
@@ -2673,6 +2682,7 @@ components:
       type: object
       required:
         - id
+        - session_name
         - start_datetime
         - end_datetime
         - therapist_id
@@ -2682,6 +2692,10 @@ components:
           format: uuid
           description: Unique identifier for the session
           example: "123e4567-e89b-12d3-a456-426614174000"
+        session_name:
+          type: string
+          description: Name of the Session
+          example: "Fluency work with Florence"
         start_datetime:
           type: string
           format: date-time
@@ -2702,6 +2716,11 @@ components:
           nullable: true
           description: Session notes (optional)
           example: "Patient showed improvement in anxiety management techniques"
+        location:
+          type: string
+          nullable: true
+          description: Session location (optional)
+          example: "To the land where the honey runs..."
         created_at:
           type: string
           format: date-time
@@ -2718,6 +2737,10 @@ components:
     UpdateSessionInput:
       type: object
       properties:
+        session_name:
+          type: string
+          description: Name of the Session
+          example: "Fluency Work with Florence"
         start_datetime:
           type: string
           format: date-time
@@ -2737,6 +2760,10 @@ components:
           type: string
           description: Optional notes about the session
           example: "Updated session notes"
+        location:
+          type: string
+          description: Optional location information about the session
+          example: "2nd Floor of the School"
 
     Student:
       type: object
