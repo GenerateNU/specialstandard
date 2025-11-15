@@ -13,6 +13,8 @@ import SessionPreviewModal from '@/components/SessionPreviewModal'
 import { useCalendarData, useCalendarState } from '@/hooks/useCalendar'
 import { useAuthContext } from '@/contexts/authContext'
 
+export const dynamic = 'force-dynamic'
+
 export default function MyCalendar() {
   const { userId, isLoading: authLoading } = useAuthContext()
   const searchParams = useSearchParams()
