@@ -51,7 +51,7 @@ const SpinnerWheel: React.FC<{
   selectedWord: string | null;
   rotation: number;
   completedIds: Set<string>;
-}> = ({ words, onSpin, isSpinning, selectedWord, rotation, completedIds }) => {
+}> = ({ words, onSpin, isSpinning, rotation, completedIds }) => {
   // Only show segments for words that are not yet completed
   const availableWords = words.filter((w) => !completedIds.has(w.id));
   const segmentAngle = availableWords.length
@@ -103,6 +103,17 @@ const SpinnerWheel: React.FC<{
         minHeight: "250px",
       }}
     >
+      {/* Pointer */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 z-20"
+        style={{
+          width: 0,
+          height: 0,
+          borderLeft: "12px solid transparent",
+          borderRight: "12px solid transparent",
+          borderBottom: "20px solid #333",
+        }}
+      ></div>
       {/* Wheel - SVG based for clean pie segments */}
       {availableWords.length > 1 ? (
         // ----- normal wheel -----
@@ -238,6 +249,7 @@ export default function MemorymatchGameInterface({
       (content) => !completedIds.has(content.id)
     );
 
+    // Special handling for single word
     if (availableWords.length === 1) {
       const finalWord = availableWords[0];
 
@@ -264,10 +276,19 @@ export default function MemorymatchGameInterface({
 
     setSpinRotation(totalRotation);
 
-    // Calculate selected word from available words only
-    const normalizedRotation = (360 - (totalRotation % 360)) % 360;
     const segmentAngle = 360 / availableWords.length;
-    const selectedIndex = Math.floor(normalizedRotation / segmentAngle);
+
+    // The pointer is at the top. When wheel rotates clockwise by X degrees,
+    // the segment that WAS at position (360 - X) is now at the top
+    const normalizedRotation = totalRotation % 360;
+
+    // Which segment is now at the top after rotating?
+    let segmentAtTop = (360 - normalizedRotation - 90) % 360;
+    if (segmentAtTop < 0) segmentAtTop += 360;
+
+    // Now find which segment index this angle belongs to
+    const selectedIndex =
+      Math.floor(segmentAtTop / segmentAngle) % availableWords.length;
 
     setTimeout(() => {
       setSelectedWordIndex(selectedIndex);
