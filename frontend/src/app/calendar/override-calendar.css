@@ -89,17 +89,17 @@
   font-size: 0.875rem;
   font-weight: 500;
   transition: all 0.2s ease;
-  
+
   /* Outline variant styles */
   border: 1px solid var(--border);
   background-color: transparent;
   color: var(--text-primary);
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  
+
   /* Padding */
   height: 2.25rem;
   padding: 0.5rem 1rem;
-  
+
   /* Cursor */
   cursor: pointer;
 }
