@@ -17,6 +17,7 @@
   --color-white: #ffffff;
   --color-black: #272727;
   --color-bg-white: #f2ece0;
+  --color-white-hover: #d9d2c4;
 
   /* Light Theme */
   --background: var(--color-bg-white);
