@@ -59,14 +59,14 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, studentID1, "John", "Doe", testDOB, therapistID1, 1, 5, "IEP Goals: Speech articulation", time.Now(), time.Now())
+    `, studentID1, "John", "Doe", testDOB, therapistID1, 1, 5, []string{"IEP Goals: Speech articulation"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	studentID2 := uuid.New()
 	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, studentID2, "Jane", "Smith", testDOB, therapistID2, 2, 3, "IEP Goals: Reading", time.Now(), time.Now())
+    `, studentID2, "Jane", "Smith", testDOB, therapistID2, 2, 3, []string{"IEP Goals: Reading"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	students, err := repo.GetStudents(ctx, nil, nil, uuid.Nil, "", utils.NewPagination())
@@ -110,7 +110,7 @@ func TestStudentRepository_GetStudents(t *testing.T) {
 		_, err := testDB.Exec(ctx, `
             INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            `, uuid.New(), "Student", fmt.Sprintf("Number%d", i), testDOB, therapistID1, 1, i, "IEP: GOALS!!", time.Now(), time.Now())
+            `, uuid.New(), "Student", fmt.Sprintf("Number%d", i), testDOB, therapistID1, 1, i, []string{"IEP: GOALS!!"}, time.Now(), time.Now())
 		assert.NoError(t, err)
 	}
 
@@ -168,25 +168,25 @@ func TestStudentRepository_GetStudents_FilterByGrade(t *testing.T) {
 	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, uuid.New(), "John", "Doe", testDOB, therapistID, 1, 5, "IEP Goals", time.Now(), time.Now())
+    `, uuid.New(), "John", "Doe", testDOB, therapistID, 1, 5, []string{"IEP Goals"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, uuid.New(), "Jane", "Smith", testDOB, therapistID, 1, 4, "IEP Goals", time.Now(), time.Now())
+    `, uuid.New(), "Jane", "Smith", testDOB, therapistID, 1, 4, []string{"IEP Goals"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, uuid.New(), "Mike", "Johnson", testDOB, therapistID, 1, 5, "IEP Goals", time.Now(), time.Now())
+    `, uuid.New(), "Mike", "Johnson", testDOB, therapistID, 1, 5, []string{"IEP Goals"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, ` 
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, uuid.New(), "Jack", "Douglas", testDOB, therapistID, 1, -1, "IEP Goals", time.Now(), time.Now())
+    `, uuid.New(), "Jack", "Douglas", testDOB, therapistID, 1, -1, []string{"IEP Goals"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	students, err := repo.GetStudents(ctx, nil, nil, uuid.Nil, "", utils.NewPagination())
@@ -593,7 +593,7 @@ func TestStudentRepository_GetStudent(t *testing.T) {
 	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, studentID, "Jane", "Smith", testDOB, therapistID, 1, 3, "IEP Goals: Language comprehension", time.Now(), time.Now())
+    `, studentID, "Jane", "Smith", testDOB, therapistID, 1, 3, []string{"IEP Goals: Language comprehension"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	student, err := repo.GetStudent(ctx, studentID)
@@ -643,7 +643,7 @@ func TestStudentRepository_AddStudent(t *testing.T) {
 		TherapistID: therapistID,
 		SchoolID:    1,
 		Grade:       PtrInt(2),
-		IEP:         ptrString("IEP Goals: Fluency and articulation"),
+		IEP:         []string{"IEP Goals: Fluency and articulation"},
 	}
 
 	createdStudent, err := repo.AddStudent(ctx, testStudent)
@@ -705,7 +705,7 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, studentID, "Sam", "Wilson", testDOB, therapistID, 1, 4, "Initial IEP", time.Now(), time.Now())
+    `, studentID, "Sam", "Wilson", testDOB, therapistID, 1, 4, []string{"Initial IEP"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	updatedStudent := models.Student{
@@ -716,7 +716,7 @@ func TestStudentRepository_UpdateStudent(t *testing.T) {
 		TherapistID: therapistID,
 		SchoolID:    1,
 		Grade:       PtrInt(5),
-		IEP:         ptrString("Updated IEP Goals: Advanced speech therapy"),
+		IEP:         []string{"Updated IEP Goals: Advanced speech therapy"},
 	}
 
 	_, err = repo.UpdateStudent(ctx, updatedStudent)
@@ -776,7 +776,7 @@ func TestStudentRepository_DeleteStudent(t *testing.T) {
 	_, err = testDB.Exec(ctx, `
         INSERT INTO student (id, first_name, last_name, dob, therapist_id, school_id, grade, iep, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, studentID, "Chris", "Brown", testDOB, therapistID, 1, 6, "IEP Goals: Social communication", time.Now(), time.Now())
+    `, studentID, "Chris", "Brown", testDOB, therapistID, 1, 6, []string{"IEP Goals: Social communication"}, time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	err = repo.DeleteStudent(ctx, studentID)
@@ -828,7 +828,7 @@ func TestStudentRepository_PromoteStudents(t *testing.T) {
 		       ($11, $12, $3, $4, $5, $13, $7, NOW()),
 		       ($14, $15, $3, $4, $5, $16, $7, NOW()),
 		       ($17, $18, $3, $19, $5, $6, $7, NOW());
-    `, "Michelle", "Li", "2005-01-31", doctorWhoID, 1, 0, "IEP Content",
+    `, "Michelle", "Li", "2005-01-31", doctorWhoID, 1, 0, []string{"IEP Content"},
 		"Ally", "Descoteaux", 5,
 		"Luis", "Enrique Sarmiento", 12,
 		"Harsh", "Singh", -1,
