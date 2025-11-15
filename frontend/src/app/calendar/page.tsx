@@ -2,6 +2,8 @@
 
 import type { SlotInfo } from 'react-big-calendar'
 import { motion } from 'motion/react'
+import { useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
 import AppLayout from '@/components/AppLayout'
 import CalendarHeader from '@/components/calendar/calendarHeader'
 import CalendarView from '@/components/calendar/calendarView'
@@ -9,10 +11,12 @@ import CardView from '@/components/calendar/cardView'
 import { CreateSessionDialog } from '@/components/calendar/NewSessionModal'
 import SessionPreviewModal from '@/components/SessionPreviewModal'
 import { useCalendarData, useCalendarState } from '@/hooks/useCalendar'
-
-const HARDCODED_THERAPIST_ID = '9dad94d8-6534-4510-90d7-e4e97c175a65'
+import { useAuthContext } from '@/contexts/authContext'
 
 export default function MyCalendar() {
+  const { userId, isLoading: authLoading } = useAuthContext()
+  const searchParams = useSearchParams()
+  
   const {
     date,
     setDate,
@@ -29,6 +33,14 @@ export default function MyCalendar() {
     newSessionOpen,
     setNewSessionOpen,
   } = useCalendarState()
+
+  // Set view mode from URL query parameter
+  useEffect(() => {
+    const viewParam = searchParams.get('view')
+    if (viewParam === 'card') {
+      setViewMode('card')
+    }
+  }, [searchParams, setViewMode])
 
   const { students, events, isLoading, error, addSession } = useCalendarData(
     date,
@@ -60,13 +72,24 @@ export default function MyCalendar() {
     setSelectedSession(event.resource)
   }
 
+  // Don't render if user is not loaded yet
+  if (authLoading || !userId) {
+    return (
+      <AppLayout>
+        <div className="flex justify-center items-center h-screen">
+          <div>Loading...</div>
+        </div>
+      </AppLayout>
+    )
+  }
+
   return (
     <AppLayout>
       <div className="flex justify-center">
         <div style={{ width: '90vw', maxHeight: 'calc(115vh - 100px)' }} className="pt-10 flex flex-col gap-6 overflow-hidden">
           <CreateSessionDialog
             open={newSessionOpen}
-            therapistId={HARDCODED_THERAPIST_ID}
+            therapistId={userId}
             students={students}
             setOpen={handleCloseModal}
             onSubmit={async data => addSession(data)}

@@ -1,5 +1,6 @@
 import type { View } from 'react-big-calendar'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { Button } from '../ui/button'
 
 interface CustomToolbarProps {
   label: string
@@ -36,27 +37,27 @@ export default function CustomToolbar({
         className="rbc-btn-group flex gap-2"
         style={showViewSelector ? {} : { opacity: 0, pointerEvents: 'none', userSelect: 'none', color: 'transparent', backgroundColor: 'transparent', borderColor: 'transparent', boxShadow: 'none' }}
       >
-        <button
+        <Button
           type="button"
           className={view === 'day' ? 'rbc-active' : ''}
           onClick={() => onView('day')}
         >
           Day
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           className={view === 'work_week' ? 'rbc-active' : ''}
           onClick={() => onView('work_week')}
         >
           Week
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           className={view === 'month' ? 'rbc-active' : ''}
           onClick={() => onView('month')}
         >
           Month
-        </button>
+        </Button>
       </span>
     </div>
   )

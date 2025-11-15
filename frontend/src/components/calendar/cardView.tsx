@@ -5,12 +5,26 @@ import { Clock } from 'lucide-react'
 import moment from 'moment'
 import CardBookBg from './CardBookBg'
 import CardViewSessionStudents from './cardViewSessionStudents'
-// ???
 
 interface CardViewProps {
   date: Date
   events: CalendarEvent[]
   onSelectSession: (session: Session, position: { x: number, y: number }) => void
+}
+
+// Hash function to consistently map session ID to a color
+function hashIdToColor(id: string | number): 'blue' | 'yellow' | 'pink' {
+  const colors: Array<'blue' | 'yellow' | 'pink'> = ['blue', 'yellow', 'pink']
+  
+  // Convert string to a numeric hash
+  let hash = 0
+  const idStr = String(id)
+  for (let i = 0; i < idStr.length; i++) {
+    hash = ((hash << 5) - hash) + idStr.charCodeAt(i)
+    hash = hash & hash // Convert to 32-bit integer
+  }
+  
+  return colors[Math.abs(hash) % colors.length]
 }
 
 export default function CardView({ date, events, onSelectSession }: CardViewProps) {
@@ -60,7 +74,11 @@ export default function CardView({ date, events, onSelectSession }: CardViewProp
                     // Map through sessions for the day
                     daySessions.map(event => (
                       <div key={event.id} className="flex flex-col gap-1 items-center">
-                        <CardBookBg className="hover:scale-102 transition" size="md" color={(['blue', 'yellow', 'pink'] as const)[Math.floor(Math.random() * 3)]}>
+                        <CardBookBg 
+                          className="hover:scale-102 transition" 
+                          size="md" 
+                          color={hashIdToColor(event.id)}
+                        >
                           <button
                             type="button"
                             onClick={() => {
@@ -75,7 +93,7 @@ export default function CardView({ date, events, onSelectSession }: CardViewProp
                             <div className="text-sm font-semibold">Session Name</div>
                             <div className="text-sm">School A</div>
                             <br />
-                            <div className="text-sm">{moment(event.start).format('D, MMM, YYYY')}</div>
+                            <div className="text-sm">{moment(event.start).format('D MMM YYYY')}</div>
                             <div className="flex items-center gap-1.5 text-xs font-medium">
                               <Clock size={14} />
                               {moment(event.start).format('h:mm A')}
