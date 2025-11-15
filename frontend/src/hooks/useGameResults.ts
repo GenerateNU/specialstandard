@@ -44,7 +44,7 @@ export function useGameResults({ session_student_id, session_id, student_id }: U
       const response = await api.getGameResults(queryParams)
       return response
     },
-    enabled: !!session_id || !!student_id,
+    enabled: !!session_id && session_id !== 'test-session' && !!student_id && student_id !== 'test-student'
   })
 
   // Start tracking a game

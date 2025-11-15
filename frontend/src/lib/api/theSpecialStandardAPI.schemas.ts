@@ -1075,6 +1075,12 @@ export type GetResourcesParams = {
    */
   theme_year?: number;
   /**
+   * Filter resources by week (1-4)
+   * @minimum 1
+   * @maximum 4
+   */
+  week?: number;
+  /**
    * Page Number of pagination
    * @minimum 1
    */

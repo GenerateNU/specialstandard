@@ -2,6 +2,7 @@
 
 import { use, useState } from 'react'
 import { BookOpen, Dumbbell } from 'lucide-react'
+import Link from 'next/link'
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
 import LevelButton from '@/components/curriculum/LevelButton'
 import WeekNavigator from '@/components/curriculum/WeekNavigator'
@@ -27,6 +28,7 @@ export default function CurriculumPage({ params }: PageProps) {
     setCurrentWeek,
     setCurrentMonth,
     setCurrentYear,
+    setCurrentLevel,
   } = useSessionContext()
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
 
@@ -132,16 +134,14 @@ export default function CurriculumPage({ params }: PageProps) {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Button
-                  size="lg"
-                  className="h-24 text-xl bg-blue hover:bg-blue-hover text-white gap-3"
-                  onClick={() => {
-                    // TODO: Navigate to reading page
-                  }}
+                <Link
+                  href={`/sessions/${id}/curriculum/reading`}
+                  onClick={() => setCurrentLevel(selectedLevel)}
+                  className="h-24 text-xl bg-blue hover:bg-blue-hover text-white gap-3 flex items-center justify-center rounded-lg font-semibold transition-all hover:scale-105"
                 >
                   <BookOpen className="w-6 h-6" />
                   Open Reading
-                </Button>
+                </Link>
                 
                 <Button
                   size="lg"

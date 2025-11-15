@@ -1805,6 +1805,14 @@ paths:
             type: integer
           required: false
           description: Filter resources by theme year
+        - in: query
+          name: week
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+          required: false
+          description: Filter resources by week (1-4)
         - name: page
           in: query
           description: Page Number of pagination

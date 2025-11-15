@@ -14,11 +14,13 @@ interface SessionContextType {
   currentWeek: number
   currentMonth: number
   currentYear: number
+  currentLevel: number | null
   setSession: (session: Session) => void
   setStudents: (students: StudentTuple[]) => void
   setCurrentWeek: (week: number) => void
   setCurrentMonth: (month: number) => void
   setCurrentYear: (year: number) => void
+  setCurrentLevel: (level: number | null) => void
   clearSession: () => void
 }
 
@@ -31,6 +33,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const now = new Date()
   const [currentMonth, setCurrentMonth] = useState<number>(now.getMonth()) // 0-11
   const [currentYear, setCurrentYear] = useState<number>(now.getFullYear())
+  const [currentLevel, setCurrentLevel] = useState<number | null>(null)
 
   const setSession = useCallback((newSession: Session) => {
     setSessionState(newSession)
@@ -47,6 +50,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const now = new Date()
     setCurrentMonth(now.getMonth())
     setCurrentYear(now.getFullYear())
+    setCurrentLevel(null)
   }, [])
 
   return (
@@ -57,11 +61,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         currentWeek,
         currentMonth,
         currentYear,
+        currentLevel,
         setSession,
         setStudents,
         setCurrentWeek,
         setCurrentMonth,
         setCurrentYear,
+        setCurrentLevel,
         clearSession,
       }}
     >
