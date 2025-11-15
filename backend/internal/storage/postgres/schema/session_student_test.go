@@ -404,9 +404,9 @@ func TestSessionStudentRepository_GetStudentAttendance(t *testing.T) {
 		endTime := date
 
 		_, err := testDB.Exec(ctx, `
-			INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime)
-			VALUES ($1, $2, $3, $4, $5)
-		`, sessionID, "Test Session", therapistID, startTime, endTime)
+			INSERT INTO session (id, therapist_id, start_datetime, end_datetime)
+			VALUES ($1, $2, $3, $4)
+		`, sessionID, therapistID, startTime, endTime)
 		require.NoError(t, err)
 
 		// Create session_student relationship
