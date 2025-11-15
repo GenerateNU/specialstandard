@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Brain, Gamepad2 } from 'lucide-react'
+import { BookOpen, Brain, Gamepad2, Image } from 'lucide-react'
 import { GameContentSelector } from '@/components/games/GameContentSelector'
 import type { GetGameContentsCategory, GetGameContentsQuestionType, Theme  } from '@/lib/api/theSpecialStandardAPI.schemas'
 import AppLayout from '@/components/AppLayout'
@@ -56,7 +56,22 @@ export default function GamesPage() {
                 <h3 className="mb-2">Flashcards</h3>
                 <p className="text-secondary text-sm">Practice with interactive flashcards</p>
               </button>
-              
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    themeId: selectedContent.theme.id,
+                    difficulty: String(selectedContent.difficultyLevel),
+                    category: selectedContent.category,
+                    questionType: selectedContent.questionType,
+                  })
+                  router.push(`/games/image-matching?${params.toString()}`)
+                }}
+                className="cursor-pointer bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
+              >
+                <Image className="w-12 h-12 text-blue mb-4 mx-auto" />
+                <h3 className="mb-2">Image Matching</h3>
+                <p className="text-secondary text-sm">Match words with images</p>
+              </button>
               <button
                 disabled
                 className="bg-card rounded-lg shadow-md p-8 opacity-50 cursor-not-allowed border border-default"
