@@ -34,7 +34,7 @@ export default function StudentSchedule({ studentId, initialView = 'day', classN
     ? []
     : sessions.map(s => ({
         id: s.id,
-        title: s.notes ? s.notes : 'Session',
+        title: s.session_name ? s.session_name : 'Session',
         start: new Date(s.start_datetime),
         end: new Date(s.end_datetime),
         allDay: false,

@@ -112,7 +112,7 @@ export default function MyCalendar() {
   // Transform sessions into calendar events
   const events: CalendarEvent[] = sessions.map(session => ({
     id: session.id,
-    title: 'session',
+    title: session.session_name,
     start: new Date(session.start_datetime),
     end: new Date(session.end_datetime),
     resource: session,

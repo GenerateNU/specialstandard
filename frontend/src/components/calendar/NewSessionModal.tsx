@@ -1,7 +1,7 @@
 import type { RepetitionConfig } from './repetition-selector'
 import type { StudentBody } from '@/hooks/useStudents'
 import type { PostSessionsBody } from '@/lib/api/theSpecialStandardAPI.schemas'
-import { Calendar, Clock, FileText, User } from 'lucide-react'
+import { Calendar, Clock, FileText, MapPin, User } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -47,18 +47,22 @@ export function CreateSessionDialog({
   initialDateTime,
 }: CreateSessionDialogProps) {
   const form = useForm<{
+    session_name: string
     student_ids: string[]
     sessionDate: string
     timeRange: [string, string]
     duration: number
+    location: string
     notes?: string
     repetition?: RepetitionConfig
   }>({
     defaultValues: {
+      session_name: "",
       student_ids: [],
       sessionDate: initialDateTime?.start.toISOString().split('T')[0] || new Date().toISOString().split('T')[0], // Today's date
       timeRange: [initialDateTime?.start.toTimeString().split(' ')[0].slice(0, 5) || '09:00', initialDateTime?.end.toTimeString().split(' ')[0].slice(0, 5) || '10:00'],
       duration: 60,
+      location: "",
       notes: '',
     },
   })
@@ -97,19 +101,23 @@ export function CreateSessionDialog({
       const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60))
 
       form.reset({
+        session_name: '',
         student_ids: [],
         sessionDate,
         timeRange: [startTime, endTime],
         duration,
+        location: '',
         notes: '',
       })
     }
     else if (open && !initialDateTime) {
       form.reset({
+        session_name: '',
         student_ids: [],
         sessionDate: new Date().toISOString().split('T')[0],
         timeRange: ['09:00', '10:00'],
         duration: 60,
+        location: '',
         notes: '',
       })
     }
@@ -136,10 +144,12 @@ export function CreateSessionDialog({
       }
 
       const postBody: PostSessionsBody = {
+        session_name: data.session_name,
         start_datetime: startDateTime.toISOString(),
         end_datetime: endDateTime.toISOString(),
         therapist_id: therapistId,
         notes: data.notes || undefined,
+        location: data.location || undefined,
         student_ids: data.student_ids,
         repetition: repetitionConfig,
       }
@@ -166,6 +176,27 @@ export function CreateSessionDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            {/* Session Name */}
+            <FormField
+              control={form.control}
+              name="session_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <FileText className="w-4 h-4" /> Session Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Session Name"
+                      {...field}
+                      value={field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Date Field */}
             <FormField
               control={form.control}
@@ -224,6 +255,27 @@ export function CreateSessionDialog({
                       sessionTime={form.watch('timeRange')[0]}
                     />
                   </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {/* Session Location */}
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <FileText className="w-4 h-4" /> Session Location
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. Room 234"
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />

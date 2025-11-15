@@ -1,6 +1,16 @@
 'use client'
 
-import { ArrowLeft, Calendar, Clock, MapPin, Pencil, Plus, X } from 'lucide-react'
+import {
+    ArrowLeft,
+    Calendar,
+    Clock, FilePen,
+    FolderPen,
+    MapPin,
+    NotepadText,
+    Pencil,
+    Plus,
+    X
+} from 'lucide-react'
 import Link from 'next/link'
 import { use, useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
@@ -41,11 +51,13 @@ export default function SessionPage({ params }: PageProps) {
   const [studentToRemove, setStudentToRemove] = useState<{ id: string, name: string } | null>(null)
   const [isEditingSession, setIsEditingSession] = useState(false)
   const [editedSession, setEditedSession] = useState({
+    session_name: '',
     startDate: '',
     startTime: '',
     endDate: '',
     endTime: '',
     notes: '',
+    location: '',
   })
 
   if (sessionLoading || studentsLoading) {
@@ -120,11 +132,13 @@ export default function SessionPage({ params }: PageProps) {
     const end = new Date(session.end_datetime)
 
     setEditedSession({
+      session_name: session.session_name,
       startDate: start.toISOString().split('T')[0],
       startTime: start.toTimeString().slice(0, 5),
       endDate: end.toISOString().split('T')[0],
       endTime: end.toTimeString().slice(0, 5),
       notes: session.notes || '',
+      location: session.location || '',
     })
     setIsEditingSession(true)
     setMode('editStudents') // Also enable student editing
@@ -135,9 +149,11 @@ export default function SessionPage({ params }: PageProps) {
     const endDatetime = new Date(`${editedSession.endDate}T${editedSession.endTime}`).toISOString()
 
     updateSession(id, {
+      session_name: editedSession.session_name,
       start_datetime: startDatetime,
       end_datetime: endDatetime,
       notes: editedSession.notes,
+      location: editedSession.location,
     })
     setIsEditingSession(false)
     setMode('view') // Exit student editing mode
@@ -167,7 +183,24 @@ export default function SessionPage({ params }: PageProps) {
       {/* Session header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-bold">Session Details</h1>
+          <h1 className="text-4xl font-bold">Session Details:
+            {!isEditingSession
+              ? ` ${  session.session_name}`
+              : <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FilePen className="w-4 h-4 inline mr-2" />
+                    Session Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editedSession.session_name}
+                    onChange={e => setEditedSession({ ...editedSession, session_name: e.target.value })}
+                    placeholder="e.g., Fluency & Flamboyancy"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
+                  />
+                </div>
+            }
+          </h1>
           {!isEditingSession
             ? (
                 <Button
@@ -212,10 +245,16 @@ export default function SessionPage({ params }: PageProps) {
                   <span className="text-lg">{formatTimeRange()}</span>
                 </div>
 
+                {/* Notes */}
+                <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
+                  <NotepadText className="w-5 h-5 text-accent" />
+                  <span className="text-lg">{session.notes || 'No notes'}</span>
+                </div>
+
                 {/* Location */}
                 <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
                   <MapPin className="w-5 h-5 text-accent" />
-                  <span className="text-lg">{session.notes || 'No location'}</span>
+                  <span className="text-lg">{session.location || 'No location'}</span>
                 </div>
               </div>
             )
@@ -266,6 +305,21 @@ export default function SessionPage({ params }: PageProps) {
                   </div>
                 </div>
 
+                {/* Notes Input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <NotepadText className="w-4 h-4 inline mr-2" />
+                    Notes
+                  </label>
+                  <input
+                    type="text"
+                    value={editedSession.notes}
+                    onChange={e => setEditedSession({ ...editedSession, notes: e.target.value })}
+                    placeholder="e.g., Boston Latin Academy"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
+                  />
+                </div>
+
                 {/* Location Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -274,9 +328,9 @@ export default function SessionPage({ params }: PageProps) {
                   </label>
                   <input
                     type="text"
-                    value={editedSession.notes}
-                    onChange={e => setEditedSession({ ...editedSession, notes: e.target.value })}
-                    placeholder="e.g., Boston Latin Academy"
+                    value={editedSession.location}
+                    onChange={e => setEditedSession({ ...editedSession, location: e.target.value })}
+                    placeholder="e.g., Richards 234"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
                   />
                 </div>
