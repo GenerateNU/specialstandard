@@ -123,7 +123,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <Separator className="bg-white/10" />
 
           {/* Navigation */}
-          <nav className="flex-1 p-2 space-y-1">
+          <nav className="flex flex-col flex-1 p-2 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -133,20 +133,25 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   <Link
                     href={item.href}
                     className={`
-                    flex items-center gap-3 rounded-lg
-                    transition-all duration-200
-                    h-10 shrink-0 overflow-hidden justify-start
-                    ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
-                    ${
+    flex flex-row items-center rounded-lg
+    transition-[width,background-color,gap] duration-300
+    h-10 shrink-0 overflow-hidden
+    ${isSidebarOpen ? 'gap-3 w-full px-2.5 justify-start' : 'lg:gap-0 lg:w-10 w-full gap-3 px-2.5 lg:px-2.5 lg:justify-center justify-start'}
+    ${
                 isActive
                   ? 'bg-blue text-white font-medium'
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }
-                  `}
+  `}
                   >
-
                     <Icon className="w-5 h-5 shrink-0" />
-                    <span className="whitespace-nowrap">{item.label}</span>
+                    <span
+                      className={`whitespace-nowrap transition-all duration-300 ${
+                        isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:overflow-hidden'
+                      }`}
+                    >
+                      {item.label}
+                    </span>
                   </Link>
                 </Tooltip>
               )
@@ -165,16 +170,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 variant="ghost"
                 aria-label="Logout"
                 className={`
-                flex items-center gap-3 rounded-lg
-                transition-all duration-200
-                h-10 shrink-0 overflow-hidden justify-start
-                text-white/70 hover:text-white hover:bg-white/10
-                ${isSidebarOpen ? 'w-full px-2.5' : 'lg:w-10 w-full px-2.5 lg:px-2.5'}
-              `}
+    flex items-center gap-3 rounded-lg
+    transition-all duration-200
+    h-10 shrink-0 overflow-hidden
+    text-white/70 hover:text-white hover:bg-white/10
+    ${isSidebarOpen ? 'w-full px-2.5 justify-start' : 'lg:w-10 w-full px-2.5 lg:px-2.5 lg:justify-center justify-start'}
+  `}
               >
-
-                <LogOut className="w-5 h-5 mr-0.5" />
-                <span className="whitespace-nowrap">Logout</span>
+                <LogOut className="w-5 h-5 shrink-0" />
+                <span
+                  className={`whitespace-nowrap transition-opacity duration-200 ${
+                    isSidebarOpen ? 'opacity-100' : 'opacity-0 lg:hidden'
+                  }`}
+                >
+                  Logout
+                </span>
               </Button>
             </Tooltip>
           </div>
