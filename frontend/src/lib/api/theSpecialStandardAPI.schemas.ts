@@ -66,6 +66,21 @@ export interface UpdateTherapistInput {
   active?: boolean;
 }
 
+export interface District {
+  id?: number;
+  name?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface School {
+  id?: number;
+  name?: string;
+  district_id?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Session {
   /** Unique identifier for the session */
   id: string;
@@ -541,6 +556,8 @@ export interface StudentRatingEntry {
 }
 
 export interface StudentWithSessionInfo {
+  /** The unique ID of the session-student relationship */
+  session_student_id: number;
   /** The student information */
   student: Student;
   /** UUID of the associated session */
@@ -869,6 +886,13 @@ export type GetSessionsSessionIdStudentsParams = {
    * Filter students by therapist UUID
    */
   therapist_id?: string;
+};
+
+export type GetSchoolsParams = {
+  /**
+   * Filter schools by district ID
+   */
+  district_id?: number;
 };
 
 export type GetStudentsParams = {
