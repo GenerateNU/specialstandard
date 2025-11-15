@@ -301,6 +301,11 @@ func createAllTables(pool *pgxpool.Pool) error {
 			FOREIGN KEY (session_student_id) REFERENCES session_student(id) ON DELETE CASCADE,
 			FOREIGN KEY (content_id) REFERENCES game_content(id) ON DELETE RESTRICT
 		);`,
+
+		`ALTER TABLE session
+			ADD COLUMN session_name VARCHAR(255) NOT NULL,
+			ADD COLUMN location VARCHAR(255);
+		`,
 	}
 
 	// Execute non-enum table creations

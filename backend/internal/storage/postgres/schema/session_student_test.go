@@ -65,9 +65,9 @@ func CreateTestSession(t *testing.T, db *pgxpool.Pool, ctx context.Context, ther
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
 	_, err := db.Exec(ctx, `
-		INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-	`, sessionID, therapistID, startTime, endTime, notes)
+		INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+	`, sessionID, "Test Session", therapistID, startTime, endTime, notes)
 	assert.NoError(t, err)
 
 	return sessionID

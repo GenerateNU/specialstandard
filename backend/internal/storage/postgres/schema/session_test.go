@@ -91,9 +91,9 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
-    `, therapistID, startTime, endTime, "Test session")
+        INSERT INTO session (session_name, therapist_id, start_datetime, end_datetime, notes, location, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+    `, "Session Name", therapistID, startTime, endTime, "Test session", "Centre of the Earth")
 	assert.NoError(t, err)
 
 	// Test
@@ -105,6 +105,8 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.Equal(t, "Test session", *sessions[0].Notes)
 	assert.Equal(t, therapistID, sessions[0].TherapistID)
 	assert.True(t, sessions[0].EndDateTime.After(sessions[0].StartDateTime))
+	assert.Equal(t, "Session Name", sessions[0].SessionName)
+	assert.Equal(t, "Centre of the Earth", *sessions[0].Location)
 
 	// More Tests for Pagination Behaviour
 	for i := 1; i <= 18; i++ {
@@ -112,9 +114,9 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 		end := start.Add(time.Hour)
 
 		_, err := testDB.Exec(ctx, `
-			INSERT INTO session (therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, NOW(), NOW())
-       `, therapistID, start, end, fmt.Sprintf("Test session%d", i))
+			INSERT INTO session (session_name, therapist_id, start_datetime, end_datetime, notes, location, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+       `, "Session Name", therapistID, start, end, fmt.Sprintf("Test session%d", i), "Khol De Baahein ~ Monali Thakur")
 		assert.NoError(t, err)
 	}
 
@@ -187,9 +189,9 @@ func TestSessionRepository_GetSessionByID(t *testing.T) {
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-    `, sessionID, therapistID, startTime, endTime, "Get by ID test session")
+        INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, location, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+    `, sessionID, "Session Name", therapistID, startTime, endTime, "Get by ID test session", "Featurethon!")
 	assert.NoError(t, err)
 
 	// Test
@@ -226,9 +228,9 @@ func TestSessionRepository_DeleteSessions(t *testing.T) {
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
 	_, err := testDB.Exec(ctx,
-		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-		sessionID, therapistID, startTime, endTime, "Inserting into session for test")
+		`INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, location, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
+		sessionID, "Session Name", therapistID, startTime, endTime, "Inserting into session for test", "Calcutta")
 	assert.NoError(t, err)
 
 	err = repo.DeleteSession(ctx, sessionID)
@@ -246,14 +248,18 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 
 	// Test foreign key violation with non-existent therapist
 	therapistID := uuid.New()
+	sessionName := "Session Name"
 	startTime := time.Now()
 	endTime := time.Now().Add(time.Hour)
 	notes := ptrString("foreign key violation")
+	location := ptrString("Home is where the heart is, but God I love the English")
 	postSession := &models.PostSessionInput{
+		SessionName: sessionName,
 		StartTime:   startTime,
 		EndTime:     endTime,
 		TherapistID: therapistID,
 		Notes:       notes,
+		Location:    location,
 	}
 	db := repo.GetDB()
 	postedSession, err := repo.PostSession(ctx, db, postSession)
@@ -268,10 +274,12 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	endTime = time.Now().Add(-time.Hour)
 	notes = ptrString("check constraint violation")
 	postSession = &models.PostSessionInput{
+		SessionName: sessionName,
 		StartTime:   startTime,
 		EndTime:     endTime,
 		TherapistID: therapistID,
 		Notes:       notes,
+		Location:    location,
 	}
 	postedSession, err = repo.PostSession(ctx, db, postSession)
 	assert.Error(t, err)
@@ -283,10 +291,12 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	endTime = time.Now().Add(time.Hour)
 	notes = ptrString("success")
 	postSession = &models.PostSessionInput{
+		SessionName: sessionName,
 		StartTime:   startTime,
 		EndTime:     endTime,
 		TherapistID: therapistID,
 		Notes:       notes,
+		Location:    location,
 	}
 	postedSessions, err := repo.PostSession(ctx, db, postSession)
 	assert.NoError(t, err)
@@ -300,10 +310,12 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 	// Test recurring sessions
 	recurEnd := startTime.AddDate(0, 0, 20) // 3 weeks later
 	postSession = &models.PostSessionInput{
+		SessionName: sessionName,
 		StartTime:   startTime,
 		EndTime:     endTime,
 		TherapistID: therapistID,
 		Notes:       ptrString("recurring sessions"),
+		Location:    location,
 		Repetition: &models.Repetition{
 			EveryNWeeks: 1,
 			RecurEnd:    recurEnd,
@@ -322,6 +334,7 @@ func TestSessionRepository_PostSessions(t *testing.T) {
 
 	// Test invalid repetition
 	postSession = &models.PostSessionInput{
+		SessionName: sessionName,
 		StartTime:   startTime,
 		EndTime:     endTime,
 		TherapistID: therapistID,
@@ -387,10 +400,12 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	id = uuid.New()
 	startTime = time.Now()
 	endTime = time.Now().Add(time.Hour)
+	sessionName := "Test Session"
+	location := "Area 51"
 	_, err = testDB.Exec(ctx,
-		`INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-		id, therapistID, startTime, endTime, "Inserted")
+		`INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, location, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
+		id, sessionName, therapistID, startTime, endTime, "Inserted", location)
 	assert.NoError(t, err)
 
 	// Test successful patch with notes only
@@ -427,10 +442,12 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	endTime = time.Now().Add(time.Hour)
 	notes = ptrString("New Note")
 	patch = &models.PatchSessionInput{
+		SessionName: ptrString("New Test Session"),
 		StartTime:   &startTime,
 		EndTime:     &endTime,
 		TherapistID: &therapistID2,
 		Notes:       notes,
+		Location:    ptrString("Area 52"),
 	}
 	patchedSession, err = repo.PatchSession(ctx, id, patch)
 	assert.NoError(t, err)
@@ -438,6 +455,8 @@ func TestSessionRepository_PatchSessions(t *testing.T) {
 	assert.True(t, patchedSession.EndDateTime.After(patchedSession.StartDateTime))
 	assert.Equal(t, patchedSession.TherapistID, therapistID2)
 	assert.Equal(t, patchedSession.Notes, notes)
+	assert.Equal(t, patchedSession.SessionName, "New Test Session")
+	assert.Equal(t, *patchedSession.Location, "Area 52")
 }
 
 func TestGetSessionStudents(t *testing.T) {
@@ -453,9 +472,9 @@ func TestGetSessionStudents(t *testing.T) {
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
 	_, err := testDB.Exec(ctx, `
-        INSERT INTO session (therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
-    `, therapistID, startTime, endTime, "Test session")
+        INSERT INTO session (session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+    `, "Test Session", therapistID, startTime, endTime, "Test session")
 	assert.NoError(t, err)
 
 	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil, therapistID)

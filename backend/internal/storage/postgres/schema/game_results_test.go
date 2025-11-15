@@ -49,9 +49,9 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
 	_, err = testDB.Exec(ctx, `
-       INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-       VALUES ($1, $2, $3, $4, $5)
-   `, sessionID, therapistID, startTime, endTime, "Test session for session-student")
+       INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes)
+       VALUES ($1, $2, $3, $4, $5, $6)
+   `, sessionID, "Test Session", therapistID, startTime, endTime, "Test session for session-student")
 	assert.NoError(t, err)
 
 	// Create test student
@@ -165,9 +165,9 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
 	_, err = testDB.Exec(ctx, `
-       INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-       VALUES ($1, $2, $3, $4, $5)
-   `, sessionID, therapistID, startTime, endTime, "Test session for session-student")
+       INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes)
+       VALUES ($1, $2, $3, $4, $5, $6)
+   `, sessionID, "Test Session", therapistID, startTime, endTime, "Test session for session-student")
 	assert.NoError(t, err)
 
 	// Create test student

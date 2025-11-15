@@ -82,9 +82,9 @@ func TestSessionResourceRepository_PostSessionResource(t *testing.T) {
 	// Create test session
 	sessionID := uuid.New()
 	_, err = testDB.Exec(ctx, `
-		INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-	`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
+		INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	`, sessionID, "Test Session", therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	t.Run("successful creation", func(t *testing.T) {
@@ -121,9 +121,9 @@ func TestSessionResourceRepository_PostSessionResource(t *testing.T) {
 		// Create new session for this test
 		newSessionID := uuid.New()
 		_, err = testDB.Exec(ctx, `
-			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, newSessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session 2", time.Now(), time.Now())
+			INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		`, newSessionID, "Test Session", therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session 2", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		nonExistentResourceID := uuid.New()
@@ -161,9 +161,9 @@ func TestSessionResourceRepository_DeleteSessionResource(t *testing.T) {
 	// Create test session
 	sessionID := uuid.New()
 	_, err = testDB.Exec(ctx, `
-		INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-	`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
+		INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	`, sessionID, "Test Session", therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	t.Run("successful deletion", func(t *testing.T) {
@@ -215,9 +215,9 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 
 		sessionID := uuid.New()
 		_, err = testDB.Exec(ctx, `
-			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
+			INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		`, sessionID, "Test Session", therapistID, time.Now(), time.Now().Add(time.Hour), "Test Session", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		_, err = testDB.Exec(ctx, `
@@ -241,9 +241,9 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		// Create session with new ID
 		sessionID := uuid.New()
 		_, err = testDB.Exec(ctx, `
-			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Multi Resource Session", time.Now(), time.Now())
+			INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		`, sessionID, "Test Session", therapistID, time.Now(), time.Now().Add(time.Hour), "Multi Resource Session", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		// Create multiple resources
@@ -283,9 +283,9 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 	t.Run("session with no resources - returns empty array", func(t *testing.T) {
 		sessionID := uuid.New()
 		_, err = testDB.Exec(ctx, `
-			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Empty Session", time.Now(), time.Now())
+			INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		`, sessionID, "Test Session", therapistID, time.Now(), time.Now().Add(time.Hour), "Empty Session", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
@@ -308,9 +308,9 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		// Create session with new ID
 		sessionID := uuid.New()
 		_, err = testDB.Exec(ctx, `
-			INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, sessionID, therapistID, time.Now(), time.Now().Add(time.Hour), "Multi Resource Session", time.Now(), time.Now())
+			INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		`, sessionID, "Test Session", therapistID, time.Now(), time.Now().Add(time.Hour), "Multi Resource Session", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
