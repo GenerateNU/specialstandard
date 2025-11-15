@@ -3099,12 +3099,11 @@ components:
           minimum: 0
           maximum: 12
           example: 5
-        date:
-          type: string
-          format: date
+        week:
+          type: integer
           nullable: true
-          description: Date associated with the resource (optional)
-          example: "2024-01-15"
+          description: Week associated with the resource (optional)
+          example: 2
         type:
           type: string
           nullable: true
@@ -3150,12 +3149,11 @@ components:
           minimum: 0
           maximum: 12
           example: 5
-        date:
-          type: string
-          format: date
+        week:
+          type: integer
           nullable: true
-          description: Date associated with the resource (optional)
-          example: "2024-01-15"
+          description: Week associated with the resource (optional)
+          example: 2
         type:
           type: string
           nullable: true
@@ -3199,12 +3197,11 @@ components:
           minimum: 0
           maximum: 12
           example: 5
-        date:
-          type: string
-          format: date
+        week:
+          type: integer
           nullable: true
-          description: Date associated with the resource (optional)
-          example: "2024-01-15"
+          description: Week associated with the resource (optional)
+          example: 2
         type:
           type: string
           nullable: true
@@ -3412,11 +3409,16 @@ components:
     StudentWithSessionInfo:
       type: object
       required:
+        - session_student_id
         - student
         - present
         - session_id
         - ratings
       properties:
+        session_student_id:
+          type: integer
+          description: The unique ID of the session-student relationship
+          example: 1
         student:
           $ref: "#/components/schemas/Student"
           description: The student information
