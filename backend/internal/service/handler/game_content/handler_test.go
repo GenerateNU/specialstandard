@@ -101,7 +101,7 @@ func TestHandler_GetGameContents(t *testing.T) {
 			mockRepo := new(mocks.MockGameContentRepository)
 			tt.mockSetup(mockRepo)
 
-			handler := NewHandler(mockRepo)
+			handler := NewHandler(mockRepo, nil)
 			app.Get("/game-contents", handler.GetGameContents)
 
 			req := httptest.NewRequest("GET", "/game-contents"+tt.url, nil)
