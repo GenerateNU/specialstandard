@@ -1,6 +1,7 @@
 'use client'
 
 import type { SlotInfo } from 'react-big-calendar'
+import { motion } from 'motion/react'
 import AppLayout from '@/components/AppLayout'
 import CalendarHeader from '@/components/calendar/calendarHeader'
 import CalendarView from '@/components/calendar/calendarView'
@@ -62,7 +63,7 @@ export default function MyCalendar() {
   return (
     <AppLayout>
       <div className="flex justify-center">
-        <div style={{ width: '90vw', maxHeight: 'calc(100vh - 100px)' }} className="pt-10">
+        <div style={{ width: '90vw', maxHeight: 'calc(115vh - 100px)' }} className="pt-10 flex flex-col gap-6 overflow-hidden">
           <CreateSessionDialog
             open={newSessionOpen}
             therapistId={HARDCODED_THERAPIST_ID}
@@ -84,27 +85,43 @@ export default function MyCalendar() {
 
           {viewMode === 'card'
             ? (
-                <CardView
-                  date={date}
-                  events={events}
-                  onSelectSession={(session, position) => {
-                    setSelectedSession(session)
-                    setModalPosition(position)
-                  }}
-                />
+                <motion.div
+                  key="card-view"
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 60 }}
+                  transition={{ type: 'spring', damping: 30 }}
+                >
+                  <CardView
+                    date={date}
+                    events={events}
+                    onSelectSession={(session, position) => {
+                      setSelectedSession(session)
+                      setModalPosition(position)
+                    }}
+                  />
+                </motion.div>
               )
             : (
-                <CalendarView
-                  date={date}
-                  view={view}
-                  events={events}
-                  isLoading={isLoading}
-                  error={error}
-                  onNavigate={setDate}
-                  onViewChange={setView}
-                  onSelectEvent={handleSelectEvent}
-                  onSelectSlot={handleSelectSlot}
-                />
+                <motion.div
+                  key="calendar-view"
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 60 }}
+                  transition={{ type: 'spring', damping: 30 }}
+                >
+                  <CalendarView
+                    date={date}
+                    view={view}
+                    events={events}
+                    isLoading={isLoading}
+                    error={error}
+                    onNavigate={setDate}
+                    onViewChange={setView}
+                    onSelectEvent={handleSelectEvent}
+                    onSelectSlot={handleSelectSlot}
+                  />
+                </motion.div>
               )}
 
           {selectedSession && modalPosition && (

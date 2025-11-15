@@ -31,8 +31,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
   padding: 0;
+  margin-bottom: 0px;
   background: transparent;
   width: 100%;
 }
@@ -91,6 +91,8 @@
 .rbc-toolbar button.rbc-active {
   background-color: var(--color-pink) !important;
   color: var(--color-white) !important;
+  display: inline-flex;
+  justify-content: space-evenly;
 }
 
 /* Focus state */

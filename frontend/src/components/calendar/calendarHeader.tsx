@@ -46,7 +46,7 @@ export default function CalendarHeader({
   return (
     <>
       <div
-        className="mb-3 flex justify-between items-end"
+        className="flex justify-between items-end"
         style={{ paddingLeft: '24px', paddingRight: '24px' }}
       >
         <div className="flex flex-col items-left justify-start">
@@ -78,7 +78,7 @@ export default function CalendarHeader({
         </div>
       </div>
 
-      <div className="mb-4" style={{ paddingLeft: '24px', paddingRight: '24px' }}>
+      <div className="" style={{ paddingLeft: '24px', paddingRight: '24px' }}>
         <CustomToolbar
           label={label}
           onNavigate={handleNavigate}

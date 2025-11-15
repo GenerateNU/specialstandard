@@ -3,7 +3,7 @@ import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
 
 import { Clock } from 'lucide-react'
 import moment from 'moment'
-import CardBookBg from './CardBookBg'
+import CardBookBg from './cardBookBg'
 import CardViewSessionStudents from './cardViewSessionStudents'
 
 interface CardViewProps {

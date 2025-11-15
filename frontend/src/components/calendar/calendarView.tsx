@@ -63,7 +63,7 @@ export default function CalendarView({
       events={events}
       startAccessor="start"
       endAccessor="end"
-      style={{ height: '80vh', width: '90vw' }}
+      style={{ height: '75vh', width: '90vw' }}
       date={date}
       view={view}
       onNavigate={onNavigate}

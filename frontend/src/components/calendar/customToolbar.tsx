@@ -17,50 +17,47 @@ export default function CustomToolbar({
   showViewSelector = true,
 }: CustomToolbarProps) {
   return (
-    <div className="rbc-toolbar">
+    <div className="rbc-toolbar flex items-center justify-between w-full gap-4">
       <span className="rbc-btn-group">
         <button type="button" onClick={() => onNavigate('TODAY')}>
           Today
         </button>
       </span>
-      <span className="rbc-toolbar-label-container">
+      <span className="rbc-toolbar-label-container flex items-center gap-2">
         <button type="button" className="rbc-toolbar-nav-btn" onClick={() => onNavigate('PREV')}>
           <ArrowLeft size={20} />
         </button>
-        <span className="rbc-toolbar-label">{label}</span>
-        <button type="button" className="rbc-toolbar-nav-btn " onClick={() => onNavigate('NEXT')}>
+        <span className="rbc-toolbar-label text-lg font-semibold">{label}</span>
+        <button type="button" className="rbc-toolbar-nav-btn" onClick={() => onNavigate('NEXT')}>
           <ArrowRight size={20} />
         </button>
       </span>
-      {showViewSelector
-        ? (
-            <span className="rbc-btn-group">
-              <button
-                type="button"
-                className={view === 'day' ? 'rbc-active' : ''}
-                onClick={() => onView('day')}
-              >
-                Day
-              </button>
-              <button
-                type="button"
-                className={view === 'work_week' ? 'rbc-active' : ''}
-                onClick={() => onView('work_week')}
-              >
-                Week
-              </button>
-              <button
-                type="button"
-                className={view === 'month' ? 'rbc-active' : ''}
-                onClick={() => onView('month')}
-              >
-                Month
-              </button>
-            </span>
-          )
-        : (
-            <span className="rbc-btn-group w-1/6" />
-          )}
+      <span
+        className="rbc-btn-group flex gap-2"
+        style={showViewSelector ? {} : { opacity: 0, pointerEvents: 'none', userSelect: 'none', color: 'transparent', backgroundColor: 'transparent', borderColor: 'transparent', boxShadow: 'none' }}
+      >
+        <button
+          type="button"
+          className={view === 'day' ? 'rbc-active' : ''}
+          onClick={() => onView('day')}
+        >
+          Day
+        </button>
+        <button
+          type="button"
+          className={view === 'work_week' ? 'rbc-active' : ''}
+          onClick={() => onView('work_week')}
+        >
+          Week
+        </button>
+        <button
+          type="button"
+          className={view === 'month' ? 'rbc-active' : ''}
+          onClick={() => onView('month')}
+        >
+          Month
+        </button>
+      </span>
     </div>
   )
 }
