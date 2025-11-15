@@ -1,6 +1,7 @@
 import type {
-  PostAuthLoginBody,
-  PostAuthSignupBody,
+    PostAuthForgotPasswordBody,
+    PostAuthLoginBody,
+    PostAuthSignupBody, PutAuthUpdatePasswordBody,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 // src/lib/api/auth.ts
@@ -48,12 +49,37 @@ export function useAuth() {
     },
   })
 
+  const updatePasswordMutation = useMutation({
+    mutationFn: (body: PutAuthUpdatePasswordBody) => api.putAuthUpdatePassword(body)
+  })
+
+  const forgotPasswordMutation = useMutation({
+    mutationFn: (body: PostAuthForgotPasswordBody) => api.postAuthForgotPassword(body)
+  })
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: (id: string) => api.deleteAuthDeleteAccountId(id),
+    onSuccess: () => {
+      localStorage.removeItem("jwt")
+      localStorage.removeItem("userId")
+
+        queryClient.setQueryData(['user'], null)
+        queryClient.invalidateQueries({ queryKey: ['user'] })
+    }
+  })
+
   return {
     userLogin: loginMutation.mutateAsync,
     userLogout: logoutMutation.mutateAsync,
     userSignup: signupMutation.mutateAsync,
+    updatePasswod: updatePasswordMutation.mutateAsync,
+    forgotPasswod: forgotPasswordMutation.mutateAsync,
+    deleteAccount: deleteAccountMutation.mutateAsync,
     loginMutation,
     logoutMutation,
     signupMutation,
+    updatePasswordMutation,
+    forgotPasswordMutation,
+    deleteAccountMutation,
   }
 }
