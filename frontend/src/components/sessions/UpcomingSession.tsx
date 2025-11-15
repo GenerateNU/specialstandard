@@ -57,16 +57,16 @@ export default function UpcomingSession({ studentId }: UpcomingSessionProps) {
         return (
           <div
             key={sessionData.id}
-            className="p-4 bg-card border-2 border-default rounded-3xl flex flex-col justify-center min-h-20 w-full"
+            className="p-4 bg-card border-2 border-default rounded-[32px] flex flex-col justify-center min-h-20 w-full shadow-card"
           >
             {/* Session title and relative time */}
             <div className="w-full flex justify-between items-center mb-2">
               <div className="font-semibold text-base">
                 {sessionData.session_name || `Session #${index + 1}`}
               </div>
-              <div className="text-sm text-muted-foreground">
+              {/* <div className="text-sm text-muted-foreground">
                 {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
-              </div>
+              </div> */}
             </div>
             
             {/* Date */}
