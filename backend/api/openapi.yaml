@@ -675,6 +675,110 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /districts:
+    get:
+      summary: Get all districts
+      description: Retrieve all districts from the system
+      tags: [Districts]
+      responses:
+        "200":
+          description: List of districts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/District"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /districts/{id}:
+    get:
+      summary: Get district by ID
+      description: Retrieve a district by its numeric ID
+      tags: [Districts]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric district ID
+          schema:
+            type: integer
+            example: 3
+      responses:
+        "200":
+          description: District found successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/District"
+        "400":
+          description: Invalid district ID (non-integer)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid district ID"
+        "404":
+          description: District not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "District not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /schools:
+    get:
+      summary: Get schools
+      description: Retrieve all schools, or filter by district using the `district_id` query parameter.
+      tags: [Schools]
+      parameters:
+        - name: district_id
+          in: query
+          required: false
+          description: Filter schools by district ID
+          schema:
+            type: integer
+            example: 4
+      responses:
+        "200":
+          description: List of schools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/School"
+        "400":
+          description: Invalid district ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid district ID"
+        "500":
+          description: Failed to fetch schools
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /students:
     get:
       summary: Get all students
@@ -754,7 +858,11 @@ paths:
                       district_id: 1
                       school_name: "Generate Elementary"
                       grade: 5
-                      iep: "Active IEP with speech therapy goals"
+                      iep:
+                        [
+                          "Active IEP with speech therapy goals",
+                          "Occupational therapy accommodations",
+                        ]
                       created_at: "2025-09-18T14:14:11.66268Z"
                       updated_at: "2025-09-18T14:14:11.66268Z"
                 filteredByGrade:
@@ -1141,7 +1249,7 @@ paths:
             type: integer
             minimum: 1
         - name: limit
-          in: query 
+          in: query
           description: Number of Items per page in pagination
           schema:
             type: integer
@@ -1173,6 +1281,60 @@ paths:
               example:
                 code: 404
                 message: "Student not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /students/{student_id}/attendance:
+    get:
+      summary: Get attendance records for a student
+      description: Retrieve all attendance records for a specific student
+      tags: [Students]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          description: UUID of the student
+          schema:
+            type: string
+            format: uuid
+            example: "0711034b-18b9-4f41-9b61-467ce9a373d5"
+        - name: date_from
+          in: query
+          required: false
+          description: Filter attendance records on or after this date (YYYY-MM-DD format), default is no lower limit
+          schema:
+            type: string
+            format: date
+            example: "2025-09-01"
+        - name: date_to
+          in: query
+          required: false
+          description: Filter attendance records on or before this date (YYYY-MM-DD format), default to today
+          schema:
+            type: string
+            format: date
+            example: "2025-11-14"
+      responses:
+        "200":
+          description: List of attendance records for the student
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceRecord"
+        "400":
+          description: Bad request (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
         "500":
           description: Internal server error
           content:
@@ -2174,13 +2336,34 @@ paths:
           description: The category associated with the game
           schema:
             type: string
-            enum: [receptive_language, expressive_language, social_pragmatic_language, speech]
+            enum:
+              [
+                receptive_language,
+                expressive_language,
+                social_pragmatic_language,
+                speech,
+              ]
         - name: question_type
           in: query
           description: The type of question being asked in the game
           schema:
             type: string
-            enum: [sequencing, following_directions, wh_questions, true_false, concepts_sorting, fill_in_the_blank, categorical_language, emotions, teamwork_talk, express_excitement_interest, fluency, articulation_s, articulation_l]
+            enum:
+              [
+                sequencing,
+                following_directions,
+                wh_questions,
+                true_false,
+                concepts_sorting,
+                fill_in_the_blank,
+                categorical_language,
+                emotions,
+                teamwork_talk,
+                express_excitement_interest,
+                fluency,
+                articulation_s,
+                articulation_l,
+              ]
         - name: difficulty_level
           in: query
           description: The difficulty level of the game
@@ -2207,7 +2390,7 @@ paths:
               schema:
                 type: array
                 items:
-                    $ref: '#/components/schemas/GameContent'
+                  $ref: "#/components/schemas/GameContent"
         "400":
           description: Bad Request (e.g., validation errors)
           content:
@@ -2236,13 +2419,13 @@ paths:
         - name: session_id
           in: query
           description: The SessionID of the session whose game results you seek
-          schema: 
+          schema:
             type: string
             format: uuid
         - name: student_id
           in: query
           description: The StudentID of the student whose game results you seek
-          schema: 
+          schema:
             type: string
             format: uuid
         - name: page
@@ -2265,7 +2448,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GameResult'
+                  $ref: "#/components/schemas/GameResult"
         "400":
           description: Bad Request (e.g., validation errors)
           content:
@@ -2294,14 +2477,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PostGameResultInput'
+              $ref: "#/components/schemas/PostGameResultInput"
       responses:
         "201":
           description: Game Result created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GameResult'
+                $ref: "#/components/schemas/GameResult"
         "400":
           description: Bad request (e.g., validation errors)
           content:
@@ -2456,6 +2639,45 @@ components:
           description: Whether the therapist is active
           example: true
 
+    District:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 3
+        name:
+          type: string
+          example: "Central District"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T14:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T14:30:00Z"
+
+    School:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        name:
+          type: string
+          example: "Lincoln Middle School"
+        district_id:
+          type: integer
+          example: 4
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T14:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T14:30:00Z"
+
     Session:
       type: object
       required:
@@ -2599,10 +2821,16 @@ components:
           maximum: 12
           example: 5
         iep:
-          type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Individualized Education Program details
-          example: "Active IEP with speech therapy goals"
+          description: List of Individualized Education Program goals
+          example:
+            [
+              "Active IEP with speech therapy goals",
+              "Occupational therapy accommodations",
+            ]
         created_at:
           type: string
           format: date-time
@@ -2652,10 +2880,16 @@ components:
           maximum: 12
           example: 5
         iep:
-          type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Individualized Education Program details (optional)
-          example: "Active IEP with speech therapy goals"
+          description: List of Individualized Education Program goals (optional)
+          example:
+            [
+              "Active IEP with speech therapy goals",
+              "Occupational therapy accommodations",
+            ]
 
     UpdateStudentInput:
       type: object
@@ -2688,10 +2922,16 @@ components:
           maximum: 12
           example: 6
         iep:
-          type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Updated IEP details (can be set to null)
-          example: "Updated IEP with advanced speech therapy goals"
+          description: Updated list of IEP goals (can be set to null or empty array)
+          example:
+            [
+              "Updated IEP with advanced speech therapy goals",
+              "Reading comprehension support",
+            ]
 
     Theme:
       type: object
@@ -2992,12 +3232,12 @@ components:
       properties:
         category:
           type: string
-          enum: ['visual_cue', 'verbal_cue', 'gestural_cue', 'engagement']
+          enum: ["visual_cue", "verbal_cue", "gestural_cue", "engagement"]
           description: Category of the rating
           example: "engagement"
         level:
           type: string
-          enum: ['minimal', 'moderate', 'maximal', 'low', 'high']
+          enum: ["minimal", "moderate", "maximal", "low", "high"]
           description: Rating level
           example: "high"
         description:
@@ -3163,7 +3403,7 @@ components:
           format: date-time
           description: Date and time of the session
           example: "2024-01-15T14:30:00Z"
-        ratings:  
+        ratings:
           type: array
           items:
             $ref: "#/components/schemas/SessionRating"
@@ -3209,6 +3449,20 @@ components:
           items:
             $ref: "#/components/schemas/SessionRating"
           description: List of ratings given to the student during the session
+    AttendanceRecord:
+      type: object
+      required:
+        - present_sessions
+        - total_sessions
+      properties:
+        present_sessions:
+          type: integer
+          description: Number of sessions the student was present
+          example: 15
+        total_sessions:
+          type: integer
+          description: Total number of sessions held
+          example: 20
 
     SessionWithStudentInfo:
       allOf:
@@ -3323,12 +3577,33 @@ components:
           example: 2
         category:
           type: string
-          enum: [ receptive_language, expressive_language, social_pragmatic_language, speech ]
+          enum:
+            [
+              receptive_language,
+              expressive_language,
+              social_pragmatic_language,
+              speech,
+            ]
           description: The category of the game
           example: "speech"
         question_type:
           type: string
-          enum: [ sequencing, following_directions, wh_questions, true_false, concepts_sorting, fill_in_the_blank, categorical_language, emotions, teamwork_talk, express_excitement_interest, fluency, articulation_s, articulation_l ]
+          enum:
+            [
+              sequencing,
+              following_directions,
+              wh_questions,
+              true_false,
+              concepts_sorting,
+              fill_in_the_blank,
+              categorical_language,
+              emotions,
+              teamwork_talk,
+              express_excitement_interest,
+              fluency,
+              articulation_s,
+              articulation_l,
+            ]
           description: The type of the question being asked in the game
           example: "fluency"
         difficulty_level:
@@ -3407,7 +3682,7 @@ components:
           items:
             type: string
           description: The actual incorrect answers chosen during the game
-          example: [ "Kroookodiley" ]
+          example: ["Kroookodiley"]
         created_at:
           type: string
           format: date-time
@@ -3454,4 +3729,4 @@ components:
           items:
             type: string
           description: The actual incorrect options selected in the course of the game
-          example: [ "Lijard", "Leopaard", "BARES" ]
+          example: ["Lijard", "Leopaard", "BARES"]

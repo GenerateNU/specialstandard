@@ -215,7 +215,7 @@ func TestGetStudentsEndpoint(t *testing.T) {
 			DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
 			Grade:       ptrInt(4),
-			IEP:         ptrString("Reading comprehension support"),
+			IEP:         []string{"Reading comprehension support"},
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -248,7 +248,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 			DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
 			Grade:       ptrInt(5),
-			IEP:         ptrString("Test IEP"),
+			IEP:         []string{"Test IEP"},
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -473,7 +473,7 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
 		Grade:       ptrInt(4),
-		IEP:         ptrString("Reading comprehension support"),
+		IEP:         []string{"Reading comprehension support"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -510,7 +510,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		TherapistID: therapistID,
 		SchoolID:    schoolID,
 		Grade:       ptrInt(5),
-		IEP:         ptrString("Test IEP"),
+		IEP:         []string{"Test IEP"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -530,7 +530,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		"therapist_id": "%s",
 		"school_id": %d,
 		"grade": 5,
-		"iep": "Test IEP"
+		"iep": ["Test IEP"]
 	}`, therapistID, schoolID)
 
 	req := httptest.NewRequest("POST", "/api/v1/students", strings.NewReader(body))
@@ -556,7 +556,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
 		Grade:       ptrInt(4),
-		IEP:         ptrString("Original IEP"),
+		IEP:         []string{"Original IEP"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -569,7 +569,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		Grade:       ptrInt(5), // updated grade
 		TherapistID: uuid.New(),
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
-		IEP:         ptrString("Updated IEP with math accommodations"),
+		IEP:         []string{"Updated IEP with math accommodations"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -584,7 +584,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 
 	body := `{
 		"grade": 5,
-		"iep": "Updated IEP with math accommodations"
+		"iep": ["Updated IEP with math accommodations"]
 	}`
 
 	req := httptest.NewRequest("PATCH", "/api/v1/students/"+studentID.String(), strings.NewReader(body))
@@ -2299,7 +2299,7 @@ func TestEndpoint_PromoteStudents(t *testing.T) {
 		DOB:         ptrTime(time.Date(2004, 9, 24, 0, 0, 0, 0, time.UTC)),
 		TherapistID: therapistID,
 		Grade:       ptrInt(7),
-		IEP:         ptrString("Original IEP"),
+		IEP:         []string{"Original IEP"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	})

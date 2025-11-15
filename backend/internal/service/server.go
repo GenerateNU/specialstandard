@@ -9,6 +9,7 @@ import (
 	"specialstandard/internal/service/handler/game_content"
 	"specialstandard/internal/service/handler/game_result"
 	"specialstandard/internal/service/handler/resource"
+	"specialstandard/internal/service/handler/school"
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/service/handler/session_resource"
 	sessionstudent "specialstandard/internal/service/handler/session_student"
@@ -21,6 +22,8 @@ import (
 	"context"
 	"net/http"
 	supabase_auth "specialstandard/internal/auth"
+
+	"specialstandard/internal/service/handler/district"
 
 	go_json "github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
@@ -115,19 +118,6 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		})
 	}
 
-	studentHandler := student.NewHandler(repo.Student)
-	// Student route
-	apiV1.Route("/students", func(r fiber.Router) {
-		r.Get("/", studentHandler.GetStudents)
-		r.Get("/:id", studentHandler.GetStudent)
-		r.Delete("/:id", studentHandler.DeleteStudent)
-		r.Post("/", studentHandler.AddStudent)
-		r.Patch("/promote", studentHandler.PromoteStudents)
-		r.Patch("/:id", studentHandler.UpdateStudent)
-		r.Get("/:id/sessions", studentHandler.GetStudentSessions)
-		r.Get("/:id/ratings", studentHandler.GetStudentRatings)
-	})
-
 	themeHandler := theme.NewHandler(repo.Theme)
 	apiV1.Route("/themes", func(r fiber.Router) {
 		r.Post("/", themeHandler.CreateTheme)
@@ -162,6 +152,20 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Patch("/", sessionStudentHandler.PatchStudentSessionRatings)
 	})
 
+	studentHandler := student.NewHandler(repo.Student)
+	// Student route
+	apiV1.Route("/students", func(r fiber.Router) {
+		r.Get("/", studentHandler.GetStudents)
+		r.Get("/:id", studentHandler.GetStudent)
+		r.Delete("/:id", studentHandler.DeleteStudent)
+		r.Post("/", studentHandler.AddStudent)
+		r.Patch("/promote", studentHandler.PromoteStudents)
+		r.Patch("/:id", studentHandler.UpdateStudent)
+		r.Get("/:id/sessions", studentHandler.GetStudentSessions)
+		r.Get("/:id/ratings", studentHandler.GetStudentRatings)
+		r.Get("/:id/attendance", sessionStudentHandler.GetStudentAttendance)
+	})
+
 	sessionResourceHandler := session_resource.NewHandler(repo.SessionResource)
 	apiV1.Route("/session-resource", func(r fiber.Router) {
 		r.Post("/", sessionResourceHandler.PostSessionResource)
@@ -190,6 +194,18 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Get("/", gameResultsHandler.GetGameResults)
 		r.Post("/", gameResultsHandler.PostGameResult)
 	})
+
+	districtHandler := district.NewHandler(repo.District)
+	apiV1.Route("/districts", func(r fiber.Router) {
+		r.Get("/", districtHandler.GetDistricts)
+		r.Get("/:id", districtHandler.GetDistrictByID)
+	})
+
+	schoolHandler := school.NewHandler(repo.School)
+	apiV1.Route("/schools", func(r fiber.Router) {
+		r.Get("/", schoolHandler.GetSchools)
+	})
+	
 
 	// Handle 404 - Route not found
 	app.Use(func(c *fiber.Ctx) error {

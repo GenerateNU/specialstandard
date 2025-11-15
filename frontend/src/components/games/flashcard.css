@@ -1,0 +1,63 @@
+/* flashcard.css - Add this to your global styles or import it in your component */
+
+/* 3D transformation support */
+.preserve-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+/* Hide the back face of cards during flip */
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Smooth transitions for card flips */
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Optional: Add a subtle shadow animation on hover */
+.flashcard-container {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.flashcard-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Optional: Disable text selection on flashcards */
+.flashcard-content {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Optional: Add a loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Optional: Progress bar smooth animation */
+.progress-bar {
+  transition: width 0.3s ease-in-out;
+}
+
+/* Mobile-friendly touch areas */
+@media (max-width: 768px) {
+  .flashcard-navigation button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

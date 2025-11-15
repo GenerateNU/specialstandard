@@ -25,10 +25,6 @@ func ptrTime(t time.Time) *time.Time {
 	return &t
 }
 
-func ptrString(s string) *string {
-	return &s
-}
-
 func ptrInt(i int) *int {
 	return &i
 }
@@ -54,7 +50,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						TherapistID: uuid.New(),
 						SchoolID:    1,
 						Grade:       ptrInt(99),
-						IEP:         ptrString("Test IEP"),
+						IEP:         []string{"Test IEP"},
 						CreatedAt:   time.Now(),
 						UpdatedAt:   time.Now(),
 					},
@@ -276,7 +272,7 @@ func TestHandler_GetStudents(t *testing.T) {
 						assert.Equal(t, 99, *students[0].Grade)
 					}
 					if students[0].IEP != nil {
-						assert.Equal(t, "Test IEP", *students[0].IEP)
+						assert.Equal(t, []string{"Test IEP"}, students[0].IEP)
 					}
 				}
 			}
@@ -305,7 +301,7 @@ func TestHandler_GetStudent(t *testing.T) {
 					DOB:         ptrTime(time.Now().AddDate(-10, 0, 0)),
 					TherapistID: uuid.New(),
 					Grade:       ptrInt(99),
-					IEP:         ptrString("Test IEP"),
+					IEP:         []string{"Test IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
@@ -379,7 +375,7 @@ func TestHandler_GetStudent(t *testing.T) {
 					assert.Equal(t, 99, *student.Grade)
 				}
 				if student.IEP != nil {
-					assert.Equal(t, "Test IEP", *student.IEP)
+					assert.Equal(t, []string{"Test IEP"}, student.IEP)
 				}
 				assert.Equal(t, studentID, student.ID)
 			}
@@ -431,7 +427,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
 					Grade:       ptrInt(4),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
@@ -443,7 +439,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					Grade:       ptrInt(5),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}, nil)
@@ -454,7 +450,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 		{
 			name:        "update IEP only",
 			studentID:   studentID.String(),
-			requestBody: `{"iep": "Updated IEP with math accommodations"}`,
+			requestBody: `{"iep": ["Updated IEP with math accommodations"]}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				existingStudent := models.Student{
 					ID:          studentID,
@@ -463,7 +459,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
 					Grade:       ptrInt(4),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
@@ -475,7 +471,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					Grade:       ptrInt(4),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
-					IEP:         ptrString("Updated IEP with math accommodations"),
+					IEP:         []string{"Updated IEP with math accommodations"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}, nil)
@@ -495,7 +491,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
 					Grade:       ptrInt(4),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
@@ -507,7 +503,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					Grade:       ptrInt(5),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}, nil)
@@ -527,7 +523,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
 					Grade:       ptrInt(4),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
@@ -539,7 +535,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					Grade:       ptrInt(4),
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}, nil)
@@ -589,7 +585,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
 					Grade:       ptrInt(4),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
@@ -610,7 +606,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
 					Grade:       ptrInt(4),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
@@ -631,7 +627,7 @@ func TestHandler_UpdateStudent(t *testing.T) {
 					DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 					TherapistID: therapistID,
 					Grade:       ptrInt(4),
-					IEP:         ptrString("Original IEP"),
+					IEP:         []string{"Original IEP"},
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
@@ -687,7 +683,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"school_id": 1,
 				"therapist_id": "` + therapistID.String() + `",
 				"grade": 5,
-				"iep": "Active IEP with speech therapy goals"
+				"iep": ["Active IEP with speech therapy goals"]
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
@@ -696,7 +692,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					LastName:    "Doe",
 					Grade:       ptrInt(5),
 					SchoolID:    1,
-					IEP:         ptrString("Active IEP with speech therapy goals"),
+					IEP:         []string{"Active IEP with speech therapy goals"},
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
 					CreatedAt:   time.Now(),
@@ -715,7 +711,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"therapist_id": "` + therapistID.String() + `",
 				"school_id": 1,
 				"grade": 3,
-				"iep": "Math accommodations and extended time"
+				"iep": ["Math accommodations and extended time"]
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
@@ -724,7 +720,7 @@ func TestHandler_AddStudent(t *testing.T) {
 					LastName:    "Johnson",
 					Grade:       ptrInt(3),
 					SchoolID:    1,
-					IEP:         ptrString("Math accommodations and extended time"),
+					IEP:         []string{"Math accommodations and extended time"},
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2012, 3, 22, 0, 0, 0, 0, time.UTC)),
 					CreatedAt:   time.Now(),
@@ -802,7 +798,7 @@ func TestHandler_AddStudent(t *testing.T) {
 				"school_id": 1,
 				"therapist_id": "` + therapistID.String() + `",
 				"grade": 12,
-				"iep": "Graduation accommodations"
+				"iep": ["Graduation accommodations"]
 			}`,
 			mockSetup: func(m *mocks.MockStudentRepository) {
 				m.On("AddStudent", mock.Anything, mock.AnythingOfType("models.Student")).Return(models.Student{
@@ -811,9 +807,9 @@ func TestHandler_AddStudent(t *testing.T) {
 					LastName:    "Student",
 					Grade:       ptrInt(12),
 					SchoolID:    1,
+					IEP:         []string{"Graduation accommodations"},
 					TherapistID: therapistID,
 					DOB:         ptrTime(time.Date(2000, 2, 29, 0, 0, 0, 0, time.UTC)),
-					IEP:         ptrString("Graduation accommodations"),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}, nil)
@@ -861,7 +857,7 @@ func TestHandler_AddStudent(t *testing.T) {
 						assert.Equal(t, 5, *student.Grade)
 					}
 					if student.IEP != nil {
-						assert.Contains(t, *student.IEP, "speech therapy")
+						assert.Contains(t, student.IEP[0], "speech therapy")
 					}
 				case "successful create student with different data":
 					assert.Equal(t, "Emma", student.FirstName)
@@ -870,7 +866,7 @@ func TestHandler_AddStudent(t *testing.T) {
 						assert.Equal(t, 3, *student.Grade)
 					}
 					if student.IEP != nil {
-						assert.Contains(t, *student.IEP, "Math accommodations")
+						assert.Contains(t, student.IEP[0], "Math accommodations")
 					}
 				case "valid date edge cases":
 					assert.Equal(t, "Test", student.FirstName)

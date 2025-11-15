@@ -5,8 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type {
+  AttendanceRecord,
   CreateStudentInput,
   GetStudentsParams,
+  GetStudentsStudentIdAttendanceParams,
   GetStudentsStudentIdRatingsParams,
   GetStudentsStudentIdSessionsParams,
   PatchStudentsPromote200,
@@ -69,21 +71,21 @@ export const getStudents = () => {
     return customAxios<void>({ url: `/students/${id}`, method: "DELETE" });
   };
   /**
- * Retrieve all sessions associated with a specific student, including bridge table information.
-
-*Date Filtering Options:**
-- Use `startDate` and `endDate` for date range filtering: `?startDate=2025-09-01&endDate=2025-09-30`
-- Use `month` and `year` for monthly filtering: `?month=9&year=2025`  
-- Use `year` alone for yearly filtering: `?year=2025`
-
-*Attendance Filtering:**
-- Use `present` to filter by attendance: `?present=true` or `?present=false`
-
-*Combining Filters:**
-All filters can be combined: `?month=9&year=2025&present=true`
-
- * @summary Get all sessions for a student
- */
+   * Retrieve all sessions associated with a specific student, including bridge table information.
+   *
+   * **Date Filtering Options:**
+   * - Use `startDate` and `endDate` for date range filtering: `?startDate=2025-09-01&endDate=2025-09-30`
+   * - Use `month` and `year` for monthly filtering: `?month=9&year=2025`
+   * - Use `year` alone for yearly filtering: `?year=2025`
+   *
+   * **Attendance Filtering:**
+   * - Use `present` to filter by attendance: `?present=true` or `?present=false`
+   *
+   * **Combining Filters:**
+   * All filters can be combined: `?month=9&year=2025&present=true`
+   *
+   * @summary Get all sessions for a student
+   */
   const getStudentsStudentIdSessions = (
     studentId: string,
     params?: GetStudentsStudentIdSessionsParams,
@@ -109,6 +111,20 @@ All filters can be combined: `?month=9&year=2025&present=true`
     });
   };
   /**
+   * Retrieve all attendance records for a specific student
+   * @summary Get attendance records for a student
+   */
+  const getStudentsStudentIdAttendance = (
+    studentId: string,
+    params?: GetStudentsStudentIdAttendanceParams,
+  ) => {
+    return customAxios<AttendanceRecord[]>({
+      url: `/students/${studentId}/attendance`,
+      method: "GET",
+      params,
+    });
+  };
+  /**
    * Promotes all of a therapist's students other than the ones that are not moving up.
    * @summary Promotes all of a therapist's students
    */
@@ -128,6 +144,7 @@ All filters can be combined: `?month=9&year=2025&present=true`
     deleteStudentsId,
     getStudentsStudentIdSessions,
     getStudentsStudentIdRatings,
+    getStudentsStudentIdAttendance,
     patchStudentsPromote,
   };
 };
@@ -154,6 +171,11 @@ export type GetStudentsStudentIdSessionsResult = NonNullable<
 export type GetStudentsStudentIdRatingsResult = NonNullable<
   Awaited<
     ReturnType<ReturnType<typeof getStudents>["getStudentsStudentIdRatings"]>
+  >
+>;
+export type GetStudentsStudentIdAttendanceResult = NonNullable<
+  Awaited<
+    ReturnType<ReturnType<typeof getStudents>["getStudentsStudentIdAttendance"]>
   >
 >;
 export type PatchStudentsPromoteResult = NonNullable<
