@@ -43,7 +43,7 @@ export default function GamesPage() {
               <button
                 onClick={() => {
                   const params = new URLSearchParams({
-                    theme: selectedContent.theme.id,
+                    themeId: selectedContent.theme.id,
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
