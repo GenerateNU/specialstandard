@@ -200,7 +200,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
    			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
    			theme_id UUID NOT NULL,
    			grade_level INTEGER CHECK (grade_level >= 0 AND grade_level <= 12),
-   			date DATE,
+   			week INT CHECK (week >= 0 AND week <= 4),
    			type VARCHAR(50),
    			title VARCHAR(100),
    			category VARCHAR(100),

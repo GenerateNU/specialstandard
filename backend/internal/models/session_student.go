@@ -17,13 +17,14 @@ type SessionStudent struct {
 }
 
 type SessionStudentsOutput struct {
-	Student   Student         `json:"student" db:"student"`
-	SessionID uuid.UUID       `json:"session_id" db:"session_id"`
-	Present   bool            `json:"present" db:"present"`
-	Notes     *string         `json:"notes,omitempty" db:"notes"`
-	CreatedAt time.Time       `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time       `json:"updated_at" db:"updated_at"`
-	Ratings   []SessionRating `json:"ratings" db:"ratings"`
+	SessionStudentID int             `json:"session_student_id" db:"session_student_id"`
+	Student          Student         `json:"student" db:"student"`
+	SessionID        uuid.UUID       `json:"session_id" db:"session_id"`
+	Present          bool            `json:"present" db:"present"`
+	Notes            *string         `json:"notes,omitempty" db:"notes"`
+	CreatedAt        time.Time       `json:"created_at" db:"created_at"`
+	UpdatedAt        time.Time       `json:"updated_at" db:"updated_at"`
+	Ratings          []SessionRating `json:"ratings" db:"ratings"`
 }
 
 type StudentSessionsOutput struct {
