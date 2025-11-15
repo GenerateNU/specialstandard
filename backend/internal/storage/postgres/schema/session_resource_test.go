@@ -72,11 +72,10 @@ func TestSessionResourceRepository_PostSessionResource(t *testing.T) {
 
 	// Create test resource
 	resourceID := uuid.New()
-	testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 	_, err := testDB.Exec(ctx, `
-		INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+		INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	`, resourceID, themeID, 5, testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+	`, resourceID, themeID, 5, 1, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Create test session
@@ -151,11 +150,10 @@ func TestSessionResourceRepository_DeleteSessionResource(t *testing.T) {
 
 	// Create test resource
 	resourceID := uuid.New()
-	testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 	_, err := testDB.Exec(ctx, `
-		INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+		INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	`, resourceID, themeID, 5, testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+	`, resourceID, themeID, 5, 1, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Create test session
@@ -206,11 +204,10 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 	t.Run("session with one resource", func(t *testing.T) {
 		// Create test resource
 		resourceID := uuid.New()
-		testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 		_, err = testDB.Exec(ctx, `
-			INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+			INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		`, resourceID, themeID, 5, testDate, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
+		`, resourceID, themeID, 5, 1, "worksheet", "Animal Worksheet", "speech", "Animal recognition", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		sessionID := uuid.New()
@@ -247,19 +244,18 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Create multiple resources
-		testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 		resourceID1 := uuid.New()
 		_, err = testDB.Exec(ctx, `
-			INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+			INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		`, resourceID1, themeID, 5, testDate, "worksheet", "Math Worksheet", "math", "Basic arithmetic", time.Now(), time.Now())
+		`, resourceID1, themeID, 5, 1, "worksheet", "Math Worksheet", "math", "Basic arithmetic", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		resourceID2 := uuid.New()
 		_, err = testDB.Exec(ctx, `
-			INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+			INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		`, resourceID2, themeID, 5, testDate, "activity", "Reading Activity", "language", "Comprehension exercise", time.Now(), time.Now())
+		`, resourceID2, themeID, 5, 1, "activity", "Reading Activity", "language", "Comprehension exercise", time.Now(), time.Now())
 		assert.NoError(t, err)
 
 		// Link resources to session
@@ -313,15 +309,13 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		`, sessionID, "Test Session", therapistID, time.Now(), time.Now().Add(time.Hour), "Multi Resource Session", time.Now(), time.Now())
 		assert.NoError(t, err)
 
-		testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
-
 		// Create multiple resources
 		for i := 1; i <= 12; i++ {
 			resourceID := uuid.New()
 			_, err := testDB.Exec(ctx, `
-                INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+                INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-				resourceID, themeID, i, testDate, "activity", "Reading Activity", "language", "Comprehension", time.Now(), time.Now())
+				resourceID, themeID, i, 1, "activity", "Reading Activity", "language", "Comprehension", time.Now(), time.Now())
 			assert.NoError(t, err)
 
 			_, err = testDB.Exec(ctx, `
