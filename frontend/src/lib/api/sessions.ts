@@ -6,6 +6,7 @@
  */
 import type {
   DeleteSessionsId200,
+  DeleteSessionsIdRecurring200,
   GetSessionsIdResourcesParams,
   GetSessionsParams,
   GetSessionsSessionIdStudentsParams,
@@ -98,6 +99,16 @@ export const getSessions = () => {
       params,
     });
   };
+  /**
+   * Delete all the future sessions in the recurring group that share the same parent session ID. This will not delete past sessions that have already occurred.
+   * @summary Delete recurring session group
+   */
+  const deleteSessionsIdRecurring = (id: string) => {
+    return customAxios<DeleteSessionsIdRecurring200>({
+      url: `/sessions/${id}/recurring`,
+      method: "DELETE",
+    });
+  };
   return {
     getSessions,
     postSessions,
@@ -106,6 +117,7 @@ export const getSessions = () => {
     deleteSessionsId,
     getSessionsIdResources,
     getSessionsSessionIdStudents,
+    deleteSessionsIdRecurring,
   };
 };
 export type GetSessionsResult = NonNullable<
@@ -129,5 +141,10 @@ export type GetSessionsIdResourcesResult = NonNullable<
 export type GetSessionsSessionIdStudentsResult = NonNullable<
   Awaited<
     ReturnType<ReturnType<typeof getSessions>["getSessionsSessionIdStudents"]>
+  >
+>;
+export type DeleteSessionsIdRecurringResult = NonNullable<
+  Awaited<
+    ReturnType<ReturnType<typeof getSessions>["deleteSessionsIdRecurring"]>
   >
 >;

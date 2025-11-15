@@ -182,6 +182,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Patch("/:id", sessionHandler.PatchSessions)
 		r.Get("/:id/students", sessionHandler.GetSessionStudents)
 		r.Delete("/:id", sessionHandler.DeleteSessions)
+		r.Delete("/:id/recurring", sessionHandler.DeleteRecurringSessions)
 	})
 
 	gameContentHandler := game_content.NewHandler(repo.GameContent)
@@ -205,7 +206,6 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	apiV1.Route("/schools", func(r fiber.Router) {
 		r.Get("/", schoolHandler.GetSchools)
 	})
-	
 
 	// Handle 404 - Route not found
 	app.Use(func(c *fiber.Ctx) error {

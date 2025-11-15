@@ -92,6 +92,8 @@ export interface Session {
   end_datetime: string;
   /** ID of the therapist conducting the session */
   therapist_id: string;
+  /** UUID of the parent session (for recurring sessions) */
+  session_parent_id: string;
   /**
    * Session notes (optional)
    * @nullable
@@ -112,6 +114,26 @@ export interface Session {
    * @nullable
    */
   updated_at?: string | null;
+  /**
+   * Repetition details for recurring sessions
+   * @nullable
+   */
+  repitition?: Repetition;
+}
+
+export interface CreateSessionInput {
+  session_name: string;
+  start_datetime: string;
+  end_datetime: string;
+  therapist_id: string;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  repetition?: Repetition;
+  /** @nullable */
+  student_ids?: string[] | null;
 }
 
 export interface UpdateSessionInput {
@@ -196,6 +218,17 @@ export interface CreateStudentInput {
    * @nullable
    */
   iep?: string[] | null;
+}
+
+export interface Repetition {
+  /** Starting Date of Recurring Session */
+  recur_start: string;
+  /** Ending Date of Recurring Session */
+  recur_end: string;
+  /** Recurring Session will happen every "N" weeks */
+  every_n_weeks: number;
+  /** Days of week for recurrence (0=Sunday, 1=Monday, ..., 6=Saturday) */
+  days: number[];
 }
 
 /**
@@ -884,6 +917,10 @@ export type GetSessionsSessionIdStudentsParams = {
    * Filter students by therapist UUID
    */
   therapist_id?: string;
+};
+
+export type DeleteSessionsIdRecurring200 = {
+  message?: string;
 };
 
 export type GetSchoolsParams = {
