@@ -3412,11 +3412,16 @@ components:
     StudentWithSessionInfo:
       type: object
       required:
+        - session_student_id
         - student
         - present
         - session_id
         - ratings
       properties:
+        session_student_id:
+          type: integer
+          description: The unique ID of the session-student relationship
+          example: 1
         student:
           $ref: "#/components/schemas/Student"
           description: The student information
