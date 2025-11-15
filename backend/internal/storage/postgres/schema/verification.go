@@ -38,7 +38,7 @@ func (r *VerificationRepository) VerifyCode(ctx context.Context, userID, code st
 	if err != nil {
 		return false, err
 	}
-	// i know this is an ugly ass line but i just want to pass the linter LOL
+	// i know this is an ugly ass line but i just want to pass the linter
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Check if code exists and is valid - 'used' is boolean
@@ -87,15 +87,4 @@ func (r *VerificationRepository) VerifyCode(ctx context.Context, userID, code st
 	}
 
 	return true, nil
-}
-
-func (r *VerificationRepository) CleanupExpiredCodes(ctx context.Context) error {
-	// Delete codes that are expired or already used
-	query := `
-		DELETE FROM verification_codes
-		WHERE expires_at < $1 OR used = true
-	`
-
-	_, err := r.db.Exec(ctx, query, time.Now())
-	return err
 }

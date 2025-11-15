@@ -85,7 +85,6 @@ type GameResultRepository interface {
 type VerificationRepository interface {
 	CreateVerificationCode(ctx context.Context, code models.VerificationCode) error
 	VerifyCode(ctx context.Context, userID, code string) (bool, error)
-	CleanupExpiredCodes(ctx context.Context) error
 }
 
 type Repository struct {

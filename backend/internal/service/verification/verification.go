@@ -2,24 +2,16 @@ package verification
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"specialstandard/internal/models"
-	"specialstandard/internal/storage"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/resend/resend-go/v3"
 )
-
-type Handler struct {
-	verificationRepo storage.VerificationRepository
-	db               *pgxpool.Pool
-	resendClient     *resend.Client
-	fromEmail        string
-}
 
 type SendCodeResponse struct {
 	Success   bool   `json:"success"`
@@ -36,18 +28,6 @@ type VerifyCodeResponse struct {
 	Verified bool   `json:"verified,omitempty"`
 	Message  string `json:"message,omitempty"`
 	Error    string `json:"error,omitempty"`
-}
-
-// Createing a new verification handler
-func NewHandler(verificationRepo storage.VerificationRepository, db *pgxpool.Pool, resendApiKey, fromEmail string) *Handler {
-	resendClient := resend.NewClient(resendApiKey)
-	
-	return &Handler{
-		verificationRepo: verificationRepo,
-		db:               db,
-		resendClient:     resendClient,
-		fromEmail:        fromEmail,
-	}
 }
 
 // extractUserIDFromToken extracts the user ID from a JWT token
@@ -170,25 +150,19 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 	token := strings.Replace(authHeader, "Bearer ", "", 1)
 	userID, err := h.extractUserIDFromToken(token)
 	if err != nil {
-		fmt.Printf("Error extracting user ID from token: %v\n", err)
 		return c.Status(fiber.StatusUnauthorized).JSON(VerifyCodeResponse{
 			Success: false,
 			Error:   "Invalid authentication token",
 		})
 	}
-	
-	fmt.Printf("Extracted user ID: %s\n", userID)
 
 	var req VerifyCodeRequest
 	if err := c.BodyParser(&req); err != nil {
-		fmt.Printf("Error parsing body: %v\n", err)
 		return c.Status(fiber.StatusBadRequest).JSON(VerifyCodeResponse{
 			Success: false,
 			Error:   "Invalid request body",
 		})
 	}
-	
-	fmt.Printf("Received code: %s\n", req.Code)
 
 	// Validate code format
 	code := strings.TrimSpace(req.Code)
@@ -202,14 +176,11 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 	// Verify the code
 	valid, err := h.verificationRepo.VerifyCode(c.Context(), userID, code)
 	if err != nil {
-		fmt.Printf("Error verifying code: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(VerifyCodeResponse{
 			Success: false,
 			Error:   "Failed to verify code",
 		})
 	}
-	
-	fmt.Printf("Code valid: %v\n", valid)
 
 	if !valid {
 		return c.Status(fiber.StatusBadRequest).JSON(VerifyCodeResponse{
@@ -233,7 +204,7 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 	
 	_, err = h.db.Exec(c.Context(), updateQuery, userID)
 	if err != nil {
-		fmt.Printf("Warning: Failed to update user metadata: %v\n", err)
+		slog.Warn("Failed to update user metadata", slog.Any("err", err))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(VerifyCodeResponse{
