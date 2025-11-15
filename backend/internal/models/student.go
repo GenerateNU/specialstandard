@@ -53,3 +53,9 @@ type PromoteStudentsInput struct {
 	TherapistID        uuid.UUID   `json:"therapist_id" validate:"required"`
 	ExcludedStudentIDs []uuid.UUID `json:"excluded_student_ids" validate:"dive"`
 }
+
+type GetStudentAttendanceParams struct {
+	StudentID uuid.UUID `param:"id" validate:"required,uuid"`
+	DateFrom  time.Time `query:"date_from" validate:"omitempty,datetime=2006-01-02"`
+	DateTo    time.Time `query:"date_to" validate:"omitempty,datetime=2006-01-02"`
+}

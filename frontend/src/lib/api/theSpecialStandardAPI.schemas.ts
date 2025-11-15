@@ -549,6 +549,13 @@ export interface StudentWithSessionInfo {
   ratings: SessionRating[];
 }
 
+export interface AttendanceRecord {
+  /** Number of sessions the student was present */
+  present_sessions: number;
+  /** Total number of sessions held */
+  total_sessions: number;
+}
+
 export type SessionWithStudentInfoAllOf = {
   /** UUID of the associated student */
   student_id: string;
@@ -945,6 +952,17 @@ export const GetStudentsStudentIdRatingsCategory = {
   gestural_cue: "gestural_cue",
   engagement: "engagement",
 } as const;
+
+export type GetStudentsStudentIdAttendanceParams = {
+  /**
+   * Filter attendance records on or after this date (YYYY-MM-DD format), default is no lower limit
+   */
+  date_from?: string;
+  /**
+   * Filter attendance records on or before this date (YYYY-MM-DD format), default to today
+   */
+  date_to?: string;
+};
 
 export type PatchStudentsPromote200 = {
   message?: string;

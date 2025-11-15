@@ -5,8 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type {
+  AttendanceRecord,
   CreateStudentInput,
   GetStudentsParams,
+  GetStudentsStudentIdAttendanceParams,
   GetStudentsStudentIdRatingsParams,
   GetStudentsStudentIdSessionsParams,
   PatchStudentsPromote200,
@@ -109,6 +111,20 @@ export const getStudents = () => {
     });
   };
   /**
+   * Retrieve all attendance records for a specific student
+   * @summary Get attendance records for a student
+   */
+  const getStudentsStudentIdAttendance = (
+    studentId: string,
+    params?: GetStudentsStudentIdAttendanceParams,
+  ) => {
+    return customAxios<AttendanceRecord[]>({
+      url: `/students/${studentId}/attendance`,
+      method: "GET",
+      params,
+    });
+  };
+  /**
    * Promotes all of a therapist's students other than the ones that are not moving up.
    * @summary Promotes all of a therapist's students
    */
@@ -128,6 +144,7 @@ export const getStudents = () => {
     deleteStudentsId,
     getStudentsStudentIdSessions,
     getStudentsStudentIdRatings,
+    getStudentsStudentIdAttendance,
     patchStudentsPromote,
   };
 };
@@ -154,6 +171,11 @@ export type GetStudentsStudentIdSessionsResult = NonNullable<
 export type GetStudentsStudentIdRatingsResult = NonNullable<
   Awaited<
     ReturnType<ReturnType<typeof getStudents>["getStudentsStudentIdRatings"]>
+  >
+>;
+export type GetStudentsStudentIdAttendanceResult = NonNullable<
+  Awaited<
+    ReturnType<ReturnType<typeof getStudents>["getStudentsStudentIdAttendance"]>
   >
 >;
 export type PatchStudentsPromoteResult = NonNullable<
