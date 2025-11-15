@@ -67,7 +67,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     mutationFn: ({ id, data }: { id: string; data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ssions"] });
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
   });
 
