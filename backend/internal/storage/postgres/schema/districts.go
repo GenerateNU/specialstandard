@@ -32,16 +32,7 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context) ([]models.Distric
 	}
 	defer rows.Close()
 	
-	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.District, error) {
-		var d models.District
-		err := row.Scan(
-			&d.ID,
-			&d.Name,
-			&d.CreatedAt,
-			&d.UpdatedAt,
-		)
-		return d, err
-	})
+	return pgx.CollectRows(rows, pgx.RowToStructByName[models.District])
 }
 
 // GetDistrictByID retrieves a single district by ID

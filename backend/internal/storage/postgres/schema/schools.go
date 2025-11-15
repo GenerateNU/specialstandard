@@ -38,17 +38,7 @@ func (r *SchoolRepository) GetSchools(ctx context.Context) ([]models.School, err
 	}
 	defer rows.Close()
 	
-	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.School, error) {
-		var s models.School
-		err := row.Scan(
-			&s.ID,
-			&s.Name,
-			&s.DistrictID,
-			&s.CreatedAt,
-			&s.UpdatedAt,
-		)
-		return s, err
-	})
+	return pgx.CollectRows(rows, pgx.RowToStructByName[models.School])
 }
 
 // GetSchoolsByDistrict retrieves all schools for a specific district
@@ -66,15 +56,5 @@ func (r *SchoolRepository) GetSchoolsByDistrict(ctx context.Context, districtID 
 	}
 	defer rows.Close()
 	
-	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.School, error) {
-		var s models.School
-		err := row.Scan(
-			&s.ID,
-			&s.Name,
-			&s.DistrictID,
-			&s.CreatedAt,
-			&s.UpdatedAt,
-		)
-		return s, err
-	})
+	return pgx.CollectRows(rows, pgx.RowToStructByName[models.School])
 }
