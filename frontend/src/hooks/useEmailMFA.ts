@@ -26,13 +26,16 @@ export const useEmailMFA = () => {
       const jwt =
         localStorage.getItem("temp_jwt") || localStorage.getItem("jwt");
 
-      const response = await fetch("/api/sendVerification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`, // Add JWT to header
-        },
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/v1/verification/send-code",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`, // Add JWT to header
+          },
+        }
+      );
 
       const data: SendVerificationResponse = await response.json();
 
@@ -65,14 +68,17 @@ export const useEmailMFA = () => {
       const jwt =
         localStorage.getItem("temp_jwt") || localStorage.getItem("jwt");
 
-      const response = await fetch("/api/verifyCode", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
-        },
-        body: JSON.stringify({ code }),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/v1/verification/verify",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify({ code }),
+        }
+      );
 
       const data: VerifyCodeResponse = await response.json();
 

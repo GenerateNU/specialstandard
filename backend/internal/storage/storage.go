@@ -71,6 +71,13 @@ type SessionResourceRepository interface {
 	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error)
 }
 
+// VerificationRepository defines methods for verification code operations
+type VerificationRepository interface {
+	CreateVerificationCode(ctx context.Context, code models.VerificationCode) error
+	VerifyCode(ctx context.Context, userID, code string) (bool, error)
+	CleanupExpiredCodes(ctx context.Context) error
+}
+
 type Repository struct {
 	Resource        ResourceRepository
 	db              *pgxpool.Pool
@@ -80,6 +87,7 @@ type Repository struct {
 	Therapist       TherapistRepository
 	SessionStudent  SessionStudentRepository
 	SessionResource SessionResourceRepository
+	Verification    VerificationRepository
 }
 
 func (r *Repository) Close() error {
@@ -101,5 +109,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		Therapist:       schema.NewTherapistRepository(db),
 		SessionStudent:  schema.NewSessionStudentRepository(db),
 		SessionResource: schema.NewSessionResourceRepository(db),
+		Verification:    schema.NewVerificationRepository(db),
 	}
 }
