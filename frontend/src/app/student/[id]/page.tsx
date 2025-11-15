@@ -14,6 +14,9 @@ import { useStudents } from '@/hooks/useStudents'
 import { getAvatarVariant } from '@/lib/utils'
 import SchoolTag from '@/components/school/schoolTag'
 
+import { useStudentAttendance } from '@/hooks/useStudentAttendance'
+import CustomPieChart from '@/components/statistics/PieChart'
+
 function StudentPage() {
   const params = useParams()
   const studentId = params.id as string
@@ -21,6 +24,10 @@ function StudentPage() {
   const { students, isLoading, updateStudent } = useStudents()
   const student = students.find(s => s.id === studentId)
   const { addRecentStudent } = useRecentlyViewedStudents()
+
+  const { attendance, isLoading: attendanceLoading } = useStudentAttendance({
+  studentId: studentId || '',
+})
 
   // Track this student as recently viewed - only when studentId changes
   useEffect(() => {
@@ -116,7 +123,7 @@ function StudentPage() {
   return (
     <AppLayout>
       <div className="w-full h-screen bg-background">
-        <div className={`w-full h-full grid grid-rows-2 gap-8 ${PADDING} relative`}>
+        <div className={`w-full h-full flex flex-col gap-8 ${PADDING} relative overflow-y-auto`}>
           {/* Edit toggle button */}
           <div className="absolute top-1/2 right-5 z-20 flex gap-2">
             {edit
@@ -152,7 +159,7 @@ function StudentPage() {
                 )}
           </div>
 
-          <div className="flex flex-col gap-4 flex-1 min-h-0">
+          <div className="flex flex-col gap-4 flex-shrink-0">
             {/* Back button */}
             <Button
               variant="outline"
@@ -166,7 +173,7 @@ function StudentPage() {
             {/* Profile and Upcoming Sessions row */}
             <div className="flex gap-8 flex-1 min-h-0">
               {/* Student Profile */}
-              <div className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col min-h-0 relative`}>
+              <div className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col relative`}>
                 {/* Edit Profile Button - Separate Section */}
                 <div className="flex justify-end p-3 flex-shrink-0 relative z-10">
                   <Button
@@ -204,7 +211,7 @@ function StudentPage() {
               </div>
 
               {/* Upcoming Sessions */}
-              <div className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex flex-col gap-4 min-h-0`}>
+              <div className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex flex-col gap-4`}>
                 <div className="text-2xl font-semibold text-primary flex-shrink-0">Upcoming Sessions</div>
                 <div className="flex-1 min-h-0">
                   {/* Upcoming sessions content will go here */}
@@ -213,16 +220,23 @@ function StudentPage() {
               </div>
             </div>
           </div>
-
-          {/* <div className={`bg-pink flex-2 flex flex-col items-center justify-between ${CORNER_ROUND} ${PADDING}`}>
-              <div className="w-full h-3/4 text-3xl font-bold flex items-center rounded-2xl">
-                <RecentSession studentId={studentId} />
+          {/* Attendance */}
+          <div className={`bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex-shrink-0 ${attendance?.total_count === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+            {attendanceLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-sm text-muted-foreground">Loading attendance...</div>
               </div>
-              <Button className="w-full h-1/5 rounded-2xl text-lg font-bold " variant="secondary">
-                View Student Attendance
-              </Button>
-          </div> */}
-
+            ) : attendance && attendance.total_count > 0 ? (
+              <CustomPieChart
+                percentage={Math.round((attendance.present_count / attendance.total_count) * 100)}
+                title="Attendance"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-sm text-muted-foreground">No attendance data</div>
+              </div>
+            )}
+          </div>
           {/* Goals and Session Notes */}
           <div className="grid grid-cols-2 gap-8 overflow-hidden">
             <div className="gap-2 flex flex-col overflow-hidden">
