@@ -157,10 +157,6 @@ export default function ProfilePage() {
           Almost There!
         </h1>
         
-        <p className="text-secondary mb-8">
-          Registered District
-        </p>
-        
         {showError && error && (
           <div className="mb-4">
             <CustomAlert
@@ -188,7 +184,7 @@ export default function ProfilePage() {
               }))}
               value={selectedDistrict}
               placeholder="Select District"
-              className="w-full min-w-30[rem]"
+              className="w-md"
             />
           </div>
           
