@@ -47,7 +47,7 @@ export default function UpcomingSession({ studentId }: UpcomingSessionProps) {
   }
 
   return (
-    <div className="h-full overflow-y-auto space-y-2 w-full">
+    <div className="h-full overflow-y-auto space-y-2 w-full p-2">
       {upcomingSessionsWithStudentInfo.map((item, index) => {
         const { sessionData } = item
         const startMoment = moment(sessionData.start_datetime)
