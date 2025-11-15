@@ -224,11 +224,12 @@ paths:
           application/json:
             schema:
               type: object
-                properties:
-                  email:
-                    format: email
-                    description: Email registered to the account that's trying to reset password
-                    example: happyPanther@feline.com
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email registered to the account that's trying to reset password
+                  example: happyPanther@feline.com
       responses:
         "200":
           description: Successfully forgot password. AND we reset it.
@@ -251,7 +252,7 @@ paths:
                 code: 500
                 message: "Internal Server Error"
 
-  /auth:
+  /auth/update-password:
     put:
       summary: Updating Password Feature
       description: Update your password for your account
@@ -261,10 +262,12 @@ paths:
         content:
           application/json:
             schema:
-              type: string
-              format: password
-              description: New Password
-              example: password
+              type: object
+              properties:
+                type: string
+                format: password
+                description: New Password
+                example: password
       responses:
         "200":
           description: Successfully updated your password.
@@ -329,7 +332,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 500
-                message: "Internal Server Error"/
+                message: "Internal Server Error"
 
   /sessions:
     /sessions:
