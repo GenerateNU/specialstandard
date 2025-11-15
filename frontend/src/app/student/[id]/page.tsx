@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { useRecentlyViewedStudents } from '@/hooks/useRecentlyViewedStudents'
 import { useStudents } from '@/hooks/useStudents'
 import { getAvatarVariant } from '@/lib/utils'
+import SchoolTag from '@/components/school/schoolTag'
 
 function StudentPage() {
   const params = useParams()
@@ -152,31 +153,55 @@ function StudentPage() {
           </div>
 
           <div className="flex gap-8">
-            {/* pfp and initials */}
-            <div className="flex flex-col items-left justify-between gap-2 w-1/6">
-              <Button
-                variant="outline"
-                className={`w-1/2 pl-4 flex flex-row items-left justify-start ${CORNER_ROUND}`}
-                onClick={() => window.history.back()}
-              >
-                <ChevronLeft />
-                Back
-              </Button>
-              <div className="w-full aspect-square border-2 border-accent rounded-full">
-                <Avatar
-                  name={fullName + student.id}
-                  variant={avatarVariant}
-                  className="w-full h-full"
-                />
+          {/* pfp and initials */}
+          <div className="flex-[2] flex flex-col gap-4">
+            <Button
+              variant="outline"
+              className={`w-fit p-4 flex flex-row items-center gap-2 ${CORNER_ROUND}`}
+              onClick={() => window.history.back()}
+            >
+              <ChevronLeft />
+              Back
+            </Button>
+            
+            <div className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col`}>
+              {/* Edit Profile Button - Separate Section */}
+              <div className="flex justify-end px-5 pt-3 pb-1 flex-shrink-0">
+                <Button
+                  onClick={() => {/* Navigate to edit page */}}
+                  variant="ghost"
+                  className="flex items-center gap-2 hover:bg-accent h-8"
+                  size="sm"
+                >
+                  <span className="text-base font-medium">Edit Profile</span>
+                  <PencilLine size={18} />
+                </Button>
               </div>
-              <div
-                className={`w-full h-1/5 text-3xl font-bold flex items-center 
-                justify-center bg-background border-border border-2 ${PADDING}
-                 ${CORNER_ROUND}`}
-              >
-                {initials}
+              
+              {/* Content */}
+              <div className={`flex items-center gap-8 flex-1 px-5 pb-5`}>
+                <div className="w-2/5 aspect-square border-2 border-default rounded-full flex-shrink-0">
+                  <Avatar
+                    name={fullName + student.id}
+                    variant={avatarVariant}
+                    className="w-full h-full"
+                  />
+                </div>
+                
+                <div className="flex flex-col gap-3 flex-1">
+                  <div className="text-4xl font-bold text-primary">{initials}</div>
+                  
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-xl font-medium text-primary">
+                      Grade {student.grade}
+                    </span>
+                    {student.school_name && <SchoolTag schoolName={student.school_name} />}
+                  </div>
+
+                </div>
               </div>
             </div>
+          </div>
             {/* student schedule */}
             <div className={`flex-[3] ${CORNER_ROUND} overflow-hidden bg-blue flex flex-col justify-between ${PADDING}`}>
               <StudentSchedule studentId={studentId} className="h-3/4" />
