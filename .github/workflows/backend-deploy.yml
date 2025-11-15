@@ -1,7 +1,7 @@
 name: Deploy (Caller)
 on:
   push:
-    branches: [main]
+    branches: [main, featurethon]
 
 jobs:
   deploy:
