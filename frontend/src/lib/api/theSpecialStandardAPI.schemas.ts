@@ -577,9 +577,9 @@ export interface StudentWithSessionInfo {
 
 export interface AttendanceRecord {
   /** Number of sessions the student was present */
-  present_sessions: number;
+  present_count: number;
   /** Total number of sessions held */
-  total_sessions: number;
+  total_count: number;
 }
 
 export interface SessionWithStudentInfo {

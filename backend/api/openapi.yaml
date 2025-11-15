@@ -3450,14 +3450,14 @@ components:
     AttendanceRecord:
       type: object
       required:
-        - present_sessions
-        - total_sessions
+        - present_count
+        - total_count
       properties:
-        present_sessions:
+        present_count:
           type: integer
           description: Number of sessions the student was present
           example: 15
-        total_sessions:
+        total_count:
           type: integer
           description: Total number of sessions held
           example: 20
