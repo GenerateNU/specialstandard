@@ -8,11 +8,11 @@ import type {
   GameResult,
   GetGameResultsParams,
   PostGameResultInput,
-} from './theSpecialStandardAPI.schemas'
+} from "./theSpecialStandardAPI.schemas";
 
-import { customAxios } from './apiClient'
+import { customAxios } from "./apiClient";
 
-export function getGameResult() {
+export const getGameResult = () => {
   /**
    * Gets the Game Results that were asked for..? Filter available by session and student.
    * @summary Gets the Game Results
@@ -20,10 +20,10 @@ export function getGameResult() {
   const getGameResults = (params?: GetGameResultsParams) => {
     return customAxios<GameResult[]>({
       url: `/game-results`,
-      method: 'GET',
+      method: "GET",
       params,
-    })
-  }
+    });
+  };
   /**
    * Creates a new result entry for a game result
    * @summary Creates a new game result
@@ -31,16 +31,16 @@ export function getGameResult() {
   const postGameResults = (postGameResultInput: PostGameResultInput) => {
     return customAxios<GameResult>({
       url: `/game-results`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       data: postGameResultInput,
-    })
-  }
-  return { getGameResults, postGameResults }
-}
+    });
+  };
+  return { getGameResults, postGameResults };
+};
 export type GetGameResultsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getGameResult>['getGameResults']>>
->
+  Awaited<ReturnType<ReturnType<typeof getGameResult>["getGameResults"]>>
+>;
 export type PostGameResultsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getGameResult>['postGameResults']>>
->
+  Awaited<ReturnType<ReturnType<typeof getGameResult>["postGameResults"]>>
+>;

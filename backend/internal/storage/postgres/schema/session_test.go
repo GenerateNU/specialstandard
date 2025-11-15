@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"specialstandard/internal/models"
+	"specialstandard/internal/storage/postgres/schema"
+	"specialstandard/internal/storage/postgres/testutil"
 	"specialstandard/internal/utils"
 	"testing"
 	"time"
-
-	"specialstandard/internal/storage/postgres/schema"
-	"specialstandard/internal/storage/postgres/testutil"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -98,7 +97,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test
-	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
+	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil, therapistID)
 
 	// Assert
 	assert.NoError(t, err)
@@ -119,15 +118,15 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), nil)
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), nil, therapistID)
 
 	assert.NoError(t, err)
-	assert.Len(t, sessions, 10)
+	assert.Len(t, sessions, 19)
 
 	sessions, err = repo.GetSessions(ctx, utils.Pagination{
 		Page:  4,
 		Limit: 5,
-	}, nil)
+	}, nil, therapistID)
 
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 4)
@@ -137,18 +136,18 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	yearFilter := &models.GetSessionRepositoryRequest{
 		Year: ptrInt(startTime.Year()),
 	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), yearFilter)
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), yearFilter, therapistID)
 	assert.NoError(t, err)
-	assert.Equal(t, 10, len(sessions))
+	assert.Equal(t, 19, len(sessions))
 
 	// Test filtering by month and year
 	monthYearFilter := &models.GetSessionRepositoryRequest{
 		Month: ptrInt(int(startTime.Month())),
 		Year:  ptrInt(startTime.Year()),
 	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), monthYearFilter)
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), monthYearFilter, therapistID)
 	assert.NoError(t, err)
-	assert.Equal(t, 10, len(sessions))
+	assert.Equal(t, 19, len(sessions))
 
 	// Test filtering by student IDs
 	studentID1 := CreateSessionTestStudent(t, testDB, ctx, therapistID, "Student1", 5)
@@ -165,7 +164,7 @@ func TestSessionRepository_GetSessions(t *testing.T) {
 	studentFilter := &models.GetSessionRepositoryRequest{
 		StudentIDs: &[]uuid.UUID{studentID1, studentID2},
 	}
-	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), studentFilter)
+	sessions, err = repo.GetSessions(ctx, utils.NewPagination(), studentFilter, therapistID)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(sessions))
 }
@@ -459,7 +458,7 @@ func TestGetSessionStudents(t *testing.T) {
     `, therapistID, startTime, endTime, "Test session")
 	assert.NoError(t, err)
 
-	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil)
+	sessions, err := repo.GetSessions(ctx, utils.NewPagination(), nil, therapistID)
 	assert.NoError(t, err)
 	assert.Len(t, sessions, 1)
 
@@ -475,7 +474,7 @@ func TestGetSessionStudents(t *testing.T) {
 	`, sessionWithStudents, studentID1, sessionWithStudents, studentID3)
 	assert.NoError(t, err)
 
-	students, err := repo.GetSessionStudents(ctx, sessionWithStudents, utils.NewPagination())
+	students, err := repo.GetSessionStudents(ctx, sessionWithStudents, utils.NewPagination(), therapistID)
 
 	assert.NoError(t, err)
 	assert.Len(t, students, 1) // returns the one student that has not graduated

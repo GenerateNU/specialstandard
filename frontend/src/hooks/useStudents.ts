@@ -1,65 +1,139 @@
+import { useAuthContext } from "@/contexts/authContext";
+import { getStudents } from "@/lib/api/students";
 import type {
   CreateStudentInput,
   Student,
   UpdateStudentInput,
-} from '@/lib/api/theSpecialStandardAPI.schemas'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getStudents } from '@/lib/api/students'
-import { gradeToDisplay } from '@/lib/gradeUtils'
+} from "@/lib/api/theSpecialStandardAPI.schemas";
+import { gradeToDisplay } from "@/lib/gradeUtils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export type StudentBody = Omit<Student, 'grade'> & {
-  grade: string
-}
+export type StudentBody = Omit<Student, "grade"> & {
+  grade: string;
+};
+
 export function useStudents() {
-  const queryClient = useQueryClient()
-  const api = getStudents()
-
+  const queryClient = useQueryClient();
+  const api = getStudents();
+  const { userId: therapistId } = useAuthContext();
+  
+  console.warn("🔍 useStudents - therapistId:", therapistId);
+  
   const {
     data: studentsData = [],
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['students'],
-    queryFn: () => api.getStudents({ limit: 100 }),
-  })
-
-  const students = studentsData.map(student => ({
-    ...student,
-    grade: gradeToDisplay(student.grade),
-  }))
-
+    queryKey: ["students", therapistId],
+    queryFn: () => {
+      console.warn("🚀 Fetching students for therapist:", therapistId);
+      return api.getStudents({ limit: 100, therapist_id: therapistId! })
+        .then((data) => {
+          console.warn("✅ Students fetched successfully:", data);
+          return data;
+        })
+        .catch((err) => {
+          console.warn("❌ Error fetching students:", err);
+          throw err;
+        });
+    },
+    // we technically dont need this line but it is just defensive programming!!
+    enabled: !!therapistId,
+  });
+  
+  console.warn("📊 Query state - isLoading:", isLoading, "error:", error);
+  console.warn("📋 Raw students data:", studentsData);
+  
+  // get students/id/sessions
+  const students = studentsData.map((student) => {
+    const transformed = {
+      ...student,
+      grade: gradeToDisplay(student.grade),
+    };
+    console.warn(`🔄 Transformed student ${student.id}: grade ${student.grade} → ${transformed.grade}`);
+    return transformed;
+  });
+  
+  console.warn("📋 Transformed students:", students);
+  
   const addStudentMutation = useMutation({
-    mutationFn: (input: CreateStudentInput) => api.postStudents(input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] })
+    mutationFn: (input: CreateStudentInput) => {
+      console.warn("➕ Adding student:", input);
+      return api.postStudents(input);
     },
-  })
-
+    onSuccess: (data) => {
+      console.warn("✅ Student added successfully:", data);
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+    onError: (error) => {
+      console.warn("❌ Error adding student:", error);
+    },
+  });
+  
   const updateStudentMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string, data: UpdateStudentInput }) =>
-      api.patchStudentsId(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] })
+    mutationFn: ({ id, data }: { id: string; data: UpdateStudentInput }) => {
+      console.warn("✏️ Updating student:", id, "with data:", data);
+      return api.patchStudentsId(id, data);
     },
-  })
-
+    onSuccess: (data) => {
+      console.warn("✅ Student updated successfully:", data);
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+    onError: (error) => {
+      console.warn("❌ Error updating student:", error);
+    },
+  });
+  
   const deleteStudentMutation = useMutation({
-    mutationFn: (id: string) => api.deleteStudentsId(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] })
+    mutationFn: (id: string) => {
+      console.warn("🗑️ Deleting student:", id);
+      return api.deleteStudentsId(id);
     },
-  })
-
+    onSuccess: (data) => {
+      console.warn("✅ Student deleted successfully:", data);
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+    onError: (error) => {
+      console.warn("❌ Error deleting student:", error);
+    },
+  });
+  
+  // Log mutation states
+  console.warn("🔧 Mutation states:", {
+    addStudent: {
+      isLoading: addStudentMutation.isPending,
+      isError: addStudentMutation.isError,
+      error: addStudentMutation.error,
+    },
+    updateStudent: {
+      isLoading: updateStudentMutation.isPending,
+      isError: updateStudentMutation.isError,
+      error: updateStudentMutation.error,
+    },
+    deleteStudent: {
+      isLoading: deleteStudentMutation.isPending,
+      isError: deleteStudentMutation.isError,
+      error: deleteStudentMutation.error,
+    },
+  });
+  
   return {
     students,
     isLoading,
     error: error?.message || null,
     refetch,
-    addStudent: (student: CreateStudentInput) =>
-      addStudentMutation.mutate(student),
-    updateStudent: (id: string, data: UpdateStudentInput) =>
-      updateStudentMutation.mutate({ id, data }),
-    deleteStudent: (id: string) => deleteStudentMutation.mutate(id),
-  }
+    addStudent: (student: CreateStudentInput) => {
+      console.warn("🎯 addStudent called with:", student);
+      return addStudentMutation.mutate(student);
+    },
+    updateStudent: (id: string, data: UpdateStudentInput) => {
+      console.warn("🎯 updateStudent called with id:", id, "data:", data);
+      return updateStudentMutation.mutate({ id, data });
+    },
+    deleteStudent: (id: string) => {
+      console.warn("🎯 deleteStudent called with id:", id);
+      return deleteStudentMutation.mutate(id);
+    },
+  };
 }

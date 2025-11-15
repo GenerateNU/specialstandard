@@ -9,11 +9,11 @@ import type {
   PostAuthLoginBody,
   PostAuthSignup201,
   PostAuthSignupBody,
-} from './theSpecialStandardAPI.schemas'
+} from "./theSpecialStandardAPI.schemas";
 
-import { customAxios } from './apiClient'
+import { customAxios } from "./apiClient";
 
-export function getAuth() {
+export const getAuth = () => {
   /**
    * Signs Up New User to the Platform as a Therapist
    * @summary SignUp Feature
@@ -21,11 +21,11 @@ export function getAuth() {
   const postAuthSignup = (postAuthSignupBody: PostAuthSignupBody) => {
     return customAxios<PostAuthSignup201>({
       url: `/auth/signup`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       data: postAuthSignupBody,
-    })
-  }
+    });
+  };
   /**
    * Log into the Platform
    * @summary Login Feature
@@ -33,16 +33,16 @@ export function getAuth() {
   const postAuthLogin = (postAuthLoginBody: PostAuthLoginBody) => {
     return customAxios<PostAuthLogin200>({
       url: `/auth/login`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       data: postAuthLoginBody,
-    })
-  }
-  return { postAuthSignup, postAuthLogin }
-}
+    });
+  };
+  return { postAuthSignup, postAuthLogin };
+};
 export type PostAuthSignupResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getAuth>['postAuthSignup']>>
->
+  Awaited<ReturnType<ReturnType<typeof getAuth>["postAuthSignup"]>>
+>;
 export type PostAuthLoginResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getAuth>['postAuthLogin']>>
->
+  Awaited<ReturnType<ReturnType<typeof getAuth>["postAuthLogin"]>>
+>;

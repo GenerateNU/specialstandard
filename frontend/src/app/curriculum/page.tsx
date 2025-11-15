@@ -4,6 +4,7 @@ import { AlertCircle, ArrowLeft, FileText, Loader2, RefreshCcw } from 'lucide-re
 import Link from 'next/link'
 import AppLayout from '@/components/AppLayout'
 import { useResources } from '@/hooks/useResources'
+import { Button } from '@/components/ui/button'
 
 export default function Curriculum() {
   const { resources, isLoading, error, refetch } = useResources()
@@ -64,6 +65,13 @@ export default function Curriculum() {
               View and access all available learning materials.
             </p>
           </header>
+
+
+          <Button>
+            <Link href="/games" className="text-primary hover:text-blue transition-colors">
+              Games
+            </Link>
+          </Button>
 
           {/* Resource list */}
           {resources.length === 0

@@ -16,6 +16,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -41,7 +42,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"notes": "Student participated well in group activities"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(&[]models.SessionStudent{
 					{
 						SessionID: sessionID,
 						StudentID: studentID,
@@ -63,7 +69,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": false
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(&[]models.SessionStudent{
 					{
 						SessionID: sessionID,
 						StudentID: studentID,
@@ -108,7 +119,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 			name:        "invalid_session_id_format",
 			requestBody: `{"student_ids": ["` + studentID.String() + `"], "present": true, "session_ids": "not-a-uuid"}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// No mock setup needed - JSON parsing should succeed but UUID validation should fail
+				// No mock setup needed - JSON parsing should fail on invalid UUID format
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -117,7 +128,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 			name:        "invalid_student_id_format",
 			requestBody: `{"session_ids": ["` + sessionID.String() + `"], "present": true, "student_ids": "not-a-uuid"}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// No mock setup needed - JSON parsing should succeed but UUID validation should fail
+				// No mock setup needed - JSON parsing should fail on invalid UUID format
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -126,13 +137,11 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 			name: "empty_session_id_nil_uuid",
 			requestBody: `{
 				"session_ids": ["00000000-0000-0000-0000-000000000000"],
-				"student_ids": ["` + studentID.String() + `"],
+				"student_ids": ["42a36e4a-1a3e-4a08-aac0-a1ca769e79d1"],
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// The nil UUID should be caught by validation before repository call
-				// But add .Maybe() in case validation logic changes
-				m.On("CreateSessionStudent", mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("invalid session")).Maybe()
+				// The handler validates zero UUIDs before calling repository, so no mock needed
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -145,9 +154,7 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				// The nil UUID should be caught by validation before repository call
-				// But add .Maybe() in case validation logic changes
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("invalid student")).Maybe()
+				// The handler validates zero UUIDs before calling repository, so no mock needed
 			},
 			expectedStatus: fiber.StatusBadRequest,
 			wantErr:        true,
@@ -161,7 +168,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"notes": "Duplicate entry"
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("duplicate key value violates unique constraint"))
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(nil, errors.New("duplicate key value violates unique constraint"))
 			},
 			expectedStatus: fiber.StatusConflict,
 			wantErr:        true,
@@ -174,7 +186,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(nil, errors.New("database connection failed"))
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(nil, errors.New("database connection failed"))
 			},
 			expectedStatus: fiber.StatusInternalServerError,
 			wantErr:        true,
@@ -196,8 +213,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).
-					Return(nil, errors.New("pq: unique_violation: duplicate student in session"))
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(nil, errors.New("pq: unique_violation: duplicate student in session"))
 			},
 			expectedStatus: fiber.StatusConflict,
 			wantErr:        true,
@@ -210,7 +231,12 @@ func TestHandler_CreateSessionStudent(t *testing.T) {
 				"present": true
 			}`,
 			mockSetup: func(m *mocks.MockSessionStudentRepository) {
-				m.On("CreateSessionStudent", mock.Anything, mock.Anything, mock.AnythingOfType("*models.CreateSessionStudentInput")).Return(&[]models.SessionStudent{
+				m.On("GetDB").Return((*pgxpool.Pool)(nil))
+				m.On("CreateSessionStudent",
+					mock.AnythingOfType("*fasthttp.RequestCtx"),
+					(*pgxpool.Pool)(nil),
+					mock.AnythingOfType("*models.CreateSessionStudentInput"),
+				).Return(&[]models.SessionStudent{
 					{
 						SessionID: sessionID,
 						StudentID: studentID,
@@ -749,7 +775,248 @@ func TestHandler_DeleteSessionStudent(t *testing.T) {
 	}
 }
 
-// Helper function to create string pointers
 func stringPtr(s string) *string {
 	return &s
+}
+
+func TestHandler_GetStudentAttendance(t *testing.T) {
+	studentID := uuid.New()
+
+	tests := []struct {
+		name           string
+		studentID      string
+		queryParams    string
+		mockSetup      func(*mocks.MockSessionStudentRepository)
+		expectedStatus int
+		expectedBody   map[string]interface{}
+		wantErr        bool
+	}{
+		{
+			name:        "successful_get_all_attendance",
+			studentID:   studentID.String(),
+			queryParams: "",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				presentCount := 18
+				totalCount := 20
+				m.On("GetStudentAttendance",
+					mock.Anything,
+					mock.Anything,
+				).Return(&presentCount, &totalCount, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			expectedBody: map[string]interface{}{
+				"present_count": float64(18),
+				"total_count":   float64(20),
+			},
+			wantErr: false,
+		},
+		{
+			name:        "successful_with_date_range",
+			studentID:   studentID.String(),
+			queryParams: "?date_from=2024-01-01&date_to=2024-12-31",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				presentCount := 10
+				totalCount := 12
+				m.On("GetStudentAttendance",
+					mock.Anything,
+					mock.Anything,
+				).Return(&presentCount, &totalCount, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			expectedBody: map[string]interface{}{
+				"present_count": float64(10),
+				"total_count":   float64(12),
+			},
+			wantErr: false,
+		},
+		{
+			name:        "successful_with_only_date_from",
+			studentID:   studentID.String(),
+			queryParams: "?date_from=2024-01-01",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				presentCount := 15
+				totalCount := 18
+				m.On("GetStudentAttendance",
+					mock.Anything,
+					mock.Anything,
+				).Return(&presentCount, &totalCount, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			expectedBody: map[string]interface{}{
+				"present_count": float64(15),
+				"total_count":   float64(18),
+			},
+			wantErr: false,
+		},
+		{
+			name:        "successful_with_only_date_to",
+			studentID:   studentID.String(),
+			queryParams: "?date_to=2024-12-31",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				presentCount := 8
+				totalCount := 10
+				m.On("GetStudentAttendance",
+					mock.Anything,
+					mock.Anything,
+				).Return(&presentCount, &totalCount, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			expectedBody: map[string]interface{}{
+				"present_count": float64(8),
+				"total_count":   float64(10),
+			},
+			wantErr: false,
+		},
+		{
+			name:        "student_with_no_sessions",
+			studentID:   studentID.String(),
+			queryParams: "",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				presentCount := 0
+				totalCount := 0
+				m.On("GetStudentAttendance",
+					mock.Anything,
+					mock.Anything,
+				).Return(&presentCount, &totalCount, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			expectedBody: map[string]interface{}{
+				"present_count": float64(0),
+				"total_count":   float64(0),
+			},
+			wantErr: false,
+		},
+		{
+			name:        "invalid_student_id_format",
+			studentID:   "not-a-uuid",
+			queryParams: "",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				// No mock setup needed - UUID validation fails before repository call
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:        "nil_uuid_student_id",
+			studentID:   "00000000-0000-0000-0000-000000000000",
+			queryParams: "",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				// The nil UUID should be caught by validation
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:        "invalid_date_from_format",
+			studentID:   studentID.String(),
+			queryParams: "?date_from=invalid-date",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				// No mock setup needed - date parsing fails before repository call
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:        "invalid_date_to_format",
+			studentID:   studentID.String(),
+			queryParams: "?date_to=2024-13-45", // Invalid month and day
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				// No mock setup needed - date parsing fails before repository call
+			},
+			expectedStatus: fiber.StatusBadRequest,
+			wantErr:        true,
+		},
+		{
+			name:        "repository_error",
+			studentID:   studentID.String(),
+			queryParams: "",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				m.On("GetStudentAttendance",
+					mock.Anything,
+					mock.Anything,
+				).Return(nil, nil, errors.New("database connection failed"))
+			},
+			expectedStatus: fiber.StatusInternalServerError,
+			wantErr:        true,
+		},
+		{
+			name:        "student_not_found",
+			studentID:   uuid.New().String(), // Different UUID
+			queryParams: "",
+			mockSetup: func(m *mocks.MockSessionStudentRepository) {
+				presentCount := 0
+				totalCount := 0
+				m.On("GetStudentAttendance",
+					mock.Anything,
+					mock.Anything,
+				).Return(&presentCount, &totalCount, nil)
+			},
+			expectedStatus: fiber.StatusOK,
+			expectedBody: map[string]interface{}{
+				"present_count": float64(0),
+				"total_count":   float64(0),
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New()
+			mockRepo := new(mocks.MockSessionStudentRepository)
+
+			if tt.mockSetup != nil {
+				tt.mockSetup(mockRepo)
+			}
+
+			handler := sessionstudent.NewHandler(mockRepo)
+			// NOW use :id to match the route exactly
+			app.Get("/students/:id/attendance", handler.GetStudentAttendance)
+
+			req := httptest.NewRequest("GET", "/students/"+tt.studentID+"/attendance"+tt.queryParams, nil)
+			resp, _ := app.Test(req, -1)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+
+			if !tt.wantErr && resp.StatusCode == fiber.StatusOK {
+				var result map[string]interface{}
+				err = json.Unmarshal(body, &result)
+				assert.NoError(t, err)
+
+				if tt.expectedBody != nil {
+					for key, expectedValue := range tt.expectedBody {
+						actualValue, exists := result[key]
+						if key == "student_id" && !exists {
+							// student_id might not be in response based on implementation
+							continue
+						}
+						assert.True(t, exists, "Expected key %s to exist", key)
+						assert.Equal(t, expectedValue, actualValue, "Value mismatch for key %s", key)
+					}
+				}
+			} else if tt.wantErr && resp.StatusCode >= 400 && resp.StatusCode < 600 {
+				var errorResp map[string]interface{}
+				err = json.Unmarshal(body, &errorResp)
+				if err == nil && errorResp["error"] != nil {
+					switch tt.name {
+					case "invalid_student_id_format":
+						assert.Contains(t, errorResp["error"], "invalid")
+					case "nil_uuid_student_id":
+						assert.Contains(t, errorResp["error"], "invalid")
+					case "invalid_date_from_format", "invalid_date_to_format":
+						assert.Contains(t, errorResp["error"], "Invalid date")
+					case "repository_error":
+						assert.Contains(t, errorResp["error"], "Failed to get attendance")
+					}
+				}
+			}
+
+			if tt.mockSetup != nil {
+				mockRepo.AssertExpectations(t)
+			}
+		})
+	}
 }
