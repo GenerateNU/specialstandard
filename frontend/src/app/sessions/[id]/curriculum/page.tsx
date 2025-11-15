@@ -85,7 +85,7 @@ export default function CurriculumPage({ params }: PageProps) {
         {/* Book Component - Shows when a level is selected */}
         {selectedLevel && (
           <div className="flex justify-center mt-12">
-            <div className="bg-card rounded-3xl shadow-2xl border border-default p-12 max-w-2xl w-full">
+            <div className="bg-card rounded-3xl shadow-2xl border border-default px-12 py-16 max-w-2xl w-full">
               <div className="text-center mb-2">
                 <p className="text-lg font-medium text-secondary">Week {currentWeek}</p>
               </div>

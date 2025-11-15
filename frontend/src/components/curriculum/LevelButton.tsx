@@ -16,7 +16,7 @@ export default function LevelButton({ level, onClick, isSelected = false, classN
       className={cn(
         'w-full px-8 py-6 rounded-full text-white font-bold text-xl transition-all hover:scale-105 hover:shadow-xl',
         isSelected 
-          ? 'bg-pink-light scale-105 shadow-xl ring-4 ring-pink-light/30'
+          ? 'bg-pink-disabled scale-105 shadow-xl ring-4 ring-pink/30'
           : 'bg-pink hover:bg-pink-hover',
         className,
       )}
