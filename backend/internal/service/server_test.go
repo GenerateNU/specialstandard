@@ -82,10 +82,12 @@ func TestGetSessionsEndpoint(t *testing.T) {
 				sessions := []models.Session{
 					{
 						ID:            uuid.New(),
+						SessionName:   "successful get sessions and default pagination",
 						TherapistID:   testTherapistID,
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
 						Notes:         ptrString("Test session"),
+						Location:      ptrString("123 Oz St."),
 						CreatedAt:     ptrTime(time.Now()),
 						UpdatedAt:     ptrTime(time.Now()),
 					},
@@ -213,7 +215,7 @@ func TestGetStudentsEndpoint(t *testing.T) {
 			DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
 			Grade:       ptrInt(4),
-			IEP:         ptrString("Reading comprehension support"),
+			IEP:         []string{"Reading comprehension support"},
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -246,7 +248,7 @@ func TestGetStudentsEndpoint_WithGradeFilter(t *testing.T) {
 			DOB:         ptrTime(time.Date(2010, 5, 15, 0, 0, 0, 0, time.UTC)),
 			TherapistID: uuid.New(),
 			Grade:       ptrInt(5),
-			IEP:         ptrString("Test IEP"),
+			IEP:         []string{"Test IEP"},
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -471,7 +473,7 @@ func TestGetStudentByIDEndpoint(t *testing.T) {
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
 		Grade:       ptrInt(4),
-		IEP:         ptrString("Reading comprehension support"),
+		IEP:         []string{"Reading comprehension support"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -508,7 +510,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		TherapistID: therapistID,
 		SchoolID:    schoolID,
 		Grade:       ptrInt(5),
-		IEP:         ptrString("Test IEP"),
+		IEP:         []string{"Test IEP"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -528,7 +530,7 @@ func TestCreateStudentEndpoint(t *testing.T) {
 		"therapist_id": "%s",
 		"school_id": %d,
 		"grade": 5,
-		"iep": "Test IEP"
+		"iep": ["Test IEP"]
 	}`, therapistID, schoolID)
 
 	req := httptest.NewRequest("POST", "/api/v1/students", strings.NewReader(body))
@@ -554,7 +556,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
 		TherapistID: uuid.New(),
 		Grade:       ptrInt(4),
-		IEP:         ptrString("Original IEP"),
+		IEP:         []string{"Original IEP"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -567,7 +569,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 		Grade:       ptrInt(5), // updated grade
 		TherapistID: uuid.New(),
 		DOB:         ptrTime(time.Date(2011, 8, 12, 0, 0, 0, 0, time.UTC)),
-		IEP:         ptrString("Updated IEP with math accommodations"),
+		IEP:         []string{"Updated IEP with math accommodations"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil)
@@ -582,7 +584,7 @@ func TestUpdateStudentEndpoint(t *testing.T) {
 
 	body := `{
 		"grade": 5,
-		"iep": "Updated IEP with math accommodations"
+		"iep": ["Updated IEP with math accommodations"]
 	}`
 
 	req := httptest.NewRequest("PATCH", "/api/v1/students/"+studentID.String(), strings.NewReader(body))
@@ -630,6 +632,7 @@ func TestGetSessionByIDEndpoint(t *testing.T) {
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				session := models.Session{
 					ID:          uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
+					SessionName: "successful get session by valid UUID",
 					TherapistID: uuid.New(),
 					Notes:       ptrString("Test session"),
 				}
@@ -746,6 +749,7 @@ func TestHandler_PostSessions(t *testing.T) {
 	}, repo, &s3_client.Client{})
 
 	body := fmt.Sprintf(`{
+		"session_name": "post session for server",
 		"start_datetime": "2025-09-14T14:00:00Z",
 		"end_datetime": "2025-09-14T16:00:00Z",
 		"therapist_id": "%s",
@@ -874,10 +878,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "Successfully changed all patchable fields",
 			payload: `{
+				"session_name": "all success",
 				"start_datetime": "2025-09-14T12:00:00Z", 
 				"end_datetime": "2025-09-14T13:00:00Z", 
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d", 
-				"notes": "Starting Over"
+				"notes": "Starting Over",
+				"location": "Temperature Zero"
 			}`,
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T12:00:00Z")
@@ -888,10 +894,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 				now := time.Now()
 
 				patch := &models.PatchSessionInput{
+					SessionName: ptrString("all success"),
 					StartTime:   &startTime,
 					EndTime:     &endTime,
 					TherapistID: &therapistID,
 					Notes:       notes,
+					Location:    ptrString("Temperature Zero"),
 				}
 
 				patchedSession := &models.Session{
@@ -2291,7 +2299,7 @@ func TestEndpoint_PromoteStudents(t *testing.T) {
 		DOB:         ptrTime(time.Date(2004, 9, 24, 0, 0, 0, 0, time.UTC)),
 		TherapistID: therapistID,
 		Grade:       ptrInt(7),
-		IEP:         ptrString("Original IEP"),
+		IEP:         []string{"Original IEP"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	})

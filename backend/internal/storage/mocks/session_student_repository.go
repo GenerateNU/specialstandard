@@ -43,6 +43,14 @@ func (m *MockSessionStudentRepository) RateStudentSession(ctx context.Context, i
 	return args.Get(0).(*models.SessionStudent), args.Get(1).([]models.SessionRating), args.Error(2)
 }
 
+func (m *MockSessionStudentRepository) GetStudentAttendance(ctx context.Context, params models.GetStudentAttendanceParams) (*int, *int, error) {
+	args := m.Called(ctx, params)
+	if args.Get(0) == nil {
+		return nil, nil, args.Error(2)
+	}
+	return args.Get(0).(*int), args.Get(1).(*int), args.Error(2)
+}
+
 // GetDB returns the database pool
 func (m *MockSessionStudentRepository) GetDB() *pgxpool.Pool {
 	args := m.Called()

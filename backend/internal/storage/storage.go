@@ -27,6 +27,7 @@ type SessionStudentRepository interface {
 	CreateSessionStudent(ctx context.Context, q dbinterface.Queryable, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error)
 	DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error
 	RateStudentSession(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, []models.SessionRating, error)
+	GetStudentAttendance(ctx context.Context, params models.GetStudentAttendanceParams) (*int, *int, error)
 	GetDB() *pgxpool.Pool
 }
 
@@ -80,6 +81,16 @@ type GameResultRepository interface {
 	PostGameResult(ctx context.Context, input models.PostGameResult) (*models.GameResult, error)
 }
 
+type DistrictRepository interface {
+	GetDistricts(ctx context.Context) ([]models.District, error)
+	GetDistrictByID(ctx context.Context, id int) (*models.District, error)
+}
+
+type SchoolRepository interface {
+	GetSchools(ctx context.Context) ([]models.School, error)
+	GetSchoolsByDistrict(ctx context.Context, districtID int) ([]models.School, error)
+}
+
 type Repository struct {
 	Resource        ResourceRepository
 	db              *pgxpool.Pool
@@ -91,6 +102,8 @@ type Repository struct {
 	SessionResource SessionResourceRepository
 	GameContent     GameContentRepository
 	GameResult      GameResultRepository
+	District 		DistrictRepository
+	School 			SchoolRepository
 }
 
 func (r *Repository) Close() error {
@@ -114,5 +127,7 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		SessionResource: schema.NewSessionResourceRepository(db),
 		GameContent:     schema.NewGameContentRepository(db),
 		GameResult:      schema.NewGameResultRepository(db),
+		District: 		 schema.NewDistrictRepository(db),
+		School: 		 schema.NewSchoolRepository(db),
 	}
 }

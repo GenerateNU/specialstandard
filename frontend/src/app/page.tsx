@@ -98,7 +98,7 @@ export default function Home() {
               <Button
                 size="sm"
                 variant="default"
-                onClick={() => router.push('/sessions')}
+                onClick={() => router.push('/calendar?view=card')}
               >
                 View All Sessions
               </Button>
@@ -122,7 +122,7 @@ export default function Home() {
                           >
                             <UpcomingSessionCard
                               className={`transition-all duration-200 ${selectedSession?.id === session.id ? 'ring-2 ring-offset-1 ring-blue-disabled scale-[1.02]' : 'hover:scale-[1.01]'}`}
-                              sessionName="Session Name"
+                              sessionName={session.session_name}
                               startTime={formatTime(session.start_datetime)}
                               endTime={formatTime(session.end_datetime)}
                               date={formatDateString(session.start_datetime)}
@@ -143,7 +143,7 @@ export default function Home() {
                         <div className="flex flex-row flex-1 ">
                           <div className="flex flex-col flex-1">
                             <strong>
-                              Session Name
+                                {selectedSession.session_name}
                             </strong>
                             <strong>
                               {getTherapistName(selectedSession.therapist_id, therapists)}
@@ -159,6 +159,15 @@ export default function Home() {
                             </span>
                             <span>
                               {formatDateString(selectedSession.start_datetime)}
+                            </span>
+                            <span>
+                              {selectedSession.location && (
+                                <div className="text-sm">
+                                  <strong>Location:</strong>
+                                  {' '}
+                                  {selectedSession.location}
+                                </div>
+                              )}
                             </span>
                           </div>
                         </div>

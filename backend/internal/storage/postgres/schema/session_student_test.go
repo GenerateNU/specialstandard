@@ -65,9 +65,9 @@ func CreateTestSession(t *testing.T, db *pgxpool.Pool, ctx context.Context, ther
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
 	_, err := db.Exec(ctx, `
-		INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-	`, sessionID, therapistID, startTime, endTime, notes)
+		INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+	`, sessionID, "Test Session", therapistID, startTime, endTime, notes)
 	assert.NoError(t, err)
 
 	return sessionID
@@ -368,4 +368,163 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, failSessionStudent)
 	assert.Nil(t, failRatings)
+}
+
+func TestSessionStudentRepository_GetStudentAttendance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+	// Setup
+	testDB := testutil.SetupTestWithCleanup(t)
+	repo := schema.NewSessionStudentRepository(testDB)
+	ctx := context.Background()
+
+	// Create test data using helper functions
+	therapistID := CreateTestTherapist(t, testDB, ctx)
+	studentID := CreateTestStudent(t, testDB, ctx, therapistID, "Attendance")
+
+	// Create sessions and session-student relationships
+	now := time.Now()
+	dates := []time.Time{
+		now.AddDate(0, 0, -10), // 10 days ago
+		now.AddDate(0, 0, -5),  // 5 days ago
+		now.AddDate(0, 0, -1),  // yesterday
+		now,                    // today
+		now.AddDate(0, 0, 5),   // 5 days future (for testing future exclusion)
+	}
+	presences := []bool{true, false, true, true, false} // last one won't matter for past sessions
+
+	sessionIDs := make([]uuid.UUID, len(dates))
+	for i, date := range dates {
+		// Create session
+		sessionID := uuid.New()
+		sessionIDs[i] = sessionID
+
+		startTime := date.Add(-1 * time.Hour)
+		endTime := date
+
+		_, err := testDB.Exec(ctx, `
+			INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime)
+			VALUES ($1, $2, $3, $4, $5)
+		`, sessionID, "Test Session", therapistID, startTime, endTime)
+		require.NoError(t, err)
+
+		// Create session_student relationship
+		_, err = testDB.Exec(ctx, `
+			INSERT INTO session_student (session_id, student_id, present)
+			VALUES ($1, $2, $3)
+		`, sessionID, studentID, presences[i])
+		require.NoError(t, err)
+	}
+
+	// Test different scenarios
+	t.Run("Get all attendance (no date params)", func(t *testing.T) {
+		// Should include all sessions up to now
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  time.Now().AddDate(-1, 0, 0), // 1 year ago
+			DateTo:    time.Now(),
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 3, *presentCount) // true, true, true (excluding the false from 5 days ago)
+		assert.Equal(t, 4, *totalCount)   // up to today
+	})
+
+	t.Run("Get attendance with date range", func(t *testing.T) {
+		// Only sessions from 5 days ago to yesterday
+		dateFrom := now.AddDate(0, 0, -5)
+		dateTo := now.AddDate(0, 0, -1)
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  dateFrom,
+			DateTo:    dateTo,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 1, *presentCount) // only yesterday was present (5 days ago was false)
+		assert.Equal(t, 2, *totalCount)   // 5 days ago + yesterday
+	})
+
+	t.Run("Get attendance from specific date to future", func(t *testing.T) {
+		// From 10 days ago to one month in future
+		dateFrom := now.AddDate(0, 0, -10)
+		dateTo := now.AddDate(0, 1, 0)
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  dateFrom,
+			DateTo:    dateTo,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 3, *presentCount) // 10 days ago, yesterday, today (5 days ago was false)
+		assert.Equal(t, 5, *totalCount)   // all
+	})
+
+	t.Run("Get future sessions only", func(t *testing.T) {
+		// Only future sessions
+		dateFrom := now.AddDate(0, 0, 1)
+		dateTo := now.AddDate(0, 0, 10)
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  dateFrom,
+			DateTo:    dateTo,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 0, *presentCount) // future session marked false
+		assert.Equal(t, 1, *totalCount)   // only one future session
+	})
+
+	t.Run("Student with no sessions", func(t *testing.T) {
+		// Create a new student with no sessions
+		newStudentID := CreateTestStudent(t, testDB, ctx, therapistID, "NoSessions")
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: newStudentID,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 0, *presentCount)
+		assert.Equal(t, 0, *totalCount)
+	})
+
+	t.Run("Invalid student ID", func(t *testing.T) {
+		// Use a random UUID that doesn't exist
+		randomID := uuid.New()
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: randomID,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err) // Should not error, just return 0s
+		assert.Equal(t, 0, *presentCount)
+		assert.Equal(t, 0, *totalCount)
+	})
+
+	t.Run("Exclude specific date", func(t *testing.T) {
+		// Exclude the day student was absent (5 days ago)
+		dateFrom := now.AddDate(0, 0, -10)
+		dateTo := now.AddDate(0, 0, -6) // Stop before 5 days ago
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  dateFrom,
+			DateTo:    dateTo,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 1, *presentCount) // only 10 days ago
+		assert.Equal(t, 1, *totalCount)   // only 10 days ago
+	})
 }

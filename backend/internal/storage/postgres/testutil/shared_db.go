@@ -194,7 +194,7 @@ func createAllTables(pool *pgxpool.Pool) error {
 			therapist_id UUID NOT NULL REFERENCES therapist(id),
 			school_id INTEGER NOT NULL REFERENCES school(id),
 			grade INTEGER CHECK (grade >= -1 AND grade <= 12),
-			iep TEXT,
+			iep TEXT[],
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
@@ -301,6 +301,11 @@ func createAllTables(pool *pgxpool.Pool) error {
 			FOREIGN KEY (session_student_id) REFERENCES session_student(id) ON DELETE CASCADE,
 			FOREIGN KEY (content_id) REFERENCES game_content(id) ON DELETE RESTRICT
 		);`,
+
+		`ALTER TABLE session
+			ADD COLUMN session_name VARCHAR(255) NOT NULL,
+			ADD COLUMN location VARCHAR(255);
+		`,
 	}
 
 	// Execute non-enum table creations

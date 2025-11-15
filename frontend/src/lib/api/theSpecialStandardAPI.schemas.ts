@@ -69,6 +69,8 @@ export interface UpdateTherapistInput {
 export interface Session {
   /** Unique identifier for the session */
   id: string;
+  /** Name of the Session */
+  session_name: string;
   /** Start date and time of the session */
   start_datetime: string;
   /** End date and time of the session */
@@ -80,6 +82,11 @@ export interface Session {
    * @nullable
    */
   notes?: string | null;
+  /**
+   * Session location (optional)
+   * @nullable
+   */
+  location?: string | null;
   /**
    * When the session record was created
    * @nullable
@@ -93,6 +100,8 @@ export interface Session {
 }
 
 export interface UpdateSessionInput {
+  /** Name of the Session */
+  session_name?: string;
   /** Start date and time of the session */
   start_datetime?: string;
   /** End date and time of the session */
@@ -101,6 +110,8 @@ export interface UpdateSessionInput {
   therapist_id?: string;
   /** Optional notes about the session */
   notes?: string;
+  /** Optional location information about the session */
+  location?: string;
 }
 
 export interface Student {
@@ -134,10 +145,10 @@ export interface Student {
    */
   grade?: number | null;
   /**
-   * Individualized Education Program details
+   * List of Individualized Education Program goals
    * @nullable
    */
-  iep?: string | null;
+  iep?: string[] | null;
   /** Timestamp when the student record was created */
   created_at: string;
   /** Timestamp when the student record was last updated */
@@ -166,10 +177,10 @@ export interface CreateStudentInput {
    */
   grade?: number | null;
   /**
-   * Individualized Education Program details (optional)
+   * List of Individualized Education Program goals (optional)
    * @nullable
    */
-  iep?: string | null;
+  iep?: string[] | null;
 }
 
 /**
@@ -195,10 +206,10 @@ export interface UpdateStudentInput {
    */
   grade?: number | null;
   /**
-   * Updated IEP details (can be set to null)
+   * Updated list of IEP goals (can be set to null or empty array)
    * @nullable
    */
-  iep?: string | null;
+  iep?: string[] | null;
 }
 
 export interface Theme {
@@ -549,6 +560,13 @@ export interface StudentWithSessionInfo {
   ratings: SessionRating[];
 }
 
+export interface AttendanceRecord {
+  /** Number of sessions the student was present */
+  present_sessions: number;
+  /** Total number of sessions held */
+  total_sessions: number;
+}
+
 export type SessionWithStudentInfoAllOf = {
   /** UUID of the associated student */
   student_id: string;
@@ -798,6 +816,8 @@ export type PostSessionsBodyRepetition = {
 };
 
 export type PostSessionsBody = {
+  /** Name of the Session */
+  session_name: string;
   /** Start date and time of the session */
   start_datetime: string;
   /** End date and time of the session */
@@ -806,6 +826,8 @@ export type PostSessionsBody = {
   therapist_id: string;
   /** Optional notes about the session */
   notes?: string;
+  /** Optional location information of the session */
+  location?: string;
   repetition?: PostSessionsBodyRepetition;
   /** List of Student IDs of the students that are being added to this Session. */
   student_ids?: string[];
@@ -945,6 +967,17 @@ export const GetStudentsStudentIdRatingsCategory = {
   gestural_cue: "gestural_cue",
   engagement: "engagement",
 } as const;
+
+export type GetStudentsStudentIdAttendanceParams = {
+  /**
+   * Filter attendance records on or after this date (YYYY-MM-DD format), default is no lower limit
+   */
+  date_from?: string;
+  /**
+   * Filter attendance records on or before this date (YYYY-MM-DD format), default to today
+   */
+  date_to?: string;
+};
 
 export type PatchStudentsPromote200 = {
   message?: string;
