@@ -2,6 +2,7 @@
 
 import {
     ArrowLeft,
+    ArrowRight,
     Calendar,
     Clock, FilePen,
     MapPin,
@@ -491,6 +492,17 @@ export default function SessionPage({ params }: PageProps) {
         variant="danger"
         isLoading={isRemoving}
       />
+
+      {/* Fixed Start Session Button - Lower Right */}
+      {mode === 'view' && (
+        <Link
+          href={`/sessions/${id}/start`}
+          className="fixed bottom-8 right-8 inline-flex items-center justify-center gap-2 bg-blue text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-blue-hover transition-all hover:scale-105 shadow-2xl z-50"
+        >
+          Start Session
+          <ArrowRight className="w-5 h-5" />
+        </Link>
+      )}
     </div>
   )
 }
