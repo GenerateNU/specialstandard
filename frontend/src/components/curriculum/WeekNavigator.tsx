@@ -7,7 +7,6 @@ interface WeekNavigatorProps {
   currentWeek: number
   onPreviousWeek: () => void
   onNextWeek: () => void
-  maxWeek?: number
   className?: string
 }
 
@@ -15,7 +14,6 @@ export default function WeekNavigator({
   currentWeek,
   onPreviousWeek,
   onNextWeek,
-  maxWeek = 4,
   className,
 }: WeekNavigatorProps) {
   return (

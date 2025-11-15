@@ -99,7 +99,6 @@ export default function CurriculumPage({ params }: PageProps) {
             currentWeek={currentWeek}
             onPreviousWeek={handlePreviousWeek}
             onNextWeek={handleNextWeek}
-            maxWeek={4}
           />
         </div>
       )}
