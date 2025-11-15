@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, ArrowLeft, BookOpen, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BookOpen, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
 import AppLayout from '@/components/AppLayout'
 import { useResources } from '@/hooks/useResources'
@@ -69,7 +69,7 @@ export default function Curriculum() {
   return (
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
-        <div className="w-full p-10 flex flex-col gap-10 overflow-y-scroll">
+        <div className="w-full p-10 flex flex-col overflow-y-scroll">
           {/* Header */}
           <header className="mb-8">
             <Link
@@ -108,6 +108,9 @@ export default function Curriculum() {
                 const games = week.resources.filter((r: any) => 
                   r.type === 'game' || r.type === 'Game'
                 )
+                const other = week.resources.filter((r: any) => 
+                  !r.type || (!['reading', 'Passage', 'Video', 'exercise', 'Worksheet', 'game', 'Game'].includes(r.type))
+                )
                 
                 // Get theme from first resource (assuming all in same week share theme)
                 const theme = week.resources[0]?.category || week.resources[0]?.theme?.name || 'General'
@@ -132,7 +135,7 @@ export default function Curriculum() {
                       {/* Exercises and Games */}
                       <div className='bg-white h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
                         <h4>Exercises and Games</h4>
-                        {exercises.length === 0 && games.length === 0 ? (
+                        {exercises.length === 0 && games.length === 0 && other.length === 0 ? (
                           <div className='text-muted text-sm px-2'>No exercises or games available</div>
                         ) : (
                           <>
@@ -141,6 +144,9 @@ export default function Curriculum() {
                             ))}
                             {games.map((game: any) => (
                               <ResourceButton key={game.id} resource={game} icon={Gamepad2} />
+                            ))}
+                            {other.map((resource: any) => (
+                              <ResourceButton key={resource.id} resource={resource} icon={File} />
                             ))}
                           </>
                         )}
