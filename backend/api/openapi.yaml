@@ -745,7 +745,7 @@ paths:
                       district_id: 1
                       school_name: "Generate Elementary"
                       grade: 5
-                      iep: "Active IEP with speech therapy goals"
+                      iep: ["Active IEP with speech therapy goals", "Occupational therapy accommodations"]
                       created_at: "2025-09-18T14:14:11.66268Z"
                       updated_at: "2025-09-18T14:14:11.66268Z"
                 filteredByGrade:
@@ -2626,10 +2626,12 @@ components:
           maximum: 12
           example: 5
         iep:
-          type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Individualized Education Program details
-          example: "Active IEP with speech therapy goals"
+          description: List of Individualized Education Program goals
+          example: ["Active IEP with speech therapy goals", "Occupational therapy accommodations"]
         created_at:
           type: string
           format: date-time
@@ -2679,10 +2681,12 @@ components:
           maximum: 12
           example: 5
         iep:
-          type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Individualized Education Program details (optional)
-          example: "Active IEP with speech therapy goals"
+          description: List of Individualized Education Program goals (optional)
+          example: ["Active IEP with speech therapy goals", "Occupational therapy accommodations"]
 
     UpdateStudentInput:
       type: object
@@ -2715,10 +2719,12 @@ components:
           maximum: 12
           example: 6
         iep:
-          type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Updated IEP details (can be set to null)
-          example: "Updated IEP with advanced speech therapy goals"
+          description: Updated list of IEP goals (can be set to null or empty array)
+          example: ["Updated IEP with advanced speech therapy goals", "Reading comprehension support"]
 
     Theme:
       type: object
