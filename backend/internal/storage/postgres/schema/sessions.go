@@ -24,7 +24,7 @@ func (r *SessionRepository) GetDB() *pgxpool.Pool {
 
 func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, id uuid.UUID) ([]models.Session, error) {
 	query := `
-	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
+	SELECT id, session_name, start_datetime, end_datetime, therapist_id, notes, location, created_at, updated_at
 	FROM session`
 
 	conditions := []string{}
@@ -100,7 +100,7 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 
 func (r *SessionRepository) GetSessionByID(ctx context.Context, id string) (*models.Session, error) {
 	query := `
-	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
+	SELECT id, session_name, start_datetime, end_datetime, therapist_id, notes, location, created_at, updated_at
 	FROM session
 	WHERE id = $1`
 
@@ -131,11 +131,11 @@ func addNWeeks(timestamp time.Time, nWeeks int) time.Time {
 }
 
 func (r *SessionRepository) PostSession(ctx context.Context, q dbinterface.Queryable, input *models.PostSessionInput) (*[]models.Session, error) {
-	query := `INSERT INTO session (start_datetime, end_datetime, therapist_id, notes)
-              VALUES ($1, $2, $3, $4)`
+	query := `INSERT INTO session (session_name, start_datetime, end_datetime, therapist_id, notes, location)
+              VALUES ($1, $2, $3, $4, $5, $6)`
 	args := []interface{}{}
-	args = append(args, input.StartTime, input.EndTime, input.TherapistID, input.Notes)
-	argCount := 5
+	args = append(args, input.SessionName, input.StartTime, input.EndTime, input.TherapistID, input.Notes, input.Location)
+	argCount := 7
 
 	if input.Repetition != nil {
 		rp := input.Repetition
@@ -148,16 +148,16 @@ func (r *SessionRepository) PostSession(ctx context.Context, q dbinterface.Query
 		endTime := addNWeeks(input.EndTime, rp.EveryNWeeks)
 
 		for startTime.Before(rp.RecurEnd) {
-			query += fmt.Sprintf(`, ($%d, $%d, $%d, $%d)`, argCount, argCount+1, argCount+2, argCount+3)
-			argCount += 4
-			args = append(args, startTime, endTime, input.TherapistID, input.Notes)
+			query += fmt.Sprintf(`, ($%d, $%d, $%d, $%d, $%d, $%d)`, argCount, argCount+1, argCount+2, argCount+3, argCount+4, argCount+5)
+			argCount += 6
+			args = append(args, input.SessionName, startTime, endTime, input.TherapistID, input.Notes, input.Location)
 
 			startTime = addNWeeks(startTime, rp.EveryNWeeks)
 			endTime = addNWeeks(endTime, rp.EveryNWeeks)
 		}
 	}
 
-	query += ` RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
+	query += ` RETURNING id, session_name, start_datetime, end_datetime, therapist_id, notes, location, created_at, updated_at`
 
 	rows, err := q.Query(ctx, query, args...)
 	if err != nil {
@@ -177,21 +177,25 @@ func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, inpu
 
 	query := `UPDATE session
 				SET
-					start_datetime = COALESCE($1, start_datetime),
-					end_datetime = COALESCE($2, end_datetime),
-					therapist_id = COALESCE($3, therapist_id),
-					notes = COALESCE($4, notes)
-				WHERE id = $5
-				RETURNING id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at`
+					session_name = COALESCE($1, session_name),
+				    start_datetime = COALESCE($2, start_datetime),
+					end_datetime = COALESCE($3, end_datetime),
+					therapist_id = COALESCE($4, therapist_id),
+					notes = COALESCE($5, notes),
+					location = COALESCE($6, location)
+				WHERE id = $7
+				RETURNING id, session_name, start_datetime, end_datetime, therapist_id, notes, location, created_at, updated_at`
 
-	row := r.db.QueryRow(ctx, query, input.StartTime, input.EndTime, input.TherapistID, input.Notes, id)
+	row := r.db.QueryRow(ctx, query, input.SessionName, input.StartTime, input.EndTime, input.TherapistID, input.Notes, input.Location, id)
 
 	if err := row.Scan(
 		&session.ID,
+		&session.SessionName,
 		&session.StartDateTime,
 		&session.EndDateTime,
 		&session.TherapistID,
 		&session.Notes,
+		&session.Location,
 		&session.CreatedAt,
 		&session.UpdatedAt,
 	); err != nil {
