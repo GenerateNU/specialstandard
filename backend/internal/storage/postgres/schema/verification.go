@@ -38,7 +38,8 @@ func (r *VerificationRepository) VerifyCode(ctx context.Context, userID, code st
 	if err != nil {
 		return false, err
 	}
-	defer tx.Rollback(ctx)
+	// i know this is an ugly ass line but i just want to pass the linter LOL
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Check if code exists and is valid - 'used' is boolean
 	var verificationCode models.VerificationCode
