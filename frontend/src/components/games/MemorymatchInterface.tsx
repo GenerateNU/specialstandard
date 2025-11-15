@@ -32,13 +32,6 @@ const CATEGORIES = {
   },
 };
 
-interface MemorymatchProps {
-  question: string;
-  onFlip: () => void;
-  onMarkCorrect?: () => void;
-  timeTaken?: number;
-}
-
 interface MemorymatchGameInterfaceProps {
   session_student_id?: number;
   session_id?: string;
@@ -50,30 +43,134 @@ interface MemorymatchGameInterfaceProps {
   questionType: string;
 }
 
-const Memorymatch: React.FC<MemorymatchProps> = ({
-  question,
-  onFlip,
-  // onMarkCorrect, WILL NEED SOON
-  // timeTaken,
-}) => {
+// Spinner component
+const SpinnerWheel: React.FC<{
+  words: any[];
+  onSpin: () => void;
+  isSpinning: boolean;
+  selectedWord: string | null;
+  rotation: number;
+  completedIds: Set<string>;
+}> = ({ words, onSpin, isSpinning, selectedWord, rotation, completedIds }) => {
+  // Only show segments for words that are not yet completed
+  const availableWords = words.filter((w) => !completedIds.has(w.id));
+  const segmentAngle = availableWords.length
+    ? 360 / availableWords.length
+    : 360;
+  const colors = [
+    "#FF6B6B",
+    "#4ECDC4",
+    "#45B7D1",
+    "#96CEB4",
+    "#FFEAA7",
+    "#DDA0DD",
+    "#98D8C8",
+    "#FFB6C1",
+    "#87CEEB",
+    "#FFD700",
+  ];
+
+  // Function to create SVG path for pie segment
+  const createPieSlice = (index: number) => {
+    const startAngle = index * segmentAngle;
+    const endAngle = startAngle + segmentAngle;
+
+    // Convert to radians
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+
+    // Calculate points
+    const x1 = 50 + 50 * Math.cos(startRad);
+    const y1 = 50 + 50 * Math.sin(startRad);
+    const x2 = 50 + 50 * Math.cos(endRad);
+    const y2 = 50 + 50 * Math.sin(endRad);
+
+    // Large arc flag for segments > 180°
+    const largeArc = segmentAngle > 180 ? 1 : 0;
+
+    return `M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArc} 1 ${x2} ${y2} Z`;
+  };
+
   return (
     <div
-      className="relative w-full h-64 cursor-pointer preserve-3d transition-transform duration-700"
+      className="relative mx-auto mb-6"
       style={{
-        transformStyle: "preserve-3d",
+        width: "30vw",
+        height: "30vw",
+        maxWidth: "400px",
+        maxHeight: "400px",
+        minWidth: "250px",
+        minHeight: "250px",
       }}
-      onClick={onFlip}
     >
-      {/* Front of card */}
-      <div
-        className="absolute inset-0 w-full h-full bg-card rounded-xl shadow-lg p-8 flex items-center justify-center backface-hidden border-2 border-default"
-        style={{ backfaceVisibility: "hidden" }}
-      >
-        <div className="text-center">
-          <p className="text-muted text-sm mb-2">Word</p>
-          <p className="text-xl font-semibold text-primary">{question}</p>
+      {/* Wheel - SVG based for clean pie segments */}
+      {availableWords.length > 1 ? (
+        // ----- normal wheel -----
+        <div
+          className="w-full h-full rounded-full relative overflow-hidden transition-transform duration-[4000ms] ease-out"
+          style={{
+            transform: `rotate(${rotation}deg)`,
+          }}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            {availableWords.map((word, index) => (
+              <g key={word.id}>
+                <path
+                  d={createPieSlice(index)}
+                  fill={colors[index % colors.length]}
+                  stroke="#333"
+                  strokeWidth="0.5"
+                />
+                <text
+                  x="70"
+                  y="50"
+                  fill="white"
+                  fontSize="3"
+                  fontWeight="600"
+                  textAnchor="middle"
+                  transform={`rotate(${
+                    index * segmentAngle + segmentAngle / 2
+                  } 50 50)`}
+                >
+                  {word.question}
+                </text>
+              </g>
+            ))}
+          </svg>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 rounded-full border-2 border-gray-700"></div>
         </div>
-      </div>
+      ) : (
+        // ----- clean placeholder -----
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="text-xl font-semibold text-primary">
+            Only one word left!
+          </div>
+        </div>
+      )}
+
+      {/* Spin button */}
+      <button
+        onClick={onSpin}
+        disabled={isSpinning || availableWords.length === 0}
+        className={`absolute left-1/2 -translate-x-1/2 rounded-lg font-semibold transition-all ${
+          isSpinning || availableWords.length === 0
+            ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+            : "bg-zinc-300 text-white hover:scale-105 hover:shadow-lg"
+        }`}
+        style={{
+          bottom: "-25%",
+          padding: "clamp(0.5rem, 1.5vw, 1rem) clamp(1rem, 3vw, 2rem)",
+          fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
+        }}
+      >
+        {availableWords.length === 0
+          ? "All Done!"
+          : availableWords.length === 1
+            ? "Choose Word"
+            : isSpinning
+              ? "Spinning..."
+              : "Spin the Wheel!"}
+      </button>
     </div>
   );
 };
@@ -89,11 +186,17 @@ export default function MemorymatchGameInterface({
   questionType,
 }: MemorymatchGameInterfaceProps) {
   const router = useRouter();
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const [cardStartTime, setCardStartTime] = useState<number | null>(null);
   const [timeTaken, setTimeTaken] = useState(0);
-  //const [setThemeName] = useState<string>('')
+
+  // Spinner-specific state
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(
+    null
+  );
+  const [showActionButtons, setShowActionButtons] = useState(false);
+  const [spinRotation, setSpinRotation] = useState(0);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
   const {
     gameContents,
@@ -117,44 +220,106 @@ export default function MemorymatchGameInterface({
 
   const startCard = gameResultsHook?.startCard;
 
-  // Initialize timer when card loads
-  useEffect(() => {
-    if (gameContents[currentCardIndex]) {
-      setCardStartTime(Date.now());
-      setFlippedCards(new Set());
-      setTimeTaken(0);
-      startCard?.(gameContents[currentCardIndex]);
-    }
-  }, [currentCardIndex, gameContents, startCard]);
-
   // Update timer display
   useEffect(() => {
     if (cardStartTime === null) return;
 
     const interval = setInterval(() => {
       setTimeTaken(Math.floor((Date.now() - cardStartTime) / 1000));
-    }, 100);
+    }, 1000); // Changed from 100ms to 1000ms for less frequent updates
 
     return () => clearInterval(interval);
   }, [cardStartTime]);
 
-  // Fetch theme name once
-  useEffect(() => {
-    // In a real app, you'd fetch this from the API
-    // For now, we'll set a default
-    //setThemeName('Theme')
-  }, [themeId]);
-
-  const handleMarkCorrect = () => {
-    if (!gameResultsHook || !gameContents[currentCardIndex]) return;
-
-    const finalTime = Math.floor(
-      (Date.now() - (cardStartTime || Date.now())) / 1000
+  // Handler functions
+  const handleSpin = () => {
+    // Get available words
+    const availableWords = gameContents.filter(
+      (content) => !completedIds.has(content.id)
     );
-    gameResultsHook.completeCard(gameContents[currentCardIndex].id, finalTime);
 
-    setCurrentCardIndex((prev) => prev + 1);
+    if (availableWords.length === 1) {
+      const finalWord = availableWords[0];
+
+      setSelectedWordIndex(0);
+      setIsSpinning(false);
+      setShowActionButtons(true);
+
+      if (gameResultsHook) {
+        startCard?.(finalWord);
+        setCardStartTime(Date.now());
+      }
+      return;
+    }
+
+    if (isSpinning || availableWords.length === 0) return;
+
+    setIsSpinning(true);
+    setShowActionButtons(false);
+
+    // Random spin calculation
+    const spins = 5 + Math.random() * 3; // 5-8 full rotations
+    const randomAngle = Math.random() * 360;
+    const totalRotation = spinRotation + (spins * 360 + randomAngle);
+
+    setSpinRotation(totalRotation);
+
+    // Calculate selected word from available words only
+    const normalizedRotation = (360 - (totalRotation % 360)) % 360;
+    const segmentAngle = 360 / availableWords.length;
+    const selectedIndex = Math.floor(normalizedRotation / segmentAngle);
+
+    setTimeout(() => {
+      setSelectedWordIndex(selectedIndex);
+      setIsSpinning(false);
+      setShowActionButtons(true);
+
+      // Start tracking time for this word
+      if (gameResultsHook) {
+        startCard?.(availableWords[selectedIndex]);
+        setCardStartTime(Date.now());
+      }
+    }, 4000);
+  };
+
+  const handleMarkResult = (isCorrect: boolean) => {
+    if (selectedWordIndex === null) return;
+
+    // Get available words to find the actual content
+    const availableWords = gameContents.filter(
+      (content) => !completedIds.has(content.id)
+    );
+    const selectedContent = availableWords[selectedWordIndex];
+
+    if (!selectedContent) return;
+
+    setShowActionButtons(false);
+
+    if (isCorrect) {
+      // Mark as completed by adding ID
+      setCompletedIds((prev) => new Set([...prev, selectedContent.id]));
+
+      if (gameResultsHook) {
+        const finalTime = Math.floor(
+          (Date.now() - (cardStartTime || Date.now())) / 1000
+        );
+        gameResultsHook.completeCard(selectedContent.id, finalTime);
+      }
+    }
+
+    // Reset immediately for snappier feel
+    setSelectedWordIndex(null);
     setCardStartTime(null);
+    setTimeTaken(0);
+  };
+
+  const handleReset = () => {
+    setSelectedWordIndex(null);
+    setShowActionButtons(false);
+    setSpinRotation(0);
+    setCompletedIds(new Set());
+    setCardStartTime(null);
+    setTimeTaken(0);
   };
 
   if (contentsLoading) {
@@ -174,8 +339,8 @@ export default function MemorymatchGameInterface({
         <div className="text-center">
           <p className="text-error mb-4">
             {contentsError
-              ? "Failed to load flashcards"
-              : "No flashcards available"}
+              ? "Failed to load Memory Match"
+              : "No words available"}
           </p>
           <button
             onClick={() => router.back()}
@@ -199,12 +364,7 @@ export default function MemorymatchGameInterface({
             ← Back
           </button>
           <button
-            onClick={() => {
-              setCurrentCardIndex(0);
-              setFlippedCards(new Set());
-              setCardStartTime(null);
-              setTimeTaken(0);
-            }}
+            onClick={handleReset}
             className="flex items-center gap-2 text-secondary hover:text-primary transition-colors"
           >
             <RotateCw className="w-4 h-4" />
@@ -212,7 +372,7 @@ export default function MemorymatchGameInterface({
           </button>
         </div>
 
-        <h1 className="mb-4">Memory Match</h1>
+        <h1 className="mb-4">Flashcards</h1>
 
         {/* Display selected options */}
         <div className="bg-card rounded-lg p-4 mb-6 border border-default">
@@ -234,10 +394,10 @@ export default function MemorymatchGameInterface({
         <div className="mb-8">
           <div className="flex items-center justify-between text-sm text-secondary mb-2">
             <span>
-              Card {currentCardIndex + 1} of {gameContents.length}
+              Card {completedIds.size + 1} of {gameContents.length}
             </span>
             <span>
-              {Math.round((currentCardIndex / gameContents.length) * 100)}%
+              {Math.round((completedIds.size / gameContents.length) * 100)}%
               Complete
             </span>
           </div>
@@ -245,97 +405,97 @@ export default function MemorymatchGameInterface({
             <div
               className="bg-blue h-full rounded-full transition-all duration-300"
               style={{
-                width: `${(currentCardIndex / gameContents.length) * 100}%`,
+                width: `${(completedIds.size / gameContents.length) * 100}%`,
               }}
             />
           </div>
         </div>
 
-        {/* Current flashcard */}
-        {gameContents[currentCardIndex] && (
+        {/* Spinner Game */}
+        {gameContents.length > 0 && (
           <div className="mb-8">
-            <Memorymatch
-              question={gameContents[currentCardIndex].question}
-              onFlip={() => {
-                setFlippedCards((prev) => {
-                  const newSet = new Set(prev);
-                  if (newSet.has(currentCardIndex)) {
-                    newSet.delete(currentCardIndex);
-                  } else {
-                    newSet.add(currentCardIndex);
-                  }
-                  return newSet;
-                });
-              }}
-              onMarkCorrect={gameResultsHook ? handleMarkCorrect : undefined}
-              timeTaken={
-                flippedCards.has(currentCardIndex) ? timeTaken : undefined
-              }
-            />
-            <p className="text-center text-muted mt-4 text-sm">
-              Click card to flip
-            </p>
+            {/* Container for wheel and side buttons */}
+            <div className="relative flex items-center justify-center gap-4">
+              {/* Incorrect button - left side */}
+              {selectedWordIndex !== null && showActionButtons && (
+                <button
+                  onClick={() => handleMarkResult(false)}
+                  className="absolute left-0 px-4 py-2 bg-red-300 text-white rounded-lg hover:bg-red-400 transition-colors animate-fade-in"
+                  style={{
+                    left: "5%",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                >
+                  Incorrect
+                </button>
+              )}
+
+              {/* Spinner Wheel */}
+              <SpinnerWheel
+                words={gameContents}
+                onSpin={handleSpin}
+                isSpinning={isSpinning}
+                selectedWord={
+                  selectedWordIndex !== null
+                    ? gameContents.filter((c) => !completedIds.has(c.id))[
+                        selectedWordIndex
+                      ]?.question
+                    : null
+                }
+                rotation={spinRotation}
+                completedIds={completedIds}
+              />
+
+              {/* Correct button - right side */}
+              {selectedWordIndex !== null && showActionButtons && (
+                <button
+                  onClick={() => handleMarkResult(true)}
+                  className="absolute right-0 px-4 py-2 bg-green-300 text-white rounded-lg hover:bg-green-400 transition-colors animate-fade-in"
+                  style={{
+                    right: "5%",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                >
+                  Correct
+                </button>
+              )}
+            </div>
+
+            {/* Result display - selected word */}
+            <div className="text-center mt-20 min-h-[60px]">
+              {selectedWordIndex !== null && (
+                <div>
+                  <p className="text-3xl font-bold text-primary">
+                    {
+                      gameContents.filter((c) => !completedIds.has(c.id))[
+                        selectedWordIndex
+                      ]?.question
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Timer display */}
+            <div className="text-center text-muted text-sm">
+              {selectedWordIndex !== null && timeTaken > 0 && (
+                <span>Time: {timeTaken}s</span>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Navigation buttons */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setCurrentCardIndex((prev) => Math.max(0, prev - 1))}
-            disabled={currentCardIndex === 0}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              currentCardIndex === 0
-                ? "bg-card text-disabled cursor-not-allowed border border-default"
-                : "bg-card border border-default text-primary hover:bg-card-hover hover:border-hover"
-            }`}
-          >
-            Previous
-          </button>
-
-          <div className="flex gap-2">
-            {gameContents.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentCardIndex(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentCardIndex
-                    ? "bg-blue"
-                    : "bg-card border border-default"
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={() => {
-              if (currentCardIndex < gameContents.length - 1) {
-                setCurrentCardIndex((prev) => prev + 1);
-              }
-            }}
-            disabled={currentCardIndex === gameContents.length - 1}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              currentCardIndex === gameContents.length - 1
-                ? "bg-blue-disabled text-white cursor-not-allowed"
-                : "bg-blue text-white hover:bg-blue-hover"
-            }`}
-          >
-            Next
-          </button>
-        </div>
-
-        {currentCardIndex >= gameContents.length && (
+        {/* Completion message */}
+        {completedIds.size === gameContents.length && (
           <div className="mt-8 p-6 bg-blue-light border border-blue rounded-lg text-center">
             <p className="text-blue font-semibold">
-              Great job! You've completed all flashcards!
+              Great job! You've completed all words!
             </p>
             <div className="mt-4 flex gap-3 justify-center">
               <button
-                onClick={() => {
-                  setCurrentCardIndex(0);
-                  setFlippedCards(new Set());
-                  setCardStartTime(null);
-                  setTimeTaken(0);
-                }}
+                onClick={handleReset}
                 className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover transition-colors"
               >
                 Start Over
@@ -357,24 +517,6 @@ export default function MemorymatchGameInterface({
                 Failed to save progress. Please try again.
               </p>
             )}
-          </div>
-        )}
-
-        {gameResultsHook && gameContents[currentCardIndex] && (
-          <div className="text-center mt-2">
-            {(() => {
-              const existingResult = gameResultsHook.getResultForContent(
-                gameContents[currentCardIndex].id
-              );
-              if (existingResult?.completed) {
-                return (
-                  <span className="text-success text-sm">
-                    ✓ Previously completed in {existingResult.time_taken_sec}s
-                  </span>
-                );
-              }
-              return null;
-            })()}
           </div>
         )}
       </div>
