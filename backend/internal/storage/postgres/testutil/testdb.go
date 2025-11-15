@@ -244,6 +244,10 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		ALTER TABLE session_rating
 		ADD CONSTRAINT unique_session_student_category 
 		UNIQUE (session_student_id, category);
+
+		ALTER TABLE session
+			ADD COLUMN session_name VARCHAR(255) NOT NULL,
+			ADD COLUMN location VARCHAR(255);
 	`)
 	if err != nil {
 		t.Fatal(err)
