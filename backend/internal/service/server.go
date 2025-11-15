@@ -115,19 +115,6 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		})
 	}
 
-	studentHandler := student.NewHandler(repo.Student)
-	// Student route
-	apiV1.Route("/students", func(r fiber.Router) {
-		r.Get("/", studentHandler.GetStudents)
-		r.Get("/:id", studentHandler.GetStudent)
-		r.Delete("/:id", studentHandler.DeleteStudent)
-		r.Post("/", studentHandler.AddStudent)
-		r.Patch("/promote", studentHandler.PromoteStudents)
-		r.Patch("/:id", studentHandler.UpdateStudent)
-		r.Get("/:id/sessions", studentHandler.GetStudentSessions)
-		r.Get("/:id/ratings", studentHandler.GetStudentRatings)
-	})
-
 	themeHandler := theme.NewHandler(repo.Theme)
 	apiV1.Route("/themes", func(r fiber.Router) {
 		r.Post("/", themeHandler.CreateTheme)
@@ -160,6 +147,20 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Post("/", sessionStudentHandler.CreateSessionStudent)
 		r.Delete("/", sessionStudentHandler.DeleteSessionStudent)
 		r.Patch("/", sessionStudentHandler.PatchStudentSessionRatings)
+	})
+
+	studentHandler := student.NewHandler(repo.Student)
+	// Student route
+	apiV1.Route("/students", func(r fiber.Router) {
+		r.Get("/", studentHandler.GetStudents)
+		r.Get("/:id", studentHandler.GetStudent)
+		r.Delete("/:id", studentHandler.DeleteStudent)
+		r.Post("/", studentHandler.AddStudent)
+		r.Patch("/promote", studentHandler.PromoteStudents)
+		r.Patch("/:id", studentHandler.UpdateStudent)
+		r.Get("/:id/sessions", studentHandler.GetStudentSessions)
+		r.Get("/:id/ratings", studentHandler.GetStudentRatings)
+		r.Get("/:id/attendance", sessionStudentHandler.GetStudentAttendance)
 	})
 
 	sessionResourceHandler := session_resource.NewHandler(repo.SessionResource)
