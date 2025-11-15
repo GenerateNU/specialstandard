@@ -23,6 +23,11 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 		return errs.BadRequest("Error parsing request body.")
 	}
 
+	therapistID, err := uuid.Parse(filter.TherapistID)
+	if err != nil {
+		return errs.BadRequest("Invalid therapist ID format")
+	}
+
 	var uuidStudentIDs []uuid.UUID
 	if filter.StudentIDs != nil && len(*filter.StudentIDs) > 0 {
 		for _, idStr := range *filter.StudentIDs {
@@ -37,14 +42,10 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 		}
 	}
 
-	// we do not need to check for invalid uuid in request body
-	// because since it is a list of UUIDs, if they provide a non-uuid it will auto-error
-
 	// check for valid time range in request body if time is given
 	if filter.StartTime != nil && filter.EndTime != nil && filter.EndTime.Before(*filter.StartTime) {
 		return errs.BadRequest("Given invalid time range.")
 	}
-
 
 	if validationErrors := xvalidator.Validator.Validate(pagination); len(validationErrors) > 0 {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
@@ -54,21 +55,22 @@ func (h *Handler) GetSessions(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	repoFilter := &models.GetSessionRepositoryRequest{
-		StartTime:  filter.StartTime,
-		EndTime:    filter.EndTime,
-		Month:      filter.Month,
-		Year:       filter.Year,
-		StudentIDs: nil,
-	}
-	
-	// Only set StudentIDs if we have valid UUIDs
-	if len(uuidStudentIDs) > 0 {
-		repoFilter.StudentIDs = &uuidStudentIDs
+	// Only create repoFilter if there are actual filters to apply
+	var repoFilter *models.GetSessionRepositoryRequest
+	if filter.StartTime != nil || filter.EndTime != nil || filter.Month != nil || 
+	   filter.Year != nil || len(uuidStudentIDs) > 0 {
+		repoFilter = &models.GetSessionRepositoryRequest{
+			StartTime:  filter.StartTime,
+			EndTime:    filter.EndTime,
+			Month:      filter.Month,
+			Year:       filter.Year,
+		}
+		if len(uuidStudentIDs) > 0 {
+			repoFilter.StudentIDs = &uuidStudentIDs
+		}
 	}
 
-
-	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination, repoFilter)
+	sessions, err := h.sessionRepository.GetSessions(c.Context(), pagination, repoFilter, therapistID)
 	if err != nil {
 		// For all database errors, return internal server error without exposing details
 		slog.Error("Failed to get session", "err", err)

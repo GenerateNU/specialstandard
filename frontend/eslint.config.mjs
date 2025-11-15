@@ -2,14 +2,16 @@ import antfu from "@antfu/eslint-config";
 
 export default antfu(
   {
-    stylistic: false,
     formatters: true,
+    stylistic: false,
     rules: {
-      "no-console": "off",
       "perfectionist/sort-imports": "off",
     },
   },
   {
-    ignores: ["src/lib/api/theSpecialStandardAPI.schemas.ts"],
+    ignores: [
+      "src/lib/api/theSpecialStandardAPI.schemas.ts",
+      "src/api/models.ts",
+    ],
   }
 );

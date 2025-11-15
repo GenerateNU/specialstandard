@@ -13,12 +13,12 @@ import (
 )
 
 type SessionRepository interface {
-	GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error)
+	GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, therapistid uuid.UUID) ([]models.Session, error)
 	GetSessionByID(ctx context.Context, id string) (*models.Session, error)
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	PostSession(ctx context.Context, q dbinterface.Queryable, session *models.PostSessionInput) (*[]models.Session, error)
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
-	GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error)
+	GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination, therapistId uuid.UUID) ([]models.SessionStudentsOutput, error)
 
 	GetDB() *pgxpool.Pool
 }
@@ -27,11 +27,12 @@ type SessionStudentRepository interface {
 	CreateSessionStudent(ctx context.Context, q dbinterface.Queryable, input *models.CreateSessionStudentInput) (*[]models.SessionStudent, error)
 	DeleteSessionStudent(ctx context.Context, input *models.DeleteSessionStudentInput) error
 	RateStudentSession(ctx context.Context, input *models.PatchSessionStudentInput) (*models.SessionStudent, []models.SessionRating, error)
+	GetStudentAttendance(ctx context.Context, params models.GetStudentAttendanceParams) (*int, *int, error)
 	GetDB() *pgxpool.Pool
 }
 
 type StudentRepository interface {
-	GetStudents(ctx context.Context, grade *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error)
+	GetStudents(ctx context.Context, grade, schoolID *int, therapistID uuid.UUID, name string, pagination utils.Pagination) ([]models.Student, error)
 	GetStudent(ctx context.Context, id uuid.UUID) (models.Student, error)
 	AddStudent(ctx context.Context, student models.Student) (models.Student, error)
 	UpdateStudent(ctx context.Context, student models.Student) (models.Student, error)
@@ -71,6 +72,15 @@ type SessionResourceRepository interface {
 	GetResourcesBySessionID(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.Resource, error)
 }
 
+type GameContentRepository interface {
+	GetGameContents(ctx context.Context, req models.GetGameContentRequest) ([]models.GameContent, error)
+}
+
+type GameResultRepository interface {
+	GetGameResults(ctx context.Context, inputQuery *models.GetGameResultQuery, pagination utils.Pagination) ([]models.GameResult, error)
+	PostGameResult(ctx context.Context, input models.PostGameResult) (*models.GameResult, error)
+}
+
 // VerificationRepository defines methods for verification code operations
 type VerificationRepository interface {
 	CreateVerificationCode(ctx context.Context, code models.VerificationCode) error
@@ -87,6 +97,8 @@ type Repository struct {
 	Therapist       TherapistRepository
 	SessionStudent  SessionStudentRepository
 	SessionResource SessionResourceRepository
+	GameContent     GameContentRepository
+	GameResult      GameResultRepository
 	Verification    VerificationRepository
 }
 
@@ -109,6 +121,8 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		Therapist:       schema.NewTherapistRepository(db),
 		SessionStudent:  schema.NewSessionStudentRepository(db),
 		SessionResource: schema.NewSessionResourceRepository(db),
+		GameContent:     schema.NewGameContentRepository(db),
+		GameResult:      schema.NewGameResultRepository(db),
 		Verification:    schema.NewVerificationRepository(db),
 	}
 }

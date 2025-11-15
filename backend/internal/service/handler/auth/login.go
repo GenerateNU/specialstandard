@@ -3,7 +3,6 @@ package auth
 import (
 	"fmt"
 	"log/slog"
-	"os"
 	"specialstandard/internal/auth"
 	"specialstandard/internal/errs"
 	"time"
@@ -40,7 +39,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	}
 
 	// Check if running in production
-	isProduction := os.Getenv("ENV") == "production"
+	isProduction := true //os.Getenv("ENV") == "production"
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "userID",

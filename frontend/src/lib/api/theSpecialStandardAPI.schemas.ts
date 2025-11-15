@@ -24,6 +24,14 @@ export interface Therapist {
   first_name: string;
   last_name: string;
   email: string;
+  /** List of school IDs associated with the therapist */
+  schools?: number[];
+  /** School district ID the therapist belongs to */
+  district_id?: number;
+  /** List of school names associated with the therapist */
+  school_names?: string[];
+  /** Name of the school district the therapist belongs to */
+  district_name?: string;
   /** Whether the therapist is currently active */
   active: boolean;
   created_at: string;
@@ -35,6 +43,10 @@ export interface CreateTherapistInput {
   first_name: string;
   /** Last name of the therapist */
   last_name: string;
+  /** List of school IDs associated with the therapist */
+  schools?: number[];
+  /** School district ID the therapist belongs to */
+  district_id: number;
   /** Email of the therapist */
   email: string;
 }
@@ -44,6 +56,10 @@ export interface UpdateTherapistInput {
   first_name?: string;
   /** Last name of the therapist */
   last_name?: string;
+  /** List of school IDs associated with the therapist */
+  schools?: number[];
+  /** School district ID the therapist belongs to */
+  district_id?: number;
   /** Email of the therapist */
   email?: string;
   /** Whether the therapist is active */
@@ -98,6 +114,18 @@ export interface Student {
   dob?: string;
   /** UUID of the assigned therapist */
   therapist_id: string;
+  /** ID of the school the student attends */
+  school_id: number;
+  /**
+   * Name of the school the student attends
+   * @nullable
+   */
+  school_name?: string | null;
+  /**
+   * ID of the school district the student belongs to
+   * @nullable
+   */
+  district_id?: number | null;
   /**
    * Student's current grade level. -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
    * @minimum -1
@@ -126,6 +154,8 @@ export interface CreateStudentInput {
    * @nullable
    */
   dob?: string | null;
+  /** ID of the school the student attends */
+  school_id: number;
   /** ID of the assigned therapist */
   therapist_id: string;
   /**
@@ -519,6 +549,13 @@ export interface StudentWithSessionInfo {
   ratings: SessionRating[];
 }
 
+export interface AttendanceRecord {
+  /** Number of sessions the student was present */
+  present_sessions: number;
+  /** Total number of sessions held */
+  total_sessions: number;
+}
+
 export type SessionWithStudentInfoAllOf = {
   /** UUID of the associated student */
   student_id: string;
@@ -556,6 +593,116 @@ export interface PromoteStudentsInput {
   therapist_id: string;
   /** List of Students this Therapist will not be promoting... */
   excluded_student_ids?: string[];
+}
+
+/**
+ * The category of the game
+ */
+export type GameContentCategory =
+  (typeof GameContentCategory)[keyof typeof GameContentCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GameContentCategory = {
+  receptive_language: "receptive_language",
+  expressive_language: "expressive_language",
+  social_pragmatic_language: "social_pragmatic_language",
+  speech: "speech",
+} as const;
+
+/**
+ * The type of the question being asked in the game
+ */
+export type GameContentQuestionType =
+  (typeof GameContentQuestionType)[keyof typeof GameContentQuestionType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GameContentQuestionType = {
+  sequencing: "sequencing",
+  following_directions: "following_directions",
+  wh_questions: "wh_questions",
+  true_false: "true_false",
+  concepts_sorting: "concepts_sorting",
+  fill_in_the_blank: "fill_in_the_blank",
+  categorical_language: "categorical_language",
+  emotions: "emotions",
+  teamwork_talk: "teamwork_talk",
+  express_excitement_interest: "express_excitement_interest",
+  fluency: "fluency",
+  articulation_s: "articulation_s",
+  articulation_l: "articulation_l",
+} as const;
+
+export interface GameContent {
+  /** ID of a Game Content. */
+  id: string;
+  /** The UUID of the Theme associated with the game's content */
+  theme_id: string;
+  /**
+   * The Week of the Content in the session
+   * @minimum 1
+   */
+  week: number;
+  /** The category of the game */
+  category: GameContentCategory;
+  /** The type of the question being asked in the game */
+  question_type: GameContentQuestionType;
+  /**
+   * The corresponding level of content for this game's content
+   * @minimum 1
+   */
+  difficulty_level: number;
+  /** The question being asked in the game */
+  question: string;
+  /** The list of wrong-words that are given for the game. */
+  options: string[];
+  /** The answer to the game. */
+  answer: string;
+  /** When the game-content was created */
+  created_at: string;
+  /** When the game-content was last updated */
+  updated_at: string;
+}
+
+export interface GameResult {
+  /** ID of the Game Result. */
+  id: string;
+  /** ID of the Student-Session associated with the Game. */
+  session_student_id: string;
+  /** ID of the Content of the Game */
+  content_id: string;
+  /** Number of seconds it takes to complete the game */
+  time_taken_sec: number;
+  /** Whether or not the game was completed or not */
+  completed: boolean;
+  /**
+   * The number of incorrect attempts made during the game
+   * @minimum 0
+   */
+  count_of_incorrect_attempts: number;
+  /** The actual incorrect answers chosen during the game */
+  incorrect_attempts: string[];
+  /** When the game-content was created */
+  created_at: string;
+  /** When the game-content was last updated */
+  updated_at: string;
+}
+
+export interface PostGameResultInput {
+  /** Serial-ID of the Session-Student associated with the gameplay */
+  session_student_id: number;
+  /** ID of the Content of the Game */
+  content_id: string;
+  /** Number of seconds it takes to complete the game */
+  time_taken_sec: number;
+  /** Whether or not the game was completed */
+  completed?: boolean;
+  /**
+   * The number of incorrect attempts made during the game
+   * @minimum 0
+   */
+  count_of_incorrect_attempts: number;
+  /** The actual incorrect options selected in the course of the game */
+  incorrect_attempts?: string[];
 }
 
 export type PostAuthSignupBody = {
@@ -641,7 +788,11 @@ export type GetSessionsParams = {
   /**
    * Filter sessions that contain ALL specified student IDs (can be repeated for multiple students)
    */
-  id?: string[];
+  student_ids?: string[];
+  /**
+   * Filter sessions by therapist UUID
+   */
+  therapist_id?: string;
 };
 
 export type PostSessionsBodyRepetition = {
@@ -699,6 +850,10 @@ export type GetSessionsSessionIdStudentsParams = {
    * @minimum 1
    */
   limit?: number;
+  /**
+   * Filter students by therapist UUID
+   */
+  therapist_id?: string;
 };
 
 export type GetStudentsParams = {
@@ -723,6 +878,10 @@ export type GetStudentsParams = {
    * Filter students by therapist UUID
    */
   therapist_id?: string;
+  /**
+   * Filter students by school ID
+   */
+  school_id?: number;
   /**
    * Search students by name (case-insensitive, matches first or last name)
    */
@@ -793,6 +952,17 @@ export const GetStudentsStudentIdRatingsCategory = {
   gestural_cue: "gestural_cue",
   engagement: "engagement",
 } as const;
+
+export type GetStudentsStudentIdAttendanceParams = {
+  /**
+   * Filter attendance records on or after this date (YYYY-MM-DD format), default is no lower limit
+   */
+  date_from?: string;
+  /**
+   * Filter attendance records on or before this date (YYYY-MM-DD format), default to today
+   */
+  date_to?: string;
+};
 
 export type PatchStudentsPromote200 = {
   message?: string;
@@ -909,4 +1079,86 @@ export type GetThemesParams = {
 
 export type DeleteThemesId200 = {
   message?: string;
+};
+
+export type GetGameContentsParams = {
+  /**
+   * Theme ID associated with the game's contents
+   */
+  theme_id?: string;
+  /**
+   * The category associated with the game
+   */
+  category?: GetGameContentsCategory;
+  /**
+   * The type of question being asked in the game
+   */
+  question_type?: GetGameContentsQuestionType;
+  /**
+   * The difficulty level of the game
+   * @minimum 1
+   */
+  difficulty_level?: number;
+  /**
+   * Refers to the number of questions that should be returned through sampling
+   * @minimum 2
+   */
+  question_count?: number;
+  /**
+   * The number of words that need to be retrieved as correct answer and wrong options
+   * @minimum 2
+   */
+  words_count?: number;
+};
+
+export type GetGameContentsCategory =
+  (typeof GetGameContentsCategory)[keyof typeof GetGameContentsCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameContentsCategory = {
+  receptive_language: "receptive_language",
+  expressive_language: "expressive_language",
+  social_pragmatic_language: "social_pragmatic_language",
+  speech: "speech",
+} as const;
+
+export type GetGameContentsQuestionType =
+  (typeof GetGameContentsQuestionType)[keyof typeof GetGameContentsQuestionType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameContentsQuestionType = {
+  sequencing: "sequencing",
+  following_directions: "following_directions",
+  wh_questions: "wh_questions",
+  true_false: "true_false",
+  concepts_sorting: "concepts_sorting",
+  fill_in_the_blank: "fill_in_the_blank",
+  categorical_language: "categorical_language",
+  emotions: "emotions",
+  teamwork_talk: "teamwork_talk",
+  express_excitement_interest: "express_excitement_interest",
+  fluency: "fluency",
+  articulation_s: "articulation_s",
+  articulation_l: "articulation_l",
+} as const;
+
+export type GetGameResultsParams = {
+  /**
+   * The SessionID of the session whose game results you seek
+   */
+  session_id?: string;
+  /**
+   * The StudentID of the student whose game results you seek
+   */
+  student_id?: string;
+  /**
+   * Page Number of pagination
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Number of Items per page in pagination
+   * @minimum 1
+   */
+  limit?: number;
 };

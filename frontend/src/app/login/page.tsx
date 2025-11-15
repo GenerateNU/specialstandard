@@ -32,7 +32,6 @@ export default function LoginPage() {
   // Handle redirect only when user navigates directly to /login while already authenticated
   useEffect(() => {
     if (isAuthenticated && !needsMFA && !hasRedirected.current && !isLoading) {
-      console.log("✅ Already authenticated, redirecting to home");
       hasRedirected.current = true;
       router.push("/");
     }
@@ -69,7 +68,6 @@ export default function LoginPage() {
   };
 
   const handleMFAVerified = () => {
-    console.log("✨ MFA verified, completing login...");
     completeMFALogin(); // Now set as authenticated
     hasRedirected.current = true;
     setNeedsMFA(false);
@@ -78,7 +76,6 @@ export default function LoginPage() {
 
   // Show MFA screen when needed
   if (needsMFA) {
-    console.log("✨ Rendering MFA screen");
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <EmailMFAVerification onVerified={handleMFAVerified} />
@@ -167,7 +164,12 @@ export default function LoginPage() {
               </label>
             </div>
 
-            <Button type="submit" disabled={isLoading} size="long">
+            <Button
+              variant="secondary"
+              type="submit"
+              disabled={isLoading}
+              size="long"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />

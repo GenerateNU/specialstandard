@@ -1,45 +1,387 @@
-/* Remove today highlight completely, it was ugly af */
+/* ========================================
+   CALENDAR CONTAINER & BACKGROUND
+   ======================================== */
+
+/* Main calendar container */
+.rbc-calendar {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  border: none;
+}
+
+/* Remove borders from time view */
+.rbc-time-view {
+  border: none;
+}
+
+/* Remove today highlight completely */
 .rbc-today {
   background-color: inherit !important;
 }
 
-/* Calendar toolbar button styling that respects dark/light mode */
-.rbc-toolbar button {
-  color: var(--text-primary) !important;
-  background-color: var(--card-bg) !important;
-  border: 1px solid var(--border) !important;
-  padding: 6px 12px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+/* ========================================
+   TOOLBAR STYLING
+   ======================================== */
+
+/* Toolbar container layout (now outside calendar) */
+.rbc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0;
+  background: transparent;
+  width: 100%;
 }
 
-/* Hover state */
-.rbc-toolbar button:hover {
-  background-color: var(--card-hover) !important;
-  border-color: var(--border-hover) !important;
-  color: var(--text-primary) !important;
-}
-
-/* Active/selected state */
-.rbc-toolbar button.rbc-active {
-  background-color: var(--accent) !important;
-  color: var(--background) !important;
-  border-color: var(--accent) !important;
-}
-
-/* Focus state */
-.rbc-toolbar button:focus {
-  outline: 2px solid var(--accent) !important;
-  outline-offset: 2px;
-}
-
-/* Navigation buttons styling */
-.rbc-btn-group button {
-  margin: 0 2px;
+/* Label container with arrows */
+.rbc-toolbar-label-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
 }
 
 /* Calendar header text */
 .rbc-toolbar-label {
   color: var(--text-primary) !important;
   font-weight: 600;
+  font-size: 1.25rem;
+  width: 300px;
+  text-align: center;
+  display: inline-block;
+}
+
+/* Navigation arrow buttons */
+.rbc-toolbar-nav-btn {
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  padding: 4px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.rbc-toolbar-nav-btn:hover {
+  stroke-width: 10;
+}
+
+/* Calendar toolbar button styling that respects dark/light mode */
+.rbc-toolbar button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+/* Hover state */
+.rbc-toolbar button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Active/selected state */
+.rbc-toolbar button.rbc-active {
+  background-color: var(--color-pink) !important;
+  color: var(--color-white) !important;
+}
+
+/* Focus state */
+.rbc-toolbar button:focus {
+  outline: 2px solid var(--color-blue) !important;
+  outline-offset: 2px;
+}
+
+/* Navigation buttons styling */
+.rbc-btn-group {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex;
+  gap: 0;
+  flex: 0 0 auto;
+}
+
+.rbc-btn-group button {
+  margin: 0px;
+}
+
+/* ========================================
+   GRID LINES & BORDERS
+   ======================================== */
+
+/* Time view grid lines */
+.rbc-time-content {
+  border-top: 1px solid var(--border);
+}
+
+/* Time slot borders */
+.rbc-timeslot-group {
+  border-bottom: 1px solid var(--border);
+  min-height: 80px;
+}
+
+.rbc-time-slot {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Day column borders */
+.rbc-day-slot .rbc-time-column {
+  border-left: 1px solid var(--border);
+}
+
+.rbc-day-slot .rbc-time-column:first-child {
+  border-left: none;
+}
+
+/* Month view cell borders */
+.rbc-month-view {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.rbc-month-row {
+  border-top: none;
+  overflow: visible;
+}
+
+.rbc-month-row:first-child {
+  border-top: none;
+}
+
+.rbc-day-bg {
+  border-left: none;
+}
+
+.rbc-day-bg:first-child {
+  border-left: none;
+}
+
+/* ========================================
+   HEADER STYLING
+   ======================================== */
+
+/* Header background */
+.rbc-header {
+  background-color: var(--card-bg);
+  border: none !important;
+  padding: 12px 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Remove all header borders */
+.rbc-time-header {
+  border: none !important;
+}
+
+/* Hide the default header text (we're using custom components) */
+.rbc-header > span {
+  display: none;
+}
+
+/* Remove extra padding/height from header to avoid empty space */
+.rbc-header > div {
+  margin: -12px -8px;
+  padding: 12px 8px;
+}
+
+.rbc-header + .rbc-header {
+  border-left: none !important;
+}
+
+/* Hide the background row that creates empty space in header */
+.rbc-time-header-content .rbc-row-bg {
+  display: none;
+}
+
+/* Also hide all-day cell row */
+.rbc-allday-cell {
+  display: none;
+}
+
+/* Time gutter (time labels on the left) */
+.rbc-time-header-gutter,
+.rbc-time-gutter {
+  background-color: var(--card-bg);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rbc-time-content > * + * > * {
+  border-left: 1px solid var(--border);
+}
+
+/* ========================================
+   EVENT STYLING (The Important Part!)
+   ======================================== */
+
+/* Base event styling with rounded corners */
+.rbc-event {
+  background-color: var(--color-blue) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  box-shadow: 0 2px 4px rgba(108, 120, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+  color: var(--color-white) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+}
+
+/* Event hover state */
+.rbc-event:hover {
+  background-color: var(--color-blue-hover) !important;
+  box-shadow: 0 4px 8px rgba(108, 120, 255, 0.4) !important;
+  transform: translateY(-1px) !important;
+  cursor: pointer !important;
+}
+
+/* Selected event */
+.rbc-event.rbc-selected {
+  background-color: var(--color-pink) !important;
+  box-shadow: 0 4px 8px rgba(205, 10, 125, 0.4) !important;
+}
+
+/* Event content */
+.rbc-event-content {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Event label (time) */
+.rbc-event-label {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+/* ========================================
+   CURRENT TIME INDICATOR
+   ======================================== */
+
+/* Current time indicator line */
+.rbc-current-time-indicator {
+  background-color: var(--color-pink) !important;
+  height: 2px !important;
+}
+
+/* Current time indicator dot */
+.rbc-current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-pink);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--card-bg);
+}
+
+/* ========================================
+   SELECTION & INTERACTION
+   ======================================== */
+
+/* Selected time slot (when clicking to create event) */
+.rbc-slot-selection {
+  background-color: var(--accent-primary-light) !important;
+  border: 2px dashed var(--color-blue) !important;
+  border-radius: 8px !important;
+}
+
+/* Selecting state */
+.rbc-slot-selecting {
+  background-color: var(--accent-primary-light) !important;
+  border-radius: 8px !important;
+}
+
+/* Month view - More events link */
+.rbc-show-more {
+  background-color: transparent;
+  color: var(--color-blue);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.rbc-show-more:hover {
+  background-color: var(--accent-primary-light);
+  color: var(--color-blue-hover);
+}
+
+/* ========================================
+   OFF-RANGE DATES (Previous/Next Month)
+   ======================================== */
+
+.rbc-off-range {
+  color: var(--text-disabled);
+}
+
+.rbc-off-range-bg {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* ========================================
+   AGENDA VIEW
+   ======================================== */
+
+.rbc-agenda-view {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.rbc-agenda-view table {
+  border-spacing: 0;
+}
+
+.rbc-agenda-date-cell,
+.rbc-agenda-time-cell {
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rbc-agenda-event-cell {
+  padding: 12px 16px;
+}
+
+/* ========================================
+   RESPONSIVE & MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .rbc-toolbar-label {
+    font-size: 1rem;
+  }
+
+  .rbc-header {
+    font-size: 0.75rem;
+    padding: 8px 4px;
+  }
+
+  .rbc-event {
+    font-size: 0.75rem !important;
+    padding: 2px 4px !important;
+  }
 }

@@ -27,6 +27,13 @@ func NewResourceRepository(db *pgxpool.Pool) *ResourceRepository {
 }
 
 func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
+	// Ensuring pagination values are valid!!
+    if pagination.Page < 1 {
+        pagination.Page = 1
+    }
+    if pagination.Limit < 1 {
+        pagination.Limit = 100 // or your default
+    }
 	resources := []models.ResourceWithTheme{}
 	queryString := "SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE 1=1"
 	args := []interface{}{}
@@ -83,8 +90,10 @@ func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID
 		argNum++
 	}
 
+	queryString += " ORDER BY t.year ASC, t.month ASC"
+
 	queryString += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argNum, argNum+1)
-	args = append(args, pagination.Limit, pagination.GettOffset())
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, queryString, args...)
 	if err != nil {

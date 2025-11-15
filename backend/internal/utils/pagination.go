@@ -7,7 +7,7 @@ type Pagination struct {
 
 const (
 	defaultPage  int = 1
-	defaultLimit int = 10
+	defaultLimit int = 100
 )
 
 func NewPagination() Pagination {
@@ -17,6 +17,6 @@ func NewPagination() Pagination {
 	}
 }
 
-func (p *Pagination) GettOffset() int {
+func (p *Pagination) GetOffset() int {
 	return (p.Page - 1) * p.Limit
 }

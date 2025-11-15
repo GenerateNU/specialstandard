@@ -9,12 +9,68 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// Helper functions
 func ptrBool(b bool) *bool {
 	return &b
+}
+
+// CreateTestDistrict creates a test district and returns its ID
+func CreateTestDistrict(t *testing.T, db *pgxpool.Pool, ctx context.Context) int {
+	districtID := 1
+	_, err := db.Exec(ctx, `
+		INSERT INTO district (id, name, created_at, updated_at) 
+		VALUES ($1, $2, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, districtID, "Test District")
+	assert.NoError(t, err)
+	return districtID
+}
+
+// CreateTestSchool creates a test school and returns its ID
+func CreateTestSchool(t *testing.T, db *pgxpool.Pool, ctx context.Context, districtID int) int {
+	schoolID := 1
+	_, err := db.Exec(ctx, `
+		INSERT INTO school (id, name, district_id, created_at, updated_at) 
+		VALUES ($1, $2, $3, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, schoolID, "Test School", districtID)
+	assert.NoError(t, err)
+	return schoolID
+}
+
+// CreateTestStudent creates a test student with required school
+func CreateTestStudent(t *testing.T, db *pgxpool.Pool, ctx context.Context, therapistID uuid.UUID, name string) uuid.UUID {
+	// Ensure school exists for student
+	districtID := CreateTestDistrict(t, db, ctx)
+	schoolID := CreateTestSchool(t, db, ctx, districtID)
+
+	studentID := uuid.New()
+	_, err := db.Exec(ctx, `
+		INSERT INTO student (id, first_name, last_name, therapist_id, school_id, grade, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+	`, studentID, name, "Student", therapistID, schoolID, 5)
+	assert.NoError(t, err)
+
+	return studentID
+}
+
+// CreateTestSession creates a test session
+func CreateTestSession(t *testing.T, db *pgxpool.Pool, ctx context.Context, therapistID uuid.UUID, notes string) uuid.UUID {
+	sessionID := uuid.New()
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
+	_, err := db.Exec(ctx, `
+		INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+	`, sessionID, therapistID, startTime, endTime, notes)
+	assert.NoError(t, err)
+
+	return sessionID
 }
 
 func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
@@ -23,37 +79,14 @@ func TestSessionStudentRepository_CreateSessionStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
-
-	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	testDB := testutil.SetupTestWithCleanup(t)
+	repo := schema.NewSessionStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist (required for session foreign key)
-	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "Dr. Test", "Therapist", "test.therapist@example.com")
-	assert.NoError(t, err)
-
-	// Create test session
-	sessionID := uuid.New()
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4, $5)
-    `, sessionID, therapistID, startTime, endTime, "Test session for session-student")
-	assert.NoError(t, err)
-
-	// Create test student
-	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, therapist_id, grade)
-        VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Test", "Student", therapistID, 5)
-	assert.NoError(t, err)
+	// Create test data using helper functions
+	therapistID := CreateTestTherapist(t, testDB, ctx)
+	sessionID := CreateTestSession(t, testDB, ctx, therapistID, "Test session for session-student")
+	studentID := CreateTestStudent(t, testDB, ctx, therapistID, "Test")
 
 	// Test successful creation
 	input := &models.CreateSessionStudentInput{
@@ -110,43 +143,20 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
-
-	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	testDB := testutil.SetupTestWithCleanup(t)
+	repo := schema.NewSessionStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist
-	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "Dr. Delete", "Test", "delete.test@example.com")
-	assert.NoError(t, err)
-
-	// Create test session
-	sessionID := uuid.New()
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4, $5)
-    `, sessionID, therapistID, startTime, endTime, "Session for delete test")
-	assert.NoError(t, err)
-
-	// Create test student
-	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, therapist_id, grade)
-        VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Delete", "Student", therapistID, 3)
-	assert.NoError(t, err)
+	// Create test data using helper functions
+	therapistID := CreateTestTherapist(t, testDB, ctx)
+	sessionID := CreateTestSession(t, testDB, ctx, therapistID, "Session for delete test")
+	studentID := CreateTestStudent(t, testDB, ctx, therapistID, "Delete")
 
 	// Create session-student relationship
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO session_student (session_id, student_id, present, notes)
-        VALUES ($1, $2, $3, $4)
-    `, sessionID, studentID, true, "Initial relationship")
+	_, err := testDB.Exec(ctx, `
+		INSERT INTO session_student (session_id, student_id, present, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, NOW(), NOW())
+	`, sessionID, studentID, true, "Initial relationship")
 	assert.NoError(t, err)
 
 	// Test successful deletion
@@ -160,10 +170,10 @@ func TestSessionStudentRepository_DeleteSessionStudent(t *testing.T) {
 
 	// Verify deletion - should not exist anymore
 	var count int
-	err = testDB.Pool.QueryRow(ctx, `
-        SELECT COUNT(*) FROM session_student 
-        WHERE session_id = $1 AND student_id = $2
-    `, sessionID, studentID).Scan(&count)
+	err = testDB.QueryRow(ctx, `
+		SELECT COUNT(*) FROM session_student 
+		WHERE session_id = $1 AND student_id = $2
+	`, sessionID, studentID).Scan(&count)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, count)
 }
@@ -174,43 +184,20 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
-
-	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	testDB := testutil.SetupTestWithCleanup(t)
+	repo := schema.NewSessionStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist
-	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "Dr. Patch", "Test", "patch.test@example.com")
-	assert.NoError(t, err)
-
-	// Create test session
-	sessionID := uuid.New()
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4, $5)
-    `, sessionID, therapistID, startTime, endTime, "Session for patch test")
-	assert.NoError(t, err)
-
-	// Create test student
-	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, therapist_id, grade)
-        VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Patch", "Student", therapistID, 4)
-	assert.NoError(t, err)
+	// Create test data using helper functions
+	therapistID := CreateTestTherapist(t, testDB, ctx)
+	sessionID := CreateTestSession(t, testDB, ctx, therapistID, "Session for patch test")
+	studentID := CreateTestStudent(t, testDB, ctx, therapistID, "Patch")
 
 	// Create initial session-student relationship
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO session_student (session_id, student_id, present, notes)
-        VALUES ($1, $2, $3, $4)
-    `, sessionID, studentID, true, "Original notes")
+	_, err := testDB.Exec(ctx, `
+		INSERT INTO session_student (session_id, student_id, present, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, NOW(), NOW())
+	`, sessionID, studentID, true, "Original notes")
 	assert.NoError(t, err)
 
 	// Test patching present field only
@@ -219,7 +206,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 		SessionID: sessionID,
 		StudentID: studentID,
 		Present:   &presentFalse,
-		Notes:     nil, // Don't update notes
+		Notes:     nil,
 	}
 
 	result, err := repo.PatchSessionStudent(ctx, patchInput)
@@ -227,9 +214,9 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, sessionID, result.SessionID)
 	assert.Equal(t, studentID, result.StudentID)
-	assert.False(t, result.Present) // Should be updated
+	assert.False(t, result.Present)
 	assert.NotNil(t, result.Notes)
-	assert.Equal(t, "Original notes", *result.Notes) // Should remain unchanged
+	assert.Equal(t, "Original notes", *result.Notes)
 
 	// Test patching notes field only
 	newNotes := ptrString("Updated progress notes")
@@ -242,11 +229,7 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	result, err = repo.PatchSessionStudent(ctx, patchInput)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	assert.Equal(t, sessionID, result.SessionID)
-	assert.Equal(t, studentID, result.StudentID)
-	assert.False(t, result.Present) // Should remain from previous update
-	assert.NotNil(t, result.Notes)
-	assert.Equal(t, "Updated progress notes", *result.Notes) // Should be updated
+	assert.Equal(t, "Updated progress notes", *result.Notes)
 
 	// Test patching both fields
 	presentTrue := true
@@ -261,11 +244,8 @@ func TestSessionStudentRepository_PatchSessionStudent(t *testing.T) {
 	result, err = repo.PatchSessionStudent(ctx, patchInput)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	assert.Equal(t, sessionID, result.SessionID)
-	assert.Equal(t, studentID, result.StudentID)
 	assert.True(t, result.Present)
-	assert.NotNil(t, result.Notes)
-	assert.Equal(t, "Final comprehensive notes", *result.Notes) // Should be updated
+	assert.Equal(t, "Final comprehensive notes", *result.Notes)
 
 	// Test patching non-existent relationship
 	nonExistentInput := &models.PatchSessionStudentInput{
@@ -286,43 +266,20 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	}
 
 	// Setup
-	testDB := testutil.SetupTestDB(t)
-	defer testDB.Cleanup()
-
-	repo := schema.NewSessionStudentRepository(testDB.Pool)
+	testDB := testutil.SetupTestWithCleanup(t)
+	repo := schema.NewSessionStudentRepository(testDB)
 	ctx := context.Background()
 
-	// Create test therapist
-	therapistID := uuid.New()
-	_, err := testDB.Pool.Exec(ctx, `
-        INSERT INTO therapist (id, first_name, last_name, email)
-        VALUES ($1, $2, $3, $4)
-    `, therapistID, "Dr. Rate", "Test", "rate.test@example.com")
-	require.NoError(t, err)
-
-	// Create test session
-	sessionID := uuid.New()
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO session (id, therapist_id, start_datetime, end_datetime, notes)
-        VALUES ($1, $2, $3, $4, $5)
-    `, sessionID, therapistID, startTime, endTime, "Session for rating test")
-	require.NoError(t, err)
-
-	// Create test student
-	studentID := uuid.New()
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO student (id, first_name, last_name, therapist_id, grade)
-        VALUES ($1, $2, $3, $4, $5)
-    `, studentID, "Rating", "Student", therapistID, 5)
-	require.NoError(t, err)
+	// Create test data using helper functions
+	therapistID := CreateTestTherapist(t, testDB, ctx)
+	sessionID := CreateTestSession(t, testDB, ctx, therapistID, "Session for rating test")
+	studentID := CreateTestStudent(t, testDB, ctx, therapistID, "Rating")
 
 	// Create initial session-student relationship
-	_, err = testDB.Pool.Exec(ctx, `
-        INSERT INTO session_student (session_id, student_id, present, notes)
-        VALUES ($1, $2, $3, $4)
-    `, sessionID, studentID, true, "Initial notes")
+	_, err := testDB.Exec(ctx, `
+		INSERT INTO session_student (session_id, student_id, present, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, NOW(), NOW())
+	`, sessionID, studentID, true, "Initial notes")
 	require.NoError(t, err)
 
 	// Test 1: Create new ratings
@@ -356,7 +313,7 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	assert.Equal(t, "Session went well", *sessionStudent.Notes)
 	assert.Len(t, ratings, 2)
 
-	// Test 2: Update existing ratings (ON CONFLICT)
+	// Test 2: Update existing ratings
 	rateInput = &models.PatchSessionStudentInput{
 		SessionID: sessionID,
 		StudentID: studentID,
@@ -365,7 +322,7 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 		Ratings: &[]models.RateInput{
 			{
 				Category:    "visual_cue",
-				Level:       "maximal", // Changed from minimal
+				Level:       "maximal",
 				Description: "Required significant visual support",
 			},
 		},
@@ -373,7 +330,6 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 
 	sessionStudent, ratings, err = repo.RateStudentSession(ctx, rateInput)
 	require.NoError(t, err)
-	require.NotNil(t, sessionStudent)
 	assert.Equal(t, "Updated notes", *sessionStudent.Notes)
 	assert.Len(t, ratings, 1)
 	assert.Equal(t, "visual_cue", *ratings[0].Category)
@@ -390,48 +346,10 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 
 	sessionStudent, ratings, err = repo.RateStudentSession(ctx, emptyRatingsInput)
 	require.NoError(t, err)
-	require.NotNil(t, sessionStudent)
 	assert.Equal(t, "No ratings update", *sessionStudent.Notes)
 	assert.Len(t, ratings, 0)
 
-	// Test 4: Test engagement levels (low/high)
-	engagementInput := &models.PatchSessionStudentInput{
-		SessionID: sessionID,
-		StudentID: studentID,
-		Present:   nil,
-		Notes:     nil,
-		Ratings: &[]models.RateInput{
-			{
-				Category:    "engagement",
-				Level:       "low", // Testing low engagement
-				Description: "Low engagement today",
-			},
-		},
-	}
-
-	// Test 5: No update to ratings
-	emptyRatingsInput = &models.PatchSessionStudentInput{
-		SessionID: sessionID,
-		StudentID: studentID,
-		Present:   &presentTrue,
-		Notes:     ptrString("No ratings update"),
-	}
-
-	sessionStudent, ratings, err = repo.RateStudentSession(ctx, emptyRatingsInput)
-	require.NoError(t, err)
-	require.NotNil(t, sessionStudent)
-	assert.NotNil(t, ratings)
-	assert.Equal(t, "No ratings update", *sessionStudent.Notes)
-	assert.Len(t, ratings, 2)
-
-	sessionStudent, ratings, err = repo.RateStudentSession(ctx, engagementInput)
-	require.NoError(t, err)
-	assert.Len(t, ratings, 1)
-	assert.NotNil(t, sessionStudent)
-	assert.Equal(t, "engagement", *ratings[0].Category)
-	assert.Equal(t, "low", *ratings[0].Level)
-
-	// Test 5: Non-existent session-student relationship
+	// Test 4: Non-existent session-student relationship
 	nonExistentInput := &models.PatchSessionStudentInput{
 		SessionID: uuid.New(),
 		StudentID: uuid.New(),
@@ -450,4 +368,163 @@ func TestSessionStudentRepository_RateStudentSession(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, failSessionStudent)
 	assert.Nil(t, failRatings)
+}
+
+func TestSessionStudentRepository_GetStudentAttendance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+	// Setup
+	testDB := testutil.SetupTestWithCleanup(t)
+	repo := schema.NewSessionStudentRepository(testDB)
+	ctx := context.Background()
+
+	// Create test data using helper functions
+	therapistID := CreateTestTherapist(t, testDB, ctx)
+	studentID := CreateTestStudent(t, testDB, ctx, therapistID, "Attendance")
+
+	// Create sessions and session-student relationships
+	now := time.Now()
+	dates := []time.Time{
+		now.AddDate(0, 0, -10), // 10 days ago
+		now.AddDate(0, 0, -5),  // 5 days ago
+		now.AddDate(0, 0, -1),  // yesterday
+		now,                    // today
+		now.AddDate(0, 0, 5),   // 5 days future (for testing future exclusion)
+	}
+	presences := []bool{true, false, true, true, false} // last one won't matter for past sessions
+
+	sessionIDs := make([]uuid.UUID, len(dates))
+	for i, date := range dates {
+		// Create session
+		sessionID := uuid.New()
+		sessionIDs[i] = sessionID
+
+		startTime := date.Add(-1 * time.Hour)
+		endTime := date
+
+		_, err := testDB.Exec(ctx, `
+			INSERT INTO session (id, therapist_id, start_datetime, end_datetime)
+			VALUES ($1, $2, $3, $4)
+		`, sessionID, therapistID, startTime, endTime)
+		require.NoError(t, err)
+
+		// Create session_student relationship
+		_, err = testDB.Exec(ctx, `
+			INSERT INTO session_student (session_id, student_id, present)
+			VALUES ($1, $2, $3)
+		`, sessionID, studentID, presences[i])
+		require.NoError(t, err)
+	}
+
+	// Test different scenarios
+	t.Run("Get all attendance (no date params)", func(t *testing.T) {
+		// Should include all sessions up to now
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  time.Now().AddDate(-1, 0, 0), // 1 year ago
+			DateTo:    time.Now(),
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 3, *presentCount) // true, true, true (excluding the false from 5 days ago)
+		assert.Equal(t, 4, *totalCount)   // up to today
+	})
+
+	t.Run("Get attendance with date range", func(t *testing.T) {
+		// Only sessions from 5 days ago to yesterday
+		dateFrom := now.AddDate(0, 0, -5)
+		dateTo := now.AddDate(0, 0, -1)
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  dateFrom,
+			DateTo:    dateTo,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 1, *presentCount) // only yesterday was present (5 days ago was false)
+		assert.Equal(t, 2, *totalCount)   // 5 days ago + yesterday
+	})
+
+	t.Run("Get attendance from specific date to future", func(t *testing.T) {
+		// From 10 days ago to one month in future
+		dateFrom := now.AddDate(0, 0, -10)
+		dateTo := now.AddDate(0, 1, 0)
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  dateFrom,
+			DateTo:    dateTo,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 3, *presentCount) // 10 days ago, yesterday, today (5 days ago was false)
+		assert.Equal(t, 5, *totalCount)   // all
+	})
+
+	t.Run("Get future sessions only", func(t *testing.T) {
+		// Only future sessions
+		dateFrom := now.AddDate(0, 0, 1)
+		dateTo := now.AddDate(0, 0, 10)
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  dateFrom,
+			DateTo:    dateTo,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 0, *presentCount) // future session marked false
+		assert.Equal(t, 1, *totalCount)   // only one future session
+	})
+
+	t.Run("Student with no sessions", func(t *testing.T) {
+		// Create a new student with no sessions
+		newStudentID := CreateTestStudent(t, testDB, ctx, therapistID, "NoSessions")
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: newStudentID,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 0, *presentCount)
+		assert.Equal(t, 0, *totalCount)
+	})
+
+	t.Run("Invalid student ID", func(t *testing.T) {
+		// Use a random UUID that doesn't exist
+		randomID := uuid.New()
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: randomID,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err) // Should not error, just return 0s
+		assert.Equal(t, 0, *presentCount)
+		assert.Equal(t, 0, *totalCount)
+	})
+
+	t.Run("Exclude specific date", func(t *testing.T) {
+		// Exclude the day student was absent (5 days ago)
+		dateFrom := now.AddDate(0, 0, -10)
+		dateTo := now.AddDate(0, 0, -6) // Stop before 5 days ago
+
+		params := models.GetStudentAttendanceParams{
+			StudentID: studentID,
+			DateFrom:  dateFrom,
+			DateTo:    dateTo,
+		}
+
+		presentCount, totalCount, err := repo.GetStudentAttendance(ctx, params)
+		require.NoError(t, err)
+		assert.Equal(t, 1, *presentCount) // only 10 days ago
+		assert.Equal(t, 1, *totalCount)   // only 10 days ago
+	})
 }

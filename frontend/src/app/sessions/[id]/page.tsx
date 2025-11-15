@@ -127,6 +127,7 @@ export default function SessionPage({ params }: PageProps) {
       notes: session.notes || '',
     })
     setIsEditingSession(true)
+    setMode('editStudents') // Also enable student editing
   }
 
   const handleSaveSession = () => {
@@ -139,10 +140,12 @@ export default function SessionPage({ params }: PageProps) {
       notes: editedSession.notes,
     })
     setIsEditingSession(false)
+    setMode('view') // Exit student editing mode
   }
 
   const handleCancelEdit = () => {
     setIsEditingSession(false)
+    setMode('view') // Exit student editing mode
   }
 
   // Filter out students already in session
@@ -230,13 +233,13 @@ export default function SessionPage({ params }: PageProps) {
                         type="date"
                         value={editedSession.startDate}
                         onChange={e => setEditedSession({ ...editedSession, startDate: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
                       />
                       <input
                         type="time"
                         value={editedSession.startTime}
                         onChange={e => setEditedSession({ ...editedSession, startTime: e.target.value })}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
                       />
                     </div>
                   </div>
@@ -251,13 +254,13 @@ export default function SessionPage({ params }: PageProps) {
                         type="date"
                         value={editedSession.endDate}
                         onChange={e => setEditedSession({ ...editedSession, endDate: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
                       />
                       <input
                         type="time"
                         value={editedSession.endTime}
                         onChange={e => setEditedSession({ ...editedSession, endTime: e.target.value })}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
                       />
                     </div>
                   </div>
@@ -274,7 +277,7 @@ export default function SessionPage({ params }: PageProps) {
                     value={editedSession.notes}
                     onChange={e => setEditedSession({ ...editedSession, notes: e.target.value })}
                     placeholder="e.g., Boston Latin Academy"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
                   />
                 </div>
               </div>
@@ -287,24 +290,15 @@ export default function SessionPage({ params }: PageProps) {
           <h2 className="text-3xl font-semibold">Students</h2>
           <div className="flex gap-3">
             {mode === 'view' && (
-              <>
-                <Button
-                  onClick={() => setMode('attendance')}
-                  variant="default"
-                  size="lg"
-                >
-                  Attendance
-                </Button>
-                <Button
-                  onClick={() => setMode('editStudents')}
-                  variant="outline"
-                  size="lg"
-                >
-                  Edit Students
-                </Button>
-              </>
+              <Button
+                onClick={() => setMode('attendance')}
+                variant="default"
+                size="lg"
+              >
+                Attendance
+              </Button>
             )}
-            {mode !== 'view' && (
+            {mode === 'attendance' && (
               <Button
                 onClick={() => setMode('view')}
                 variant="secondary"

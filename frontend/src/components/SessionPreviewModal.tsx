@@ -164,7 +164,7 @@ export default function SessionPreviewModal({
         <div className="border-t border-gray-200 p-3 bg-gray-50 flex gap-2">
           <Link
             href={`/sessions/${session.id}`}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-md text-sm font-medium transition-colors"
+            className="flex-1 bg-blue hover:bg-blue-hover text-white text-center py-2 px-3 rounded-md text-sm font-medium transition-colors"
             onClick={onClose}
           >
             View Details

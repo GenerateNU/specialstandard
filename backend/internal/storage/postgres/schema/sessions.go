@@ -22,7 +22,7 @@ func (r *SessionRepository) GetDB() *pgxpool.Pool {
 	return r.db
 }
 
-func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest) ([]models.Session, error) {
+func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, id uuid.UUID) ([]models.Session, error) {
 	query := `
 	SELECT id, start_datetime, end_datetime, therapist_id, notes, created_at, updated_at
 	FROM session`
@@ -30,6 +30,12 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 	conditions := []string{}
 	args := []interface{}{}
 	argCount := 1
+
+	if id != uuid.Nil {
+		conditions = append(conditions, fmt.Sprintf("therapist_id = $%d", argCount))
+		args = append(args, id)
+		argCount++
+	}
 
 	if filter != nil {
 		if filter.Month != nil && filter.Year != nil {
@@ -75,9 +81,9 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += fmt.Sprintf(` ORDER BY start_datetime DESC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
+	query += fmt.Sprintf(` ORDER BY start_datetime ASC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
 
-	args = append(args, pagination.Limit, pagination.GettOffset())
+	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -201,7 +207,12 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 	}
 }
 
-func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination) ([]models.SessionStudentsOutput, error) {
+func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination, therapistID uuid.UUID) ([]models.SessionStudentsOutput, error) {
+	// Validate that therapistID is provided
+	if therapistID == uuid.Nil {
+		return nil, fmt.Errorf("therapist_id is required")
+	}
+
 	query := `
     SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
            s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 
@@ -211,11 +222,12 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
     JOIN student s ON ss.student_id = s.id
     LEFT JOIN session_rating sr ON ss.id = sr.session_student_id
     WHERE ss.session_id = $1
+    AND s.therapist_id = $2
     AND s.grade != -1
-    ORDER BY ss.id, sr.id
-	LIMIT $2 OFFSET $3`
+    ORDER BY s.first_name, s.last_name
+    LIMIT $3 OFFSET $4`
 
-	rows, err := r.db.Query(ctx, query, sessionID, pagination.Limit, pagination.GettOffset())
+	rows, err := r.db.Query(ctx, query, sessionID, therapistID, pagination.Limit, pagination.GetOffset())
 	if err != nil {
 		return nil, err
 	}
