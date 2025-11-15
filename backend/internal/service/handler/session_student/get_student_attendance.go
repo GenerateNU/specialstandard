@@ -14,12 +14,23 @@ func (h *Handler) GetStudentAttendance(c *fiber.Ctx) error {
 	studentID := c.Params("id")
 
 	if studentID == "" {
-		return errs.BadRequest("Given Empty ID")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Student ID is required",
+		})
 	}
 
 	// Validate that ID is a valid UUID
-	if _, err := uuid.Parse(studentID); err != nil {
-		return errs.BadRequest("Invalid UUID format")
+	parsedID, err := uuid.Parse(studentID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Student ID is invalid UUID format",
+		})
+	}
+
+	if parsedID == uuid.Nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Student ID is invalid (nil)",
+		})
 	}
 
 	dateFrom := time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC) // old date as default - get all records
@@ -27,7 +38,9 @@ func (h *Handler) GetStudentAttendance(c *fiber.Ctx) error {
 		var err error
 		dateFrom, err = time.Parse("2006-01-02", dateStr)
 		if err != nil {
-			return errs.BadRequest("Invalid date format. Use YYYY-MM-DD")
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid date_from format",
+			})
 		}
 	}
 
@@ -36,12 +49,14 @@ func (h *Handler) GetStudentAttendance(c *fiber.Ctx) error {
 		var err error
 		dateTo, err = time.Parse("2006-01-02", dateStr)
 		if err != nil {
-			return errs.BadRequest("Invalid date format. Use YYYY-MM-DD")
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid date_to format",
+			})
 		}
 	}
 
 	presentCount, totalCount, err := h.sessionStudentRepository.GetStudentAttendance(c.Context(), models.GetStudentAttendanceParams{
-		StudentID: uuid.MustParse(studentID),
+		StudentID: parsedID,
 		DateFrom:  dateFrom,
 		DateTo:    dateTo,
 	})
@@ -51,7 +66,6 @@ func (h *Handler) GetStudentAttendance(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(map[string]interface{}{
-		"student_id":    studentID,
 		"present_count": presentCount,
 		"total_count":   totalCount,
 	})

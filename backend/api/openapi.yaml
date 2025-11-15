@@ -3239,15 +3239,9 @@ components:
     AttendanceRecord:
       type: object
       required:
-        - student_id
         - present_sessions
         - total_sessions
       properties:
-        student_id:
-          type: string
-          format: uuid
-          description: UUID of the student
-          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
         present_sessions:
           type: integer
           description: Number of sessions the student was present
