@@ -213,6 +213,124 @@ paths:
                 code: 401
                 message: "Status Unauthorized?!"
 
+  /auth/forgot-password:
+    post:
+      summary: Forgot Password Feature
+      description: Forgot Password? Reset it here!
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+                properties:
+                  email:
+                    format: email
+                    description: Email registered to the account that's trying to reset password
+                    example: happyPanther@feline.com
+      responses:
+        "200":
+          description: Successfully forgot password. AND we reset it.
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad Request"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                message: "Internal Server Error"
+
+  /auth:
+    put:
+      summary: Updating Password Feature
+      description: Update your password for your account
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              format: password
+              description: New Password
+              example: password
+      responses:
+        "200":
+          description: Successfully updated your password.
+        "400":
+          description: Bad Request (e.g., validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad Request"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                message: "Internal Server Error"
+
+  /auth/delete-account/{id}:
+    delete:
+      summary: Delete Account Feature
+      description: Delete your Account here! Resigning? Fired? We're here for you.
+      tags: [Auth]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the user (therapist) being deleted
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully deleted account.
+        "401":
+          description: Unauthorized! 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 401
+                message: "Unauthorized"
+        "403":
+          description: Don't do that! Forbidden! 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 403
+                message: "Forbidden"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                message: "Internal Server Error"/
+
   /sessions:
     /sessions:
     get:

@@ -119,7 +119,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		})
 	}
 
-	authGroup.Post("/update-password", SupabaseAuthHandler.UpdatePassword)
+	authGroup.Put("/update-password", SupabaseAuthHandler.UpdatePassword)
 	authGroup.Delete("/delete-account/:id", SupabaseAuthHandler.DeleteAccount)
 
 	themeHandler := theme.NewHandler(repo.Theme)
