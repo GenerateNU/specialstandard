@@ -14,11 +14,19 @@ interface SessionContextType {
   currentWeek: number
   currentMonth: number
   currentYear: number
+<<<<<<< Updated upstream
+=======
+  currentLevel: number | null
+>>>>>>> Stashed changes
   setSession: (session: Session) => void
   setStudents: (students: StudentTuple[]) => void
   setCurrentWeek: (week: number) => void
   setCurrentMonth: (month: number) => void
   setCurrentYear: (year: number) => void
+<<<<<<< Updated upstream
+=======
+  setCurrentLevel: (level: number | null) => void
+>>>>>>> Stashed changes
   clearSession: () => void
 }
 
@@ -31,6 +39,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const now = new Date()
   const [currentMonth, setCurrentMonth] = useState<number>(now.getMonth()) // 0-11
   const [currentYear, setCurrentYear] = useState<number>(now.getFullYear())
+<<<<<<< Updated upstream
+=======
+  const [currentLevel, setCurrentLevel] = useState<number | null>(null)
+>>>>>>> Stashed changes
 
   const setSession = useCallback((newSession: Session) => {
     setSessionState(newSession)
@@ -47,6 +59,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const now = new Date()
     setCurrentMonth(now.getMonth())
     setCurrentYear(now.getFullYear())
+<<<<<<< Updated upstream
+=======
+    setCurrentLevel(null)
+>>>>>>> Stashed changes
   }, [])
 
   return (
@@ -57,11 +73,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         currentWeek,
         currentMonth,
         currentYear,
+<<<<<<< Updated upstream
+=======
+        currentLevel,
+>>>>>>> Stashed changes
         setSession,
         setStudents,
         setCurrentWeek,
         setCurrentMonth,
         setCurrentYear,
+<<<<<<< Updated upstream
+=======
+        setCurrentLevel,
+>>>>>>> Stashed changes
         clearSession,
       }}
     >
