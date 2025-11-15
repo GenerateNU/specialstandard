@@ -90,16 +90,6 @@ type SchoolRepository interface {
 	GetSchoolsByDistrict(ctx context.Context, districtID int) ([]models.School, error)
 }
 
-type DistrictRepository interface {
-	GetDistricts(ctx context.Context) ([]models.District, error)
-	GetDistrictByID(ctx context.Context, id int) (*models.District, error)
-}
-
-type SchoolRepository interface {
-	GetSchools(ctx context.Context) ([]models.School, error)
-	GetSchoolsByDistrict(ctx context.Context, districtID int) ([]models.School, error)
-}
-
 type Repository struct {
 	Resource        ResourceRepository
 	db              *pgxpool.Pool
