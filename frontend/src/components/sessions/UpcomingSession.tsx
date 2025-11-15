@@ -52,7 +52,7 @@ export default function UpcomingSession({ studentId }: UpcomingSessionProps) {
         const { sessionData } = item
         const startMoment = moment(sessionData.start_datetime)
         const endMoment = moment(sessionData.end_datetime)
-        const daysUntil = startMoment.diff(now, 'days')
+        // const daysUntil = startMoment.diff(now, 'days')
 
         return (
           <div
