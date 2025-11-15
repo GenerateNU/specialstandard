@@ -326,10 +326,10 @@ export interface Resource {
    */
   grade_level?: number | null;
   /**
-   * Date associated with the resource (optional)
+   * Week associated with the resource (optional)
    * @nullable
    */
-  date?: string | null;
+  week?: number | null;
   /**
    * Type of resource (optional)
    * @nullable
@@ -367,10 +367,10 @@ export interface ResourceWithPresignURL {
    */
   grade_level?: number | null;
   /**
-   * Date associated with the resource (optional)
+   * Week associated with the resource (optional)
    * @nullable
    */
-  date?: string | null;
+  week?: number | null;
   /**
    * Type of resource (optional)
    * @nullable
@@ -411,10 +411,10 @@ export interface UpdateResourceBody {
    */
   grade_level?: number | null;
   /**
-   * Date associated with the resource (optional)
+   * Week associated with the resource (optional)
    * @nullable
    */
-  date?: string | null;
+  week?: number | null;
   /**
    * Type of resource (optional)
    * @nullable

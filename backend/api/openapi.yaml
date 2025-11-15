@@ -3099,12 +3099,11 @@ components:
           minimum: 0
           maximum: 12
           example: 5
-        date:
-          type: string
-          format: date
+        week:
+          type: integer
           nullable: true
-          description: Date associated with the resource (optional)
-          example: "2024-01-15"
+          description: Week associated with the resource (optional)
+          example: 2
         type:
           type: string
           nullable: true
@@ -3150,12 +3149,11 @@ components:
           minimum: 0
           maximum: 12
           example: 5
-        date:
-          type: string
-          format: date
+        week:
+          type: integer
           nullable: true
-          description: Date associated with the resource (optional)
-          example: "2024-01-15"
+          description: Week associated with the resource (optional)
+          example: 2
         type:
           type: string
           nullable: true
@@ -3199,12 +3197,11 @@ components:
           minimum: 0
           maximum: 12
           example: 5
-        date:
-          type: string
-          format: date
+        week:
+          type: integer
           nullable: true
-          description: Date associated with the resource (optional)
-          example: "2024-01-15"
+          description: Week associated with the resource (optional)
+          example: 2
         type:
           type: string
           nullable: true
