@@ -581,12 +581,14 @@ export interface StudentWithSessionInfo {
 
 export interface AttendanceRecord {
   /** Number of sessions the student was present */
-  present_sessions: number;
+  present_count: number;
   /** Total number of sessions held */
-  total_sessions: number;
+  total_count: number;
 }
 
-export type SessionWithStudentInfoAllOf = {
+export interface SessionWithStudentInfo {
+  /** The nested session object */
+  session: Session;
   /** UUID of the associated student */
   student_id: string;
   /** Whether the student was present at this session */
@@ -596,9 +598,11 @@ export type SessionWithStudentInfoAllOf = {
    * @nullable
    */
   notes?: string | null;
-};
-
-export type SessionWithStudentInfo = Session & SessionWithStudentInfoAllOf;
+  /** When the session-student relationship was created */
+  created_at: string;
+  /** When the session-student relationship was last updated */
+  updated_at: string;
+}
 
 export interface SessionResource {
   /** ID of completed session */
@@ -1076,6 +1080,12 @@ export type GetResourcesParams = {
    * Filter resources by theme year
    */
   theme_year?: number;
+  /**
+   * Filter resources by week (1-4)
+   * @minimum 1
+   * @maximum 4
+   */
+  week?: number;
   /**
    * Page Number of pagination
    * @minimum 1

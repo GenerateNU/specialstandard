@@ -118,7 +118,7 @@ All filters can be combined: `?month=9&year=2025&present=true`
     studentId: string,
     params?: GetStudentsStudentIdAttendanceParams,
   ) => {
-    return customAxios<AttendanceRecord[]>({
+    return customAxios<AttendanceRecord>({
       url: `/students/${studentId}/attendance`,
       method: "GET",
       params,
