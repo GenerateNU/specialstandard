@@ -81,6 +81,12 @@ type GameResultRepository interface {
 	PostGameResult(ctx context.Context, input models.PostGameResult) (*models.GameResult, error)
 }
 
+// VerificationRepository defines methods for verification code operations
+type VerificationRepository interface {
+	CreateVerificationCode(ctx context.Context, code models.VerificationCode) error
+	VerifyCode(ctx context.Context, userID, code string) (bool, error)
+}
+
 type Repository struct {
 	Resource        ResourceRepository
 	db              *pgxpool.Pool
@@ -92,6 +98,7 @@ type Repository struct {
 	SessionResource SessionResourceRepository
 	GameContent     GameContentRepository
 	GameResult      GameResultRepository
+	Verification    VerificationRepository
 }
 
 func (r *Repository) Close() error {
@@ -115,5 +122,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		SessionResource: schema.NewSessionResourceRepository(db),
 		GameContent:     schema.NewGameContentRepository(db),
 		GameResult:      schema.NewGameResultRepository(db),
+		Verification:    schema.NewVerificationRepository(db),
 	}
 }

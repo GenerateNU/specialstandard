@@ -6,4 +6,5 @@ type Config struct {
 	Supabase    Supabase
 	S3Bucket    S3
 	TestMode    bool
+	Resend      Resend
 }
