@@ -98,7 +98,7 @@ export default function Home() {
               <Button
                 size="sm"
                 variant="default"
-                onClick={() => router.push('/sessions')}
+                onClick={() => router.push('/calendar?view=card')}
               >
                 View All Sessions
               </Button>

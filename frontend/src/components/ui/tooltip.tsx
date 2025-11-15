@@ -8,9 +8,11 @@ interface TooltipProps {
   children: React.ReactNode
   /** When false the tooltip won't be rendered and children are returned as-is */
   enabled?: boolean
+  /** Optional className for the wrapper div */
+  wrapperClassName?: string
 }
 
-export default function Tooltip({ content, children, enabled = true }: TooltipProps) {
+export default function Tooltip({ content, children, enabled = true, wrapperClassName }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -41,20 +43,19 @@ export default function Tooltip({ content, children, enabled = true }: TooltipPr
     <>
       <div
         ref={wrapperRef}
-        className="relative inline-flex items-center"
+        className={wrapperClassName}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {children}
       </div>
-
       {isVisible
         && typeof window !== 'undefined'
         && createPortal(
           <div
             role="tooltip"
             className={`pointer-events-none fixed whitespace-nowrap 
-                rounded-lg bg-black border-white text-white text-sm px-3 
+                rounded-lg bg-black border-white text-white text-sm px-2.5 
                 py-1.5 z-50 shadow-lg -translate-y-1/2 transition-opacity 
                 duration-200 ${isMounted ? 'opacity-100' : 'opacity-0'}`}
             style={{
