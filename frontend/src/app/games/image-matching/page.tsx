@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, CheckCircle, Volume2, XCircle } from 'lucide-react'
 import AppLayout from '@/components/AppLayout'
 import { useGameContents } from '@/hooks/useGameContents'
+import { useGameResults } from '@/hooks/useGameResults'
 
 function ImageMatchingGameContent() {
   const router = useRouter()
@@ -14,6 +15,9 @@ function ImageMatchingGameContent() {
   const difficulty = searchParams.get('difficulty')
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
+  const sessionStudentId = searchParams.get('session_student_id')
+  const sessionId = searchParams.get('session_id')
+  const studentId = searchParams.get('student_id')
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeId || undefined,
@@ -22,12 +26,20 @@ function ImageMatchingGameContent() {
     question_type: questionType as any,
   })
 
+  const gameResultsHook = sessionStudentId ? useGameResults({
+    session_student_id: Number.parseInt(sessionStudentId),
+    session_id: sessionId || undefined,
+    student_id: studentId || undefined
+  }) : null
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [showFeedback, setShowFeedback] = useState<'correct' | 'incorrect' | null>(null)
   const [gameComplete, setGameComplete] = useState(false)
   const [wrongAnswerUrl, setWrongAnswerUrl] = useState<string>('')
   const [imageOptions, setImageOptions] = useState<string[]>([])
+  const [cardStartTime, setCardStartTime] = useState<number | null>(null)
+  const [resultsSaved, setResultsSaved] = useState(false)
   const currentQuestion = gameContents?.[currentQuestionIndex]
 
   type SpeakWordFn = (word: string) => void
@@ -52,6 +64,11 @@ function ImageMatchingGameContent() {
     if (isCorrect) {
       setScore(score + 1)
       setShowFeedback('correct')
+      
+      if (gameResultsHook && currentQuestion && cardStartTime) {
+        const timeTaken = Math.floor((Date.now() - cardStartTime) / 1000)
+        gameResultsHook.completeCard(currentQuestion.id, timeTaken)
+      }
     } else {
       setShowFeedback('incorrect')
     }
@@ -66,7 +83,25 @@ function ImageMatchingGameContent() {
     }, 1500)
   }
 
-  // Update image options when question changes
+  const handleSaveProgress = async () => {
+    if (gameResultsHook) {
+      await gameResultsHook.saveAllResults()
+      setResultsSaved(true)
+    }
+  }
+
+  const handlePlayAgain = async () => {
+    if (gameResultsHook) {
+      await gameResultsHook.saveAllResults()
+    }
+    
+    setCurrentQuestionIndex(0)
+    setScore(0)
+    setGameComplete(false)
+    setCardStartTime(null)
+    setResultsSaved(false)
+  }
+
   useEffect(() => {
     if (currentQuestion && wrongAnswerUrl) {
       const shuffled = [currentQuestion.answer, wrongAnswerUrl].sort(() => Math.random() - 0.5)
@@ -89,6 +124,13 @@ function ImageMatchingGameContent() {
       speakWord(currentQuestion.question)
     }
   }, [currentQuestionIndex, currentQuestion])
+
+  useEffect(() => {
+    if (currentQuestion) {
+      setCardStartTime(Date.now())
+      gameResultsHook?.startCard(currentQuestion)
+    }
+  }, [currentQuestion])
 
   if (isLoading) {
     return (
@@ -130,15 +172,20 @@ function ImageMatchingGameContent() {
             </p>
             <div className="flex gap-4 justify-center">
               <button
-                onClick={() => {
-                  setCurrentQuestionIndex(0)
-                  setScore(0)
-                  setGameComplete(false)
-                }}
+                onClick={handlePlayAgain}
                 className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover"
               >
                 Play Again
               </button>
+              {gameResultsHook && (
+                <button
+                  onClick={handleSaveProgress}
+                  disabled={gameResultsHook.isSaving || resultsSaved}
+                  className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
+                >
+                  {gameResultsHook.isSaving ? 'Saving...' : resultsSaved ? 'Saved!' : 'Save Progress'}
+                </button>
+              )}
               <button
                 onClick={() => router.push('/games')}
                 className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border"
@@ -146,6 +193,11 @@ function ImageMatchingGameContent() {
                 Back to Games
               </button>
             </div>
+            {gameResultsHook?.saveError && (
+              <p className="text-error text-sm mt-2">
+                Failed to save progress. Please try again.
+              </p>
+            )}
           </div>
         </div>
       </AppLayout>
@@ -206,12 +258,12 @@ function ImageMatchingGameContent() {
                 </div>
 
                 {showFeedback === 'correct' && answerUrl === currentQuestion?.answer && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-green-500 opacity-20">
+                  <div className="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-20 rounded-lg">
                     <CheckCircle className="w-16 h-16 text-green-500" />
                   </div>
                 )}
                 {showFeedback === 'incorrect' && answerUrl !== currentQuestion?.answer && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-red-500 opacity-20">
+                  <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-20 rounded-lg">
                     <XCircle className="w-16 h-16 text-red-500" />
                   </div>
                 )}
