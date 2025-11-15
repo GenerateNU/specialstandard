@@ -9,6 +9,7 @@ import (
 	"specialstandard/internal/service/handler/game_content"
 	"specialstandard/internal/service/handler/game_result"
 	"specialstandard/internal/service/handler/resource"
+	"specialstandard/internal/service/handler/school"
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/service/handler/session_resource"
 	sessionstudent "specialstandard/internal/service/handler/session_student"
@@ -21,6 +22,8 @@ import (
 	"context"
 	"net/http"
 	supabase_auth "specialstandard/internal/auth"
+
+	"specialstandard/internal/service/handler/district"
 
 	go_json "github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
@@ -191,6 +194,18 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Get("/", gameResultsHandler.GetGameResults)
 		r.Post("/", gameResultsHandler.PostGameResult)
 	})
+
+	districtHandler := district.NewHandler(repo.District)
+	apiV1.Route("/districts", func(r fiber.Router) {
+		r.Get("/", districtHandler.GetDistricts)
+		r.Get("/:id", districtHandler.GetDistrictByID)
+	})
+
+	schoolHandler := school.NewHandler(repo.School)
+	apiV1.Route("/schools", func(r fiber.Router) {
+		r.Get("/", schoolHandler.GetSchools)
+	})
+	
 
 	// Handle 404 - Route not found
 	app.Use(func(c *fiber.Ctx) error {
