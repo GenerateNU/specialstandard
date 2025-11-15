@@ -1,29 +1,33 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { useRouter } from 'next/navigation'
-import { BookOpen, Brain, Gamepad2 } from 'lucide-react'
-import { GameContentSelector } from '@/components/games/GameContentSelector'
-import type { GetGameContentsCategory, GetGameContentsQuestionType, Theme  } from '@/lib/api/theSpecialStandardAPI.schemas'
-import AppLayout from '@/components/AppLayout'
+import AppLayout from "@/components/AppLayout";
+import { GameContentSelector } from "@/components/games/GameContentSelector";
+import type {
+  GetGameContentsCategory,
+  GetGameContentsQuestionType,
+  Theme,
+} from "@/lib/api/theSpecialStandardAPI.schemas";
+import { BookOpen, Brain, Gamepad2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React from "react";
 
 export default function GamesPage() {
-  const router = useRouter()
+  const router = useRouter();
   const [selectedContent, setSelectedContent] = React.useState<{
-    theme: Theme
-    difficultyLevel: number
-    category: GetGameContentsCategory
-    questionType: GetGameContentsQuestionType
-  } | null>(null)
+    theme: Theme;
+    difficultyLevel: number;
+    category: GetGameContentsCategory;
+    questionType: GetGameContentsQuestionType;
+  } | null>(null);
 
   const handleContentSelection = (selection: {
-    theme: Theme
-    difficultyLevel: number
-    category: GetGameContentsCategory
-    questionType: GetGameContentsQuestionType
+    theme: Theme;
+    difficultyLevel: number;
+    category: GetGameContentsCategory;
+    questionType: GetGameContentsQuestionType;
   }) => {
-    setSelectedContent(selection)
-  }
+    setSelectedContent(selection);
+  };
 
   // Show game selection after content is selected
   if (selectedContent) {
@@ -38,7 +42,7 @@ export default function GamesPage() {
               ← Back to Content
             </button>
             <h1 className="mb-8">Select a Game</h1>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <button
                 onClick={() => {
@@ -47,25 +51,37 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
-                  })
-                  router.push(`/games/flashcards?${params.toString()}`)
+                  });
+                  router.push(`/games/flashcards?${params.toString()}`);
                 }}
                 className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
               >
                 <BookOpen className="w-12 h-12 text-blue mb-4 mx-auto" />
                 <h3 className="mb-2">Flashcards</h3>
-                <p className="text-secondary text-sm">Practice with interactive flashcards</p>
+                <p className="text-secondary text-sm">
+                  Practice with interactive flashcards
+                </p>
               </button>
-              
+
               <button
-                disabled
-                className="bg-card rounded-lg shadow-md p-8 opacity-50 cursor-not-allowed border border-default"
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    themeId: selectedContent.theme.id,
+                    difficulty: String(selectedContent.difficultyLevel),
+                    category: selectedContent.category,
+                    questionType: selectedContent.questionType,
+                  });
+                  router.push(`/games/memorymatch?${params.toString()}`);
+                }}
+                className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
               >
-                <Brain className="w-12 h-12 text-muted mb-4 mx-auto" />
+                <Brain className="w-12 h-12 text-blue mb-4 mx-auto" />
                 <h3 className="mb-2 text-muted">Memory Match</h3>
-                <p className="text-disabled text-sm">Coming soon</p>
+                <p className="text-secondary text-sm">
+                  Spin a wheel to test your skills!
+                </p>
               </button>
-              
+
               <button
                 disabled
                 className="bg-card rounded-lg shadow-md p-8 opacity-50 cursor-not-allowed border border-default"
@@ -78,16 +94,13 @@ export default function GamesPage() {
           </div>
         </div>
       </AppLayout>
-    )
+    );
   }
 
   // Show content selector
   return (
     <AppLayout>
-      <GameContentSelector
-      onSelectionComplete={handleContentSelection}
-    />
+      <GameContentSelector onSelectionComplete={handleContentSelection} />
     </AppLayout>
-    
-  )
+  );
 }
