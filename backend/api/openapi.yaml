@@ -2820,9 +2820,12 @@ components:
           type: array
           items:
             type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Individualized Education Program details
-          example: "Active IEP with speech therapy goals"
+          description: List of Individualized Education Program goals
+          example: ["Active IEP with speech therapy goals", "Occupational therapy accommodations"]
         created_at:
           type: string
           format: date-time
@@ -2875,9 +2878,12 @@ components:
           type: array
           items:
             type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Individualized Education Program details (optional)
-          example: "Active IEP with speech therapy goals"
+          description: List of Individualized Education Program goals (optional)
+          example: ["Active IEP with speech therapy goals", "Occupational therapy accommodations"]
 
     UpdateStudentInput:
       type: object
@@ -2913,9 +2919,12 @@ components:
           type: array
           items:
             type: string
+          type: array
+          items:
+            type: string
           nullable: true
-          description: Updated IEP details (can be set to null)
-          example: "Updated IEP with advanced speech therapy goals"
+          description: Updated list of IEP goals (can be set to null or empty array)
+          example: ["Updated IEP with advanced speech therapy goals", "Reading comprehension support"]
 
     Theme:
       type: object
