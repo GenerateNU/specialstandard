@@ -18,14 +18,10 @@ export default function WeekNavigator({
   maxWeek = 4,
   className,
 }: WeekNavigatorProps) {
-  const canGoPrevious = currentWeek > 1
-  const canGoNext = currentWeek < maxWeek
-
   return (
     <div className={`flex items-center gap-4 ${className}`}>
       <Button
         onClick={onPreviousWeek}
-        disabled={!canGoPrevious}
         variant="ghost"
         size="icon"
         className="w-10 h-10 rounded-full hover:bg-blue-light"
@@ -43,7 +39,6 @@ export default function WeekNavigator({
 
       <Button
         onClick={onNextWeek}
-        disabled={!canGoNext}
         variant="ghost"
         size="icon"
         className="w-10 h-10 rounded-full hover:bg-blue-light"

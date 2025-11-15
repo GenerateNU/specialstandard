@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { use, useEffect, useRef, useState } from 'react'
@@ -12,20 +12,27 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
 export default function StartSessionPage({ params }: PageProps) {
   const { id } = use(params)
   const router = useRouter()
   const { session, isLoading: sessionLoading } = useSession(id)
   const { students: sessionStudents, isLoading: studentsLoading } = useSessionStudentsForSession(id)
-  const { setSession, setStudents, setCurrentWeek } = useSessionContext()
+  const { setSession, setStudents, setCurrentWeek, setCurrentMonth, setCurrentYear } = useSessionContext()
   const [selectedWeek, setSelectedWeek] = useState(1)
   const initializedRef = useRef(false)
 
+  // Initialize month and year from current date
+  const now = new Date()
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth())
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+
   // Available weeks - 4 weeks per month
   const availableWeeks = [1, 2, 3, 4]
-  
-  // Get month name from session date
-  const monthName = session ? new Date(session.start_datetime).toLocaleDateString('en-US', { month: 'long' }) : ''
 
   useEffect(() => {
     if (session && sessionStudents && !initializedRef.current) {
@@ -39,8 +46,28 @@ export default function StartSessionPage({ params }: PageProps) {
     }
   }, [session, sessionStudents, setSession, setStudents])
 
+  const handlePreviousMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11)
+      setSelectedYear(selectedYear - 1)
+    } else {
+      setSelectedMonth(selectedMonth - 1)
+    }
+  }
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0)
+      setSelectedYear(selectedYear + 1)
+    } else {
+      setSelectedMonth(selectedMonth + 1)
+    }
+  }
+
   const handleStartCurriculum = () => {
     setCurrentWeek(selectedWeek)
+    setCurrentMonth(selectedMonth)
+    setCurrentYear(selectedYear)
     router.push(`/sessions/${id}/curriculum`)
   }
 
@@ -73,7 +100,26 @@ export default function StartSessionPage({ params }: PageProps) {
 
       {/* Main content */}
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">{monthName}</h1>
+        {/* Month/Year Selector */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <button
+            onClick={handlePreviousMonth}
+            className="w-12 h-12 rounded-full hover:bg-card-hover flex items-center justify-center transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          
+          <h1 className="text-4xl font-bold text-center min-w-[300px]">
+            {MONTHS[selectedMonth]} {selectedYear}
+          </h1>
+          
+          <button
+            onClick={handleNextMonth}
+            className="w-12 h-12 rounded-full hover:bg-card-hover flex items-center justify-center transition-colors"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
 
         {/* Week Selection */}
         <div className="bg-card rounded-3xl p-8 shadow-lg border border-default">

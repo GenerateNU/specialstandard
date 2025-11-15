@@ -12,9 +12,22 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
 export default function CurriculumPage({ params }: PageProps) {
   const { id } = use(params)
-  const { session, currentWeek, setCurrentWeek } = useSessionContext()
+  const { 
+    session, 
+    currentWeek, 
+    currentMonth, 
+    currentYear,
+    setCurrentWeek,
+    setCurrentMonth,
+    setCurrentYear,
+  } = useSessionContext()
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
 
   if (!session) {
@@ -28,14 +41,34 @@ export default function CurriculumPage({ params }: PageProps) {
   const handlePreviousWeek = () => {
     if (currentWeek > 1) {
       setCurrentWeek(currentWeek - 1)
-      setSelectedLevel(null) // Reset selection when changing weeks
+      setSelectedLevel(null)
+    } else {
+      // Go to previous month, week 4
+      if (currentMonth === 0) {
+        setCurrentMonth(11)
+        setCurrentYear(currentYear - 1)
+      } else {
+        setCurrentMonth(currentMonth - 1)
+      }
+      setCurrentWeek(4)
+      setSelectedLevel(null)
     }
   }
 
   const handleNextWeek = () => {
     if (currentWeek < 4) {
       setCurrentWeek(currentWeek + 1)
-      setSelectedLevel(null) // Reset selection when changing weeks
+      setSelectedLevel(null)
+    } else {
+      // Go to next month, week 1
+      if (currentMonth === 11) {
+        setCurrentMonth(0)
+        setCurrentYear(currentYear + 1)
+      } else {
+        setCurrentMonth(currentMonth + 1)
+      }
+      setCurrentWeek(1)
+      setSelectedLevel(null)
     }
   }
 
@@ -54,11 +87,14 @@ export default function CurriculumPage({ params }: PageProps) {
   return (
     <CurriculumLayout
       title="Curriculum"
+      subtitle={formattedDate}
       backHref={`/sessions/${id}`}
       backLabel="Back to Session"
       headerContent={(
-        <div className="flex items-center gap-6">
-          <span className="text-lg font-medium opacity-90">{formattedDate}</span>
+        <div className="flex items-center gap-4">
+          <span className="text-lg font-medium opacity-90">
+            {MONTHS[currentMonth]} {currentYear}
+          </span>
           <WeekNavigator
             currentWeek={currentWeek}
             onPreviousWeek={handlePreviousWeek}
