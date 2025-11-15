@@ -124,40 +124,6 @@ function StudentPage() {
     <AppLayout>
       <div className="w-full h-screen bg-background">
         <div className={`w-full h-full flex flex-col gap-8 ${PADDING} relative overflow-y-auto`}>
-          {/* Edit toggle button */}
-          <div className="absolute top-1/2 right-5 z-20 flex gap-2">
-            {edit
-              ? (
-                  <>
-                    <Button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="w-12 h-12 p-0 bg-green-600 hover:bg-green-700"
-                      size="icon"
-                    >
-                      <Save size={20} />
-                    </Button>
-                    <Button
-                      onClick={handleCancel}
-                      disabled={isSaving}
-                      className="w-12 h-12 p-0 bg-red-600 hover:bg-red-700"
-                      size="icon"
-                    >
-                      <X size={20} />
-                    </Button>
-                  </>
-                )
-              : (
-                  <Button
-                    onClick={() => setEdit(!edit)}
-                    className="w-12 h-12 p-0"
-                    variant="secondary"
-                    size="icon"
-                  >
-                    <PencilLine size={20} />
-                  </Button>
-                )}
-          </div>
 
           <div className="flex flex-col gap-4 flex-shrink-0">
             {/* Back button */}
@@ -239,9 +205,43 @@ function StudentPage() {
           </div>
           {/* Goals and Session Notes */}
           <div className="grid grid-cols-2 gap-8 overflow-hidden">
-            <div className="gap-2 flex flex-col overflow-hidden">
+            <div className="gap-2 flex flex-col overflow-hidden relative">
               <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
                 IEP Goals
+              </div>
+              {/* Edit toggle button */}
+              <div className="absolute top-0 right-0 z-10 flex gap-2">
+                {edit
+                  ? (
+                      <>
+                        <Button
+                          onClick={handleSave}
+                          disabled={isSaving}
+                          className="w-12 h-12 p-0 bg-green-600 hover:bg-green-700"
+                          size="icon"
+                        >
+                          <Save size={20} />
+                        </Button>
+                        <Button
+                          onClick={handleCancel}
+                          disabled={isSaving}
+                          className="w-12 h-12 p-0 bg-red-600 hover:bg-red-700"
+                          size="icon"
+                        >
+                          <X size={20} />
+                        </Button>
+                      </>
+                    )
+                  : (
+                      <Button
+                        onClick={() => setEdit(!edit)}
+                        className="w-12 h-12 p-0"
+                        variant="secondary"
+                        size="icon"
+                      >
+                        <PencilLine size={20} />
+                      </Button>
+                    )}
               </div>
               <div className="flex-1 overflow-y-auto flex flex-col gap-2">
                 {iepGoals.length === 0 && !edit
