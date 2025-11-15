@@ -9,6 +9,7 @@ import (
 	"specialstandard/internal/service/handler/game_content"
 	"specialstandard/internal/service/handler/game_result"
 	"specialstandard/internal/service/handler/resource"
+	s3handler "specialstandard/internal/service/handler/s3"
 	"specialstandard/internal/service/handler/school"
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/service/handler/session_resource"
@@ -76,12 +77,12 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	// Use logging middleware
 	app.Use(logger.New())
 
-	// Use CORS middleware to configure CORS and handle preflight/OPTIONS requests.
+	// Use CORS middleware
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:3000,http://localhost:3001,http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:3000,https://clownfish-app-wq7as.ondigitalocean.app,https://king-prawn-app-n5vk6.ondigitalocean.app",
-		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS", // Using these methods.
+		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowCredentials: true, // Allow cookies
+		AllowCredentials: true,
 		ExposeHeaders:    "Content-Length, X-Request-ID",
 	}))
 
@@ -98,10 +99,13 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 
 	apiV1 := app.Group("/api/v1")
 
+	// S3 presign endpoint - ONLY ONCE, AFTER apiV1 is created
+	s3Handler := s3handler.NewHandler(bucket)
+	apiV1.Post("/s3/presign", s3Handler.GeneratePresignedURL)
+
 	apiV1.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusOK)
 	})
-	// Setup
 
 	SupabaseAuthHandler := auth.NewHandler(config.Supabase, repo.Therapist)
 
@@ -185,7 +189,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Delete("/:id/recurring", sessionHandler.DeleteRecurringSessions)
 	})
 
-	gameContentHandler := game_content.NewHandler(repo.GameContent)
+	gameContentHandler := game_content.NewHandler(repo.GameContent, bucket)
 	apiV1.Route("/game-contents", func(r fiber.Router) {
 		r.Get("/", gameContentHandler.GetGameContents)
 	})

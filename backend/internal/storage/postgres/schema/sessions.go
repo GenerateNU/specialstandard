@@ -460,7 +460,7 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
 	}
 
 	query := `
-    SELECT ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
+    SELECT ss.id, ss.session_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
            s.id, s.first_name, s.last_name, s.dob, s.therapist_id, 
            s.grade, s.iep, s.created_at, s.updated_at, 
            sr.level, sr.category, sr.description
@@ -486,7 +486,7 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
 		var rating models.SessionRating
 
 		err := rows.Scan(
-			&result.SessionID, &result.Present, &result.Notes, &result.CreatedAt, &result.UpdatedAt,
+			&result.SessionStudentID, &result.SessionID, &result.Present, &result.Notes, &result.CreatedAt, &result.UpdatedAt,
 			&student.ID, &student.FirstName, &student.LastName, &student.DOB, &student.TherapistID,
 			&student.Grade, &student.IEP, &student.CreatedAt, &student.UpdatedAt,
 			&rating.Level, &rating.Category, &rating.Description,

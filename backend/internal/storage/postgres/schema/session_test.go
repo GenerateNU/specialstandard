@@ -545,4 +545,5 @@ func TestGetSessionStudents(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, students, 1) // returns the one student that has not graduated
+	assert.Greater(t, students[0].SessionStudentID, 0, "SessionStudentID should be populated")
 }

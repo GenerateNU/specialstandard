@@ -102,8 +102,8 @@ type Repository struct {
 	SessionResource SessionResourceRepository
 	GameContent     GameContentRepository
 	GameResult      GameResultRepository
-	District        DistrictRepository
-	School          SchoolRepository
+	District 		DistrictRepository
+	School 			SchoolRepository
 }
 
 func (r *Repository) Close() error {
@@ -127,7 +127,7 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		SessionResource: schema.NewSessionResourceRepository(db),
 		GameContent:     schema.NewGameContentRepository(db),
 		GameResult:      schema.NewGameResultRepository(db),
-		District:        schema.NewDistrictRepository(db),
-		School:          schema.NewSchoolRepository(db),
+		District: 		 schema.NewDistrictRepository(db),
+		School: 		 schema.NewSchoolRepository(db),
 	}
 }

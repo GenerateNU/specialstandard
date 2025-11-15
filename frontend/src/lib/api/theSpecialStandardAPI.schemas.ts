@@ -589,6 +589,8 @@ export interface StudentRatingEntry {
 }
 
 export interface StudentWithSessionInfo {
+  /** The unique ID of the session-student relationship */
+  session_student_id: number;
   /** The student information */
   student: Student;
   /** UUID of the associated session */
@@ -1109,6 +1111,12 @@ export type GetResourcesParams = {
    * Filter resources by theme year
    */
   theme_year?: number;
+  /**
+   * Filter resources by week (1-4)
+   * @minimum 1
+   * @maximum 4
+   */
+  week?: number;
   /**
    * Page Number of pagination
    * @minimum 1
