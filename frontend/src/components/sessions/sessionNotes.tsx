@@ -30,11 +30,13 @@ export default function SessionNotes({ studentId }: SessionNotesProps) {
   }
 
   // Sort sessions by date (most recent first)
+  const now = moment()
   const sortedSessions = [...sessions]
     .map(item => ({
       ...item,
       sessionData: (item as any).session
     }))
+    .filter(item => moment(item.sessionData.start_datetime).isBefore(now))
     .sort((a, b) =>
       new Date(b.sessionData.start_datetime).getTime() - new Date(a.sessionData.start_datetime).getTime()
     )
