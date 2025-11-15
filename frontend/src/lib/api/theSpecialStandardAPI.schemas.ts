@@ -556,6 +556,8 @@ export interface StudentRatingEntry {
 }
 
 export interface StudentWithSessionInfo {
+  /** The unique ID of the session-student relationship */
+  session_student_id: number;
   /** The student information */
   student: Student;
   /** UUID of the associated session */
