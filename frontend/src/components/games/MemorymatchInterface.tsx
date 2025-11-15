@@ -135,8 +135,8 @@ const SpinnerWheel: React.FC<{
                 <text
                   x="70"
                   y="50"
-                  fill="white"
-                  fontSize="3"
+                  fill="black"
+                  fontSize="5"
                   fontWeight="600"
                   textAnchor="middle"
                   transform={`rotate(${
@@ -166,7 +166,7 @@ const SpinnerWheel: React.FC<{
         className={`absolute left-1/2 -translate-x-1/2 rounded-lg font-semibold transition-all ${
           isSpinning || availableWords.length === 0
             ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-            : "bg-zinc-300 text-white hover:scale-105 hover:shadow-lg"
+            : "bg-zinc-300 text-black hover:scale-105 hover:shadow-lg"
         }`}
         style={{
           bottom: "-25%",
@@ -441,7 +441,7 @@ export default function MemorymatchGameInterface({
               {selectedWordIndex !== null && showActionButtons && (
                 <button
                   onClick={() => handleMarkResult(false)}
-                  className="absolute left-0 px-4 py-2 bg-red-300 text-white rounded-lg hover:bg-red-400 transition-colors animate-fade-in"
+                  className="absolute left-0 px-4 py-2 bg-red-300 text-black rounded-lg hover:bg-red-400 transition-colors animate-fade-in"
                   style={{
                     left: "5%",
                     top: "50%",
@@ -472,7 +472,7 @@ export default function MemorymatchGameInterface({
               {selectedWordIndex !== null && showActionButtons && (
                 <button
                   onClick={() => handleMarkResult(true)}
-                  className="absolute right-0 px-4 py-2 bg-green-300 text-white rounded-lg hover:bg-green-400 transition-colors animate-fade-in"
+                  className="absolute right-0 px-4 py-2 bg-green-300 text-black rounded-lg hover:bg-green-400 transition-colors animate-fade-in"
                   style={{
                     right: "5%",
                     top: "50%",

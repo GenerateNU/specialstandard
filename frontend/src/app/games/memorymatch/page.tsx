@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { MemorymatchContent } from "./MemorymatchContent";
 
 export const metadata: Metadata = {
-  title: "Flashcard Game",
-  description: "Practice with interactive flashcards",
+  title: "Memory Match Game",
+  description: "Practice with interactive wheel",
 };
 
 function LoadingSpinner() {
