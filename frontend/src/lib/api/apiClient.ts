@@ -10,8 +10,8 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 const apiClient = axios.create({
-  // eslint-disable-next-line node/prefer-global/process
   baseURL:
+    // eslint-disable-next-line node/prefer-global/process
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1",
   timeout: 10000,
   headers: {
