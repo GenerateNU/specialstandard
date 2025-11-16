@@ -264,10 +264,11 @@ paths:
             schema:
               type: object
               properties:
-                type: string
-                format: password
-                description: New Password
-                example: password
+                password:
+                  type: string
+                  format: password
+                  description: New Password
+                  example: password
       responses:
         "200":
           description: Successfully updated your password.

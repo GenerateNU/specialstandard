@@ -21,12 +21,7 @@ func (h *Handler) UpdatePassword(c *fiber.Ctx) error {
 		return errs.BadRequest("New password is required")
 	}
 
-	// The token is typically passed as a query parameter from the reset link
-	token := c.Query("token")
-	if token == "" {
-		return errs.BadRequest("Reset token is missing")
-	}
-
+	token := c.Cookies("jwt", "")
 	err := auth.SupabaseUpdatePassword(&h.config, token, payload.Password)
 	if err != nil {
 		return errs.InternalServerError(fmt.Sprintf("Password update failed: %v", err))

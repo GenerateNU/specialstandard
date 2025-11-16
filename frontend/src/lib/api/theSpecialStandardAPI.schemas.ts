@@ -788,10 +788,8 @@ export type PostAuthForgotPasswordBody = {
 };
 
 export type PutAuthUpdatePasswordBody = {
-  type?: unknown;
-  format?: unknown;
-  description?: unknown;
-  example?: unknown;
+  /** New Password */
+  password?: string;
 };
 
 export type GetSessionsParams = {
