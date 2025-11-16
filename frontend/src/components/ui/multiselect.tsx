@@ -123,13 +123,13 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                   key={option.value}
                   value={option.value}
                   disabled={isDisabled}
-                  className="cursor-pointer bg-background hover:bg-accent/50"
+                  className="cursor-pointer bg-secondary hover:bg-accent/50"
                 >
                   <div className="flex items-center gap-2 w-full">
                     <div className={cn(
                       'flex h-4 w-4 items-center justify-center rounded-sm border',
                       isSelected
-                        ? 'bg-accent border-primary'
+                        ? 'bg-primary border-primary'
                         : 'border-muted-foreground',
                     )}
                     >

@@ -64,10 +64,20 @@ func CreateTestSession(t *testing.T, db *pgxpool.Pool, ctx context.Context, ther
 	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-	_, err := db.Exec(ctx, `
-		INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-	`, sessionID, "Test Session", therapistID, startTime, endTime, notes)
+
+	sessionParentID := uuid.New()
+	startDate := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, startTime.Location())
+	endDate := time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 0, 0, 0, 0, endTime.Location())
+	_, err := testDB.Exec(ctx, `
+       INSERT INTO session_parent (id, start_date, end_date, therapist_id)
+       VALUES ($1, $2, $3, $4)
+   `, sessionParentID, startDate, endDate, therapistID)
+	assert.NoError(t, err)
+
+	_, err = db.Exec(ctx, `
+		INSERT INTO session (id, session_name, start_datetime, end_datetime, notes, created_at, updated_at, session_parent_id)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $6)
+	`, sessionID, "Test Session", startTime, endTime, notes, sessionParentID)
 	assert.NoError(t, err)
 
 	return sessionID
@@ -403,10 +413,19 @@ func TestSessionStudentRepository_GetStudentAttendance(t *testing.T) {
 		startTime := date.Add(-1 * time.Hour)
 		endTime := date
 
+		sessionParentID := uuid.New()
+		startDate := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, startTime.Location())
+		endDate := time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 0, 0, 0, 0, endTime.Location())
 		_, err := testDB.Exec(ctx, `
-			INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime)
+       INSERT INTO session_parent (id, start_date, end_date, therapist_id)
+       VALUES ($1, $2, $3, $4)
+   `, sessionParentID, startDate, endDate, therapistID)
+		assert.NoError(t, err)
+
+		_, err = testDB.Exec(ctx, `
+			INSERT INTO session (id, session_name, start_datetime, end_datetime, session_parent_id)
 			VALUES ($1, $2, $3, $4, $5)
-		`, sessionID, "Test Session", therapistID, startTime, endTime)
+		`, sessionID, "Test Session", startTime, endTime, sessionParentID)
 		require.NoError(t, err)
 
 		// Create session_student relationship

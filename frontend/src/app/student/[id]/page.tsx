@@ -4,18 +4,14 @@ import { ChevronLeft, CirclePlus, PencilLine, Save, Trash2, X } from 'lucide-rea
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
-import UpcomingSession from '@/components/sessions/UpcomingSession'
-
+import RecentSession from '@/components/attendance/RecentSession'
+import StudentSchedule from '@/components/schedule/StudentSchedule'
 import SessionNotes from '@/components/sessions/sessionNotes'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useRecentlyViewedStudents } from '@/hooks/useRecentlyViewedStudents'
 import { useStudents } from '@/hooks/useStudents'
 import { getAvatarVariant } from '@/lib/utils'
-import SchoolTag from '@/components/school/schoolTag'
-
-import { useStudentAttendance } from '@/hooks/useStudentAttendance'
-import CustomPieChart from '@/components/statistics/PieChart'
 
 function StudentPage() {
   const params = useParams()
@@ -24,10 +20,6 @@ function StudentPage() {
   const { students, isLoading, updateStudent } = useStudents()
   const student = students.find(s => s.id === studentId)
   const { addRecentStudent } = useRecentlyViewedStudents()
-
-  const { attendance, isLoading: attendanceLoading } = useStudentAttendance({
-  studentId: studentId || '',
-})
 
   // Track this student as recently viewed - only when studentId changes
   useEffect(() => {
@@ -123,124 +115,90 @@ function StudentPage() {
   return (
     <AppLayout>
       <div className="w-full h-screen bg-background">
-        <div className={`w-full h-full flex flex-col gap-8 ${PADDING} relative overflow-y-auto`}>
-
-          <div className="flex flex-col gap-4 flex-shrink-0">
-            {/* Back button */}
-            <Button
-              variant="outline"
-              className={`w-fit p-4 flex flex-row items-center gap-2 ${CORNER_ROUND} flex-shrink-0`}
-              onClick={() => window.history.back()}
-            >
-              <ChevronLeft />
-              Back
-            </Button>
-
-            {/* Profile and Upcoming Sessions row */}
-            <div className="flex gap-8 flex-1 min-h-0">
-              {/* Student Profile */}
-              <div className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col relative`}>
-                {/* Edit Profile Button - Separate Section */}
-                <div className="flex justify-end p-3 flex-shrink-0 relative z-10">
+        <div className={`w-full h-full grid grid-rows-2 gap-8 ${PADDING} relative`}>
+          {/* Edit toggle button */}
+          <div className="absolute top-1/2 right-5 z-20 flex gap-2">
+            {edit
+              ? (
+                  <>
+                    <Button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="w-12 h-12 p-0 bg-green-600 hover:bg-green-700"
+                      size="icon"
+                    >
+                      <Save size={20} />
+                    </Button>
+                    <Button
+                      onClick={handleCancel}
+                      disabled={isSaving}
+                      className="w-12 h-12 p-0 bg-red-600 hover:bg-red-700"
+                      size="icon"
+                    >
+                      <X size={20} />
+                    </Button>
+                  </>
+                )
+              : (
                   <Button
-                    onClick={() => {/* Navigate to edit page */}}
+                    onClick={() => setEdit(!edit)}
+                    className="w-12 h-12 p-0"
                     variant="secondary"
-                    className="flex items-center gap-2 hover:bg-accent h-8"
-                    size="sm"
+                    size="icon"
                   >
-                    <span className="text-base font-medium">Edit Profile</span>
-                    <PencilLine size={18} />
+                    <PencilLine size={20} />
                   </Button>
-                </div>
-                
-                {/* Content - positioned absolutely to center in entire card */}
-                <div className="absolute inset-0 flex items-center justify-center gap-8 p-5 pointer-events-none">
-                  <div className="max-h-full aspect-square border-2 border-default rounded-full flex-shrink-0 pointer-events-auto">
-                    <Avatar
-                      name={fullName + student.id}
-                      variant={avatarVariant}
-                      className="w-full h-full"
-                    />
-                  </div>
-                  
-                  <div className="flex flex-col gap-3 flex-1 pointer-events-auto">
-                    <div className="text-4xl font-bold text-primary">{initials}</div>
-                    
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-xl font-medium text-primary">
-                        Grade {student.grade}
-                      </span>
-                      {student.school_name && <SchoolTag schoolName={student.school_name} />}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Upcoming Sessions */}
-              <div className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex flex-col gap-4`}>
-                <div className="text-2xl font-semibold text-primary flex-shrink-0">Upcoming Sessions</div>
-                <div className="flex-1 min-h-0">
-                  {/* Upcoming sessions content will go here */}
-                  <UpcomingSession studentId={studentId}/>
-                </div>
-              </div>
-            </div>
+                )}
           </div>
-          {/* Attendance */}
-          <div className={`bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex-shrink-0`}>
-            {attendanceLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-sm text-muted-foreground">Loading attendance...</div>
-              </div>
-            ) : (
-              <div className={attendance?.total_count === 0 ? 'opacity-50 pointer-events-none' : ''}>
-                <CustomPieChart
-                  percentage={attendance && attendance.total_count > 0 ? Math.round((attendance.present_count / attendance.total_count) * 100) : 0}
-                  title="Attendance"
-                  showPlaceholder={!attendance || attendance.total_count === 0}
+
+          <div className="flex gap-8">
+            {/* pfp and initials */}
+            <div className="flex flex-col items-left justify-between gap-2 w-1/6">
+              <Button
+                variant="outline"
+                className={`w-1/2 pl-4 flex flex-row items-left justify-start ${CORNER_ROUND}`}
+                onClick={() => window.history.back()}
+              >
+                <ChevronLeft />
+                Back
+              </Button>
+              <div className="w-full aspect-square border-2 border-accent rounded-full">
+                <Avatar
+                  name={fullName + student.id}
+                  variant={avatarVariant}
+                  className="w-full h-full"
                 />
               </div>
-            )}
+              <div
+                className={`w-full h-1/5 text-3xl font-bold flex items-center 
+                justify-center bg-background border-border border-2 ${PADDING}
+                 ${CORNER_ROUND}`}
+              >
+                {initials}
+              </div>
+            </div>
+            {/* student schedule */}
+            <div className={`flex-[3] ${CORNER_ROUND} overflow-hidden bg-blue flex flex-col justify-between ${PADDING}`}>
+              <StudentSchedule studentId={studentId} className="h-3/4" />
+              <Button className="h-1/5 rounded-2xl text-lg font-bold " variant="secondary">
+                View Student Schedule
+              </Button>
+            </div>
+            <div className={`bg-pink flex-2 flex flex-col items-center justify-between ${CORNER_ROUND} ${PADDING}`}>
+              <div className="w-full h-3/4 text-3xl font-bold flex items-center rounded-2xl">
+                <RecentSession studentId={studentId} />
+              </div>
+              <Button className="w-full h-1/5 rounded-2xl text-lg font-bold " variant="secondary">
+                View Student Attendance
+              </Button>
+            </div>
           </div>
+
           {/* Goals and Session Notes */}
           <div className="grid grid-cols-2 gap-8 overflow-hidden">
-            <div className="gap-2 flex flex-col overflow-hidden relative">
+            <div className="gap-2 flex flex-col overflow-hidden">
               <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
                 IEP Goals
-              </div>
-              {/* Edit toggle button */}
-              <div className="absolute top-0 right-0 z-10 flex gap-2">
-                {edit
-                  ? (
-                      <>
-                        <Button
-                          onClick={handleSave}
-                          disabled={isSaving}
-                          className="w-12 h-12 p-0 bg-green-600 hover:bg-green-700"
-                          size="icon"
-                        >
-                          <Save size={20} />
-                        </Button>
-                        <Button
-                          onClick={handleCancel}
-                          disabled={isSaving}
-                          className="w-12 h-12 p-0 bg-red-600 hover:bg-red-700"
-                          size="icon"
-                        >
-                          <X size={20} />
-                        </Button>
-                      </>
-                    )
-                  : (
-                      <Button
-                        onClick={() => setEdit(!edit)}
-                        className="w-12 h-12 p-0"
-                        variant="secondary"
-                        size="icon"
-                      >
-                        <PencilLine size={20} />
-                      </Button>
-                    )}
               </div>
               <div className="flex-1 overflow-y-auto flex flex-col gap-2">
                 {iepGoals.length === 0 && !edit

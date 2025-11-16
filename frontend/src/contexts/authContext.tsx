@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserId(response.user.id)
       }
 
-      router.push('/signup/link')
+      router.push('/')
     }
     catch (error) {
       console.error('Signup failed:', error)
