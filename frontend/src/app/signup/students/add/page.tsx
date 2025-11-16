@@ -169,7 +169,7 @@ export default function AddStudentsPage() {
       <div className="max-w-md w-full">
         <button
           onClick={handleBack}
-          className="mb-6 flex items-center text-secondary hover:text-primary transition-colors"
+          className="mb-6 flex items-center text-secondary hover:text-primary cursor-pointer transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back
@@ -322,7 +322,7 @@ export default function AddStudentsPage() {
             <button
               type="button"
               onClick={() => router.push('/signup/complete')}
-              className="text-sm text-secondary hover:text-primary underline"
+              className="text-sm clock cursor-pointer text-secondary hover:text-primary underline"
             >
               Skip this step
             </button>

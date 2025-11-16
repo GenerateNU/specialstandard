@@ -54,7 +54,7 @@ export default function StudentsPage() {
       <div className="max-w-2xl w-full">
         <button
           onClick={handleBack}
-          className="mb-6 flex items-center text-secondary hover:text-primary transition-colors"
+          className="mb-6 flex items-center cursor-pointer text-secondary hover:text-primary transform hover:scale-125 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back
@@ -116,7 +116,7 @@ export default function StudentsPage() {
           <div className="text-center mt-4">
             <button
               onClick={handleContinue}
-              className="text-sm text-secondary hover:text-primary underline"
+              className="text-sm text-secondary cursor-pointer hover:text-primary underline"
             >
               Skip this step
             </button>

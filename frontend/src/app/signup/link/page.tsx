@@ -147,7 +147,7 @@ export default function ProfilePage() {
       <div className="max-w-md w-full">
         <button
           onClick={handleBack}
-          className="mb-6 flex items-center text-secondary hover:text-primary transition-colors"
+          className="mb-6 flex items-center text-secondary cursor-pointer transition-colors transform hover:scale-125"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back

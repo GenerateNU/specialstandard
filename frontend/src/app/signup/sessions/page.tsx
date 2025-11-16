@@ -92,7 +92,7 @@ export default function SessionsPage() {
         <div className="flex justify-between items-center mb-6">
           <button
             onClick={handleBack}
-            className="flex items-center text-secondary hover:text-primary transition-colors"
+            className="flex items-center cursor-pointer text-secondary hover:text-primary transform hover:scale-125 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
@@ -100,7 +100,7 @@ export default function SessionsPage() {
           
           <button
             onClick={handleSkip}
-            className="text-sm text-accent hover:text-accent-hover"
+            className="text-sm text-accent cursor-pointer hover:text-accent-hover"
           >
             skip →
           </button>
