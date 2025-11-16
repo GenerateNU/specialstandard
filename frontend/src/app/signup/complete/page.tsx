@@ -32,7 +32,7 @@ export default function CompletePage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen p-8 bg-background">
-      <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg p-12 text-center">
+      <div className="max-w-lg w-full bg-background rounded-2xl shadow-lg p-12 text-center">
         <div className="mb-8 flex justify-center">
           <div className="w-24 h-24 bg-accent-light rounded-full flex items-center justify-center">
             <CheckCircle className="w-12 h-12 text-accent" />
@@ -58,7 +58,7 @@ export default function CompletePage() {
         </div>
         <Button
           onClick={handleGoToDashboard}
-          className="bg-white text-primary border-2 border-primary hover:bg-gray-50 px-8 py-2"
+          className="text-primary border-2 border-primary px-8 py-2"
         >
           Dashboard
         </Button>

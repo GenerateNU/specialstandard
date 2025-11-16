@@ -139,7 +139,7 @@ export default function AddSessionsPage() {
                 <div className="text-center">
                   <button
                     onClick={() => router.push('/signup/complete')}
-                    className="text-sm text-secondary hover:text-primary underline"
+                    className="text-sm cursor-pointer text-secondary hover:text-primary underline"
                   >
                     Skip this step
                   </button>
