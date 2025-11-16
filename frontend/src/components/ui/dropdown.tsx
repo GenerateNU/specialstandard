@@ -76,7 +76,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
           className={cn(
             'inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
             'border border-border bg-background hover:bg-card-hover',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent w-full',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
             className,
           )}
         >
@@ -92,7 +92,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
           <div
             ref={ref}
             className={cn(
-              'absolute z-50 mt-2 overflow-hidden rounded-md border border-border bg-background shadow-lg',
+              'absolute z-50 mt-2 min-w-[8rem] overflow-hidden rounded-md border border-border bg-background shadow-lg',
               alignmentClasses[align],
             )}
           >
@@ -104,12 +104,12 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
                   disabled={item.disabled}
                   onClick={() => handleSelect(item)}
                   className={cn(
-                    'flex w-full gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors',
+                    'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors',
                     'hover:bg-card-hover hover:text-primary',
                     'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
                     'disabled:pointer-events-none disabled:opacity-50',
                     '[&>svg]:h-4 [&>svg]:w-4',
-                    selectedValue === item.value && 'bg-accent text-foreground', className,
+                    selectedValue === item.value && 'bg-accent text-foreground',
                   )}
                 >
                   {item.icon}

@@ -32,17 +32,13 @@ export default function StudentSchedule({ studentId, initialView = 'day', classN
   // Always build events array (empty if error or no data)
   const events = error
     ? []
-    : sessions.map(s => {
-        // Check if this is from studentHook (nested) or allHook (flat)
-        const sessionData = studentHook ? (s as any).session : s
-        return {
-          id: sessionData.id,
-          title: sessionData.session_name ? sessionData.session_name : 'Session',
-          start: new Date(sessionData.start_datetime),
-          end: new Date(sessionData.end_datetime),
-          allDay: false,
-        }
-      })
+    : sessions.map(s => ({
+        id: s.id,
+        title: s.session_name ? s.session_name : 'Session',
+        start: new Date(s.start_datetime),
+        end: new Date(s.end_datetime),
+        allDay: false,
+      }))
 
   // Dynamic header text based on view
   const getHeaderText = () => {

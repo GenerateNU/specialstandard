@@ -1366,7 +1366,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AttendanceRecord"
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceRecord"
         "400":
           description: Bad request (invalid UUID format)
           content:
@@ -2628,17 +2630,11 @@ components:
     CreateTherapistInput:
       type: object
       required:
-        - id
         - first_name
         - last_name
         - email
         - district_id
       properties:
-        id:
-          type: string
-          format: uuid
-          description: Unique identifier for the therapist
-          example: "123e4567-e89b-12d3-a456-426614174000"
         first_name:
           type: string
           description: First name of the therapist
@@ -3588,54 +3584,40 @@ components:
     AttendanceRecord:
       type: object
       required:
-        - present_count
-        - total_count
+        - present_sessions
+        - total_sessions
       properties:
-        present_count:
+        present_sessions:
           type: integer
           description: Number of sessions the student was present
           example: 15
-        total_count:
+        total_sessions:
           type: integer
           description: Total number of sessions held
           example: 20
 
     SessionWithStudentInfo:
-      type: object
-      required:
-        - session
-        - student_id
-        - present
-        - created_at
-        - updated_at
-      properties:
-        session:
-          $ref: "#/components/schemas/Session"
-          description: The nested session object
-        student_id:
-          type: string
-          format: uuid
-          description: UUID of the associated student
-          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-        present:
-          type: boolean
-          description: Whether the student was present at this session
-          example: true
-        notes:
-          type: string
-          nullable: true
-          description: Session-specific notes about the student
-          example: "Worked on balance exercises"
-        created_at:
-          type: string
-          format: date-time
-          description: When the session-student relationship was created
-          example: "2024-01-15T10:30:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          description: When the session-student relationship was last updated
-          example: "2024-01-15T10:35:00Z"
+      allOf:
+        - $ref: "#/components/schemas/Session"
+        - type: object
+          required:
+            - student_id
+            - present
+          properties:
+            student_id:
+              type: string
+              format: uuid
+              description: UUID of the associated student
+              example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+            present:
+              type: boolean
+              description: Whether the student was present at this session
+              example: true
+            notes:
+              type: string
+              nullable: true
+              description: Session-specific notes about the student
+              example: "Worked on balance exercises"
 
     SessionResource:
       type: object

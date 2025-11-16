@@ -17,7 +17,6 @@
   --color-white: #ffffff;
   --color-black: #272727;
   --color-bg-white: #f2ece0;
-  --color-white-hover: #d9d2c4;
 
   /* Light Theme */
   --background: var(--color-bg-white);
@@ -362,8 +361,4 @@ h6 {
 
 .disabled\:text-disabled:disabled {
   color: var(--text-disabled);
-}
-
-.shadow-card {
-  box-shadow: 0px 4px 10px 0px #00000040;
 }
