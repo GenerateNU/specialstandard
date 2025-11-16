@@ -7,24 +7,21 @@ import (
 )
 
 type Session struct {
-	ID              uuid.UUID   `json:"id" db:"id"`
-	SessionName     string      `json:"session_name" db:"session_name"`
-	StartDateTime   time.Time   `json:"start_datetime" db:"start_datetime"`
-	EndDateTime     time.Time   `json:"end_datetime" db:"end_datetime"`
-	TherapistID     uuid.UUID   `json:"therapist_id" db:"therapist_id"`
-	Notes           *string     `json:"notes" db:"notes"`
-	Location        *string     `json:"location" db:"location"`
-	CreatedAt       *time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt       *time.Time  `json:"updated_at" db:"updated_at"`
-	SessionParentID uuid.UUID   `json:"session_parent_id" db:"session_parent_id"`
-	Repetition      *Repetition `json:"repetition" db:"-"`
+	ID            uuid.UUID  `json:"id" db:"id"`
+	SessionName   string     `json:"session_name" db:"session_name"`
+	StartDateTime time.Time  `json:"start_datetime" db:"start_datetime"`
+	EndDateTime   time.Time  `json:"end_datetime" db:"end_datetime"`
+	TherapistID   uuid.UUID  `json:"therapist_id" db:"therapist_id"`
+	Notes         *string    `json:"notes" db:"notes"`
+	Location      *string    `json:"location" db:"location"`
+	CreatedAt     *time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type Repetition struct {
 	RecurStart  time.Time `json:"recur_start" validate:"required"`
 	RecurEnd    time.Time `json:"recur_end" validate:"required,gtfield=RecurStart"`
 	EveryNWeeks int       `json:"every_n_weeks" validate:"required,gte=1"`
-	Days        []int     `json:"days" validate:"required,dive,gte=0,lte=6"`
 }
 
 type PostSessionInput struct {

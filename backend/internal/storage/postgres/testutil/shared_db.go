@@ -199,29 +199,17 @@ func createAllTables(pool *pgxpool.Pool) error {
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
 
-		`CREATE TABLE IF NOT EXISTS session_parent (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    therapist_id UUID NOT NULL REFERENCES therapist(id) ON DELETE RESTRICT,
-    days SMALLINT[],
-    every_n_weeks INT,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    CHECK (end_date >= start_date)
-);`,
-
 		`CREATE TABLE IF NOT EXISTS session (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    start_datetime TIMESTAMPTZ NOT NULL,
-    end_datetime TIMESTAMPTZ NOT NULL,
-    session_parent_id UUID NOT NULL,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (session_parent_id) REFERENCES session_parent(id) ON DELETE CASCADE,
-    CHECK (end_datetime > start_datetime)
-);`,
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			start_datetime TIMESTAMPTZ NOT NULL,
+			end_datetime TIMESTAMPTZ NOT NULL,
+			therapist_id UUID NOT NULL,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT now(),
+			updated_at TIMESTAMPTZ DEFAULT now(),
+			FOREIGN KEY (therapist_id) REFERENCES therapist(id) ON DELETE RESTRICT,
+			CHECK (end_datetime > start_datetime)
+		)`,
 
 		`CREATE TABLE IF NOT EXISTS session_student (
 			id SERIAL PRIMARY KEY,

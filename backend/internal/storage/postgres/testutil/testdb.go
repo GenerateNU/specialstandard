@@ -129,23 +129,6 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 
-	_, err = pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS session_parent (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    therapist_id UUID NOT NULL REFERENCES therapist(id) ON DELETE RESTRICT,
-    days SMALLINT[],
-    every_n_weeks INT,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    CHECK (end_date >= start_date)
-);
-CREATE INDEX IF NOT EXISTS idx_session_parent_therapist ON session_parent(therapist_id);
-`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// Create student table (with foreign key to therapist)
 	_, err = pool.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS student (
@@ -165,17 +148,16 @@ CREATE INDEX IF NOT EXISTS idx_session_parent_therapist ON session_parent(therap
 
 	// Create sessions table
 	_, err = pool.Exec(ctx, `
-        CREATE TABLE IF NOT EXISTS session (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    start_datetime TIMESTAMPTZ NOT NULL,
-    end_datetime TIMESTAMPTZ NOT NULL,
-    session_parent_id UUID NOT NULL,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (session_parent_id) REFERENCES session_parent(id) ON DELETE CASCADE,
-    CHECK (end_datetime > start_datetime)
-);`)
+        CREATE TABLE IF NOT EXISTS sessions (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+			therapist_id UUID NOT NULL,
+			session_date DATE NOT NULL,
+			start_time TIME,
+			end_time TIME,
+			notes TEXT,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`)
 	if err != nil {
 		t.Fatal(err)
 	}

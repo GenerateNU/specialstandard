@@ -46,11 +46,6 @@ func (m *MockSessionRepository) DeleteSession(ctx context.Context, id uuid.UUID)
 	return args.Error(0)
 }
 
-func (m *MockSessionRepository) DeleteRecurringSessions(ctx context.Context, id uuid.UUID) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
 func (m *MockSessionRepository) PostSession(ctx context.Context, q dbinterface.Queryable, session *models.PostSessionInput) (*[]models.Session, error) {
 	args := m.Called(ctx, q, session)
 	if args.Get(0) == nil {

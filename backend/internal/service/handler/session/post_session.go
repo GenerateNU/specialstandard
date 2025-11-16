@@ -1,7 +1,6 @@
 package session
 
 import (
-	"fmt"
 	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
@@ -51,9 +50,6 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 	if err != nil {
 		return errs.InternalServerError("Failed to start transaction")
 	}
-
-	fmt.Printf("Posting session with data: %+v\n", session)
-	fmt.Printf("Session Time: %+v\n", session.StartTime)
 
 	newSessions, err := h.sessionRepository.PostSession(c.Context(), tx, &session)
 	if err != nil {

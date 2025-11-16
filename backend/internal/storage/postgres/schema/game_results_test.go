@@ -45,39 +45,15 @@ func TestGameResultRepository_GetGameResults(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Create test session
-	sessionParentID := uuid.New()
+	sessionID := uuid.New()
 	startTime := time.Now()
 	endTime := startTime.Add(time.Hour)
-
-	startDate := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, startTime.Location())
-	endDate := time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 0, 0, 0, 0, endTime.Location())
 	_, err = testDB.Exec(ctx, `
-       INSERT INTO session_parent (id, start_date, end_date, therapist_id)
-       VALUES ($1, $2, $3, $4)
-   `, sessionParentID, startDate, endDate, therapistID)
+       INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes)
+       VALUES ($1, $2, $3, $4, $5, $6)
+   `, sessionID, "Test Session", therapistID, startTime, endTime, "Test session for session-student")
 	assert.NoError(t, err)
 
-	sessionID := uuid.New()
-	_, err = testDB.Exec(ctx, `
-	   INSERT INTO session (id, session_name, start_datetime, end_datetime, notes, session_parent_id)
-	   VALUES ($1, $2, $3, $4, $5, $6)
-   `, sessionID, "Test Session", startTime, endTime, "Test session for session-student", sessionParentID)
-	assert.NoError(t, err)
-	// Convert datetimes to dates (zero out time portion) and update inserted rows,
-
-	_, err = testDB.Exec(ctx, `
-		UPDATE session_parent
-		SET start_date = $1, end_date = $2
-		WHERE id = $3
-	`, startDate, endDate, sessionParentID)
-	assert.NoError(t, err)
-
-	_, err = testDB.Exec(ctx, `
-		UPDATE session
-		SET start_datetime = $1, end_datetime = $2
-		WHERE id = $3
-	`, startTime, endTime, sessionID)
-	assert.NoError(t, err)
 	// Create test student
 	studentID := uuid.New()
 	_, err = testDB.Exec(ctx, `
@@ -184,24 +160,14 @@ func TestGameResultRepository_PostGameResult(t *testing.T) {
 		therapistID, "Speech", "Therapist", "teachthespeech@specialstandard.com", []int{schoolID})
 	assert.NoError(t, err)
 
-	sessionParentID := uuid.New()
-	startTime := time.Now()
-	endTime := startTime.Add(time.Hour)
-
-	startDate := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, startTime.Location())
-	endDate := time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 0, 0, 0, 0, endTime.Location())
-	_, err = testDB.Exec(ctx, `
-       INSERT INTO session_parent (id, start_date, end_date, therapist_id)
-       VALUES ($1, $2, $3, $4)
-   `, sessionParentID, startDate, endDate, therapistID)
-	assert.NoError(t, err)
-
 	// Create test session
 	sessionID := uuid.New()
+	startTime := time.Now()
+	endTime := startTime.Add(time.Hour)
 	_, err = testDB.Exec(ctx, `
-       INSERT INTO session (id, session_name, start_datetime, end_datetime, notes, session_parent_id)
+       INSERT INTO session (id, session_name, therapist_id, start_datetime, end_datetime, notes)
        VALUES ($1, $2, $3, $4, $5, $6)
-   `, sessionID, "Test Session", startTime, endTime, "Test session for session-student", sessionParentID)
+   `, sessionID, "Test Session", therapistID, startTime, endTime, "Test session for session-student")
 	assert.NoError(t, err)
 
 	// Create test student

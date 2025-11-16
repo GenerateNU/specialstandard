@@ -186,7 +186,6 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Patch("/:id", sessionHandler.PatchSessions)
 		r.Get("/:id/students", sessionHandler.GetSessionStudents)
 		r.Delete("/:id", sessionHandler.DeleteSessions)
-		r.Delete("/:id/recurring", sessionHandler.DeleteRecurringSessions)
 	})
 
 	gameContentHandler := game_content.NewHandler(repo.GameContent, bucket)

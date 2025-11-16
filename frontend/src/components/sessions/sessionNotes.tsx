@@ -30,35 +30,44 @@ export default function SessionNotes({ studentId }: SessionNotesProps) {
   }
 
   // Sort sessions by date (most recent first)
-  const sortedSessions = [...sessions].sort((a, b) =>
-    new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime(),
-  )
+  const now = moment()
+  const sortedSessions = [...sessions]
+    .map(item => ({
+      ...item,
+      sessionData: (item as any).session
+    }))
+    .filter(item => moment(item.sessionData.start_datetime).isBefore(now))
+    .sort((a, b) =>
+      new Date(b.sessionData.start_datetime).getTime() - new Date(a.sessionData.start_datetime).getTime()
+    )
+
 
   return (
     <div className="h-full overflow-y-auto">
-      {sortedSessions.map((session) => {
-        const startMoment = moment(session.start_datetime)
-        const endMoment = moment(session.end_datetime)
+      {sortedSessions.map((item) => {
+        const { sessionData } = item
+        const startMoment = moment(sessionData.start_datetime)
+        const endMoment = moment(sessionData.end_datetime)
 
         return (
           <div
-            key={session.id}
+            key={sessionData.id}
             className="w-full p-4 bg-background text-primary border-border border-b-2 last:border-b-0"
           >
             {/* Session title and date */}
             <div className="w-full flex justify-between items-start">
               <div className="font-semibold text-base">
                 Session #
-                {sortedSessions.length - sortedSessions.indexOf(session)}
+                {sortedSessions.length - sortedSessions.indexOf(item)}
               </div>
               <div className="text-sm opacity-90">
                 {startMoment.format('MM/DD/YYYY')}
               </div>
             </div>
 
-            {session.notes && (
+            {item.notes && (
               <div className="text-sm text-muted-foreground mt-2">
-                {session.notes}
+                {item.notes}
               </div>
             )}
 

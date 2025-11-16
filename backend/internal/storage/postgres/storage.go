@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"fmt"
 	"specialstandard/internal/config"
 	"specialstandard/internal/storage"
 
@@ -14,10 +13,9 @@ import (
 
 // Establishes a sustained connection to the PostgreSQL database using pooling.
 func ConnectDatabase(ctx context.Context, config config.DB) (*pgxpool.Pool, error) {
-	dbConfig, err := pgxpool.ParseConfig(config.Connection())
-	fmt.Printf("help")
-	// dbConfig, err := pgxpool.ParseConfig("postgresql://postgres:postgres@host.docker.internal:54322/postgres")
+	dbConfig, err := pgxpool.ParseConfig(config.Connection() + "?pgbouncer=true")
 	//dbConfig, err := pgxpool.ParseConfig("postgresql://postgres:postgres@host.docker.internal:54322/postgres")
+	// dbConfig, err := pgxpool.ParseConfig("postgresql://postgres:postgres@127.0.0.1:54322/postgres")
 
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
