@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"fmt"
 	"specialstandard/internal/config"
 	"specialstandard/internal/storage"
 
