@@ -3,7 +3,6 @@ import type {
   PostAuthSignupBody,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-// src/lib/api/auth.ts
 import { getAuth as getAuthApi } from '@/lib/api/auth'
 
 export function useAuth() {
