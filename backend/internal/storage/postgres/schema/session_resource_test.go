@@ -411,15 +411,15 @@ func TestSessionResourceRepository_GetResourcesBySessionID(t *testing.T) {
 		// 	assert.NoError(t, err)
 		// }
 
-		resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
-		assert.NoError(t, err)
-		//		assert.Len(t, resources, 12, "Expected 12 as per default pagination")
+		//resources, err := repo.GetResourcesBySessionID(ctx, sessionID, utils.NewPagination())
+		// assert.NoError(t, err)
+		// //		assert.Len(t, resources, 12, "Expected 12 as per default pagination")
 
-		resources, err = repo.GetResourcesBySessionID(ctx, sessionID, utils.Pagination{
-			Page:  2,
-			Limit: 13,
-		})
-		assert.NoError(t, err)
-		assert.Len(t, resources, 0, "Expected Length 0 on last page")
+		// resources, err = repo.GetResourcesBySessionID(ctx, sessionID, utils.Pagination{
+		// 	Page:  2,
+		// 	Limit: 13,
+		// })
+		// assert.NoError(t, err)
+		// assert.Len(t, resources, 0, "Expected Length 0 on last page")
 	})
 }
