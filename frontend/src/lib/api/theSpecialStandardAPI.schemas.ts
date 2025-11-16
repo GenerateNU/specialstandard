@@ -39,6 +39,8 @@ export interface Therapist {
 }
 
 export interface CreateTherapistInput {
+  /** Unique identifier for the therapist */
+  id: string;
   /** First name of the therapist */
   first_name: string;
   /** Last name of the therapist */
