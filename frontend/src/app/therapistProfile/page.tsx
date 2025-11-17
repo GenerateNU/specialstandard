@@ -13,6 +13,7 @@ import {
     DialogTitle
 } from "@/components/ui/dialog";
 import {ConfirmDialog} from "@/components/ui/confirm-dialog";
+import {validatePassword} from "@/app/signup/page";
 
 export default function TherapistProfile() {
     const {updatePassword, deleteAccount} = useAuth();
@@ -26,26 +27,6 @@ export default function TherapistProfile() {
     const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false)
 
     const router = useRouter()
-
-    // Client-side password validation
-    const validatePassword = (pwd: string): string | null => {
-        if (pwd.length < 8) {
-            return 'Password must be at least 8 characters long'
-        }
-        if (!/[A-Z]/.test(pwd)) {
-            return 'Password must include at least one uppercase letter'
-        }
-        if (!/[a-z]/.test(pwd)) {
-            return 'Password must include at least one lowercase letter'
-        }
-        if (!/\d/.test(pwd)) {
-            return 'Password must include at least one digit'
-        }
-        if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>?/~`]/.test(pwd)) {
-            return 'Password must include at least one special character (!@#$%^&*()_+-=[]{};:\'",.<>?/~`|)'
-        }
-        return null
-    }
 
     const handlePasswordSave = () => {
         setPasswordError("")
