@@ -93,7 +93,7 @@ export default function GamesPage() {
                 className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
               >
                 <Brain className="w-12 h-12 text-blue mb-4 mx-auto" />
-                <h3 className="mb-2 text-muted">Memory Match</h3>
+                <h3 className="mb-2">Memory Match</h3>
                 <p className="text-secondary text-sm">
                   Spin a wheel to test your skills!
                 </p>
