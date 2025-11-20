@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button'
 import CustomAlert from '@/components/ui/CustomAlert'
 import { Input } from '@/components/ui/input'
 import { useAuthContext } from '@/contexts/authContext'
-import {validatePassword} from "@/app/signup/page";
+import {validatePassword} from "@/app/signup/page"
+import {createClient} from '@supabase/supabase-js'
 
-export default function SignupPage() {
+export default function ResetPasswordPage() {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -20,6 +21,17 @@ export default function SignupPage() {
 
     const { isAuthenticated } = useAuthContext()
     const router = useRouter()
+
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+            },
+        }
+    )
 
     // Redirect if already authenticated
     useEffect(() => {
@@ -32,6 +44,36 @@ export default function SignupPage() {
         if (error)
             setShowError(true)
     }, [error])
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+
+        const restoreSession = async () => {
+            const hash = window.location.hash.replace('#', '')
+            const params = new URLSearchParams(hash)
+
+            const accessToken = params.get('access_token')
+            const refreshToken = params.get('refresh_token')
+
+            if (accessToken && refreshToken) {
+                const { error } = await supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                })
+
+                if (error) {
+                    console.warn("Failed to restore session:", error)
+                    setError("Invalid or expired password-reset link.")
+                } else {
+                    console.warn("Session restored successfully!")
+                }
+            }
+
+            await supabase.auth.getSession()
+        }
+
+        restoreSession()
+    }, [])
 
     if (isLoading) {
         return (
@@ -65,7 +107,14 @@ export default function SignupPage() {
         setIsLoading(true)
 
         try {
-          // TODO: Try Backend Function once its made.
+            const { error } = await supabase.auth.updateUser({ password })
+
+            if (error) {
+                console.error(error)
+                setError("Password unable to be reset successfully")
+            } else {
+                setTimeout(() => router.push("/login"), 2000)
+            }
         }
         catch (err: unknown) {
             console.error('Reset error:', err)
