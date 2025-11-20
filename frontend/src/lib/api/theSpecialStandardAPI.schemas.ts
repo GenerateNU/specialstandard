@@ -792,6 +792,8 @@ export type PutAuthUpdatePasswordBody = {
   password?: string;
   /** Reset Token sent to the user's email */
   token?: string;
+  /** Email associated with the account */
+  email?: string;
 };
 
 export type GetSessionsParams = {

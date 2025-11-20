@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"specialstandard/internal/auth"
 	"specialstandard/internal/errs"
 
@@ -10,32 +9,31 @@ import (
 
 func (h *Handler) UpdatePassword(c *fiber.Ctx) error {
 	var payload struct {
+		Email    string `json:"email"`
 		Password string `json:"password"`
-		Token    string `json:"token"` // the recovery token from email
+		OTP      string `json:"otp"`
 	}
 
 	if err := c.BodyParser(&payload); err != nil {
 		return errs.BadRequest("Invalid request body")
 	}
 
+	if payload.Email == "" {
+		return errs.BadRequest("Email is required")
+	}
+
 	if payload.Password == "" {
-		return errs.BadRequest("New password is required")
+		return errs.BadRequest("Password is required")
 	}
 
-	// If token is provided, it's a password reset flow (unauthenticated)
-	// If token is empty, it's from authenticated user (use JWT from cookie)
-	token := payload.Token
-	if token == "" {
-		token = c.Cookies("jwt", "")
+	if payload.OTP == "" {
+		return errs.BadRequest("OTP is required")
 	}
 
-	if token == "" {
-		return errs.BadRequest("Authentication required")
-	}
-
-	err := auth.SupabaseUpdatePassword(&h.config, token, payload.Password)
+	// Verify OTP and update password
+	err := auth.VerifyOTPAndResetPassword(&h.config, payload.Email, payload.OTP, payload.Password)
 	if err != nil {
-		return errs.InternalServerError(fmt.Sprintf("Password update failed: %v", err))
+		return errs.BadRequest(err.Error())
 	}
 
 	return c.SendStatus(fiber.StatusOK)
