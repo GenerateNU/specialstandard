@@ -12,13 +12,15 @@ import (
 )
 
 func SupabaseForgotPassword(cfg *config.Supabase, email string) error {
-	supbaseURL := cfg.URL
+	supabaseURL := cfg.URL
 	apiKey := cfg.ServiceRoleKey
 
 	payload := struct {
-		Email string `json:"email"`
+		Email      string `json:"email"`
+		RedirectTo string `json:"redirect_to"`
 	}{
-		Email: email,
+		Email:      email,
+		RedirectTo: "http://localhost:3000/resetPassword", // Add your redirect URL here
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -26,7 +28,7 @@ func SupabaseForgotPassword(cfg *config.Supabase, email string) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/auth/v1/recover", supbaseURL), bytes.NewBuffer(payloadBytes))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/auth/v1/recover", supabaseURL), bytes.NewBuffer(payloadBytes))
 	if err != nil {
 		return errs.BadRequest(fmt.Sprintf("failed to create request: %v", err))
 	}
