@@ -73,6 +73,29 @@ export default function Home() {
     return null
   }
 
+  // Newsletter download handler
+  const handleDownloadNewsletter = async () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+    try {
+      const res = await fetch(`/api/v1/newsletter/by-date?date=${dateStr}`);
+      if (!res.ok) {
+        return;
+      }
+      const data = await res.json();
+      if (!data.s3_url) {
+        return;
+      }
+      // Download the file
+      window.open(data.s3_url, '_blank');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
@@ -84,10 +107,9 @@ export default function Home() {
               <p className="text-2xl">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
-
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleDownloadNewsletter}>
                 Download Newsletter
               </Button>
             </div>

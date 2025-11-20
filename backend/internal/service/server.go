@@ -8,6 +8,7 @@ import (
 	"specialstandard/internal/service/handler/auth"
 	"specialstandard/internal/service/handler/game_content"
 	"specialstandard/internal/service/handler/game_result"
+	newsletterhandler "specialstandard/internal/service/handler/newsletter"
 	"specialstandard/internal/service/handler/resource"
 	s3handler "specialstandard/internal/service/handler/s3"
 	"specialstandard/internal/service/handler/school"
@@ -67,6 +68,15 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		JSONDecoder:  go_json.Unmarshal,
 		ErrorHandler: errs.ErrorHandler,
 	})
+	// ...existing code...
+
+	// Create apiV1 group before using it
+	apiV1 := app.Group("/api/v1")
+
+	// Newsletter endpoint
+	newsletterHandler := newsletterhandler.NewHandler(repo.Newsletter)
+	apiV1.Get("/newsletter/by-date", newsletterHandler.GetNewsletterByDate)
+	// ...existing code...
 
 	app.Use(recover.New())
 	app.Use(favicon.New())
@@ -96,8 +106,6 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).SendString("Welcome to The Special Standard!")
 	})
-
-	apiV1 := app.Group("/api/v1")
 
 	// S3 presign endpoint - ONLY ONCE, AFTER apiV1 is created
 	s3Handler := s3handler.NewHandler(bucket)
