@@ -13,7 +13,7 @@ import {
     DialogTitle
 } from "@/components/ui/dialog";
 import {ConfirmDialog} from "@/components/ui/confirm-dialog";
-import {validatePassword} from "@/app/signup/page";
+import { validatePassword } from '@/lib/validatePassword'
 
 export default function TherapistProfile() {
     const {updatePassword, deleteAccount} = useAuth();
