@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Practice with interactive flashcards',
 }
 
-function LoadingSpinner() {
+export function LoadingSpinner() {
   return (
     <div className="min-h-screen bg-background p-8 flex items-center justify-center">
       <div className="text-center">
