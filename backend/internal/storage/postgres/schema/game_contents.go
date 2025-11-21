@@ -25,7 +25,7 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
              (SELECT array_agg(opt) 
               	FROM (SELECT opt FROM unnest(gc.options) AS opt ORDER BY random() LIMIT $1) AS sampled)
               	AS options,
-    		 answer, created_at, updated_at
+    		 answer, exercise_type, applicable_game_types, created_at, updated_at
        	     FROM game_content gc`
 
 	var conditions []string
@@ -51,6 +51,16 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 	if req.DifficultyLevel != nil {
 		conditions = append(conditions, fmt.Sprintf("difficulty_level = $%d", argCount))
 		args = append(args, *req.DifficultyLevel)
+		argCount++
+	}
+	if req.ExerciseType != nil {
+		conditions = append(conditions, fmt.Sprintf("exercise_type = $%d", argCount))
+		args = append(args, *req.ExerciseType)
+		argCount++
+	}
+	if req.ApplicableGameTypes != nil {
+		conditions = append(conditions, fmt.Sprintf("applicable_game_types @> $%d::question_type[]", argCount))
+		args = append(args, *req.ApplicableGameTypes)
 		argCount++
 	}
 
