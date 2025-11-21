@@ -34,7 +34,7 @@ func (h *Handler) ForgotPassword(c *fiber.Ctx) error {
 	}
 
 	// Construct the redirect URL for the password reset link
-	redirectURL := frontendURL + "/auth/reset-password"
+	redirectURL := frontendURL + "/resetPassword"
 
 	err := auth.SupabaseForgotPassword(&h.config, payload.Email, redirectURL)
 	if err != nil {

@@ -11,7 +11,7 @@ import (
 	"github.com/goccy/go-json"
 )
 
-func SupabaseForgotPassword(cfg *config.Supabase, email string) error {
+func SupabaseForgotPassword(cfg *config.Supabase, email string, redirectURL string) error {
 	supbaseURL := cfg.URL
 	apiKey := cfg.ServiceRoleKey
 
@@ -35,6 +35,7 @@ func SupabaseForgotPassword(cfg *config.Supabase, email string) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("apikey", apiKey)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("redirect_to", redirectURL)
 
 	res, err := Client.Do(req)
 	if err != nil {

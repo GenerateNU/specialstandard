@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2, UserPlus } from 'lucide-react'
+import { Loader2, LockKeyhole } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button'
 import CustomAlert from '@/components/ui/CustomAlert'
 import { Input } from '@/components/ui/input'
 import { useAuthContext } from '@/contexts/authContext'
+import { useAuth } from '@/hooks/useAuth'
 import { validatePassword } from '@/lib/validatePassword'
-import {createClient} from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,116 +18,75 @@ export default function ResetPasswordPage() {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
-    const [isLoading, setIsLoading] = useState(false)
+    const [success, setSuccess] = useState<string | null>(null)
     const [showError, setShowError] = useState(false)
-    const [sessionReady, setSessionReady] = useState(false)
-    const [sessionError, setSessionError] = useState<string | null>(null)
+    const [showSuccess, setShowSuccess] = useState(false)
+    const [token, setToken] = useState<string | null>(null)
+    const [tokenError, setTokenError] = useState<string | null>(null)
+    const [isValidating, setIsValidating] = useState(true)
 
     const { isAuthenticated } = useAuthContext()
+    const { updatePassword, updatePasswordMutation } = useAuth()
     const router = useRouter()
-      // eslint-disable-next-line node/prefer-global/process
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-          // eslint-disable-next-line node/prefer-global/process
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl) {
-      // eslint-disable-next-line node/prefer-global/process
-      if (process.env.NODE_ENV === "production" && typeof window === "undefined") {
-        console.warn(
-          "Supabase URL not found during build. Using placeholder for static generation."
-        );
-      } else {
-        console.error(
-          "Supabase URL is required. Please set NEXT_PUBLIC_SUPABASE_URL environment variable."
-        );
-      }
-    }
-
-    const supabase = createClient(
-      supabaseUrl || "https://placeholder-for-static-build.supabase.co",
-      supabaseAnonKey || "placeholder-key-for-static-build"
-    );
-
-    // Redirect if already authenticated
-    useEffect(() => {
-        if (!isLoading && isAuthenticated) {
-            router.push('/')
-        }
-    }, [isAuthenticated, isLoading, router])
-
-    useEffect(() => {
-        if (error)
-            setShowError(true)
-    }, [error])
-
+    // Extract token from URL hash on component mount
     useEffect(() => {
         if (typeof window === 'undefined') return
 
-        const restoreSession = async () => {
-            try {
-                const hash = window.location.hash.replace('#', '')
-                const params = new URLSearchParams(hash)
+        setIsValidating(true)
 
-                const accessToken = params.get('access_token')
-                const refreshToken = params.get('refresh_token')
-                const type = params.get('type')
+        const hash = window.location.hash.replace('#', '')
+        const params = new URLSearchParams(hash)
 
-                console.warn("Extracted tokens from URL:", { 
-                    hasAccessToken: !!accessToken, 
-                    hasRefreshToken: !!refreshToken,
-                    type 
-                })
+        const accessToken = params.get('access_token')
+        const type = params.get('type')
 
-                // Check if this is a recovery/password reset type
-                if (type !== 'recovery') {
-                    setSessionError("Invalid reset link. This is not a password recovery link.")
-                    setSessionReady(false)
-                    return
-                }
+        console.warn('Extracted from hash:', {
+            hasAccessToken: !!accessToken,
+            type,
+        })
 
-                if (accessToken && refreshToken) {
-                    // Set the session with the tokens from the email link
-                    const { data, error: setSessionError } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                    })
-
-                    if (setSessionError) {
-                        console.error("Failed to restore session:", setSessionError)
-                        setSessionError("Invalid or expired password-reset link. Please request a new one.")
-                        setSessionReady(false)
-                        return
-                    }
-
-                    // Verify session was actually set
-                    const { data: sessionData, error: getSessionError } = await supabase.auth.getSession()
-                    
-                    if (getSessionError || !sessionData?.session) {
-                        console.error("Session not found after setting:", getSessionError)
-                        if (setSessionError) {
-                            setSessionError("Failed to establish session. Please try the reset link again.")
-                        }
-                        setSessionReady(false)
-                        return
-                    }
-
-                    console.warn("Session restored successfully!")
-                    setSessionReady(true)
-                } else {
-                    setSessionError("Invalid reset link. Missing authentication tokens.")
-                    setSessionReady(false)
-                }
-            } catch (err) {
-                console.error("Error restoring session:", err)
-                setSessionError("An error occurred while processing the reset link.")
-                setSessionReady(false)
-            }
+        // Validate token and type
+        if (type !== 'recovery') {
+            setTokenError(
+                'Invalid reset link. This does not appear to be a password recovery link.'
+            )
+            setIsValidating(false)
+            return
         }
 
-        restoreSession()
-    }, [supabase])
+        if (!accessToken) {
+            setTokenError(
+                'Invalid reset link. Missing authentication token. Please request a new password reset link.'
+            )
+            setIsValidating(false)
+            return
+        }
 
-    if (isLoading) {
+        // Token is valid
+        setToken(accessToken)
+        setIsValidating(false)
+    }, [])
+
+    useEffect(() => {
+        if (!updatePasswordMutation.isPending && isAuthenticated) {
+            router.push('/')
+        }
+    }, [isAuthenticated, updatePasswordMutation.isPending, router])
+
+    useEffect(() => {
+        if (error) {
+            setShowError(true)
+        }
+    }, [error])
+
+    useEffect(() => {
+        if (success) {
+            setShowSuccess(true)
+        }
+    }, [success])
+
+    if (isValidating) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -142,10 +101,10 @@ export default function ResetPasswordPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
+        setSuccess(null)
 
-        // Check if session is ready before proceeding
-        if (!sessionReady) {
-            setError("Session is not ready. Please try the reset link again.")
+        if (!token) {
+            setError('Reset token is missing. Please request a new password reset link.')
             return
         }
 
@@ -162,29 +121,24 @@ export default function ResetPasswordPage() {
             return
         }
 
-        setIsLoading(true)
-
         try {
-            const { error: updateError } = await supabase.auth.updateUser({ password })
+            // Call the API with both password and token
+            await updatePassword({
+                password,
+                token,
+            })
 
-            if (updateError) {
-                console.error("Password update failed:", updateError)
-                setError(updateError.message || "Password unable to be reset successfully")
-            } else {
-                // Clear the hash from URL after successful reset
-                window.history.replaceState({}, document.title, window.location.pathname)
-                setError(null)
-                
-                // Redirect to login after 2 seconds
-                setTimeout(() => {
-                    // Sign out to clear the session
-                    supabase.auth.signOut().then(() => {
-                        router.push("/login")
-                    })
-                }, 2000)
-            }
-        }
-        catch (err: unknown) {
+            setSuccess(
+                'Password has been reset successfully! You will be redirected to login shortly.'
+            )
+            setPassword('')
+            setConfirmPassword('')
+
+            // Redirect to login after 2 seconds
+            setTimeout(() => {
+                router.push('/login')
+            }, 2000)
+        } catch (err: unknown) {
             console.error('Reset error:', err)
 
             const errorData = (err as any)?.response?.data
@@ -192,28 +146,22 @@ export default function ResetPasswordPage() {
             if (errorData?.message) {
                 const message = errorData.message
                 if (typeof message === 'object' && message !== null) {
-                    const errorMessages = Object.values(message).filter(v => typeof v === 'string').join(', ')
+                    const errorMessages = Object.values(message)
+                        .filter(v => typeof v === 'string')
+                        .join(', ')
                     setError(errorMessages || 'Validation error occurred')
-                }
-                else if (typeof message === 'string') {
+                } else if (typeof message === 'string') {
                     setError(message)
-                }
-                else {
+                } else {
                     setError('An error occurred during password reset. Please try again.')
                 }
-            }
-            else if (errorData?.msg) {
+            } else if (errorData?.msg) {
                 setError(errorData.msg)
-            }
-            else if (err instanceof Error && err.message) {
+            } else if (err instanceof Error && err.message) {
                 setError(err.message)
-            }
-            else {
+            } else {
                 setError('An error occurred during password reset. Please try again.')
             }
-        }
-        finally {
-            setIsLoading(false)
         }
     }
 
@@ -230,16 +178,16 @@ export default function ResetPasswordPage() {
                         priority
                     />
                     <h1 className="text-3xl font-bold text-primary mb-2">Reset Password</h1>
-                    <p className="text-secondary">Enter your new password</p>
+                    <p className="text-secondary">Enter your new password below</p>
                 </div>
 
                 <div className="bg-card rounded-lg shadow-lg border border-default p-8 flex flex-col gap-2">
-                    {sessionError && (
+                    {tokenError && (
                         <CustomAlert
                             variant="destructive"
-                            title="Reset Link Error"
-                            description={sessionError}
-                            onClose={() => setSessionError(null)}
+                            title="Invalid Reset Link"
+                            description={tokenError}
+                            onClose={() => setTokenError(null)}
                         />
                     )}
 
@@ -255,21 +203,26 @@ export default function ResetPasswordPage() {
                         />
                     )}
 
-                    {!sessionReady && !sessionError && (
-                        <div className="flex items-center justify-center py-8">
-                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                            <span className="ml-3 text-secondary">Validating reset link...</span>
-                        </div>
+                    {showSuccess && success && (
+                        <CustomAlert
+                            variant="default"
+                            title="Success"
+                            description={success}
+                            onClose={() => {
+                                setShowSuccess(false)
+                                setSuccess(null)
+                            }}
+                        />
                     )}
 
-                    {sessionReady && (
+                    {token && !tokenError && (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
                                 <label
                                     htmlFor="password"
                                     className="block text-sm font-medium text-primary mb-2"
                                 >
-                                    Password *
+                                    New Password *
                                 </label>
                                 <Input
                                     id="password"
@@ -277,7 +230,7 @@ export default function ResetPasswordPage() {
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     required
-                                    disabled={isLoading}
+                                    disabled={updatePasswordMutation.isPending}
                                     placeholder="••••••••"
                                 />
                                 <p className="text-xs text-secondary mt-1">
@@ -298,32 +251,34 @@ export default function ResetPasswordPage() {
                                     value={confirmPassword}
                                     onChange={e => setConfirmPassword(e.target.value)}
                                     required
-                                    disabled={isLoading}
+                                    disabled={updatePasswordMutation.isPending}
                                     placeholder="••••••••"
                                 />
                             </div>
 
-                            <Button type="submit" disabled={isLoading} size="long">
-                                {isLoading
-                                    ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            <span>Resetting Password...</span>
-                                        </>
-                                    )
-                                    : (
-                                        <>
-                                            <UserPlus className="w-5 h-5" />
-                                            <span>Reset Password</span>
-                                        </>
-                                    )}
+                            <Button
+                                type="submit"
+                                disabled={updatePasswordMutation.isPending}
+                                size="long"
+                            >
+                                {updatePasswordMutation.isPending ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Resetting Password...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <LockKeyhole className="w-5 h-5" />
+                                        <span>Reset Password</span>
+                                    </>
+                                )}
                             </Button>
                         </form>
                     )}
 
                     <div className="mt-6 text-center">
                         <p className="text-sm text-secondary">
-                            Already have an account?
+                            Remember your password?
                             {' '}
                             <Link href="/login">
                                 <Button variant="link" size="sm">
