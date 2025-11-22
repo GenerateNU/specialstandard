@@ -112,6 +112,8 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	authGroup := apiV1.Group("/auth")
 	authGroup.Post("/login", SupabaseAuthHandler.Login)
 	authGroup.Post("/signup", SupabaseAuthHandler.SignUp)
+	authGroup.Post("/forgot-password", SupabaseAuthHandler.ForgotPassword)
+	authGroup.Put("/update-password", SupabaseAuthHandler.UpdatePassword)
 
 	if !config.TestMode {
 		apiV1.Use(supabase_auth.Middleware(&config.Supabase))
@@ -121,6 +123,8 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 			return c.Next()
 		})
 	}
+
+	authGroup.Delete("/delete-account/:id", SupabaseAuthHandler.DeleteAccount)
 
 	themeHandler := theme.NewHandler(repo.Theme)
 	apiV1.Route("/themes", func(r fiber.Router) {

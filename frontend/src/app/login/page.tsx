@@ -171,6 +171,18 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
+
+          <div className="text-center">
+            <p className="text-sm text-secondary">
+              Forgot your password?
+              {' '}
+              <Link href="/forgotPassword">
+                  <Button variant="link" size="sm">
+                    Reset
+                  </Button>
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
