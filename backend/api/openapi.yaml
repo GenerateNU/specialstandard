@@ -255,32 +255,42 @@ paths:
   /auth/update-password:
     put:
       summary: Updating Password Feature
-      description: Update your password for your account
+      description: Update your password for your account using a reset token
       tags: [Auth]
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: Password reset token (typically sent via email to the user)
+          schema:
+            type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - password
               properties:
                 password:
                   type: string
                   format: password
-                  description: New Password
-                  example: password
+                  description: New Password (must meet strong password requirements)
+                  example: "NewPassword@123"
       responses:
         "200":
           description: Successfully updated your password.
         "400":
-          description: Bad Request (e.g., validation errors)
+          description: Bad Request (e.g., validation errors, missing token)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 400
-                message: "Bad Request"
+                message: "Reset token is missing"
         "500":
           description: Internal Server Error
           content:
@@ -289,42 +299,51 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 500
-                message: "Internal Server Error"
+                message: "Password update failed"
 
   /auth/delete-account/{id}:
     delete:
       summary: Delete Account Feature
-      description: Delete your Account here! Resigning? Fired? We're here for you.
+      description: Delete your Account here! Requires authentication via JWT token in cookies. You can only delete your own account.
       tags: [Auth]
       parameters:
         - name: id
           in: path
           required: true
-          description: The UUID of the user (therapist) being deleted
+          description: The UUID of the user (therapist) being deleted. Must match the authenticated user's ID.
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: Successfully deleted account.
+          description: Successfully deleted account. Cookies cleared.
+        "400":
+          description: Bad Request (e.g., invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
         "401":
-          description: Unauthorized! 
+          description: Unauthorized! No authentication token found or token invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 401
-                message: "Unauthorized"
+                message: "No authentication token found"
         "403":
-          description: Don't do that! Forbidden! 
+          description: Forbidden! You can only delete your own account
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 403
-                message: "Forbidden"
+                message: "You can only delete your own account"
         "500":
           description: Internal Server Error
           content:
@@ -333,7 +352,10 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 500
-                message: "Internal Server Error"
+                message: "Failed to delete user data"
+      security:
+        - cookieAuth: []
+
 
   /sessions:
     /sessions:
@@ -4002,3 +4024,9 @@ components:
             type: string
           description: The actual incorrect options selected in the course of the game
           example: ["Lijard", "Leopaard", "BARES"]
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt
+      description: JWT token stored in cookies for authentication

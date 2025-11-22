@@ -826,9 +826,16 @@ export type PostAuthForgotPasswordBody = {
   email?: string;
 };
 
+export type PutAuthUpdatePasswordParams = {
+  /**
+   * Password reset token (typically sent via email to the user)
+   */
+  token: string;
+};
+
 export type PutAuthUpdatePasswordBody = {
-  /** New Password */
-  password?: string;
+  /** New Password (must meet strong password requirements) */
+  password: string;
 };
 
 export type GetSessionsParams = {

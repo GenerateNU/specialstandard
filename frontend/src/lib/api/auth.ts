@@ -11,6 +11,7 @@ import type {
   PostAuthSignup201,
   PostAuthSignupBody,
   PutAuthUpdatePasswordBody,
+  PutAuthUpdatePasswordParams,
 } from "./theSpecialStandardAPI.schemas";
 
 import { customAxios } from "./apiClient";
@@ -55,21 +56,23 @@ export const getAuth = () => {
     });
   };
   /**
-   * Update your password for your account
+   * Update your password for your account using a reset token
    * @summary Updating Password Feature
    */
   const putAuthUpdatePassword = (
     putAuthUpdatePasswordBody: PutAuthUpdatePasswordBody,
+    params: PutAuthUpdatePasswordParams,
   ) => {
     return customAxios<void>({
       url: `/auth/update-password`,
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       data: putAuthUpdatePasswordBody,
+      params,
     });
   };
   /**
-   * Delete your Account here! Resigning? Fired? We're here for you.
+   * Delete your Account here! Requires authentication via JWT token in cookies. You can only delete your own account.
    * @summary Delete Account Feature
    */
   const deleteAuthDeleteAccountId = (id: string) => {
