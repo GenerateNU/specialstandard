@@ -164,3 +164,5 @@ func TestHandler_Login(t *testing.T) {
 		})
 	}
 }
+
+// TODO: Do test-stuff for auth-stuff later (update & forgot password, delete account).
