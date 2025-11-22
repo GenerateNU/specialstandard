@@ -1,3 +1,5 @@
+// hooks/useSessions.ts - FULLY UPDATED WITH REPETITION SUPPORT
+
 import { useAuthContext } from "@/contexts/authContext";
 import { getSessions as getSessionsApi } from "@/lib/api/sessions";
 import type {
@@ -13,9 +15,15 @@ interface UseSessionsReturn {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<QueryObserverResult<Session[], Error>>;
-  addSession: (session: PostSessionsBody) => void;
+  addSession: (session: PostSessionsBody) => Promise<Session[]>;
   updateSession: (id: string, updatedSession: UpdateSessionInput) => void;
   deleteSession: (id: string) => void;
+  deleteRecurringSessions: (id: string) => void;
+  isAddingSession: boolean;
+  isDeletingSession: boolean;
+  isDeletingRecurring: boolean;
+  addSessionError: string | null;
+  deleteError: string | null;
 }
 
 interface UseSessionsParams {
@@ -29,6 +37,7 @@ interface UseSessionReturn {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<QueryObserverResult<Session, Error>>;
+  isRecurring: boolean;
 }
 
 export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
@@ -48,21 +57,22 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
         limit: params?.limit ?? 100,
         startdate: params?.startdate,
         enddate: params?.enddate,
-        therapist_id: therapistId!, // exclamation point essentially says "yo, this is confirmed to exist and not be null"
+        therapist_id: therapistId!,
       }),
-    // we technically dont need this line but it is just defensive programming!!
     enabled: !!therapistId,
   });
 
   const sessions = sessionsResponse ?? [];
 
+  // Add Session Mutation
   const addSessionMutation = useMutation({
     mutationFn: (input: PostSessionsBody) => api.postSessions(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sessions", therapistId] });
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
   });
 
+  // Update Session Mutation
   const updateSessionMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
@@ -71,10 +81,19 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     },
   });
 
+  // Delete Single Session Mutation
   const deleteSessionMutation = useMutation({
     mutationFn: (id: string) => api.deleteSessionsId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sessions", therapistId] });
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+    },
+  });
+
+  // Delete Recurring Sessions Group Mutation
+  const deleteRecurringMutation = useMutation({
+    mutationFn: (id: string) => api.deleteSessionsIdRecurring(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
   });
 
@@ -83,17 +102,31 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     isLoading,
     error: error?.message || null,
     refetch,
-    addSession: (session: PostSessionsBody) =>
-      addSessionMutation.mutate(session),
+    addSession: async (session: PostSessionsBody) => {
+      return new Promise((resolve, reject) => {
+        addSessionMutation.mutate(session, {
+          onSuccess: (data) => resolve(data),
+          onError: (err) => reject(err),
+        });
+      });
+    },
     updateSession: (id: string, data: UpdateSessionInput) =>
       updateSessionMutation.mutate({ id, data }),
     deleteSession: (id: string) => deleteSessionMutation.mutate(id),
+    deleteRecurringSessions: (id: string) => deleteRecurringMutation.mutate(id),
+    isAddingSession: addSessionMutation.isPending,
+    isDeletingSession: deleteSessionMutation.isPending,
+    isDeletingRecurring: deleteRecurringMutation.isPending,
+    addSessionError: addSessionMutation.error?.message || null,
+    deleteError:
+      deleteSessionMutation.error?.message ||
+      deleteRecurringMutation.error?.message ||
+      null,
   };
 }
 
 export function useSession(id: string): UseSessionReturn {
   const api = getSessionsApi();
-
   const {
     data: session,
     isLoading,
@@ -105,10 +138,33 @@ export function useSession(id: string): UseSessionReturn {
     enabled: !!id,
   });
 
+  const isRecurring = !!session?.repitition;
+
   return {
     session: session || null,
     isLoading,
     error: error?.message || null,
     refetch,
+    isRecurring,
   };
+}
+
+// ============================================
+// UTILITY FUNCTION - Format recurrence text
+// ============================================
+export function formatRecurrence(repetition: any): string {
+  if (!repetition) return "Single session";
+
+  const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = repetition.days
+    .map((d: number) => DAYS_OF_WEEK[d])
+    .join(", ");
+
+  const endDate = new Date(repetition.recur_end).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  return `Every ${repetition.every_n_weeks} week${repetition.every_n_weeks !== 1 ? "s" : ""} on ${dayNames} until ${endDate}`;
 }

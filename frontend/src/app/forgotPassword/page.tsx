@@ -51,6 +51,7 @@ export default function ForgotPasswordPage() {
         setIsLoading(true)
 
         try {
+            console.warn('Submitting forgot password request for email:', email)
             await forgotPassword({ email })
             // AuthContext will handle redirect to /
 

@@ -255,32 +255,42 @@ paths:
   /auth/update-password:
     put:
       summary: Updating Password Feature
-      description: Update your password for your account
+      description: Update your password for your account using a reset token
       tags: [Auth]
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: Password reset token (typically sent via email to the user)
+          schema:
+            type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - password
               properties:
                 password:
                   type: string
                   format: password
-                  description: New Password
-                  example: password
+                  description: New Password (must meet strong password requirements)
+                  example: "NewPassword@123"
       responses:
         "200":
           description: Successfully updated your password.
         "400":
-          description: Bad Request (e.g., validation errors)
+          description: Bad Request (e.g., validation errors, missing token)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 400
-                message: "Bad Request"
+                message: "Reset token is missing"
         "500":
           description: Internal Server Error
           content:
@@ -289,42 +299,51 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 500
-                message: "Internal Server Error"
+                message: "Password update failed"
 
   /auth/delete-account/{id}:
     delete:
       summary: Delete Account Feature
-      description: Delete your Account here! Resigning? Fired? We're here for you.
+      description: Delete your Account here! Requires authentication via JWT token in cookies. You can only delete your own account.
       tags: [Auth]
       parameters:
         - name: id
           in: path
           required: true
-          description: The UUID of the user (therapist) being deleted
+          description: The UUID of the user (therapist) being deleted. Must match the authenticated user's ID.
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: Successfully deleted account.
+          description: Successfully deleted account. Cookies cleared.
+        "400":
+          description: Bad Request (e.g., invalid UUID format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Invalid UUID format"
         "401":
-          description: Unauthorized! 
+          description: Unauthorized! No authentication token found or token invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 401
-                message: "Unauthorized"
+                message: "No authentication token found"
         "403":
-          description: Don't do that! Forbidden! 
+          description: Forbidden! You can only delete your own account
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 403
-                message: "Forbidden"
+                message: "You can only delete your own account"
         "500":
           description: Internal Server Error
           content:
@@ -333,7 +352,10 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 code: 500
-                message: "Internal Server Error"
+                message: "Failed to delete user data"
+      security:
+        - cookieAuth: []
+
 
   /sessions:
     /sessions:
@@ -518,7 +540,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Session"
-                description: Every Session that was created as a result of this request
+                description: Single session if non-recurring, or multiple sessions if recurring
         "400":
           description: Bad Request (e.g., validation errors)
           content:
@@ -797,6 +819,49 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /sessions/{id}/recurring:
+    delete:
+      summary: Delete recurring session group
+      description: Delete all the future sessions in the recurring group that share the same parent session ID. This will not delete past sessions that have already occurred.
+      tags: [Sessions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the parent Session to delete (with all recurring instances)
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: Recurring sessions deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sessions deleted successfully"
+        "400":
+          description: Bad Request Error (invalid UUID)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /districts:
     get:
       summary: Get all districts
@@ -1445,9 +1510,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AttendanceRecord"
+                $ref: "#/components/schemas/AttendanceRecord"
         "400":
           description: Bad request (invalid UUID format)
           content:
@@ -1927,6 +1990,14 @@ paths:
             type: integer
           required: false
           description: Filter resources by theme year
+        - in: query
+          name: week
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+          required: false
+          description: Filter resources by week (1-4)
         - name: page
           in: query
           description: Page Number of pagination
@@ -2701,11 +2772,17 @@ components:
     CreateTherapistInput:
       type: object
       required:
+        - id
         - first_name
         - last_name
         - email
         - district_id
       properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the therapist
+          example: "123e4567-e89b-12d3-a456-426614174000"
         first_name:
           type: string
           description: First name of the therapist
@@ -2808,6 +2885,7 @@ components:
         - start_datetime
         - end_datetime
         - therapist_id
+        - session_parent_id
       properties:
         id:
           type: string
@@ -2833,6 +2911,11 @@ components:
           format: uuid
           description: ID of the therapist conducting the session
           example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        session_parent_id:
+          type: string
+          format: uuid
+          description: UUID of the parent session (for recurring sessions)
+          example: "123e4567-e89b-12d3-a456-426614174000"
         notes:
           type: string
           nullable: true
@@ -2855,7 +2938,49 @@ components:
           nullable: true
           description: When the session record was last updated
           example: "2024-01-15T10:35:00Z"
+        repitition:
+          $ref: "#/components/schemas/Repetition"
+          nullable: true
+          description: Repetition details for recurring sessions
 
+    CreateSessionInput:
+      type: object
+      required:
+        - session_name
+        - start_datetime
+        - end_datetime
+        - therapist_id
+      properties:
+        session_name:
+          type: string
+          example: "Grammar say what?!"
+        start_datetime:
+          type: string
+          format: date-time
+          example: "2025-09-13T17:19:00Z"
+        end_datetime:
+          type: string
+          format: date-time
+          example: "2025-09-13T18:00:00Z"
+        therapist_id:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        notes:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        repetition:
+          $ref: "#/components/schemas/Repetition"
+          nullable: true
+        student_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
     UpdateSessionInput:
       type: object
       properties:
@@ -3012,7 +3137,38 @@ components:
               "Active IEP with speech therapy goals",
               "Occupational therapy accommodations",
             ]
-
+    Repetition:
+      type: object
+      required:
+        - recur_start
+        - recur_end
+        - every_n_weeks
+        - days  # ADD THIS
+      properties:
+        recur_start:
+          type: string
+          format: date-time
+          description: Starting Date of Recurring Session
+          example: "2025-09-13T17:19:00Z"
+        recur_end:
+          type: string
+          format: date-time
+          description: Ending Date of Recurring Session
+          example: "2025-11-13T17:19:00Z"
+        every_n_weeks:
+          type: integer
+          format: positive
+          description: Recurring Session will happen every "N" weeks
+          example: 2
+        days:  # ADD THIS FIELD
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+          description: Days of week for recurrence (0=Sunday, 1=Monday, ..., 6=Saturday)
+          example: [1, 3, 5]
+          
     UpdateStudentInput:
       type: object
       description: Fields that can be updated (all optional for partial updates)
@@ -3576,40 +3732,54 @@ components:
     AttendanceRecord:
       type: object
       required:
-        - present_sessions
-        - total_sessions
+        - present_count
+        - total_count
       properties:
-        present_sessions:
+        present_count:
           type: integer
           description: Number of sessions the student was present
           example: 15
-        total_sessions:
+        total_count:
           type: integer
           description: Total number of sessions held
           example: 20
 
     SessionWithStudentInfo:
-      allOf:
-        - $ref: "#/components/schemas/Session"
-        - type: object
-          required:
-            - student_id
-            - present
-          properties:
-            student_id:
-              type: string
-              format: uuid
-              description: UUID of the associated student
-              example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
-            present:
-              type: boolean
-              description: Whether the student was present at this session
-              example: true
-            notes:
-              type: string
-              nullable: true
-              description: Session-specific notes about the student
-              example: "Worked on balance exercises"
+      type: object
+      required:
+        - session
+        - student_id
+        - present
+        - created_at
+        - updated_at
+      properties:
+        session:
+          $ref: "#/components/schemas/Session"
+          description: The nested session object
+        student_id:
+          type: string
+          format: uuid
+          description: UUID of the associated student
+          example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        present:
+          type: boolean
+          description: Whether the student was present at this session
+          example: true
+        notes:
+          type: string
+          nullable: true
+          description: Session-specific notes about the student
+          example: "Worked on balance exercises"
+        created_at:
+          type: string
+          format: date-time
+          description: When the session-student relationship was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the session-student relationship was last updated
+          example: "2024-01-15T10:35:00Z"
 
     SessionResource:
       type: object
@@ -3854,3 +4024,9 @@ components:
             type: string
           description: The actual incorrect options selected in the course of the game
           example: ["Lijard", "Leopaard", "BARES"]
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt
+      description: JWT token stored in cookies for authentication
