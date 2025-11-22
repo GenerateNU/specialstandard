@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import CustomAlert from '@/components/ui/CustomAlert'
 import { Input } from '@/components/ui/input'
 import { useAuthContext } from '@/contexts/authContext'
-import {validatePassword} from "@/app/signup/page"
+import {validatePassword} from "@/app/therapistProfile/page"
 import {createClient} from '@supabase/supabase-js'
 
 export default function ResetPasswordPage() {
