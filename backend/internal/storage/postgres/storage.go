@@ -42,11 +42,11 @@ func ConnectDatabase(ctx context.Context, dbConfig config.DB) (*pgxpool.Pool, er
 	poolConfig.MaxConnIdleTime = time.Duration(maxConnIdleTime)
 
 	// Set max connection lifetime (prevents stale connections)
-	// maxLifetime := dbConfig.ConnMaxLifetime
-	// if maxLifetime == 0 {
-	// 	maxLifetime = 5 * 60 // 5 minutes
-	// }
-	// poolConfig.MaxConnLifetime = time.Duration(maxLifetime) * time.Second
+	maxLifetime := dbConfig.ConnMaxLifetime
+	if maxLifetime == 0 {
+		maxLifetime = 5 * 60 // 5 minutes
+	}
+	poolConfig.MaxConnLifetime = time.Duration(maxLifetime) * time.Second
 
 	// Disable prepared statements to avoid conflicts during hot reload in development
 	// This prevents "prepared statement already exists" errors when connections are reused
