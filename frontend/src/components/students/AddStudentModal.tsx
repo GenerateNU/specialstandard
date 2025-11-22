@@ -2,7 +2,7 @@
 
 import type { CreateStudentInput } from "@/lib/api/theSpecialStandardAPI.schemas";
 
-import { Calendar, FileText, GraduationCap, User } from "lucide-react";
+import { Building2, Calendar, FileText, GraduationCap, User } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useStudents } from "@/hooks/useStudents";
+import { useSchools } from "@/hooks/useSchools";
 import { gradeOptions, gradeToStorage } from "@/lib/gradeUtils";
 import { useForm } from "react-hook-form";
 import { useAuthContext } from "@/contexts/authContext";
@@ -39,10 +40,12 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
   const [open, setOpen] = useState(false);
   const { addStudent } = useStudents();
   const { userId } = useAuthContext();
+  const { schools, isLoading: isLoadingSchools, error: schoolsError } = useSchools();
 
-  type CreateStudentFormInput = Omit<CreateStudentInput, 'grade' | 'iep'> & {
+  type CreateStudentFormInput = Omit<CreateStudentInput, 'grade' | 'iep' | 'school_id'> & {
     grade?: string
-    iep?: string // Keep as string for textarea input
+    iep?: string
+    school_id?: string // Keep as string for form
   }
 
   const form = useForm<CreateStudentFormInput>({
@@ -50,9 +53,10 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
       first_name: "",
       last_name: "",
       dob: "",
-      therapist_id: userId ?? undefined, // use auth hook to get ID?, change hard codedd\
+      therapist_id: userId ?? undefined,
       grade: "",
       iep: "",
+      school_id: "",
     },
   });
 
@@ -67,7 +71,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
         grade: gradeToStorage(data.grade ?? ""), // Convert K to 0, numbers to numbers
         // Convert IEP string to array (split by newlines for multiple goals)
         iep: data.iep ? data.iep.split('\n').map((goal: string) => goal.trim()).filter((goal: string) => goal) : undefined,
-        school_id: 1, // TODO: Get this from context or props
+        school_id: data.school_id ? Number.parseInt(data.school_id) : undefined,
       };
 
       // Add the student using the hook with converted data
@@ -149,6 +153,46 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                   <FormControl>
                     <Input type="date" {...field} value={field.value ?? ""} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="school_id"
+              rules={{ required: schools.length > 0 ? "School is required" : false }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <Building2 className="w-4 h-4" />
+                    School {schools.length > 0 ? "*" : ""}
+                  </FormLabel>
+                  <FormControl>
+                    <Dropdown
+                      value={field.value || ""}
+                      onValueChange={(value) => field.onChange(value)}
+                      placeholder={
+                        isLoadingSchools 
+                          ? "Loading schools..." 
+                          : schoolsError
+                            ? "Error loading schools"
+                            : schools.length === 0
+                              ? "No schools available"
+                              : "Select school..."
+                      }
+                      items={schools.map(school => ({
+                        label: school.name,
+                        value: school.id.toString(),
+                      }))}
+                      className="w-full justify-between"
+                    />
+                  </FormControl>
+                  {schoolsError && (
+                    <p className="text-sm text-error mt-1">
+                      Unable to load schools. You may need to contact support.
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
