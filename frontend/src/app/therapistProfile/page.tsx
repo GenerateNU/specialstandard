@@ -44,7 +44,7 @@ export default function TherapistProfile() {
         }
 
         try {
-            updatePassword({password: newPassword})
+            updatePassword({ password: newPassword })
 
             setOpenPassword(false)
             setCurrentPassword("")

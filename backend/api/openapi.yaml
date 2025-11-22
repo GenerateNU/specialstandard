@@ -260,7 +260,7 @@ paths:
       parameters:
         - name: token
           in: query
-          required: true
+          required: false
           description: Password reset token (typically sent via email to the user)
           schema:
             type: string

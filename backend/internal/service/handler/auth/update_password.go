@@ -27,8 +27,11 @@ func (h *Handler) UpdatePassword(c *fiber.Ctx) error {
 		return errs.BadRequest("New password is required")
 	}
 
-	token := c.Query("token")
-	if token == "" {
+	token := c.Query("token", "missing")
+
+	if token == "missing" {
+		token = c.Cookies("jwt", "")
+	} else if token == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Reset token is missing"})
 	}
 

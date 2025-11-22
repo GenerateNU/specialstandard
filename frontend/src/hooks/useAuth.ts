@@ -52,7 +52,7 @@ export function useAuth() {
     })
 
     const updatePasswordMutation = useMutation({
-        mutationFn: (data: { password: string; token: string }) => {
+        mutationFn: (data: { password: string; token?: string }) => {
             // Extract token and password
             const { token, password } = data
             const body: PutAuthUpdatePasswordBody = { password }
