@@ -6,9 +6,7 @@ import {
 } from 'lucide-react'
 
 import { Avatar } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
-import { getSchoolColor } from '@/lib/utils'
 
 interface StudentCardProps {
   student: StudentBody
@@ -44,13 +42,13 @@ export default function StudentCard({ student }: StudentCardProps) {
         className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-card-hover rounded-lg transition-colors cursor-pointer"
         aria-controls={`student-details-${student.id}`}
       >
-        <div className="flex items-center space-x-4 flex-1">
+        <div className="flex items-center space-x-4">
           <Avatar
             name={getAvatarName(student.first_name, student.last_name, student.id)}
             variant={avatarVariant}
             className="w-12 h-12 ring-2 ring-accent-light"
           />
-          <div className="flex-1">
+          <div>
             <h3 className="font-semibold text-lg text-primary">
               {getFullName()}
             </h3>
@@ -76,13 +74,6 @@ export default function StudentCard({ student }: StudentCardProps) {
                 </>
               )}
             </div>
-            {student.school_name && (
-              <div className="mt-2">
-                <Badge className={getSchoolColor(student.school_name)}>
-                  {student.school_name}
-                </Badge>
-              </div>
-            )}
           </div>
         </div>
       </button>

@@ -72,26 +72,3 @@ export function getTherapistName(
   const therapist = therapists.find(t => t.id === therapistId)
   return therapist ? `${therapist.first_name} ${therapist.last_name}` : 'Unknown Therapist'
 }
-
-// Deterministically pick a color for a school name using hashing
-export function getSchoolColor(schoolName: string): string {
-  // Define color palette using only project brand colors
-  const colors = [
-    'bg-blue text-white',
-    'bg-pink text-white',
-    'bg-orange text-black',
-    'bg-blue-disabled text-black',
-    'bg-pink-disabled text-black',
-    'bg-orange-disabled text-black',
-  ]
-
-  // Hash the school name
-  let hash = 0
-  for (let i = 0; i < schoolName.length; i++) {
-    hash = ((hash << 5) - hash) + schoolName.charCodeAt(i)
-    // Convert to 32-bit integer
-    hash = hash & hash
-  }
-
-  return colors[Math.abs(hash) % colors.length]
-}
