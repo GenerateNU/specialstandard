@@ -28,6 +28,7 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 	SELECT s.id, s.session_name, s.start_datetime, s.end_datetime,
 	       s.notes, s.location, s.created_at, s.updated_at,
 	       s.session_parent_id,
+		   sp.therapist_id,
 	       sp.start_date, sp.end_date, sp.every_n_weeks, sp.days
 	FROM session s
 	INNER JOIN session_parent sp ON s.session_parent_id = sp.id
@@ -113,6 +114,7 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 			&s.CreatedAt,
 			&s.UpdatedAt,
 			&s.SessionParentID,
+			&s.TherapistID,
 			&recurStart,
 			&recurEnd,
 			&everyNWeeks,
