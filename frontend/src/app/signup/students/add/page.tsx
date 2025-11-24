@@ -152,8 +152,6 @@ export default function AddStudentsPage() {
         dob: formData.dob,
     })
       localStorage.setItem('onboardingStudents', JSON.stringify(existingStudents))
-      
-      // Navigate to complete or add more students
       router.push('/signup/students')
     } catch (err: any) {
       console.error('Add student error:', err)
@@ -321,7 +319,7 @@ export default function AddStudentsPage() {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => router.push('/signup/complete')}
+              onClick={() => router.push('/signup/sessions/add')}
               className="text-sm clock cursor-pointer text-secondary hover:text-primary underline"
             >
               Skip this step

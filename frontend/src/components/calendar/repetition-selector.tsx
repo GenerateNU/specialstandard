@@ -1,10 +1,7 @@
-// components/repetition-selector.tsx
-
 import React from "react";
 import { ChevronDown, ChevronUp, Repeat } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export interface RepetitionConfig {
@@ -22,13 +19,11 @@ interface RepetitionSelectorProps {
 }
 
 const DAYS_OF_WEEK = [
-  { label: "Sun", value: 0 },
   { label: "Mon", value: 1 },
   { label: "Tue", value: 2 },
   { label: "Wed", value: 3 },
   { label: "Thu", value: 4 },
   { label: "Fri", value: 5 },
-  { label: "Sat", value: 6 },
 ];
 
 export function RepetitionSelector({
@@ -65,8 +60,8 @@ export function RepetitionSelector({
     if (new Date(end) <= new Date(sessionDate)) return;
 
     const config: RepetitionConfig = {
-      recur_start: new Date(`${sessionDate  }T${  sessionTime}`).toISOString(),
-      recur_end: new Date(`${end  }T${  sessionTime}`).toISOString(),
+      recur_start: new Date(`${sessionDate}T${sessionTime}`).toISOString(),
+      recur_end: new Date(`${end}T${sessionTime}`).toISOString(),
       every_n_weeks: weeks,
       days: days.sort((a, b) => a - b),
     };
@@ -110,19 +105,19 @@ export function RepetitionSelector({
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden bg-white">
+    <div className="border border-gray-300 rounded-lg overflow-hidden">
       {/* Header */}
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+        className="w-full flex items-center justify-between p-3 hover:bg-gray-50 border border-gray-300 transition-colors"
       >
         <label className="flex items-center gap-3 cursor-pointer flex-1">
-          <Repeat className="w-4 h-4" />
+          <Repeat className="w-4 h-4 text-secondary" />
           <div className="text-left">
-            <p className="font-semibold text-sm">Recurring Session</p>
+            <p className="text-sm font-medium text-primary">Recurring Session</p>
             {isRecurring && selectedDays.length > 0 && (
-              <p className="text-xs text-gray-600">{getRecurrenceSummary()}</p>
+              <p className="text-xs text-secondary mt-1">{getRecurrenceSummary()}</p>
             )}
           </div>
           <Switch
@@ -130,26 +125,24 @@ export function RepetitionSelector({
             onCheckedChange={handleToggleRecurring}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              isRecurring ? "bg-blue-500" : "bg-gray-300",
-              "transition-colors"
-            )}
-          />
+              "data-[state=checked]:bg-primary",
+              "data-[state=unchecked]:bg-gray-300",
+              "data-[state=unchecked]:border-gray-400"
+            )}          />
         </label>
         {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-500 ml-2" />
+          <ChevronUp className="w-4 h-4 text-secondary ml-2" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-gray-500 ml-2" />
+          <ChevronDown className="w-4 h-4 text-secondary ml-2" />
         )}
       </button>
 
       {/* Expanded Content */}
       {isExpanded && isRecurring && (
-        <div className="p-4 space-y-4 border-t bg-white">
+        <div className="p-4 space-y-4 border-t">
           {/* Every N Weeks */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
-              Frequency
-            </Label>
+          <div>
+            <p className="text-xs text-secondary mb-1">Frequency</p>
             <div className="flex items-center gap-2">
               <span className="text-sm">Every</span>
               <Input
@@ -161,28 +154,27 @@ export function RepetitionSelector({
                   const val = Math.max(1, Number.parseInt(e.target.value) || 1);
                   setEveryNWeeks(val);
                 }}
-                className="w-16 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-16 border border-gray-300"
               />
               <span className="text-sm">week{everyNWeeks !== 1 ? "s" : ""}</span>
             </div>
           </div>
 
           {/* Days of Week Selection */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
-              Days of Week
-            </Label>
-            <div className="grid grid-cols-7 gap-2">
+          <div>
+            <p className="text-xs text-secondary mb-2">Days of Week</p>
+            <div className="grid grid-cols-5 gap-1">
               {DAYS_OF_WEEK.map((day) => (
                 <button
                   key={day.value}
                   type="button"
                   onClick={() => handleDayToggle(day.value)}
-                  className={`py-2 px-1 text-xs font-semibold rounded transition-all border ${
+                  className={cn(
+                    "py-2 px-1 text-xs font-medium rounded transition-all",
                     selectedDays.includes(day.value)
-                      ? "bg-blue-500 text-white border-blue-600 shadow-sm"
-                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
-                  }`}
+                      ? "bg-primary text-white"
+                      : "bg-gray-50 text-secondary hover:bg-gray-100"
+                  )}
                 >
                   {day.label}
                 </button>
@@ -196,20 +188,17 @@ export function RepetitionSelector({
           </div>
 
           {/* End Date */}
-          <div className="space-y-2">
-            <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
-              Recurrence End Date
-            </Label>
+          <div>
+            <p className="text-xs text-secondary mb-1">Recurrence End Date</p>
             <Input
-              id="endDate"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               min={sessionDate}
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300"
             />
             {new Date(endDate) <= new Date(sessionDate) && (
-              <p className="text-xs text-red-500">
+              <p className="text-xs text-red-500 mt-1">
                 End date must be after the session date
               </p>
             )}
@@ -218,9 +207,9 @@ export function RepetitionSelector({
           {/* Summary Card */}
           {selectedDays.length > 0 &&
             new Date(endDate) > new Date(sessionDate) && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-2">
-                <p className="text-sm font-semibold text-blue-900">Summary:</p>
-                <ul className="text-xs text-blue-800 space-y-1">
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded">
+                <p className="text-sm font-medium text-primary mb-2">Summary:</p>
+                <ul className="text-xs text-secondary space-y-1">
                   <li>
                     • First session: {new Date(sessionDate).toLocaleDateString()}
                   </li>
