@@ -32,7 +32,6 @@ export default function StudentsPage() {
   }
   
   const handleContinue = () => {
-    router.push('/signup/sessions')
     router.push('/signup/sessions/add')
   }
   

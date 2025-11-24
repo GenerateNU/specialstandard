@@ -13,7 +13,7 @@ import CustomAlert from '@/components/ui/CustomAlert'
 export default function ProfilePage() {
   const router = useRouter()
   const { schools, districts, isLoading: isLoadingSchools } = useSchools()
-  const { updateTherapist } = useTherapists()
+  const { updateTherapist } = useTherapists({ fetchOnMount: false });
   
   const [selectedDistrict, setSelectedDistrict] = useState<string>('')
   const [selectedSchools, setSelectedSchools] = useState<string[]>([])
