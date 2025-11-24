@@ -96,11 +96,18 @@ function StudentPage() {
   };
 
   const handleDelete = async () => {
-    try {
-      await deleteStudent(studentId);
-      window.history.back();
-    } catch (error) {
-      console.error("Failed to delete student:", error);
+    if (
+      // eslint-disable-next-line no-alert
+      window.confirm(
+        `Are you sure you want to delete the student: ${student?.first_name}? This action cannot be undone.`
+      )
+    ) {
+      try {
+        await deleteStudent(studentId);
+        window.history.back();
+      } catch (error) {
+        console.error("Failed to delete student:", error);
+      }
     }
   };
 

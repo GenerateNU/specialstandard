@@ -154,11 +154,18 @@ export default function SessionPage({ params }: PageProps) {
   };
 
   const handleDelete = async () => {
-    try {
-      await deleteSession(id);
-      window.history.back();
-    } catch (error) {
-      console.error("Failed to delete session:", error);
+    if (
+      // eslint-disable-next-line no-alert
+      window.confirm(
+        `Are you sure you want to delete the session: ${session.session_name}? This action cannot be undone.`
+      )
+    ) {
+      try {
+        await deleteSession(id);
+        window.history.back();
+      } catch (error) {
+        console.error("Failed to delete session:", error);
+      }
     }
   };
 
