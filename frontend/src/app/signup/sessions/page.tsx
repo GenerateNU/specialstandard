@@ -13,28 +13,23 @@ import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 export default function SessionsPage() {
   const router = useRouter()
   const { sessions, isLoading: loadingSessions, refetch } = useSessions()
-  const [therapistId, setTherapistId] = useState<string>('')
   const [selectedSessionId, setSelectedSessionId] = useState<string>('')
-  
-  // Filter sessions for this therapist
-  const therapistSessions = sessions.filter(
-    session => session.therapist_id === therapistId
-  )
   
   // Use the hook to get students for the selected session
   const { students: sessionStudents, isLoading: loadingStudents } = useSessionStudentsForSession(selectedSessionId)
   
   // Get the first session's ID when sessions load
   useEffect(() => {
-    if (therapistSessions.length > 0 && !selectedSessionId) {
-      setSelectedSessionId(therapistSessions[0].id)
+    if (sessions.length > 0 && !selectedSessionId) {
+      setSelectedSessionId(sessions[0].id)
     }
-  }, [therapistSessions, selectedSessionId])
-  
+  }, [sessions, selectedSessionId])
+
   useEffect(() => {
     const userId = localStorage.getItem('userId')
     if (userId) {
-      setTherapistId(userId)
+      localStorage.setItem('userId', userId)
+
     } else {
       router.push('/signup/welcome')
     }
@@ -42,6 +37,7 @@ export default function SessionsPage() {
     // Refetch sessions when page loads
     refetch()
   }, [router, refetch])
+  
   
   const handleBack = () => {
     router.push('/signup/students')
@@ -52,10 +48,6 @@ export default function SessionsPage() {
   }
   
   const handleFinish = () => {
-    router.push('/signup/complete')
-  }
-  
-  const handleSkip = () => {
     router.push('/signup/complete')
   }
   
@@ -97,20 +89,13 @@ export default function SessionsPage() {
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
           </button>
-          
-          <button
-            onClick={handleSkip}
-            className="text-sm text-accent cursor-pointer hover:text-accent-hover"
-          >
-            skip →
-          </button>
         </div>
 
         <h1 className="text-3xl font-bold text-primary mb-8">
           Your Sessions
         </h1>
         
-        {therapistSessions.length === 0 ? (
+        {sessions.length === 0 ? (
           <>
             <div className="bg-card rounded-lg border border-default p-12 text-center mb-6">
               <p className="text-secondary mb-6">
@@ -139,15 +124,15 @@ export default function SessionsPage() {
           <>
             {/* Session Card Display */}
             <div className="bg-card rounded-lg border border-default p-6 mb-6">
-              {therapistSessions.length > 0 && (
+              {sessions.length > 0 && (
                 <div className="space-y-4">
                   <div className="text-sm text-secondary mb-2">
                     <div>Session Name</div>
                     <div className="font-semibold text-primary">
-                      {formatTime(therapistSessions[0].start_datetime)} - {formatTime(therapistSessions[0].end_datetime)}, Does not repeat
+                      {formatTime(sessions[0].start_datetime)} - {formatTime(sessions[0].end_datetime)}, Does not repeat
                     </div>
-                    {therapistSessions[0].location && (
-                      <div className="mt-1">{therapistSessions[0].location}</div>
+                    {sessions[0].location && (
+                      <div className="mt-1">{sessions[0].location}</div>
                     )}
                   </div>
                   
@@ -178,10 +163,10 @@ export default function SessionsPage() {
             </div>
             
             {/* Show other sessions as cards */}
-            {therapistSessions.length > 1 && (
+            {sessions.length > 1 && (
               <div className="space-y-2 mb-6">
                 <p className="text-sm text-secondary mb-2">Other scheduled sessions:</p>
-                {therapistSessions.slice(1).map((session) => (
+                {sessions.slice(1).map((session) => (
                   <UpcomingSessionCard
                     key={session.id}
                     sessionName={session.session_name}

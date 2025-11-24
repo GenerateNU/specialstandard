@@ -18,7 +18,11 @@ interface UseTherapistsReturn {
   deleteTherapist: (id: string) => void;
 }
 
-export function useTherapists(): UseTherapistsReturn {
+interface UseTherapistsOptions {
+  fetchOnMount: boolean;
+}
+
+export function useTherapists(_options: UseTherapistsOptions = { fetchOnMount: true }): UseTherapistsReturn {
   const queryClient = useQueryClient();
   const api = getTherapistsApi();
   const { userId: therapistId } = useAuthContext();
@@ -31,6 +35,7 @@ export function useTherapists(): UseTherapistsReturn {
   } = useQuery({
     queryKey: ["therapists", therapistId],
     queryFn: () => api.getTherapists({}),
+    enabled: _options.fetchOnMount,
   });
 
   const therapists = therapistsResponse ?? [];
