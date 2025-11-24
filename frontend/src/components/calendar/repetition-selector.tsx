@@ -9,6 +9,10 @@ export interface RepetitionConfig {
   recur_end: string; // ISO datetime string
   every_n_weeks: number;
   days: number[]; // 0-6 representing Sun-Sat
+  recur_start: string; // ISO datetime string
+  recur_end: string; // ISO datetime string
+  every_n_weeks: number;
+  days: number[]; // 0-6 representing Sun-Sat
 }
 
 interface RepetitionSelectorProps {
@@ -16,7 +20,22 @@ interface RepetitionSelectorProps {
   onChange: (config: RepetitionConfig | undefined) => void;
   sessionDate: string;
   sessionTime: string;
+interface RepetitionSelectorProps {
+  value: RepetitionConfig | undefined;
+  onChange: (config: RepetitionConfig | undefined) => void;
+  sessionDate: string;
+  sessionTime: string;
 }
+
+const DAYS_OF_WEEK = [
+  { label: "Sun", value: 0 },
+  { label: "Mon", value: 1 },
+  { label: "Tue", value: 2 },
+  { label: "Wed", value: 3 },
+  { label: "Thu", value: 4 },
+  { label: "Fri", value: 5 },
+  { label: "Sat", value: 6 },
+];
 
 const DAYS_OF_WEEK = [
   { label: "Sun", value: 0 },
@@ -87,7 +106,26 @@ export function RepetitionSelector({
   React.useEffect(() => {
     if (isRecurring) {
       updateRepetition(selectedDays, everyNWeeks, endDate);
+    if (isRecurring) {
+      updateRepetition(selectedDays, everyNWeeks, endDate);
     }
+  }, [selectedDays, everyNWeeks, endDate, isRecurring]);
+
+  const getRecurrenceSummary = () => {
+    if (!isRecurring || selectedDays.length === 0) return "";
+
+    const dayNames = selectedDays
+      .map((d) => DAYS_OF_WEEK.find((day) => day.value === d)?.label)
+      .join(", ");
+
+    const endDateFormatted = new Date(endDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    return `Every ${everyNWeeks} week${everyNWeeks !== 1 ? "s" : ""} on ${dayNames} until ${endDateFormatted}`;
+  };
   }, [selectedDays, everyNWeeks, endDate, isRecurring]);
 
   const getRecurrenceSummary = () => {
@@ -147,17 +185,22 @@ export function RepetitionSelector({
             <p className="text-xs text-secondary mb-1">Frequency</p>
             <div className="flex items-center gap-2">
               <span className="text-sm">Every</span>
+              <span className="text-sm">Every</span>
               <Input
                 type="number"
                 min="1"
+                max="12"
                 max="12"
                 value={everyNWeeks}
                 onChange={(e) => {
                   const val = Math.max(1, Number.parseInt(e.target.value) || 1);
                   setEveryNWeeks(val);
+                  const val = Math.max(1, Number.parseInt(e.target.value) || 1);
+                  setEveryNWeeks(val);
                 }}
                 className="w-16 border border-gray-300"
               />
+              <span className="text-sm">week{everyNWeeks !== 1 ? "s" : ""}</span>
               <span className="text-sm">week{everyNWeeks !== 1 ? "s" : ""}</span>
             </div>
           </div>
@@ -230,6 +273,8 @@ export function RepetitionSelector({
             )}
         </div>
       )}
+    </div>
+  );
     </div>
   );
 }

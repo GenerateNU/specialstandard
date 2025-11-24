@@ -152,6 +152,8 @@ export default function AddStudentsPage() {
         dob: formData.dob,
     })
       localStorage.setItem('onboardingStudents', JSON.stringify(existingStudents))
+      
+      // Navigate to complete or add more students
       router.push('/signup/students')
     } catch (err: any) {
       console.error('Add student error:', err)
