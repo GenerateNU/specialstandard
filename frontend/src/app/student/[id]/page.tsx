@@ -7,6 +7,7 @@ import {
   CirclePlus,
   PencilLine,
   Save,
+  Trash,
   Trash2,
   X,
 } from "lucide-react";
@@ -20,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { useRecentlyViewedStudents } from "@/hooks/useRecentlyViewedStudents";
 import { useStudents } from "@/hooks/useStudents";
 import { getAvatarVariant } from "@/lib/utils";
-import { Trash } from "lucide-react";
 
 import CustomPieChart from "@/components/statistics/PieChart";
 import { useStudentAttendance } from "@/hooks/useStudentAttendance";
@@ -101,7 +101,6 @@ function StudentPage() {
       window.history.back();
     } catch (error) {
       console.error("Failed to delete student:", error);
-      alert("Failed to delete student. Please try again.");
     }
   };
 
