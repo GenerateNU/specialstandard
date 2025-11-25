@@ -85,7 +85,9 @@ function CalendarPage() {
           therapistId={userId}
           students={students}
           setOpen={handleCloseModal}
-          onSubmit={async data => addSession(data)}
+          onSubmit={async data => {
+            await addSession(data)
+          }}
           initialDateTime={selectedSlot ?? undefined}
         />
 

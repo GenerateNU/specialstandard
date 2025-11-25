@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"specialstandard/internal/models"
 	"specialstandard/internal/storage/dbinterface"
@@ -22,53 +23,59 @@ func (r *SessionRepository) GetDB() *pgxpool.Pool {
 	return r.db
 }
 
-func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, id uuid.UUID) ([]models.Session, error) {
+func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, therapistID uuid.UUID) ([]models.Session, error) {
 	query := `
-	SELECT id, session_name, start_datetime, end_datetime, therapist_id, notes, location, created_at, updated_at
-	FROM session`
+	SELECT s.id, s.session_name, s.start_datetime, s.end_datetime,
+	       s.notes, s.location, s.created_at, s.updated_at,
+	       s.session_parent_id,
+		   sp.therapist_id,
+	       sp.start_date, sp.end_date, sp.every_n_weeks, sp.days
+	FROM session s
+	INNER JOIN session_parent sp ON s.session_parent_id = sp.id
+	`
 
 	conditions := []string{}
 	args := []interface{}{}
 	argCount := 1
 
-	if id != uuid.Nil {
-		conditions = append(conditions, fmt.Sprintf("therapist_id = $%d", argCount))
-		args = append(args, id)
+	// Therapist filter
+	if therapistID != uuid.Nil {
+		conditions = append(conditions, fmt.Sprintf("sp.therapist_id = $%d", argCount))
+		args = append(args, therapistID)
 		argCount++
 	}
 
 	if filter != nil {
 		if filter.Month != nil && filter.Year != nil {
-			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM start_datetime) = $%d AND EXTRACT(YEAR FROM start_datetime) = $%d", argCount, argCount+1))
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM s.start_datetime) = $%d AND EXTRACT(YEAR FROM s.start_datetime) = $%d", argCount, argCount+1))
 			args = append(args, *filter.Month, *filter.Year)
 			argCount += 2
 		} else if filter.Year != nil {
-			conditions = append(conditions, fmt.Sprintf("EXTRACT(YEAR FROM start_datetime) = $%d", argCount))
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(YEAR FROM s.start_datetime) = $%d", argCount))
 			args = append(args, *filter.Year)
 			argCount++
 		} else if filter.Month != nil {
-			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM start_datetime) = $%d", argCount))
+			conditions = append(conditions, fmt.Sprintf("EXTRACT(MONTH FROM s.start_datetime) = $%d", argCount))
 			args = append(args, *filter.Month)
 			argCount++
 		}
 
 		if filter.StartTime != nil {
-			conditions = append(conditions, fmt.Sprintf("start_datetime >= $%d", argCount))
+			conditions = append(conditions, fmt.Sprintf("s.start_datetime >= $%d", argCount))
 			args = append(args, *filter.StartTime)
 			argCount++
 		}
 
 		if filter.EndTime != nil {
-			conditions = append(conditions, fmt.Sprintf("end_datetime <= $%d", argCount))
+			conditions = append(conditions, fmt.Sprintf("s.end_datetime <= $%d", argCount))
 			args = append(args, *filter.EndTime)
 			argCount++
 		}
 
 		if filter.StudentIDs != nil && len(*filter.StudentIDs) > 0 {
-			// For each student ID, add a condition that checks if that specific student exists in the session
 			for _, studentID := range *filter.StudentIDs {
 				conditions = append(conditions, fmt.Sprintf(
-					"EXISTS (SELECT 1 FROM session_student WHERE session_id = session.id AND student_id = $%d)",
+					"EXISTS (SELECT 1 FROM session_student WHERE session_id = s.id AND student_id = $%d)",
 					argCount,
 				))
 				args = append(args, studentID)
@@ -81,8 +88,7 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += fmt.Sprintf(` ORDER BY start_datetime ASC LIMIT $%d OFFSET $%d`, argCount, argCount+1)
-
+	query += fmt.Sprintf(" ORDER BY s.start_datetime ASC LIMIT $%d OFFSET $%d", argCount, argCount+1)
 	args = append(args, pagination.Limit, pagination.GetOffset())
 
 	rows, err := r.db.Query(ctx, query, args...)
@@ -91,32 +97,100 @@ func (r *SessionRepository) GetSessions(ctx context.Context, pagination utils.Pa
 	}
 	defer rows.Close()
 
-	sessions, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Session])
-	if err != nil {
-		return nil, err
+	var sessions []models.Session
+	for rows.Next() {
+		var s models.Session
+		var recurStart, recurEnd *time.Time
+		var everyNWeeks *int
+		var days []int
+
+		if err := rows.Scan(
+			&s.ID,
+			&s.SessionName,
+			&s.StartDateTime,
+			&s.EndDateTime,
+			&s.Notes,
+			&s.Location,
+			&s.CreatedAt,
+			&s.UpdatedAt,
+			&s.SessionParentID,
+			&s.TherapistID,
+			&recurStart,
+			&recurEnd,
+			&everyNWeeks,
+			&days,
+		); err != nil {
+			return nil, err
+		}
+
+		// Populate repetition only if recur_start != recur_end
+		if recurStart != nil && recurEnd != nil && !recurStart.Equal(*recurEnd) && everyNWeeks != nil {
+			s.Repetition = &models.Repetition{
+				RecurStart:  *recurStart,
+				RecurEnd:    *recurEnd,
+				EveryNWeeks: *everyNWeeks,
+				Days:        days,
+			}
+		} else {
+			s.Repetition = nil
+		}
+
+		sessions = append(sessions, s)
 	}
+
 	return sessions, nil
 }
 
 func (r *SessionRepository) GetSessionByID(ctx context.Context, id string) (*models.Session, error) {
 	query := `
-	SELECT id, session_name, start_datetime, end_datetime, therapist_id, notes, location, created_at, updated_at
-	FROM session
-	WHERE id = $1`
+	SELECT s.id, s.session_name, s.start_datetime, s.end_datetime,
+	       s.notes, s.location, s.created_at, s.updated_at,
+	       s.session_parent_id,
+	       sp.start_date, sp.end_date, sp.every_n_weeks, sp.days
+	FROM session s
+	INNER JOIN session_parent sp ON s.session_parent_id = sp.id
+	WHERE s.id = $1`
 
-	row, err := r.db.Query(ctx, query, id)
-	if err != nil {
+	row := r.db.QueryRow(ctx, query, id)
+
+	var s models.Session
+	var recurStart, recurEnd *time.Time
+	var everyNWeeks *int
+	var days []int
+
+	if err := row.Scan(
+		&s.ID,
+		&s.SessionName,
+		&s.StartDateTime,
+		&s.EndDateTime,
+		&s.Notes,
+		&s.Location,
+		&s.CreatedAt,
+		&s.UpdatedAt,
+		&s.SessionParentID,
+		&recurStart,
+		&recurEnd,
+		&everyNWeeks,
+		&days,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("session not found")
+		}
 		return nil, err
 	}
-	defer row.Close()
 
-	// Using CollectExactlyOneRow because we expect exactly one session with this ID
-	session, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[models.Session])
-	if err != nil {
-		return nil, err
+	if recurStart != nil && recurEnd != nil && !recurStart.Equal(*recurEnd) && everyNWeeks != nil {
+		s.Repetition = &models.Repetition{
+			RecurStart:  *recurStart,
+			RecurEnd:    *recurEnd,
+			EveryNWeeks: *everyNWeeks,
+			Days:        days,
+		}
+	} else {
+		s.Repetition = nil
 	}
 
-	return &session, nil
+	return &s, nil
 }
 
 func (r *SessionRepository) DeleteSession(ctx context.Context, id uuid.UUID) error {
@@ -130,46 +204,211 @@ func addNWeeks(timestamp time.Time, nWeeks int) time.Time {
 	return timestamp.Add(time.Duration(24*7*nWeeks) * time.Hour)
 }
 
-func (r *SessionRepository) PostSession(ctx context.Context, q dbinterface.Queryable, input *models.PostSessionInput) (*[]models.Session, error) {
-	query := `INSERT INTO session (session_name, start_datetime, end_datetime, therapist_id, notes, location)
-              VALUES ($1, $2, $3, $4, $5, $6)`
-	args := []interface{}{}
-	args = append(args, input.SessionName, input.StartTime, input.EndTime, input.TherapistID, input.Notes, input.Location)
-	argCount := 7
+func (r *SessionRepository) PostSession(
+	ctx context.Context,
+	q dbinterface.Queryable,
+	input *models.PostSessionInput,
+) (*[]models.Session, error) {
 
+	fmt.Printf("Posting session with data: %+v\n", input)
+	fmt.Printf("Time details: %+v\n", input.StartTime)
+
+	// Insert session_parent first
+	var parentID uuid.UUID
+	var parentStart, parentEnd time.Time
+
+	if input.Repetition == nil {
+		// Single session → make start=end so repetition=NULL in frontend
+		parentStart = input.StartTime
+		parentEnd = input.EndTime
+
+		err := q.QueryRow(ctx,
+			`INSERT INTO session_parent (start_date, end_date, every_n_weeks, days, therapist_id)
+             VALUES ($1, $2, NULL, NULL, $3)
+             RETURNING id`,
+			parentStart, parentEnd, input.TherapistID,
+		).Scan(&parentID)
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		rp := input.Repetition
+
+		parentStart = rp.RecurStart
+		parentEnd = rp.RecurEnd
+		everyNWeeks := &rp.EveryNWeeks
+		days := rp.Days
+
+		err := q.QueryRow(ctx,
+			`INSERT INTO session_parent (start_date, end_date, every_n_weeks, days, therapist_id)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id`,
+			parentStart, parentEnd, everyNWeeks, days, input.TherapistID,
+		).Scan(&parentID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Insert all session occurrences
+
+	type insertedSession struct {
+		ID    uuid.UUID
+		Start time.Time
+		End   time.Time
+	}
+
+	var sessionsInserted []insertedSession
+
+	// Always insert the first session
+	{
+
+		fmt.Printf("Posting session with data: %+v\n", input)
+		fmt.Printf("Time details: %+v\n", input.StartTime)
+
+		// Add these right before the INSERT:
+		fmt.Printf("About to insert START: %v, END: %v\n", input.StartTime, input.EndTime)
+		fmt.Printf("START > END? %v\n", input.StartTime.After(input.EndTime))
+		fmt.Printf("START == END? %v\n", input.StartTime.Equal(input.EndTime))
+
+		var id uuid.UUID
+		err := q.QueryRow(ctx,
+			`INSERT INTO session (session_name, start_datetime, end_datetime, notes, location, session_parent_id)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id, start_datetime, end_datetime`,
+			input.SessionName, input.StartTime, input.EndTime,
+			input.Notes, input.Location, parentID,
+		).Scan(&id, &input.StartTime, &input.EndTime)
+		if err != nil {
+			return nil, err
+		}
+
+		sessionsInserted = append(sessionsInserted, insertedSession{
+			ID:    id,
+			Start: input.StartTime,
+			End:   input.EndTime,
+		})
+	}
+
+	// Generate repeating sessions only if repetition exists
 	if input.Repetition != nil {
 		rp := input.Repetition
-		if rp.RecurEnd.Before(rp.RecurStart) {
-			return nil, fmt.Errorf("invalid repetition range: recur_end (%s) is before recur_start (%s)",
-				rp.RecurEnd.Format(time.RFC3339), rp.RecurStart.Format(time.RFC3339))
+
+		// We start from the week of the initial session start date.
+		startOfInitialWeek := input.StartTime
+
+		// For each N-week interval until rp.RecurEnd
+		for wkStart := startOfInitialWeek; !wkStart.After(rp.RecurEnd); wkStart = addNWeeks(wkStart, rp.EveryNWeeks) {
+
+			for _, dayIndex := range rp.Days {
+				// Compute the occurrence for this weekday in the repeating week.
+				occStart := setToWeekday(wkStart, dayIndex, input.StartTime)
+				occEnd := setToWeekday(wkStart, dayIndex, input.EndTime)
+
+				if occStart.Before(rp.RecurStart) {
+					continue
+				}
+
+				// Skip if the occurrence is beyond the recurrence end
+				if occStart.After(rp.RecurEnd) {
+					continue
+				}
+
+				fmt.Printf("About to insert repeating session START: %v, END: %v\n", occStart, occEnd)
+				fmt.Printf("START > END? %v\n", occStart.After(occEnd))
+				fmt.Printf("START == END? %v\n", occStart.Equal(occEnd))
+
+				var id uuid.UUID
+				err := q.QueryRow(ctx,
+					`INSERT INTO session (session_name, start_datetime, end_datetime, notes, location, session_parent_id)
+                 VALUES ($1, $2, $3, $4, $5, $6)
+                 RETURNING id, start_datetime, end_datetime`,
+					input.SessionName, occStart, occEnd,
+					input.Notes, input.Location, parentID,
+				).Scan(&id, &occStart, &occEnd)
+				if err != nil {
+					return nil, err
+				}
+
+				sessionsInserted = append(sessionsInserted, insertedSession{
+					ID:    id,
+					Start: occStart,
+					End:   occEnd,
+				})
+			}
+		}
+	}
+
+	// Fetch full session objects using same logic as GetSessionByID (JOIN + scan repetition)
+
+	sessions := make([]models.Session, 0, len(sessionsInserted))
+
+	for _, sInserted := range sessionsInserted {
+
+		row := q.QueryRow(ctx, `
+            SELECT s.id, s.session_name, s.start_datetime, s.end_datetime,
+                   s.notes, s.location, s.created_at, s.updated_at,
+                   s.session_parent_id,
+                   sp.start_date, sp.end_date, sp.every_n_weeks, sp.days
+            FROM session s
+            INNER JOIN session_parent sp ON s.session_parent_id = sp.id
+            WHERE s.id = $1
+        `, sInserted.ID)
+
+		var s models.Session
+		var recurStart, recurEnd *time.Time
+		var enWeeks *int
+		var d []int
+
+		err := row.Scan(
+			&s.ID,
+			&s.SessionName,
+			&s.StartDateTime,
+			&s.EndDateTime,
+			&s.Notes,
+			&s.Location,
+			&s.CreatedAt,
+			&s.UpdatedAt,
+			&s.SessionParentID,
+			&recurStart,
+			&recurEnd,
+			&enWeeks,
+			&d,
+		)
+		if err != nil {
+			return nil, err
 		}
 
-		startTime := addNWeeks(input.StartTime, rp.EveryNWeeks)
-		endTime := addNWeeks(input.EndTime, rp.EveryNWeeks)
-
-		for startTime.Before(rp.RecurEnd) {
-			query += fmt.Sprintf(`, ($%d, $%d, $%d, $%d, $%d, $%d)`, argCount, argCount+1, argCount+2, argCount+3, argCount+4, argCount+5)
-			argCount += 6
-			args = append(args, input.SessionName, startTime, endTime, input.TherapistID, input.Notes, input.Location)
-
-			startTime = addNWeeks(startTime, rp.EveryNWeeks)
-			endTime = addNWeeks(endTime, rp.EveryNWeeks)
+		// Same repetition logic as GetSessionByID
+		if recurStart != nil && recurEnd != nil && !recurStart.Equal(*recurEnd) && enWeeks != nil {
+			s.Repetition = &models.Repetition{
+				RecurStart:  *recurStart,
+				RecurEnd:    *recurEnd,
+				EveryNWeeks: *enWeeks,
+				Days:        d,
+			}
+		} else {
+			s.Repetition = nil
 		}
+
+		sessions = append(sessions, s)
 	}
 
-	query += ` RETURNING id, session_name, start_datetime, end_datetime, therapist_id, notes, location, created_at, updated_at`
-
-	rows, err := q.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	sessions, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Session])
-	if err != nil {
-		return nil, err
-	}
 	return &sessions, nil
+}
+
+func setToWeekday(base time.Time, targetWeekday int, reference time.Time) time.Time {
+	baseWeekday := int(base.Weekday()) // Sunday=0
+	diff := targetWeekday - baseWeekday
+	d := base.AddDate(0, 0, diff)
+
+	// Preserve the hour/min/sec from the reference
+	return time.Date(
+		d.Year(), d.Month(), d.Day(),
+		reference.Hour(), reference.Minute(), reference.Second(),
+		reference.Nanosecond(), reference.Location(),
+	)
 }
 
 func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, input *models.PatchSessionInput) (*models.Session, error) {
@@ -178,22 +417,20 @@ func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, inpu
 	query := `UPDATE session
 				SET
 					session_name = COALESCE($1, session_name),
-				    start_datetime = COALESCE($2, start_datetime),
-					end_datetime = COALESCE($3, end_datetime),
-					therapist_id = COALESCE($4, therapist_id),
-					notes = COALESCE($5, notes),
-					location = COALESCE($6, location)
-				WHERE id = $7
-				RETURNING id, session_name, start_datetime, end_datetime, therapist_id, notes, location, created_at, updated_at`
+			      start_datetime = COALESCE($2, start_datetime),
+			      end_datetime = COALESCE($3, end_datetime),
+					notes = COALESCE($4, notes),
+					location = COALESCE($5, location)
+				WHERE id = $6
+				RETURNING id, session_name, start_datetime, end_datetime, notes, location, created_at, updated_at`
 
-	row := r.db.QueryRow(ctx, query, input.SessionName, input.StartTime, input.EndTime, input.TherapistID, input.Notes, input.Location, id)
+	row := r.db.QueryRow(ctx, query, input.SessionName, input.StartTime, input.EndTime, input.Notes, input.Location, id)
 
 	if err := row.Scan(
 		&session.ID,
 		&session.SessionName,
 		&session.StartDateTime,
 		&session.EndDateTime,
-		&session.TherapistID,
 		&session.Notes,
 		&session.Location,
 		&session.CreatedAt,
@@ -202,13 +439,20 @@ func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, inpu
 		return nil, err
 	}
 
+	session.TherapistID = *input.TherapistID
+
 	return session, nil
 }
 
-func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
-	return &SessionRepository{
-		db,
-	}
+func (r *SessionRepository) DeleteRecurringSessions(ctx context.Context, id uuid.UUID) error {
+	query := `
+        DELETE FROM session
+        WHERE session_parent_id = $1
+        AND start_datetime > NOW();
+    `
+
+	_, err := r.db.Exec(ctx, query, id)
+	return err
 }
 
 func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination, therapistID uuid.UUID) ([]models.SessionStudentsOutput, error) {
@@ -277,4 +521,10 @@ func (r *SessionRepository) GetSessionStudents(ctx context.Context, sessionID uu
 	}
 
 	return sessionStudents, nil
+}
+
+func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
+	return &SessionRepository{
+		db,
+	}
 }

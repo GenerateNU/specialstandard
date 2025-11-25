@@ -20,6 +20,7 @@ type SessionRepository interface {
 	GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, therapistid uuid.UUID) ([]models.Session, error)
 	GetSessionByID(ctx context.Context, id string) (*models.Session, error)
 	DeleteSession(ctx context.Context, id uuid.UUID) error
+	DeleteRecurringSessions(ctx context.Context, id uuid.UUID) error
 	PostSession(ctx context.Context, q dbinterface.Queryable, session *models.PostSessionInput) (*[]models.Session, error)
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
 	GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination, therapistId uuid.UUID) ([]models.SessionStudentsOutput, error)
