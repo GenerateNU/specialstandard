@@ -51,13 +51,6 @@ func (h *Handler) GetNewsletterByDate(c *fiber.Ctx) error {
 		return errs.InternalServerError("Newsletter S3 key is empty")
 	}
 
-	// Log for debugging
-	slog.Info("Newsletter: About to generate presigned URL",
-		"s3_url_raw", newsletter.S3URL,
-		"key_extracted", key,
-		"key_length", len(key),
-	)
-
 	// Generate presigned URL (same as resource handler)
 	url, err := h.s3Client.GeneratePresignedURL(c.Context(), key, time.Hour)
 	if err != nil {
