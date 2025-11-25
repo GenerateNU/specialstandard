@@ -26,16 +26,16 @@ func NewResourceRepository(db *pgxpool.Pool) *ResourceRepository {
 	}
 }
 
-func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
+func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, week string, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error) {
 	// Ensuring pagination values are valid!!
-    if pagination.Page < 1 {
-        pagination.Page = 1
-    }
-    if pagination.Limit < 1 {
-        pagination.Limit = 100 // or your default
-    }
+	if pagination.Page < 1 {
+		pagination.Page = 1
+	}
+	if pagination.Limit < 1 {
+		pagination.Limit = 100 // or your default
+	}
 	resources := []models.ResourceWithTheme{}
-	queryString := "SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE 1=1"
+	queryString := "SELECT r.id, r.theme_id, r.grade_level, r.week, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE 1=1"
 	args := []interface{}{}
 	argNum := 1
 
@@ -69,9 +69,9 @@ func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID
 		args = append(args, content)
 		argNum++
 	}
-	if date != nil {
-		queryString += fmt.Sprintf(" AND date = $%d", argNum)
-		args = append(args, date)
+	if week != "" {
+		queryString += fmt.Sprintf(" AND week = $%d", argNum)
+		args = append(args, week)
 		argNum++
 	}
 	if themeName != "" {
@@ -108,7 +108,7 @@ func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID
 			&resource.ID,
 			&resource.ThemeID,
 			&resource.GradeLevel,
-			&resource.Date,
+			&resource.Week,
 			&resource.Type,
 			&resource.Title,
 			&resource.Category,
@@ -134,11 +134,11 @@ func (r *ResourceRepository) GetResources(ctx context.Context, themeID uuid.UUID
 
 func (r *ResourceRepository) GetResourceByID(ctx context.Context, id uuid.UUID) (*models.ResourceWithTheme, error) {
 	var resource models.ResourceWithTheme
-	err := r.db.QueryRow(ctx, "SELECT r.id, r.theme_id, r.grade_level, r.date, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE r.id = $1", id.String()).Scan(
+	err := r.db.QueryRow(ctx, "SELECT r.id, r.theme_id, r.grade_level, r.week, r.type, r.title, r.category, r.content, r.created_at, r.updated_at, t.theme_name, t.month, t.year, t.created_at, t.updated_at FROM resource r JOIN theme t ON r.theme_id = t.id WHERE r.id = $1", id.String()).Scan(
 		&resource.ID,
 		&resource.ThemeID,
 		&resource.GradeLevel,
-		&resource.Date,
+		&resource.Week,
 		&resource.Type,
 		&resource.Title,
 		&resource.Category,
@@ -176,9 +176,9 @@ func (r *ResourceRepository) UpdateResource(ctx context.Context, id uuid.UUID, r
 		args = append(args, *resourceBody.GradeLevel)
 		argNum++
 	}
-	if resourceBody.Date != nil {
-		setFields = append(setFields, "date = $"+fmt.Sprint(argNum))
-		args = append(args, *resourceBody.Date)
+	if resourceBody.Week != nil {
+		setFields = append(setFields, "week = $"+fmt.Sprint(argNum))
+		args = append(args, *resourceBody.Week)
 		argNum++
 	}
 	if resourceBody.Type != nil {
@@ -210,14 +210,14 @@ func (r *ResourceRepository) UpdateResource(ctx context.Context, id uuid.UUID, r
 	args = append(args, time.Now())
 	argNum++
 
-	query := "UPDATE resource SET " + strings.Join(setFields, ", ") + " WHERE id = $" + fmt.Sprint(argNum) + " RETURNING id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at"
+	query := "UPDATE resource SET " + strings.Join(setFields, ", ") + " WHERE id = $" + fmt.Sprint(argNum) + " RETURNING id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at"
 	args = append(args, id.String())
 
 	err := r.db.QueryRow(ctx, query, args...).Scan(
 		&updatedResource.ID,
 		&updatedResource.ThemeID,
 		&updatedResource.GradeLevel,
-		&updatedResource.Date,
+		&updatedResource.Week,
 		&updatedResource.Type,
 		&updatedResource.Title,
 		&updatedResource.Category,
@@ -233,15 +233,15 @@ func (r *ResourceRepository) UpdateResource(ctx context.Context, id uuid.UUID, r
 
 func (r *ResourceRepository) CreateResource(ctx context.Context, resourceBody models.ResourceBody) (*models.Resource, error) {
 	var newResource models.Resource
-	err := r.db.QueryRow(ctx, "INSERT INTO resource (theme_id, grade_level, date, type, title, category, content) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at",
+	err := r.db.QueryRow(ctx, "INSERT INTO resource (theme_id, grade_level, week, type, title, category, content) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at",
 		resourceBody.ThemeID,
 		resourceBody.GradeLevel,
-		resourceBody.Date,
+		resourceBody.Week,
 		resourceBody.Type,
 		resourceBody.Title,
 		resourceBody.Category,
 		resourceBody.Content,
-	).Scan(&newResource.ID, &newResource.ThemeID, &newResource.GradeLevel, &newResource.Date, &newResource.Type, &newResource.Title, &newResource.Category, &newResource.Content, &newResource.CreatedAt, &newResource.UpdatedAt)
+	).Scan(&newResource.ID, &newResource.ThemeID, &newResource.GradeLevel, &newResource.Week, &newResource.Type, &newResource.Title, &newResource.Category, &newResource.Content, &newResource.CreatedAt, &newResource.UpdatedAt)
 	if err != nil {
 		if strings.Contains(err.Error(), "23503") {
 			return nil, errs.InvalidRequestData(map[string]string{"theme_id": "invalid theme"})
