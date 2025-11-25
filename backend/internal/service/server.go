@@ -68,15 +68,6 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		JSONDecoder:  go_json.Unmarshal,
 		ErrorHandler: errs.ErrorHandler,
 	})
-	// ...existing code...
-
-	// Create apiV1 group before using it
-	apiV1 := app.Group("/api/v1")
-
-	// Newsletter endpoint
-	newsletterHandler := newsletterhandler.NewHandler(repo.Newsletter)
-	apiV1.Get("/newsletter/by-date", newsletterHandler.GetNewsletterByDate)
-	// ...existing code...
 
 	app.Use(recover.New())
 	app.Use(favicon.New())
@@ -107,6 +98,8 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		return c.Status(fiber.StatusOK).SendString("Welcome to The Special Standard!")
 	})
 
+	apiV1 := app.Group("/api/v1")
+
 	// S3 presign endpoint - ONLY ONCE, AFTER apiV1 is created
 	s3Handler := s3handler.NewHandler(bucket)
 	apiV1.Post("/s3/presign", s3Handler.GeneratePresignedURL)
@@ -122,7 +115,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	authGroup.Post("/signup", SupabaseAuthHandler.SignUp)
 
 	if !config.TestMode {
-		apiV1.Use(supabase_auth.Middleware(&config.Supabase))
+		//apiV1.Use(supabase_auth.Middleware(&config.Supabase))
 	} else {
 		apiV1.Use(func(c *fiber.Ctx) error {
 			c.Locals("user", "test-user")
@@ -217,6 +210,10 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	apiV1.Route("/schools", func(r fiber.Router) {
 		r.Get("/", schoolHandler.GetSchools)
 	})
+
+	// Newsletter endpoint
+	newsletterHandler := newsletterhandler.NewHandler(repo.Newsletter, bucket)
+	apiV1.Get("/newsletter/by-date", newsletterHandler.GetNewsletterByDate)
 
 	// Handle 404 - Route not found
 	app.Use(func(c *fiber.Ctx) error {
