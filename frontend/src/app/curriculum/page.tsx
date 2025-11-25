@@ -161,11 +161,11 @@ export default function Curriculum() {
                     )
 
                     return (
-                      <div key={weekIndex} className='bg-orange-disabled rounded-2xl flex flex-col p-6'>
-                        <h4>Week {week.weekNumber}</h4>
+                      <div key={weekIndex} className='bg-orange-blue rounded-2xl flex flex-col p-6'>
+                        <h4 className='text-black'>Week {week.weekNumber}</h4>
                         <div className='grid grid-cols-2 w-full gap-6 mt-4'>
                           {/* Readings */}
-                          <div className='bg-white h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
+                          <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
                             <h4>Readings</h4>
                             {readings.length === 0 ? (
                               <div className='text-muted text-sm px-2'>No readings available</div>
@@ -177,7 +177,7 @@ export default function Curriculum() {
                           </div>
 
                           {/* Exercises and Games */}
-                          <div className='bg-white h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
+                          <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
                             <h4>Exercises and Games</h4>
                             {exercises.length === 0 && games.length === 0 && other.length === 0 ? (
                               <div className='text-muted text-sm px-2'>No exercises or games available</div>
