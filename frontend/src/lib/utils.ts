@@ -75,23 +75,23 @@ export function getTherapistName(
 
 // Deterministically pick a color for a school name using hashing
 export function getSchoolColor(schoolName: string): string {
-  // Define color palette using project brand colors
+  // Define color palette using only project brand colors
   const colors = [
-    'bg-blue text-black',
+    'bg-blue text-white',
+    'bg-pink text-white',
     'bg-orange text-black',
-    'bg-pink text-black',
-    'bg-blue-light text-black',
-    'bg-orange-light text-black',
-    'bg-pink-light text-black',
+    'bg-blue-disabled text-black',
+    'bg-pink-disabled text-black',
+    'bg-orange-disabled text-black',
   ]
 
   // Hash the school name
   let hash = 0
   for (let i = 0; i < schoolName.length; i++) {
-    hash = schoolName.charCodeAt(i) + ((hash << 5) - hash)
+    hash = ((hash << 5) - hash) + schoolName.charCodeAt(i)
+    // Convert to 32-bit integer
+    hash = hash & hash
   }
 
-  const colorIndex = Math.abs(hash) % colors.length
-  
-  return colors[colorIndex]
+  return colors[Math.abs(hash) % colors.length]
 }
