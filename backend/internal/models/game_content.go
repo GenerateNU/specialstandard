@@ -31,7 +31,7 @@ type GetGameContentRequest struct {
 	QuestionCount       *int       `query:"question_count" validate:"omitempty,gte=2"`
 	WordsCount          *int       `query:"words_count" validate:"omitempty,gte=2"`
 	ExerciseType        *string    `query:"exercise_type" validate:"omitempty,oneof=game pdf"`
-	ApplicableGameTypes *[]string  `query:"applicable_game_types" validate:"omitempty,dive,oneof=sequencing following_directions wh_questions true_false concepts_sorting fill_in_the_blank categorical_language emotions teamwork_talk express_excitement_interest fluency articulation_s articulation_l"`
+	ApplicableGameTypes *[]string  `query:"applicable_game_types" validate:"omitempty,dive"`
 }
 
 const (
