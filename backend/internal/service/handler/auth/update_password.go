@@ -23,9 +23,10 @@ func (h *Handler) UpdatePassword(c *fiber.Ctx) error {
 
 	token := c.Query("token", "missing")
 
-	if token == "missing" {
+	switch token {
+	case "missing":
 		token = c.Cookies("jwt", "")
-	} else if token == "" {
+	case "":
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Reset token is missing"})
 	}
 
