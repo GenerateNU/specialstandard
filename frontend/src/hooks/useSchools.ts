@@ -1,50 +1,59 @@
-import { useAuthContext } from '@/contexts/authContext'
+import { getSchools } from "@/lib/api/schools";
+import { getDistricts } from "@/lib/api/districts";
+import { useQuery } from "@tanstack/react-query";
 
-import type { QueryObserverResult } from '@tanstack/react-query'
-import { useQuery } from '@tanstack/react-query'
-import { getSchools as getSchoolsApi } from '@/lib/api/schools'
-import { getDistricts as getDistrictsApi } from '@/lib/api/districts'
-import type { District, School } from '@/lib/api/theSpecialStandardAPI.schemas'
-
-interface UseSchoolsReturn {
-  schools: School[]
-  districts: District[]
-  isLoading: boolean
-  error: string | null
-  refetch: () => Promise<QueryObserverResult<School[], Error>>
+export interface SchoolOption {
+  id: number;
+  name: string;
+  district_id?: number;
 }
 
-export function useSchools(): UseSchoolsReturn {
-  const schoolsApi = getSchoolsApi()
-  const districtsApi = getDistrictsApi()
-  const { userId: therapistId } = useAuthContext()
+export interface DistrictOption {
+  id: number;
+  name: string;
+}
+
+/**
+ * Hook to fetch all schools and districts from the API
+ */
+export function useSchools() {
+  const schoolsApi = getSchools();
+  const districtsApi = getDistricts();
 
   const {
-    data: schoolsResponse,
-    isLoading,
-    error,
-    refetch,
+    data: schoolsData,
+    isLoading: isLoadingSchools,
+    error: schoolsError,
   } = useQuery({
-    queryKey: ['schools', therapistId],
+    queryKey: ["schools"],
     queryFn: () => schoolsApi.getSchools(),
-  })
+  });
 
   const {
-    data: districtsResponse,
+    data: districtsData,
+    isLoading: isLoadingDistricts,
+    error: districtsError,
   } = useQuery({
-    queryKey: ['districts', therapistId],
+    queryKey: ["districts"],
     queryFn: () => districtsApi.getDistricts(),
-  })
+  });
 
-  const schools = schoolsResponse ?? []
-  const districts = districtsResponse ?? []
+  const schools: SchoolOption[] = (schoolsData || []).map(school => ({
+    id: school.id!,
+    name: school.name!,
+    district_id: school.district_id,
+  }));
+
+  const districts: DistrictOption[] = (districtsData || []).map(district => ({
+    id: district.id!,
+    name: district.name!,
+  }));
 
   return {
     schools,
     districts,
-    isLoading,
-    error: error?.message || null,
-    refetch,
-  }
+    isLoading: isLoadingSchools || isLoadingDistricts,
+    error: schoolsError?.message || districtsError?.message || null,
+  };
 }
 
