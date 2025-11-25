@@ -107,39 +107,27 @@ export default function StudentsPage() {
 
           {/* School Filters */}
           {uniqueSchools.length > 0 && (
-            <div className="mb-6 bg-card rounded-lg shadow-sm border border-default p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-primary">Filter by School</h3>
-                {selectedSchools.length > 0 && (
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-secondary">Filter:</span>
+              {uniqueSchools.map(schoolName => {
+                const isSelected = selectedSchools.includes(schoolName)
+                return (
                   <button
-                    onClick={clearFilters}
-                    className="text-xs text-secondary hover:text-primary transition-colors flex items-center gap-1"
+                    key={schoolName}
+                    onClick={() => toggleSchoolFilter(schoolName)}
+                    className={`transition-all ${
+                      isSelected 
+                        ? 'opacity-100' 
+                        : 'opacity-40 hover:opacity-70'
+                    }`}
                   >
-                    <X className="w-3 h-3" />
-                    Clear filters
+                    <Badge className={`${getSchoolColor(schoolName)} ${isSelected ? 'ring-2 ring-accent ring-offset-2' : ''}`}>
+                      {schoolName}
+                      {isSelected && <X className="w-3 h-3 ml-1 inline" />}
+                    </Badge>
                   </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {uniqueSchools.map(schoolName => {
-                  const isSelected = selectedSchools.includes(schoolName)
-                  return (
-                    <button
-                      key={schoolName}
-                      onClick={() => toggleSchoolFilter(schoolName)}
-                      className={`transition-all ${
-                        isSelected 
-                          ? 'ring-2 ring-accent ring-offset-2' 
-                          : 'opacity-70 hover:opacity-100'
-                      }`}
-                    >
-                      <Badge className={getSchoolColor(schoolName)}>
-                        {schoolName}
-                      </Badge>
-                    </button>
-                  )
-                })}
-              </div>
+                )
+              })}
             </div>
           )}
 
