@@ -107,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clear localStorage
     localStorage.removeItem('jwt')
     localStorage.removeItem('userId')
+    localStorage.removeItem('recentlyViewedStudents')
 
     // Clear any remaining cookies (for backwards compatibility)
     document.cookie.split(';').forEach((cookie) => {
