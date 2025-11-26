@@ -39,14 +39,13 @@ func TestResourceRepository_GetResources(t *testing.T) {
 
 	// Create test resource
 	resourceID := uuid.New()
-	testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+        INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, resourceID, themeID, 5, testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
+    `, resourceID, themeID, 5, 1, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
+	resources, err := repo.GetResources(ctx, themeID, "", "", "", "", "", "", "", nil, nil, utils.NewPagination())
 
 	// Assert
 	assert.NoError(t, err)
@@ -63,17 +62,17 @@ func TestResourceRepository_GetResources(t *testing.T) {
 	// More Tests for Pagination Behaviour
 	for i := 1; i <= 12; i++ {
 		_, err := testDB.Exec(ctx,
-			`INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+			`INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        `, uuid.New(), themeID, i, testDate, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
+        `, uuid.New(), themeID, i, 1, "worksheet", "Math Worksheet", "mathematics", "Addition problems", time.Now(), time.Now())
 		assert.NoError(t, err)
 	}
 
-	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.NewPagination())
+	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", "", nil, nil, utils.NewPagination())
 	assert.NoError(t, err)
 	assert.Len(t, resources, 13)
 
-	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", nil, nil, nil, utils.Pagination{
+	resources, err = repo.GetResources(ctx, themeID, "", "", "", "", "", "", "", nil, nil, utils.Pagination{
 		Page:  2,
 		Limit: 9,
 	})
@@ -103,11 +102,10 @@ func TestResourceRepository_GetResourceByID(t *testing.T) {
 
 	// Create test resource
 	resourceID := uuid.New()
-	testDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+        INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, resourceID, themeID, 3, testDate, "video", "Science Video", "science", "Volcano experiment", time.Now(), time.Now())
+    `, resourceID, themeID, 3, 1, "video", "Science Video", "science", "Volcano experiment", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Test
@@ -143,11 +141,10 @@ func TestResourceRepository_CreateResource(t *testing.T) {
     `, themeID, "Reading Theme", 3, 2024, time.Now(), time.Now())
 	assert.NoError(t, err)
 
-	testDate := time.Date(2024, 3, 10, 0, 0, 0, 0, time.UTC)
 	resourceBody := models.ResourceBody{
 		ThemeID:    themeID,
 		GradeLevel: ptrInt(4),
-		Date:       &testDate,
+		Week:       ptrInt(1),
 		Type:       ptrString("book"),
 		Title:      ptrString("Reading Comprehension"),
 		Category:   ptrString("literacy"),
@@ -187,11 +184,10 @@ func TestResourceRepository_UpdateResource(t *testing.T) {
 
 	// Create test resource
 	resourceID := uuid.New()
-	testDate := time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC)
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+        INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, resourceID, themeID, 2, testDate, "activity", "Art Activity", "art", "Drawing exercise", time.Now(), time.Now())
+    `, resourceID, themeID, 2, 1, "activity", "Art Activity", "art", "Drawing exercise", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	updateBody := models.UpdateResourceBody{
@@ -232,11 +228,10 @@ func TestResourceRepository_DeleteResource(t *testing.T) {
 
 	// Create test resource
 	resourceID := uuid.New()
-	testDate := time.Date(2024, 5, 1, 0, 0, 0, 0, time.UTC)
 	_, err = testDB.Exec(ctx, `
-        INSERT INTO resource (id, theme_id, grade_level, date, type, title, category, content, created_at, updated_at)
+        INSERT INTO resource (id, theme_id, grade_level, week, type, title, category, content, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, resourceID, themeID, 6, testDate, "document", "History Document", "history", "Ancient civilizations", time.Now(), time.Now())
+    `, resourceID, themeID, 6, 1, "document", "History Document", "history", "Ancient civilizations", time.Now(), time.Now())
 	assert.NoError(t, err)
 
 	// Test

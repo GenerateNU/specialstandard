@@ -6,7 +6,6 @@ import (
 	"specialstandard/internal/storage/dbinterface"
 	"specialstandard/internal/storage/postgres/schema"
 	"specialstandard/internal/utils"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -16,6 +15,7 @@ type SessionRepository interface {
 	GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, therapistid uuid.UUID) ([]models.Session, error)
 	GetSessionByID(ctx context.Context, id string) (*models.Session, error)
 	DeleteSession(ctx context.Context, id uuid.UUID) error
+	DeleteRecurringSessions(ctx context.Context, id uuid.UUID) error
 	PostSession(ctx context.Context, q dbinterface.Queryable, session *models.PostSessionInput) (*[]models.Session, error)
 	PatchSession(ctx context.Context, id uuid.UUID, session *models.PatchSessionInput) (*models.Session, error)
 	GetSessionStudents(ctx context.Context, sessionID uuid.UUID, pagination utils.Pagination, therapistId uuid.UUID) ([]models.SessionStudentsOutput, error)
@@ -59,7 +59,7 @@ type TherapistRepository interface {
 }
 
 type ResourceRepository interface {
-	GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, date *time.Time, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error)
+	GetResources(ctx context.Context, themeID uuid.UUID, gradeLevel, resType, title, category, content, themeName string, week string, themeMonth, themeYear *int, pagination utils.Pagination) ([]models.ResourceWithTheme, error)
 	GetResourceByID(ctx context.Context, id uuid.UUID) (*models.ResourceWithTheme, error)
 	UpdateResource(ctx context.Context, id uuid.UUID, resourceBody models.UpdateResourceBody) (*models.Resource, error)
 	CreateResource(ctx context.Context, resourceBody models.ResourceBody) (*models.Resource, error)
@@ -102,8 +102,8 @@ type Repository struct {
 	SessionResource SessionResourceRepository
 	GameContent     GameContentRepository
 	GameResult      GameResultRepository
-	District 		DistrictRepository
-	School 			SchoolRepository
+	District        DistrictRepository
+	School          SchoolRepository
 }
 
 func (r *Repository) Close() error {
@@ -127,7 +127,7 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		SessionResource: schema.NewSessionResourceRepository(db),
 		GameContent:     schema.NewGameContentRepository(db),
 		GameResult:      schema.NewGameResultRepository(db),
-		District: 		 schema.NewDistrictRepository(db),
-		School: 		 schema.NewSchoolRepository(db),
+		District:        schema.NewDistrictRepository(db),
+		School:          schema.NewSchoolRepository(db),
 	}
 }

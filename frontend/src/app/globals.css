@@ -17,6 +17,7 @@
   --color-white: #ffffff;
   --color-black: #272727;
   --color-bg-white: #f2ece0;
+  --color-white-hover: #d9d2c4;
 
   /* Light Theme */
   --background: var(--color-bg-white);
@@ -65,6 +66,7 @@
     --card-hover: #454545;
     --border: rgba(255, 255, 255, 0.1);
     --border-hover: rgba(255, 255, 255, 0.2);
+    --color-blue: #6c78ff;
 
     /* Text Colors */
     --text-primary: var(--color-white);
@@ -204,12 +206,14 @@ h6 {
 .bg-orange {
   background-color: var(--color-orange);
 }
-
-/* Black/White Classes */
-.bg-black {
-  background-color: var(--color-black);
+.bg-orange-blue {
+  background-color: var(--color-orange);
 }
-
+@media (prefers-color-scheme: dark) {
+  .bg-orange-blue {
+    background-color: var(--color-blue);
+  }
+}
 .bg-card {
   background-color: var(--card-bg);
 }
@@ -361,4 +365,8 @@ h6 {
 
 .disabled\:text-disabled:disabled {
   color: var(--text-disabled);
+}
+
+.shadow-card {
+  box-shadow: 0px 4px 10px 0px #00000040;
 }

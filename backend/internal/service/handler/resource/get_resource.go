@@ -26,14 +26,7 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 		themeId = parsedThemeId
 	}
 	gradeLevel := c.Query("grade_level")
-	dateStr := c.Query("date")
-	var date *time.Time
-	if dateStr != "" {
-		parsedDate, err := time.Parse("2006-01-02", dateStr)
-		if err == nil {
-			date = &parsedDate
-		}
-	}
+	weekstr := c.Query("week")
 	res_type := c.Query("type")
 	title := c.Query("title")
 	category := c.Query("category")
@@ -72,7 +65,7 @@ func (h *Handler) GetResources(c *fiber.Ctx) error {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
-	resourcesWithThemes, err := h.resourceRepository.GetResources(c.Context(), themeId, gradeLevel, res_type, title, category, content, themeName, date, themeMonth, themeYear, pagination)
+	resourcesWithThemes, err := h.resourceRepository.GetResources(c.Context(), themeId, gradeLevel, res_type, title, category, content, themeName, weekstr, themeMonth, themeYear, pagination)
 	if err != nil {
 		return errs.InternalServerError(err.Error())
 	}
