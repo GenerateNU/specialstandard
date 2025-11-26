@@ -8,6 +8,7 @@ import (
 	"specialstandard/internal/service/handler/auth"
 	"specialstandard/internal/service/handler/game_content"
 	"specialstandard/internal/service/handler/game_result"
+	newsletterhandler "specialstandard/internal/service/handler/newsletter"
 	"specialstandard/internal/service/handler/resource"
 	s3handler "specialstandard/internal/service/handler/s3"
 	"specialstandard/internal/service/handler/school"
@@ -214,6 +215,10 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	apiV1.Route("/schools", func(r fiber.Router) {
 		r.Get("/", schoolHandler.GetSchools)
 	})
+
+	// Newsletter endpoint
+	newsletterHandler := newsletterhandler.NewHandler(repo.Newsletter, bucket)
+	apiV1.Get("/newsletter/by-date", newsletterHandler.GetNewsletterByDate)
 
 	// Handle 404 - Route not found
 	app.Use(func(c *fiber.Ctx) error {
