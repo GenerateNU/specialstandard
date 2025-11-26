@@ -17,6 +17,7 @@ type GameContent struct {
 	Question        string     `json:"question" db:"question"`
 	Options         []string   `json:"options" db:"options"`
 	Answer          string     `json:"answer" db:"answer"`
+	RawAnswer       string     `json:"raw_answer" db:"raw_answer"`
 	CreatedAt       *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt       *time.Time `json:"updated_at" db:"updated_at"`
 }
