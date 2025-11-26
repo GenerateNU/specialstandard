@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       else {
         setUserId(null)
+        localStorage.removeItem('recentlyViewedStudents')     
       }
       setIsLoading(false)
     }
