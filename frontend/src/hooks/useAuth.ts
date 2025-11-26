@@ -32,6 +32,7 @@ export function useAuth() {
             // Clear localStorage
             localStorage.removeItem('jwt')
             localStorage.removeItem('userId')
+            localStorage.removeItem('recentlyViewedStudents')     
             // Clear cookies
             document.cookie.split(';').forEach((cookie) => {
                 const eqPos = cookie.indexOf('=')
@@ -65,6 +66,7 @@ export function useAuth() {
             // Clear auth data after successful password reset
             localStorage.removeItem('jwt')
             localStorage.removeItem('userId')
+            localStorage.removeItem('recentlyViewedStudents')     
             queryClient.setQueryData(['user'], null)
             queryClient.invalidateQueries({ queryKey: ['user'] })
         },
@@ -75,6 +77,8 @@ export function useAuth() {
         onSuccess: () => {
             localStorage.removeItem('jwt')
             localStorage.removeItem('userId')
+            localStorage.removeItem('recentlyViewedStudents')     
+
             queryClient.setQueryData(['user'], null)
             queryClient.invalidateQueries({ queryKey: ['user'] })
         },
