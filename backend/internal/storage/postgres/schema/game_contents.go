@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"specialstandard/internal/models"
 	"strings"
+	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -64,6 +65,7 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
+		slog.Error("Failed to get game contents", "error", err)
 		return nil, err
 	}
 

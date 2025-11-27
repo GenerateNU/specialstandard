@@ -722,8 +722,12 @@ export interface GameContent {
   question: string;
   /** The list of wrong-words that are given for the game. */
   options: string[];
-  /** The answer to the game. */
+  /** The answer to the game (presigned URL) */
   answer: string;
+  /** The raw answer to the game. */
+  raw_answer?: string;
+  /** The list of wrong-words that are given for the game. */
+  presigned_options: string[];
   /** When the game-content was created */
   created_at: string;
   /** When the game-content was last updated */

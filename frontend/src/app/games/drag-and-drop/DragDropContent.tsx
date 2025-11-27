@@ -1,84 +1,26 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, CheckCircle, Volume2 } from 'lucide-react'
 import {
+  closestCenter,
   DndContext,
   DragOverlay,
-  closestCenter,
   PointerSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import {
   SortableContext,
   verticalListSortingStrategy,
-  useSortable,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import AppLayout from '@/components/AppLayout'
 import { useGameContents } from '@/hooks/useGameContents'
 import { useGameResults } from '@/hooks/useGameResults'
-
-// Draggable image component
-function DraggableImage({ id, url, isInSequence }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={`bg-card rounded-lg shadow-md p-3 cursor-grab active:cursor-grabbing ${
-        isInSequence ? 'ring-2 ring-blue' : ''
-      }`}
-    >
-      <div className="aspect-square rounded-lg overflow-hidden">
-        <img 
-          src={url} 
-          alt="Sequence item"
-          className="w-full h-full object-contain"
-        />
-      </div>
-    </div>
-  )
-}
-
-// Droppable sequence slot
-function SequenceSlot({ position, imageUrl }) {
-  return (
-    <div className="relative bg-card-hover border-2 border-dashed border-border rounded-lg p-4 min-h-[150px] flex items-center justify-center">
-      {imageUrl ? (
-        <div className="w-full h-full">
-          <div className="aspect-square rounded-lg overflow-hidden">
-            <img 
-              src={imageUrl} 
-              alt={`Position ${position}`}
-              className="w-full h-full object-contain"
-            />
-          </div>
-        </div>
-      ) : (
-        <span className="text-secondary text-sm">Drop here ({position})</span>
-      )}
-    </div>
-  )
-}
+import DraggableImage from '@/components/games/drag-and-drop/DraggableImage'
+import SequenceSlot from '@/components/games/drag-and-drop/SequenceSlot'
 
 export default function SequencingGameContent() {
   const router = useRouter()
@@ -88,22 +30,23 @@ export default function SequencingGameContent() {
   const difficulty = searchParams.get('difficulty')
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
-  const sessionStudentId = searchParams.get('session_student_id')
+  // const sessionStudentId = searchParams.get('session_student_id')
+  const sessionStudentId = "1"
   const sessionId = searchParams.get('session_id')
   const studentId = searchParams.get('student_id')
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeId || undefined,
     difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
-    category: category as any,
-    question_type: questionType as any,
+    category: category as 'receptive_language' | 'expressive_language' | 'social_pragmatic_language' | 'speech' | undefined,
+    question_type: questionType as 'sequencing' | 'following_directions' | 'wh_questions' | 'true_false' | 'concepts_sorting' | 'fill_in_the_blank' | 'categorical_language' | 'emotions' | 'teamwork_talk' | 'express_excitement_interest' | 'fluency' | 'articulation_s' | 'articulation_l' | undefined,
   })
 
-  const gameResultsHook = sessionStudentId ? useGameResults({
+  const gameResultsHook = useGameResults({
     session_student_id: Number.parseInt(sessionStudentId),
     session_id: sessionId || undefined,
     student_id: studentId || undefined
-  }) : null
+  })
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
@@ -112,15 +55,32 @@ export default function SequencingGameContent() {
   const [cardStartTime, setCardStartTime] = useState<number | null>(null)
   const [incorrectAttempts, setIncorrectAttempts] = useState(0)
   
-  // Sequencing state
-  const [availableImages, setAvailableImages] = useState<string[]>([])
+  // Sequencing state - using FILENAMES as IDs
+  const [availableFilenames, setAvailableFilenames] = useState<string[]>([])
   const [sequence, setSequence] = useState<(string | null)[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
-  const [correctAnswer, setCorrectAnswer] = useState<string[]>([])
+  const [correctAnswerFilenames, setCorrectAnswerFilenames] = useState<string[]>([])
   const [loadingAnswer, setLoadingAnswer] = useState(false)
 
   const currentQuestion = gameContents?.[currentQuestionIndex]
+
+  // Create a map of filename -> presigned URL
+  const filenameToUrlMap = useMemo(() => {
+    if (!currentQuestion?.options || !currentQuestion?.presigned_options) return {}
+    
+    const map: Record<string, string> = {}
+    currentQuestion.options.forEach((filename, index) => {
+      // Ensure we have a corresponding presigned option
+      if (index < currentQuestion.presigned_options.length) {
+        map[filename] = currentQuestion.presigned_options[index]
+      } else {
+        // Fallback or handle mismatch if needed
+        map[filename] = filename // filename text fallback
+      }
+    })
+    return map
+  }, [currentQuestion])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -141,59 +101,43 @@ export default function SequencingGameContent() {
     }
   }
 
-  // Helper to convert filename to S3 URL
-  const getImageUrl = (filename: string): string => {
-    // If it's already a full URL, return as-is
-    if (filename.startsWith('http')) {
-      return filename
-    }
-    // Otherwise, construct S3 URL (you may need to adjust bucket/path)
-    return `https://specialstandard-bucket.s3.us-east-1.amazonaws.com/${filename}`
-  }
-
-  // Fetch correct answer from URL and convert to full image URLs
+  // Parse correct answer from raw_answer field - store as FILENAMES
   useEffect(() => {
-    const fetchAnswer = async () => {
-      if (!currentQuestion?.answer) return
+    if (!currentQuestion?.raw_answer) return
+    
+    setLoadingAnswer(true)
+    try {
+      console.warn('Raw answer from API:', currentQuestion.raw_answer)
       
-      setLoadingAnswer(true)
-      try {
-        // Fetch the answer URL to get the JSON array
-        const response = await fetch(currentQuestion.answer)
-        const text = await response.text()
-        
-        // Parse the JSON (might be double-encoded)
-        let parsed = JSON.parse(text)
-        if (typeof parsed === 'string') {
-          parsed = JSON.parse(parsed)
-        }
-        
-        // Convert filenames to full S3 URLs
-        const imageUrls = parsed.map(filename => getImageUrl(filename))
-        setCorrectAnswer(imageUrls)
-      } catch (err) {
-        console.error('Error fetching answer:', err)
-        setCorrectAnswer([])
-      } finally {
-        setLoadingAnswer(false)
-      }
-    }
+      // Parse the raw_answer JSON string (might be double-encoded)
+      let parsed = JSON.parse(currentQuestion.raw_answer)
 
-    fetchAnswer()
+      console.warn('Parsed answer:', parsed)
+      
+      // Store as filenames directly
+      setCorrectAnswerFilenames(parsed)
+    } catch (err) {
+      console.error('Error parsing raw_answer:', err)
+      setCorrectAnswerFilenames([])
+    } finally {
+      setLoadingAnswer(false)
+    }
   }, [currentQuestion])
 
-  // Initialize available images and sequence
+  // Initialize available filenames and sequence
   useEffect(() => {
-    if (currentQuestion?.options && correctAnswer.length > 0) {
-      // Convert option filenames to full S3 URLs
-      const imageUrls = currentQuestion.options.map(filename => getImageUrl(filename))
-      const shuffled = [...imageUrls].sort(() => Math.random() - 0.5)
-      setAvailableImages(shuffled)
-      setSequence(Array(correctAnswer.length).fill(null))
+    if (currentQuestion?.options && correctAnswerFilenames.length > 0) {
+      console.warn('Options from API:', currentQuestion.options)
+      console.warn('Correct answer filenames:', correctAnswerFilenames)
+      
+      // Use filenames directly from options
+      const shuffled = [...currentQuestion.options].sort(() => Math.random() - 0.5)
+      setAvailableFilenames(shuffled)
+      setSequence(Array.from({ length: correctAnswerFilenames.length }, () => null))
       setShowSuccess(false)
       setIncorrectAttempts(0)
     }
-  }, [currentQuestionIndex, currentQuestion, correctAnswer])
+  }, [currentQuestionIndex, currentQuestion, correctAnswerFilenames])
 
   // Speak question on load
   useEffect(() => {
@@ -201,62 +145,36 @@ export default function SequencingGameContent() {
       speakWord(currentQuestion.question)
     }
   }, [currentQuestionIndex, currentQuestion])
-
+  
   // Track card start time
   useEffect(() => {
     if (currentQuestion) {
       setCardStartTime(Date.now())
       gameResultsHook?.startCard(currentQuestion)
     }
-  }, [currentQuestion])
+  }, [currentQuestion, gameResultsHook])
 
-  const handleDragStart = (event) => {
-    setActiveId(event.active.id)
-  }
-
-  const handleDragEnd = (event) => {
-    const { active, over } = event
-    setActiveId(null)
-
-    if (!over) return
-
-    const draggedImage = active.id
-    
-    // Check if dropped on a sequence slot
-    if (over.id.startsWith('slot-')) {
-      const slotIndex = parseInt(over.id.split('-')[1])
-      
-      // Update sequence
-      const newSequence = [...sequence]
-      
-      // If slot already has an image, return it to available
-      if (newSequence[slotIndex]) {
-        setAvailableImages([...availableImages, newSequence[slotIndex]!])
-      }
-      
-      newSequence[slotIndex] = draggedImage
-      setSequence(newSequence)
-      
-      // Remove from available
-      setAvailableImages(availableImages.filter(img => img !== draggedImage))
-      
-      // Check if sequence is correct
-      checkSequence(newSequence)
-    }
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
   }
 
   const checkSequence = (currentSequence: (string | null)[]) => {
     // Only check if all slots are filled
     if (currentSequence.every(item => item !== null)) {
-      const isCorrect = currentSequence.every((img, idx) => img === correctAnswer[idx])
+      const isCorrect = currentSequence.every((filename, idx) => filename === correctAnswerFilenames[idx])
       
       if (isCorrect) {
         setShowSuccess(true)
         setScore(score + 1)
         
+        // Save result using the hook
         if (gameResultsHook && currentQuestion && cardStartTime) {
           const timeTaken = Math.floor((Date.now() - cardStartTime) / 1000)
-          gameResultsHook.completeCard(currentQuestion.id, timeTaken, incorrectAttempts)
+          gameResultsHook.completeCard(
+            currentQuestion.id, 
+            timeTaken, 
+            incorrectAttempts,
+          )
         }
 
         setTimeout(() => {
@@ -268,17 +186,49 @@ export default function SequencingGameContent() {
         }, 2000)
       } else {
         setIncorrectAttempts(incorrectAttempts + 1)
+        // Could track the incorrect attempt here if needed
       }
     }
   }
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveId(null)
+
+    if (!over) return
+    
+    const draggedFilename = active.id as string
+    
+    // Check if dropped on a sequence slot
+    if (String(over.id).startsWith('slot-')) {
+      const slotIndex = Number.parseInt(String(over.id).split('-')[1])
+      
+      // Update sequence
+      const newSequence = [...sequence]
+      
+      // If slot already has an image, return it to available
+      if (newSequence[slotIndex]) {
+        setAvailableFilenames([...availableFilenames, newSequence[slotIndex]!])
+      }
+      
+      newSequence[slotIndex] = draggedFilename
+      setSequence(newSequence)
+      
+      // Remove from available
+      setAvailableFilenames(availableFilenames.filter(f => f !== draggedFilename))
+      
+      // Check if sequence is correct
+      checkSequence(newSequence)
+    }
+  }
+
   const handleRemoveFromSequence = (index: number) => {
-    const imageToRemove = sequence[index]
-    if (imageToRemove) {
+    const filenameToRemove = sequence[index]
+    if (filenameToRemove) {
       const newSequence = [...sequence]
       newSequence[index] = null
       setSequence(newSequence)
-      setAvailableImages([...availableImages, imageToRemove])
+      setAvailableFilenames([...availableFilenames, filenameToRemove])
     }
   }
 
@@ -415,23 +365,23 @@ export default function SequencingGameContent() {
               <div className="bg-card rounded-lg shadow-lg p-6">
                 <h3 className="text-xl font-semibold mb-4">Put in order:</h3>
                 <div className="space-y-4">
-                  {sequence.map((imageUrl, index) => (
-                    <SortableContext
+                  {sequence.map((filename, index) => (
+                    <div 
                       key={`slot-${index}`}
-                      items={[`slot-${index}`]}
-                      strategy={verticalListSortingStrategy}
+                      className="relative"
                     >
-                      <div 
-                        id={`slot-${index}`}
-                        className="relative"
-                        onClick={() => handleRemoveFromSequence(index)}
-                      >
-                        <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-lg font-bold text-secondary">
-                          {index + 1}
-                        </div>
-                        <SequenceSlot position={index + 1} imageUrl={imageUrl} />
+                      <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-lg font-bold text-secondary">
+                        {index + 1}
                       </div>
-                    </SortableContext>
+                      <div onClick={() => handleRemoveFromSequence(index)}>
+                        <SequenceSlot 
+                          position={index + 1} 
+                          filename={filename}
+                          url={filename ? filenameToUrlMap[filename] : undefined}
+                          slotId={`slot-${index}`}
+                        />
+                      </div>
+                    </div>
                   ))}
                 </div>
                 {showSuccess && (
@@ -446,21 +396,21 @@ export default function SequencingGameContent() {
               <div className="bg-card rounded-lg shadow-lg p-6">
                 <h3 className="text-xl font-semibold mb-4">Available images:</h3>
                 <SortableContext
-                  items={availableImages}
+                  items={availableFilenames}
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="grid grid-cols-2 gap-4">
-                    {availableImages.map((imageUrl) => (
+                    {availableFilenames.map((filename) => (
                       <DraggableImage
-                        key={imageUrl}
-                        id={imageUrl}
-                        url={imageUrl}
-                        isInSequence={false}
+                        key={filename}
+                        id={filename}
+                        filename={filename}
+                        url={filenameToUrlMap[filename]}
                       />
                     ))}
                   </div>
                 </SortableContext>
-                {availableImages.length === 0 && (
+                {availableFilenames.length === 0 && (
                   <p className="text-secondary text-center py-8">
                     All images placed in sequence
                   </p>
@@ -473,7 +423,7 @@ export default function SequencingGameContent() {
                 <div className="bg-card rounded-lg shadow-xl p-3 rotate-3 cursor-grabbing">
                   <div className="aspect-square rounded-lg overflow-hidden">
                     <img 
-                      src={activeId} 
+                      src={filenameToUrlMap[activeId]} 
                       alt="Dragging"
                       className="w-full h-full object-contain"
                     />
