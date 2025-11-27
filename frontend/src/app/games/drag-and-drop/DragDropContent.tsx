@@ -106,14 +106,10 @@ export default function SequencingGameContent() {
     if (!currentQuestion?.raw_answer) return
     
     setLoadingAnswer(true)
-    try {
-      console.warn('Raw answer from API:', currentQuestion.raw_answer)
-      
+    try {      
       // Parse the raw_answer JSON string (might be double-encoded)
       const parsed = JSON.parse(currentQuestion.raw_answer)
 
-      console.warn('Parsed answer:', parsed)
-      
       // Store as filenames directly
       setCorrectAnswerFilenames(parsed)
     } catch (err) {
@@ -127,9 +123,6 @@ export default function SequencingGameContent() {
   // Initialize available filenames and sequence
   useEffect(() => {
     if (currentQuestion?.options && correctAnswerFilenames.length > 0) {
-      console.warn('Options from API:', currentQuestion.options)
-      console.warn('Correct answer filenames:', correctAnswerFilenames)
-      
       // Use filenames directly from options
       const shuffled = [...currentQuestion.options].sort(() => Math.random() - 0.5)
       setAvailableFilenames(shuffled)
