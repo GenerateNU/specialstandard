@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, CheckCircle, Volume2 } from 'lucide-react'
 import {
@@ -110,7 +110,7 @@ export default function SequencingGameContent() {
       console.warn('Raw answer from API:', currentQuestion.raw_answer)
       
       // Parse the raw_answer JSON string (might be double-encoded)
-      let parsed = JSON.parse(currentQuestion.raw_answer)
+      const parsed = JSON.parse(currentQuestion.raw_answer)
 
       console.warn('Parsed answer:', parsed)
       

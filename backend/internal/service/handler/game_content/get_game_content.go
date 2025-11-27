@@ -53,7 +53,6 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 						if err != nil {
 							slog.Warn("Failed to generate presigned URL", "key", gameContents[i].Options[j], "error", err)
 						} else {
-							gameContents[i].Options[j] = gameContents[i].Options[j]
 							gameContents[i].PresignedOptions[j] = presignedURL
 						}
 					}
