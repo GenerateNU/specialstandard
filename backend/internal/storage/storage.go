@@ -6,10 +6,15 @@ import (
 	"specialstandard/internal/storage/dbinterface"
 	"specialstandard/internal/storage/postgres/schema"
 	"specialstandard/internal/utils"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type NewsletterRepository interface {
+	GetNewsletterByDate(ctx context.Context, date time.Time) (*models.Newsletter, error)
+}
 
 type SessionRepository interface {
 	GetSessions(ctx context.Context, pagination utils.Pagination, filter *models.GetSessionRepositoryRequest, therapistid uuid.UUID) ([]models.Session, error)
@@ -104,6 +109,7 @@ type Repository struct {
 	GameResult      GameResultRepository
 	District        DistrictRepository
 	School          SchoolRepository
+	Newsletter      NewsletterRepository
 }
 
 func (r *Repository) Close() error {
@@ -129,5 +135,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		GameResult:      schema.NewGameResultRepository(db),
 		District:        schema.NewDistrictRepository(db),
 		School:          schema.NewSchoolRepository(db),
+		Newsletter:      schema.NewNewsletterRepository(db),
 	}
 }
