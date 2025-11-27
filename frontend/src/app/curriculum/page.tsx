@@ -1,70 +1,93 @@
 'use client'
 
-import { AlertCircle, ArrowLeft, BookOpen, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BookOpen, Download, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
+import { useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useResources } from '@/hooks/useResources'
 import { ResourceButton } from '@/components/curriculum/resourceButton'
 import { Button } from '@/components/ui/button'
+import { Dropdown } from '@/components/ui/dropdown'
 
-// Group resources by theme, then by week
-function groupByThemeAndWeek(resources: any[]) {
-  const themes = new Map()
-  
-  resources.forEach(resource => {
-    // Filter out resources without theme or week
-    if (!resource.theme || !resource.theme_id || resource.week === null || resource.week === undefined) return
-    
-    const themeId = resource.theme_id
-    
-    if (!themes.has(themeId)) {
-      themes.set(themeId, {
-        themeId,
-        themeName: resource.theme.theme_name,
-        themeMonth: resource.theme.theme_month,
-        themeYear: resource.theme.theme_year,
-        weeks: new Map()
-      })
-    }
-    
-    const themeData = themes.get(themeId)
-    const weekNumber = resource.week
-    
-    if (!themeData.weeks.has(weekNumber)) {
-      themeData.weeks.set(weekNumber, {
-        weekNumber,
-        resources: []
-      })
-    }
-    
-    themeData.weeks.get(weekNumber).resources.push(resource)
-  })
-  
-  // Convert to array and sort themes by date (newest to oldest)
-  const themesArray = Array.from(themes.values()).sort((a, b) => {
-    const dateA = new Date(a.themeYear, a.themeMonth - 1)
-    const dateB = new Date(b.themeYear, b.themeMonth - 1)
-    return dateB.getTime() - dateA.getTime()
-  })
-  
-  // Sort weeks within each theme
-  themesArray.forEach(themeData => {
-  themeData.weeks = Array.from(themeData.weeks.values()).sort((a: any, b: any) => a.weekNumber - b.weekNumber)
-})
-  
-  return themesArray
-}
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+]
 
 function getMonthName(month: number): string {
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ]
-  return months[month - 1] || ''
+  return MONTHS[month - 1] || ''
+}
+
+function getAvailableYears(resources: any[]): number[] {
+  const years = new Set<number>()
+  resources.forEach(resource => {
+    if (resource.theme?.theme_year) {
+      years.add(resource.theme.theme_year)
+    }
+  })
+  return Array.from(years).sort((a, b) => b - a) // Sort descending
+}
+
+function groupResourcesByMonthAndWeek(resources: any[], selectedYear: number) {
+  const monthsMap = new Map()
+  
+  // Initialize all months with empty structure for selected year
+  MONTHS.forEach((monthName, index) => {
+    const month = index + 1
+    const monthKey = `${month}`
+    
+    monthsMap.set(monthKey, {
+      month,
+      year: selectedYear,
+      monthName,
+      weeks: new Map()
+    })
+  })
+  
+  // Populate with actual resources for the selected year
+  resources.forEach(resource => {
+    if (!resource.theme?.theme_month || resource.week === null || resource.week === undefined) return
+    if (resource.theme.theme_year !== selectedYear) return
+    
+    const month = resource.theme.theme_month
+    const monthKey = `${month}`
+    
+    if (monthsMap.has(monthKey)) {
+      const monthData = monthsMap.get(monthKey)
+      const weekNumber = resource.week
+      
+      if (!monthData.weeks.has(weekNumber)) {
+        monthData.weeks.set(weekNumber, {
+          weekNumber,
+          resources: []
+        })
+      }
+      
+      monthData.weeks.get(weekNumber).resources.push(resource)
+    }
+  })
+  
+  const monthsArray = Array.from(monthsMap.values()).map(monthData => ({
+    ...monthData,
+    weeks: Array.from(monthData.weeks.values()).sort((a: any, b: any) => a.weekNumber - b.weekNumber)
+  }))
+  
+  return monthsArray
 }
 
 export default function Curriculum() {
   const { resources, isLoading, error, refetch } = useResources()
+  const [selectedMonth, setSelectedMonth] = useState(1)
+  
+  const availableYears = useMemo(() => {
+    const years = getAvailableYears(resources)
+    return years.length > 0 ? years : [new Date().getFullYear()]
+  }, [resources])
+  
+  const [selectedYear, setSelectedYear] = useState(availableYears[0])
+  
+  const monthGroups = useMemo(() => groupResourcesByMonthAndWeek(resources, selectedYear), [resources, selectedYear])
+  const activeMonthData = monthGroups.find(m => m.month === selectedMonth) || monthGroups[0]
 
   if (isLoading) {
     return (
@@ -98,8 +121,6 @@ export default function Curriculum() {
     )
   }
 
-  const themeGroups = groupByThemeAndWeek(resources)
-
   return (
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
@@ -113,96 +134,154 @@ export default function Curriculum() {
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm font-medium">Back to Home</span>
             </Link>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center justify-between w-full">
-                <div className='flex flex-row items-center gap-2'>
+            <div className="flex items-center justify-between mb-8">
+              <div className='flex flex-row items-center gap-2'>
                 <FileText className="w-8 h-8 text-accent" />
                 <h1 className="text-3xl font-bold text-primary">Curriculum Calendar</h1>
-                </div>
-                <Link href="/games">
-                  <Button variant={'outline'} className='px-10 py-5 items-center text-xl font-serif font-bold'>
-                    <Gamepad2 size={36} className='!h-6 !w-6 text-xl' />
-                    Games
-                  </Button>
-                </Link>
               </div>
+              <Link href="/games">
+                <Button variant={'outline'} className='px-10 py-5 items-center text-xl font-serif font-bold'>
+                  <Gamepad2 size={36} className='!h-6 !w-6 text-xl' />
+                  Games
+                </Button>
+              </Link>
             </div>
-            <p className="text-secondary">
-              View and access all available learning materials.
+
+            {/* Year Selector */}
+            <div className="flex items-center gap-2 mb-4">
+              <label className="text-sm font-medium text-secondary">Year:</label>
+              <Dropdown
+                value={String(selectedYear)}
+                onValueChange={(value) => setSelectedYear(Number.parseInt(value))}
+                items={availableYears.map((year) => ({
+                  label: String(year),
+                  value: String(year)
+                }))}
+              />
+            </div>
+
+            {/* Month Selector + Download Button */}
+            <div className="flex flex-col gap-3">
+
+              {/* Month Selector (full width, scrollable if needed) */}
+              <div className="flex gap-6 overflow-x-auto pb-2 w-full">
+                {MONTHS.map((monthName, index) => {
+                  const monthNum = index + 1
+                  const isActive = monthNum === selectedMonth
+
+                  return (
+                    <button
+                      key={monthNum}
+                      onClick={() => setSelectedMonth(monthNum)}
+                      className={`px-1 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                        isActive
+                          ? 'text-primary border-b-2 border-accent'
+                          : 'text-secondary hover:text-primary'
+                      }`}
+                    >
+                      {monthName}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Right-Aligned Download Button */}
+              {activeMonthData && (
+                <div className="flex justify-end w-full">
+                  <button className="px-4 py-2 border border-accent text-accent rounded-full hover:bg-accent hover:text-white transition-colors flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+                    <Download className="w-4 h-4" />
+                    Download {activeMonthData.monthName} Newsletter
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Year Description */}
+            <p className="text-secondary text-sm mt-4">
+              View and access all available learning materials for {selectedYear}.
             </p>
+
           </header>
 
-          <div className='w-full flex flex-col gap-10'>
-            {themeGroups.length === 0 ? (
-              <div className='bg-orange-disabled rounded-2xl p-6 text-center text-muted'>
-                No resources scheduled yet
-              </div>
-            ) : (
-              themeGroups.map((themeGroup, themeIndex) => (
-                <div key={themeIndex} className='flex flex-col gap-2'>
-                  {/* Theme Header */}
-                  <h3 className='text-2xl font-semibold px-2'>
-                    {getMonthName(themeGroup.themeMonth)} {themeGroup.themeYear} - {themeGroup.themeName}
-                  </h3>
+          {/* Content */}
+          {activeMonthData && activeMonthData.weeks.length > 0 ? (
+            <div className='w-full flex flex-col gap-6'>
+              {activeMonthData.weeks.map((week: any, weekIndex: number) => {
+                const readings = week.resources.filter((r: any) => 
+                  r.type === 'reading' || r.type === 'Passage' || r.type === 'Video'
+                )
+                const exercises = week.resources.filter((r: any) => 
+                  r.type === 'exercise' || r.type === 'Worksheet'
+                )
+                const games = week.resources.filter((r: any) => 
+                  r.type === 'game' || r.type === 'Game'
+                )
+                const other = week.resources.filter((r: any) => 
+                  !r.type || (!['reading', 'Passage', 'Video', 'exercise', 'Worksheet', 'game', 'Game'].includes(r.type))
+                )
 
-                  {/* Weeks within this theme */}
-                  {themeGroup.weeks.map((week: any, weekIndex: number) => {
-                    const readings = week.resources.filter((r: any) => 
-                      r.type === 'reading' || r.type === 'Passage' || r.type === 'Video'
-                    )
-                    const exercises = week.resources.filter((r: any) => 
-                      r.type === 'exercise' || r.type === 'Worksheet'
-                    )
-                    const games = week.resources.filter((r: any) => 
-                      r.type === 'game' || r.type === 'Game'
-                    )
-                    const other = week.resources.filter((r: any) => 
-                      !r.type || (!['reading', 'Passage', 'Video', 'exercise', 'Worksheet', 'game', 'Game'].includes(r.type))
-                    )
-
-                    return (
-                      <div key={weekIndex} className='bg-orange-blue rounded-2xl flex flex-col p-6'>
-                        <h4 className='text-black'>Week {week.weekNumber}</h4>
-                        <div className='grid grid-cols-2 w-full gap-6 mt-4'>
-                          {/* Readings */}
-                          <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
-                            <h4>Readings</h4>
-                            {readings.length === 0 ? (
-                              <div className='text-muted text-sm px-2'>No readings available</div>
-                            ) : (
-                              readings.map((reading: any) => (
-                                <ResourceButton key={reading.id} resource={reading} icon={BookOpen} />
-                              ))
-                            )}
-                          </div>
-
-                          {/* Exercises and Games */}
-                          <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
-                            <h4>Exercises and Games</h4>
-                            {exercises.length === 0 && games.length === 0 && other.length === 0 ? (
-                              <div className='text-muted text-sm px-2'>No exercises or games available</div>
-                            ) : (
-                              <>
-                                {exercises.map((exercise: any) => (
-                                  <ResourceButton key={exercise.id} resource={exercise} icon={NotebookPen} />
-                                ))}
-                                {games.map((game: any) => (
-                                  <ResourceButton key={game.id} resource={game} icon={Gamepad2} />
-                                ))}
-                                {other.map((resource: any) => (
-                                  <ResourceButton key={resource.id} resource={resource} icon={File} />
-                                ))}
-                              </>
-                            )}
-                          </div>
-                        </div>
+                return (
+                  <div key={weekIndex} className='bg-orange-blue rounded-2xl flex flex-col p-6'>
+                    <div className="flex items-center gap-3 mb-4">
+                      <h4 className='text-lg font-semibold text-black'>Week {week.weekNumber}</h4>
+                      {week.resources[0]?.theme && (
+                        <span className='bg-orange-300 text-black text-xs font-medium px-3 py-1 rounded-full'>
+                          {week.resources[0].theme.theme_name}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className='grid grid-cols-3 w-full gap-6'>
+                      {/* Readings */}
+                      <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
+                        <h5 className='font-semibold text-black'>Readings</h5>
+                        {readings.length === 0 ? (
+                          <div className='text-muted text-sm'>No readings available</div>
+                        ) : (
+                          readings.map((reading: any) => (
+                            <ResourceButton key={reading.id} resource={reading} icon={BookOpen} />
+                          ))
+                        )}
                       </div>
-                    )
-                  })}
-                </div>
-              ))
-            )}
-          </div>
+
+                      {/* Exercises */}
+                      <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
+                        <h5 className='font-semibold text-black'>Exercises</h5>
+                        {exercises.length === 0 && other.length === 0 ? (
+                          <div className='text-muted text-sm'>No exercises available</div>
+                        ) : (
+                          <>
+                            {exercises.map((exercise: any) => (
+                              <ResourceButton key={exercise.id} resource={exercise} icon={NotebookPen} />
+                            ))}
+                            {other.map((resource: any) => (
+                              <ResourceButton key={resource.id} resource={resource} icon={File} />
+                            ))}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Games */}
+                      <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
+                        <h5 className='font-semibold text-black'>Games</h5>
+                        {games.length === 0 ? (
+                          <div className='text-muted text-sm'>No games available</div>
+                        ) : (
+                          games.map((game: any) => (
+                            <ResourceButton key={game.id} resource={game} icon={Gamepad2} />
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className='bg-orange-disabled rounded-2xl p-6 text-center text-muted'>
+              No resources scheduled for {activeMonthData?.monthName || 'this month'}
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
