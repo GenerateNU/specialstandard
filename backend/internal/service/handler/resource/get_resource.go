@@ -131,12 +131,23 @@ func (h *Handler) GetResourceByID(c *fiber.Ctx) error {
 	presignedURL := ""
 
 	if key != "" {
+		slog.Info("Resource: About to generate presigned URL",
+			"content_raw", resource.Content,
+			"key_extracted", key,
+			"key_length", len(key),
+		)
+
 		url, err := h.s3Client.GeneratePresignedURL(c.Context(), key, time.Hour)
 		if err != nil {
-			slog.Warn("Failed to generate presigned URL for resource,",
+			slog.Error("Failed to generate presigned URL for resource",
 				"key", key,
 				"error", err)
 		} else {
+			slog.Info("Resource: Generated presigned URL",
+				"key", key,
+				"url_length", len(url),
+				"url_prefix", url[:100],
+			)
 			presignedURL = url
 		}
 	}

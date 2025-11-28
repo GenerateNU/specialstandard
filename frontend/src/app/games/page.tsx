@@ -80,6 +80,7 @@ export default function GamesPage() {
                   Match words with images
                 </p>
               </button>
+              
               <button
                 onClick={() => {
                   const params = new URLSearchParams({

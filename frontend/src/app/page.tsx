@@ -16,11 +16,16 @@ import { useSessions } from '@/hooks/useSessions'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { useTherapists } from '@/hooks/useTherapists'
 import { formatDateString, formatTime, getTherapistName } from '@/lib/utils'
+import { useNewsletter } from '@/hooks/useNewsletter'
+
 
 export default function Home() {
   const { isAuthenticated, isLoading, userId } = useAuthContext()
   const router = useRouter()
   const CORNER_ROUND = 'rounded-2xl'
+
+    const { downloadNewsletter, isLoading: newsletterLoading, error: newsletterError } = useNewsletter()
+
 
   // Recently viewed students
   const { recentStudents } = useRecentlyViewedStudents()
@@ -73,6 +78,11 @@ export default function Home() {
     return null
   }
 
+  // Newsletter download handler
+  const handleDownloadNewsletter = async () => {
+    await downloadNewsletter()
+  }
+
   return (
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
@@ -84,12 +94,26 @@ export default function Home() {
               <p className="text-2xl">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
-
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">
-                Download Newsletter
+              {/* Updated button with loading state */}
+              <Button
+                variant="outline"
+                onClick={handleDownloadNewsletter}
+                disabled={newsletterLoading}
+              >
+                {newsletterLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Downloading...
+                  </>
+                ) : (
+                  'Download Newsletter'
+                )}
               </Button>
+              {newsletterError && (
+                <span className="text-sm text-red-500">{newsletterError}</span>
+              )}
             </div>
           </div>
           <div className={`w-full bg-card p-6 gap-4 ${CORNER_ROUND} flex flex-col transition`}>
