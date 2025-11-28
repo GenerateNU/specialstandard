@@ -4,7 +4,7 @@ import React, {useEffect, useState} from "react";
 import MatchingCard from "@/components/games/word-image-match/MatchingCard";
 import { useRouter } from 'next/navigation'
 import {RotateCw} from "lucide-react";
-import {GetGameContentsCategory} from "@/lib/api/theSpecialStandardAPI.schemas";
+import type {GetGameContentsCategory} from "@/lib/api/theSpecialStandardAPI.schemas";
 import {CATEGORIES} from "@/components/games/FlashcardGameInterface";
 
 export interface MatchingCardContent {
@@ -51,16 +51,35 @@ export default function WordImageMatchingGameInterface({
 
   const router = useRouter()
 
+  const [tempWrongIDs, setTempWrongIDs] = useState<Set<string>>(new Set())
+
   useEffect(() => {
     const shuffled = [...contents].sort(() => Math.random() - 0.5)
       setShuffledCards(shuffled)
       setSelectedCards([])
       setMatchedIDs(new Set())
+      setTempWrongIDs(new Set())
       setGameCompleted(false)
   }, [contents]);
 
+  const canSelectCard = (card: MatchingCardContent) => {
+    if (selectedCards.length === 0) return true
+    const first = selectedCards[0]
+    return first.type !== card.type
+  }
+
   const handleCardClick = (card: MatchingCardContent) => {
-    if (selectedCards.find(c => c.id === card.id) || matchedIDs.has(card.id)) return
+    // De-select a selected card.
+    if (selectedCards.some(c => c.id === card.id)) {
+      setSelectedCards(prev => prev.filter(c => c.id !== card.id))
+      return
+    }
+
+    // Can't select matched cards or cards of same type (two images, etc.)
+    if ((matchedIDs.has(card.id)) || (!canSelectCard(card))) {
+      return
+    }
+
     const newSelected = [...selectedCards, card]
     setSelectedCards(newSelected)
 
@@ -68,8 +87,16 @@ export default function WordImageMatchingGameInterface({
       const [first, second] = newSelected
       if (first.pairID === second.pairID) {
         setMatchedIDs(prev => new Set(prev).add(first.id).add(second.id))
+        setTimeout(() => setSelectedCards([]), 800)
+      } else {
+        const wrongSet = new Set<string>([first.id, second.id])
+        setTempWrongIDs(wrongSet)
+
+        setTimeout(() => {
+          setTempWrongIDs(new Set())
+          setSelectedCards([])
+        }, 800)
       }
-      setTimeout(() => setSelectedCards([]), 800)
     }
   }
 
@@ -92,11 +119,11 @@ export default function WordImageMatchingGameInterface({
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()}
-                  className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors">
+                  className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors cursor-pointer">
             ← Back
           </button>
           <button onClick={resetGame}
-                  className="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+                  className="flex items-center gap-2 text-secondary hover:text-primary transition-colors cursor-pointer">
             <RotateCw className="w-4 h-4" />
             Reset
           </button>
@@ -108,6 +135,7 @@ export default function WordImageMatchingGameInterface({
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-muted">Theme: </span>
             <span className="font-medium text-primary">{themeName}</span>
+            <span className="text-muted mx-2">•</span>
             <span className="text-muted">Difficulty:</span>
             <span className="font-medium text-primary">Level {difficulty}</span>
             <span className="text-muted mx-2">•</span>
@@ -125,6 +153,7 @@ export default function WordImageMatchingGameInterface({
                   type={card.type}
                   value={card.value}
                   isSelected={selectedCards.some(c => c.id === card.id)}
+                  isWrong={tempWrongIDs.has(card.id)}
                   isMatched={matchedIDs.has(card.id)}
                   onClick={() => handleCardClick(card)}
                 />

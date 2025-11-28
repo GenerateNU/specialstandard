@@ -7,6 +7,7 @@ interface MatchingCardProps {
   type: 'word' | 'image'
   value: string
   isSelected: boolean
+  isWrong: boolean
   isMatched: boolean
   onClick: () => void
   disabled?: boolean
@@ -15,8 +16,9 @@ interface MatchingCardProps {
 export default function MatchingCard({
   type,
   value,
-  isSelected,
-  isMatched,
+  isSelected = false,
+  isWrong = false,
+  isMatched = false,
   onClick,
   disabled = false,
  }: MatchingCardProps) {
@@ -25,13 +27,16 @@ export default function MatchingCard({
             disabled={disabled || isMatched}
             className={clsx("relative flex items-center justify-center rounded-lg border p-4 bg-card transition-all",
               "hover:shadow-md active:scale-[0.97]",
-              isSelected && "border-blue shadow-lg bg-card-hover",
-              isMatched && "border-green bg-green/15 cursor-not-allowed"
+              isMatched && "border-green-500 border-2 bg-green/15 cursor-not-allowed",
+              isWrong && "border-red-500 border-2 shadow-red-500/40",
+              isSelected && !isWrong && !isMatched && "border-blue shadow-lg bg-card-hover"
             )}>
       {type === 'word' ? (
-        <span className="text-lg font-medium text-foreground">{value}</span>
+        <span className="text-xl font-semibold text-foreground">{value}</span>
       ) : (
-        <img src={value} alt="Image" className="w-20 h-20 object-contain"/>
+        // TODO: Change it back for image display!
+        <span className="text-lg font-medium text-foreground">{value}</span>
+        // <img src={value} alt="Image" className="w-20 h-20 object-contain"/>
       )}
     </button>
   )
