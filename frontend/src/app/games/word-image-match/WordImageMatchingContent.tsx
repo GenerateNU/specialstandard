@@ -38,9 +38,9 @@ export default function WordImageMatchingContent() {
     // TODO: Sample GameContent.
     const sampleContents: MatchingCardContent[] = [
       {id: "1", type: "word", value: "Dog", pairID: "A"},
-      {id: "2", type: "image", value: "/dog.png", pairID: "A"},
+      {id: "2", type: "image", value: "Dog-Image", pairID: "A"},
       {id: "3", type: "word", value: "Apple", pairID: "B"},
-      {id: "4", type: "image", value: "/apple.png", pairID: "B"},
+      {id: "4", type: "image", value: "Apple-Image", pairID: "B"},
     ]
 
     return (
