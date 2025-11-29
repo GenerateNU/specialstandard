@@ -4,7 +4,7 @@ import React from 'react'
 import clsx from 'clsx'
 
 interface MatchingCardProps {
-  type: 'word' | 'image'
+  isImage: boolean
   value: string
   isSelected: boolean
   isWrong: boolean
@@ -14,7 +14,7 @@ interface MatchingCardProps {
 }
 
 export default function MatchingCard({
-  type,
+  isImage,
   value,
   isSelected = false,
   isWrong = false,
@@ -31,12 +31,10 @@ export default function MatchingCard({
               isWrong && "border-red-500 border-2 shadow-red-500/40",
               isSelected && !isWrong && !isMatched && "border-blue shadow-lg bg-card-hover"
             )}>
-      {type === 'word' ? (
-        <span className="text-xl font-semibold text-foreground">{value}</span>
+      {!isImage ? (
+        <span className="w-50 h-30 text-5xl font-semibold text-foreground px-2 pt-[7.5%]">{value}</span>
       ) : (
-        // TODO: Change it back for image display!
-        <span className="text-lg font-medium text-foreground">{value}</span>
-        // <img src={value} alt="Image" className="w-20 h-20 object-contain"/>
+        <img src={value} alt="Image" className="w-50 h-30 object-contain p-2"/>
       )}
     </button>
   )

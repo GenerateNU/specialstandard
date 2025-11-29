@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation'
 import {RotateCw} from "lucide-react";
 import type {GetGameContentsCategory} from "@/lib/api/theSpecialStandardAPI.schemas";
 import {CATEGORIES} from "@/components/games/FlashcardGameInterface";
+import {useGameContents} from "@/hooks/useGameContents";
 
 export interface MatchingCardContent {
-  id: string,
-  type: 'word' | 'image'
+  id: string
+  isImage: boolean
   value: string
   pairID: string
 }
@@ -42,8 +43,8 @@ export default function WordImageMatchingGameInterface({
   const [matchedIDs, setMatchedIDs] = useState<Set<string>>(new Set())
   const [gameCompleted, setGameCompleted] = useState(false)
 
-  const imageCards = shuffledCards.filter(card => card.type === 'image')
-  const wordCards = shuffledCards.filter(card => card.type === 'word')
+  const imageCards = shuffledCards.filter(card => card.isImage)
+  const wordCards = shuffledCards.filter(card => !card.isImage)
   const groupedCols = [
     { key: 'images', cards: imageCards },
     { key: 'words', cards: wordCards },
@@ -53,19 +54,40 @@ export default function WordImageMatchingGameInterface({
 
   const [tempWrongIDs, setTempWrongIDs] = useState<Set<string>>(new Set())
 
+  const { gameContents, isLoading, error } = useGameContents({
+    theme_id: themeID || undefined,
+    difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
+    category: category as any,
+    question_type: questionType as any,
+  })
+  const cards: MatchingCardContent[] = gameContents.flatMap((gc) => [
+    {
+      id: `${gc.id}-image`,
+      isImage: true,
+      value: gc.answer,
+      pairID: gc.id
+    },
+    {
+      id: `${gc.id}-word`,
+      isImage: false,
+      value: gc.question,
+      pairID: gc.id
+    }
+  ])
+
   useEffect(() => {
-    const shuffled = [...contents].sort(() => Math.random() - 0.5)
-      setShuffledCards(shuffled)
-      setSelectedCards([])
-      setMatchedIDs(new Set())
-      setTempWrongIDs(new Set())
-      setGameCompleted(false)
-  }, [contents]);
+    const shuffled = [...cards].sort(() => Math.random() - 0.5)
+    setShuffledCards(shuffled)
+    setSelectedCards([])
+    setMatchedIDs(new Set())
+    setTempWrongIDs(new Set())
+    setGameCompleted(false)
+  }, [gameContents]);
 
   const canSelectCard = (card: MatchingCardContent) => {
     if (selectedCards.length === 0) return true
     const first = selectedCards[0]
-    return first.type !== card.type
+    return first.isImage !== card.isImage
   }
 
   const handleCardClick = (card: MatchingCardContent) => {
@@ -107,7 +129,7 @@ export default function WordImageMatchingGameInterface({
   }, [matchedIDs, shuffledCards]);
 
   const resetGame = () => {
-    const shuffled = [...contents].sort(() => Math.random() - 0.5)
+    const shuffled = [...cards].sort(() => Math.random() - 0.5)
     setShuffledCards(shuffled)
     setSelectedCards([])
     setMatchedIDs(new Set())
@@ -144,13 +166,14 @@ export default function WordImageMatchingGameInterface({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-8">
           {groupedCols.map(group => (
             <div key={group.key} className="flex flex-col gap-4">
               {group.cards.map(card => (
                 <MatchingCard
                   key={card.id}
-                  type={card.type}
+                  id={card.id}
+                  isImage={card.isImage}
                   value={card.value}
                   isSelected={selectedCards.some(c => c.id === card.id)}
                   isWrong={tempWrongIDs.has(card.id)}
