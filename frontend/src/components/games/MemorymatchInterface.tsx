@@ -118,7 +118,7 @@ const SpinnerWheel: React.FC<{
       {availableWords.length > 1 ? (
         // ----- normal wheel -----
         <div
-          className="w-full h-full rounded-full relative overflow-hidden transition-transform duration-[4000ms] ease-out"
+          className="w-full h-full rounded-full relative overflow-hidden transition-transform duration-[4000] ease-out"
           style={{
             transform: `rotate(${rotation}deg)`,
           }}

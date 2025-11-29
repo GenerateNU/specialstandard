@@ -43,7 +43,7 @@ export default function SequencingGameContent() {
   const gameResultsHook = useGameResults({
     session_id: sessionId || undefined,
     student_id: studentId || undefined,
-    session_student_id: sessionStudentId || undefined,
+    session_student_id: sessionStudentId,
   })
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)

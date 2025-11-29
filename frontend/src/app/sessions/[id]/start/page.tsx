@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { use, useEffect, useRef, useState } from 'react'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useSession } from '@/hooks/useSessions'
-import { useSessionStudents, useSessionStudentsForSession } from '@/hooks/useSessionStudents'
+import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 
 interface PageProps {
   params: Promise<{ id: string }>

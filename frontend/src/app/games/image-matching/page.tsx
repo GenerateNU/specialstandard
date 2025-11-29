@@ -14,8 +14,8 @@ function ImageMatchingGameContent() {
   const difficulty = searchParams.get('difficulty')
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
-  const sessionStudentId = searchParams.get('sessionStudentId')
-  const sessionId = sessionStorage.getItem("currentSessionId") || "00000000-0000-0000-0000-000000000000";
+  const sessionStudentId = Number.parseInt(searchParams.get('sessionStudentId') || '0')
+  const sessionId = searchParams.get('sessionId') || '00000000-0000-0000-0000-000000000000'
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeId || undefined,
@@ -24,10 +24,10 @@ function ImageMatchingGameContent() {
     question_type: questionType as any,
   })
 
-  const gameResultsHook = sessionStudentId ? useGameResults({
-    session_student_id: Number.parseInt(sessionStudentId),
+  const gameResultsHook = useGameResults({
+    session_student_id: sessionStudentId,
     session_id: sessionId || undefined,
-  }) : null
+  })
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)

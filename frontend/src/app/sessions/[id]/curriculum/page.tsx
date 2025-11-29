@@ -8,7 +8,6 @@ import LevelButton from '@/components/curriculum/LevelButton'
 import WeekNavigator from '@/components/curriculum/WeekNavigator'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/dist/client/components/navigation'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -148,7 +147,7 @@ export default function CurriculumPage({ params }: PageProps) {
                   size="lg"
                   className="h-24 text-xl bg-pink hover:bg-pink-hover text-white gap-3"
                   onClick={() => {
-                  window.open(`/games?sessionId=${id}`, '_blank')
+                  window.open(`/games?sessionId=${id}`, '_blank') // figured itd be more useful in a new tab
                   }}
                 >
                   <Dumbbell className="w-6 h-6" />
