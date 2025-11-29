@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { use, useEffect, useRef, useState } from 'react'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useSession } from '@/hooks/useSessions'
-import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
+import { useSessionStudents, useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -68,6 +68,16 @@ export default function StartSessionPage({ params }: PageProps) {
     setCurrentWeek(selectedWeek)
     setCurrentMonth(selectedMonth)
     setCurrentYear(selectedYear)
+
+    if (!sessionStudents || sessionStudents.length === 0) {
+      console.warn('No session students found, aborting curriculum start')
+      return
+    }
+
+    sessionStorage.setItem('activeStudents', JSON.stringify(sessionStudents.map(s => ({
+      studentId: s.id,
+      sessionStudentId: s.session_student_id,
+    }))))
     router.push(`/sessions/${id}/curriculum`)
   }
 

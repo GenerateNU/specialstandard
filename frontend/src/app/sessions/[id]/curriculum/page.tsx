@@ -8,6 +8,7 @@ import LevelButton from '@/components/curriculum/LevelButton'
 import WeekNavigator from '@/components/curriculum/WeekNavigator'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/dist/client/components/navigation'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -31,7 +32,7 @@ export default function CurriculumPage({ params }: PageProps) {
     setCurrentLevel,
   } = useSessionContext()
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
-
+  
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -147,7 +148,7 @@ export default function CurriculumPage({ params }: PageProps) {
                   size="lg"
                   className="h-24 text-xl bg-pink hover:bg-pink-hover text-white gap-3"
                   onClick={() => {
-                    // TODO: Navigate to exercises page
+                  window.open(`/games?sessionId=${id}`, '_blank')
                   }}
                 >
                   <Dumbbell className="w-6 h-6" />

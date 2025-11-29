@@ -10,14 +10,12 @@ import { useGameResults } from '@/hooks/useGameResults'
 function ImageMatchingGameContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
   const themeId = searchParams.get('themeId')
   const difficulty = searchParams.get('difficulty')
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
-  const sessionStudentId = searchParams.get('session_student_id')
-  const sessionId = searchParams.get('session_id')
-  const studentId = searchParams.get('student_id')
+  const sessionStudentId = searchParams.get('sessionStudentId')
+  const sessionId = sessionStorage.getItem("currentSessionId") || "00000000-0000-0000-0000-000000000000";
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeId || undefined,
@@ -29,7 +27,6 @@ function ImageMatchingGameContent() {
   const gameResultsHook = sessionStudentId ? useGameResults({
     session_student_id: Number.parseInt(sessionStudentId),
     session_id: sessionId || undefined,
-    student_id: studentId || undefined
   }) : null
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)

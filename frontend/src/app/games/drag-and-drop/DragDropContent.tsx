@@ -25,15 +25,13 @@ import SequenceSlot from '@/components/games/drag-and-drop/SequenceSlot'
 export default function SequencingGameContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
+  const sessionStudentId = Number.parseInt(searchParams.get("sessionStudentId") ?? "0");
   const themeId = searchParams.get('themeId')
   const difficulty = searchParams.get('difficulty')
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
-  // const sessionStudentId = searchParams.get('session_student_id')
-  const sessionStudentId = "1"
-  const sessionId = searchParams.get('session_id')
-  const studentId = searchParams.get('student_id')
+  const sessionId = searchParams.get('sessionId')
+  const studentId = searchParams.get('studentId')
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeId || undefined,
@@ -43,9 +41,9 @@ export default function SequencingGameContent() {
   })
 
   const gameResultsHook = useGameResults({
-    session_student_id: Number.parseInt(sessionStudentId),
     session_id: sessionId || undefined,
-    student_id: studentId || undefined
+    student_id: studentId || undefined,
+    session_student_id: sessionStudentId || undefined,
   })
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)

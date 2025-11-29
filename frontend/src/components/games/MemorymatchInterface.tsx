@@ -189,7 +189,6 @@ const SpinnerWheel: React.FC<{
 export default function MemorymatchGameInterface({
   session_student_id,
   session_id,
-  student_id,
   themeId,
   themeName,
   difficulty,
@@ -225,7 +224,6 @@ export default function MemorymatchGameInterface({
     ? useGameResults({
         session_student_id,
         session_id,
-        student_id,
       })
     : null;
 

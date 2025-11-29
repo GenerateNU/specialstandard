@@ -43,6 +43,7 @@ export function useSessionStudentsForSession(sessionId: string) {
     notes: item.notes,
     created_at: item.created_at,
     updated_at: item.updated_at,
+    session_student_id: item.session_student_id,
     // Override grade with display format
     grade: gradeToDisplay(item.student?.grade ?? item.grade),
   }));

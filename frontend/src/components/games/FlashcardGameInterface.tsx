@@ -48,7 +48,6 @@ interface FlashcardProps {
 interface FlashcardGameInterfaceProps {
   session_student_id?: number
   session_id?: string
-  student_id?: string
   themeId: string,
   themeName: string,
   difficulty: number
@@ -115,7 +114,6 @@ const Flashcard: React.FC<FlashcardProps> = ({
 export default function FlashcardGameInterface({ 
   session_student_id, 
   session_id, 
-  student_id,
   themeId,
   themeName,
   difficulty,
@@ -140,7 +138,6 @@ export default function FlashcardGameInterface({
   const gameResultsHook = session_student_id ? useGameResults({
     session_student_id,
     session_id,
-    student_id
   }) : null
 
   const startCard = gameResultsHook?.startCard

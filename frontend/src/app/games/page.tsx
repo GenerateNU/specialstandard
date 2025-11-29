@@ -8,17 +8,27 @@ import type {
   Theme,
 } from "@/lib/api/theSpecialStandardAPI.schemas";
 import { BookOpen, Brain, Gamepad2, Image, SquareDashedMousePointer} from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
 export default function GamesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000";
+  const [sessionStudentIds, setSessionStudentIds] = React.useState<string | null>(null);
   const [selectedContent, setSelectedContent] = React.useState<{
     theme: Theme;
     difficultyLevel: number;
     category: GetGameContentsCategory;
     questionType: GetGameContentsQuestionType;
   } | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = window.sessionStorage.getItem("activeStudents");
+      setSessionStudentIds(stored);
+    }
+  }, []);
 
   const handleContentSelection = (selection: {
     theme: Theme;
@@ -51,6 +61,8 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds ? JSON.parse(sessionStudentIds)[0].sessionStudentId : '',
                   });
                   router.push(`/games/flashcards?${params.toString()}`);
                 }}
@@ -69,6 +81,8 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds ? JSON.parse(sessionStudentIds)[0].sessionStudentId : '',
                   });
                   router.push(`/games/image-matching?${params.toString()}`);
                 }}
@@ -88,6 +102,8 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds ? JSON.parse(sessionStudentIds)[0].sessionStudentId : '',
                   });
                   router.push(`/games/memorymatch?${params.toString()}`);
                 }}
@@ -107,6 +123,8 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds ? JSON.parse(sessionStudentIds)[0].sessionStudentId : '',
                   });
                   router.push(`/games/drag-and-drop?${params.toString()}`);
                 }}
