@@ -8,17 +8,19 @@ import (
 )
 
 type GameContent struct {
-	ID              uuid.UUID  `json:"id" db:"id"`
-	ThemeID         uuid.UUID  `json:"theme_id" db:"theme_id"`
-	Week            int        `json:"week" db:"week"`
-	Category        *string    `json:"category" db:"category"`
-	QuestionType    string     `json:"question_type" db:"question_type"`
-	DifficultyLevel int        `json:"difficulty_level" db:"difficulty_level"`
-	Question        string     `json:"question" db:"question"`
-	Options         []string   `json:"options" db:"options"`
-	Answer          string     `json:"answer" db:"answer"`
-	CreatedAt       *time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt       *time.Time `json:"updated_at" db:"updated_at"`
+	ID               uuid.UUID  `json:"id" db:"id"`
+	ThemeID          uuid.UUID  `json:"theme_id" db:"theme_id"`
+	Week             int        `json:"week" db:"week"`
+	Category         *string    `json:"category" db:"category"`
+	QuestionType     string     `json:"question_type" db:"question_type"`
+	DifficultyLevel  int        `json:"difficulty_level" db:"difficulty_level"`
+	Question         string     `json:"question" db:"question"`
+	Options          []string   `json:"options" db:"options"`
+	Answer           string     `json:"answer" db:"answer"`
+	RawAnswer        string     `json:"raw_answer" db:"-"`
+	PresignedOptions []string   `json:"presigned_options" db:"-"`
+	CreatedAt        *time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt        *time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type GetGameContentRequest struct {

@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"specialstandard/internal/models"
 	"strings"
 
@@ -64,6 +65,7 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
+		slog.Error("Failed to get game contents", "error", err)
 		return nil, err
 	}
 
