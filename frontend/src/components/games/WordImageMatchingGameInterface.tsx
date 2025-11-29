@@ -3,10 +3,12 @@
 import React, {useEffect, useState} from "react";
 import MatchingCard from "@/components/games/word-image-match/MatchingCard";
 import { useRouter } from 'next/navigation'
-import {RotateCw} from "lucide-react";
+import {CheckCircle, RotateCw} from "lucide-react";
 import type {GetGameContentsCategory} from "@/lib/api/theSpecialStandardAPI.schemas";
 import {CATEGORIES} from "@/components/games/FlashcardGameInterface";
 import {useGameContents} from "@/hooks/useGameContents";
+import AppLayout from "@/components/AppLayout";
+import {useGameResults} from "@/hooks/useGameResults";
 
 export interface MatchingCardContent {
   id: string
@@ -16,7 +18,6 @@ export interface MatchingCardContent {
 }
 
 interface WordImageMatchingGameInterfaceProps {
-  contents: MatchingCardContent[]
   session_student_id: number
   session_id: string
   student_id: string
@@ -28,7 +29,6 @@ interface WordImageMatchingGameInterfaceProps {
 }
 
 export default function WordImageMatchingGameInterface({
-  contents,
   session_student_id,
   session_id,
   student_id,
@@ -38,21 +38,7 @@ export default function WordImageMatchingGameInterface({
   category,
   questionType
 }: WordImageMatchingGameInterfaceProps) {
-  const [shuffledCards, setShuffledCards] = useState<MatchingCardContent[]>([])
-  const [selectedCards, setSelectedCards] = useState<MatchingCardContent[]>([])
-  const [matchedIDs, setMatchedIDs] = useState<Set<string>>(new Set())
-  const [gameCompleted, setGameCompleted] = useState(false)
-
-  const imageCards = shuffledCards.filter(card => card.isImage)
-  const wordCards = shuffledCards.filter(card => !card.isImage)
-  const groupedCols = [
-    { key: 'images', cards: imageCards },
-    { key: 'words', cards: wordCards },
-  ]
-
   const router = useRouter()
-
-  const [tempWrongIDs, setTempWrongIDs] = useState<Set<string>>(new Set())
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeID || undefined,
@@ -60,6 +46,19 @@ export default function WordImageMatchingGameInterface({
     category: category as any,
     question_type: questionType as any,
   })
+  const gameResultsHook = useGameResults({
+    session_student_id,
+    session_id,
+    student_id
+  })
+
+  const [shuffledCards, setShuffledCards] = useState<MatchingCardContent[]>([])
+  const [selectedCards, setSelectedCards] = useState<MatchingCardContent[]>([])
+  const [matchedIDs, setMatchedIDs] = useState<Set<string>>(new Set())
+  const [tempWrongIDs, setTempWrongIDs] = useState<Set<string>>(new Set())
+  const [gameCompleted, setGameCompleted] = useState(false)
+  const [resultsSaved, setResultsSaved] = useState(false)
+
   const cards: MatchingCardContent[] = gameContents.flatMap((gc) => [
     {
       id: `${gc.id}-image`,
@@ -74,6 +73,12 @@ export default function WordImageMatchingGameInterface({
       pairID: gc.id
     }
   ])
+  const imageCards = shuffledCards.filter(card => card.isImage)
+  const wordCards = shuffledCards.filter(card => !card.isImage)
+  const groupedCols = [
+    { key: 'images', cards: imageCards },
+    { key: 'words', cards: wordCards },
+  ]
 
   useEffect(() => {
     const shuffled = [...cards].sort(() => Math.random() - 0.5)
@@ -82,6 +87,11 @@ export default function WordImageMatchingGameInterface({
     setMatchedIDs(new Set())
     setTempWrongIDs(new Set())
     setGameCompleted(false)
+    setResultsSaved(false)
+
+    gameContents.forEach((gc) => {
+      gameResultsHook.startCard(gc)
+    })
   }, [gameContents]);
 
   const canSelectCard = (card: MatchingCardContent) => {
@@ -98,9 +108,7 @@ export default function WordImageMatchingGameInterface({
     }
 
     // Can't select matched cards or cards of same type (two images, etc.)
-    if ((matchedIDs.has(card.id)) || (!canSelectCard(card))) {
-      return
-    }
+    if ((matchedIDs.has(card.id)) || (!canSelectCard(card))) return
 
     const newSelected = [...selectedCards, card]
     setSelectedCards(newSelected)
@@ -109,10 +117,14 @@ export default function WordImageMatchingGameInterface({
       const [first, second] = newSelected
       if (first.pairID === second.pairID) {
         setMatchedIDs(prev => new Set(prev).add(first.id).add(second.id))
+        gameResultsHook.completeCard(first.pairID)
         setTimeout(() => setSelectedCards([]), 800)
       } else {
         const wrongSet = new Set<string>([first.id, second.id])
         setTempWrongIDs(wrongSet)
+
+        gameResultsHook.trackIncorrectAttempt(first.pairID, second.value)
+        gameResultsHook.trackIncorrectAttempt(second.pairID, first.value)
 
         setTimeout(() => {
           setTempWrongIDs(new Set())
@@ -134,6 +146,59 @@ export default function WordImageMatchingGameInterface({
     setSelectedCards([])
     setMatchedIDs(new Set())
     setGameCompleted(false)
+    setResultsSaved(false)
+
+    gameContents.forEach((gc) => {
+       gameResultsHook.startCard(gc)
+    })
+  }
+
+  const handleSaveProgress = async() => {
+    try {
+      await gameResultsHook.saveAllResults()
+      setResultsSaved(true)
+    } catch (err) {
+      console.error("Error saving results", err)
+      setResultsSaved(false)
+    }
+  }
+
+  if (gameCompleted) {
+    return (
+        <AppLayout>
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center bg-card p-8 rounded-sm shadow-lg max-w-md">
+                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                    <h2 className="mb-4">Game Complete!</h2>
+                    <div className="flex gap-4 justify-center">
+                        <button
+                            onClick={resetGame}
+                            className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover cursor-pointer"
+                        >
+                            Start Over?
+                        </button>
+                        {gameResultsHook && (
+                            <button
+                                onClick={() => {
+                                  handleSaveProgress()
+                                  router.push('/games')
+                                }}
+                                disabled={gameResultsHook.isSaving || resultsSaved}
+                                className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border cursor-pointer"
+                            >
+                                Save Progress & Exit
+                            </button>
+                        )}
+                    </div>
+                    {gameResultsHook?.saveError && (
+                        <p className="text-error text-sm mt-2">
+                            Failed to save progress. Please try again.
+                        </p>
+                    )}
+                </div>
+            </div>
+        </AppLayout>
+    )
   }
 
   return (
@@ -172,7 +237,6 @@ export default function WordImageMatchingGameInterface({
               {group.cards.map(card => (
                 <MatchingCard
                   key={card.id}
-                  id={card.id}
                   isImage={card.isImage}
                   value={card.value}
                   isSelected={selectedCards.some(c => c.id === card.id)}
@@ -184,17 +248,6 @@ export default function WordImageMatchingGameInterface({
             </div>
           ))}
         </div>
-
-        {gameCompleted && (
-          <div className="mt-8 p-6 bg-green/20 border border-green rounded-lg text-center">
-            <p className="text-green-500 font-semibold text-xl">You matched all the cards!</p>
-            <button onClick={resetGame}
-                    className="mt-4 px-6 bg-green-300 text-white rounded-lg hover:bg-green-hover
-                               transition-colors">
-              Play Again!
-            </button>
-          </div>
-        )}
       </div>
     </div>
   )

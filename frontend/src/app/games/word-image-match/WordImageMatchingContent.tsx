@@ -1,9 +1,6 @@
 'use client'
 
 import {useSearchParams} from "next/navigation";
-import type {
-    MatchingCardContent
-} from "@/components/games/WordImageMatchingGameInterface";
 import WordImageMatchingGameInterface from "@/components/games/WordImageMatchingGameInterface";
 
 const sessionStudentId = 1
@@ -35,17 +32,8 @@ export default function WordImageMatchingContent() {
         )
     }
 
-    // TODO: Sample GameContent.
-    const sampleContents: MatchingCardContent[] = [
-      {id: "1", type: "word", value: "Dog", pairID: "A"},
-      {id: "2", type: "image", value: "Dog-Image", pairID: "A"},
-      {id: "3", type: "word", value: "Apple", pairID: "B"},
-      {id: "4", type: "image", value: "Apple-Image", pairID: "B"},
-    ]
-
     return (
         <WordImageMatchingGameInterface
-            contents={sampleContents}
             session_student_id={sessionStudentId}
             session_id={sessionId}
             student_id={studentId}
