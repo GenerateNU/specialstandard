@@ -58,6 +58,7 @@ export default function WordImageMatchingGameInterface({
   const [tempWrongIDs, setTempWrongIDs] = useState<Set<string>>(new Set())
   const [gameCompleted, setGameCompleted] = useState(false)
   const [resultsSaved, setResultsSaved] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
   const cards: MatchingCardContent[] = gameContents.flatMap((gc) => [
     {
@@ -81,6 +82,8 @@ export default function WordImageMatchingGameInterface({
   ]
 
   useEffect(() => {
+    if(initialized) return
+
     const shuffled = [...cards].sort(() => Math.random() - 0.5)
     setShuffledCards(shuffled)
     setSelectedCards([])
@@ -90,9 +93,13 @@ export default function WordImageMatchingGameInterface({
     setResultsSaved(false)
 
     gameContents.forEach((gc) => {
-      gameResultsHook.startCard(gc)
+      if (!gameResultsHook.currentResults.has(gc.id)) {
+        gameResultsHook.startCard(gc)
+      }
     })
-  }, [gameContents]);
+
+    setInitialized(true)
+  }, [gameContents, initialized]);
 
   const canSelectCard = (card: MatchingCardContent) => {
     if (selectedCards.length === 0) return true
@@ -147,10 +154,6 @@ export default function WordImageMatchingGameInterface({
     setMatchedIDs(new Set())
     setGameCompleted(false)
     setResultsSaved(false)
-
-    gameContents.forEach((gc) => {
-       gameResultsHook.startCard(gc)
-    })
   }
 
   const handleSaveProgress = async() => {
