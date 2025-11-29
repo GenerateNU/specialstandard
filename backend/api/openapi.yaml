@@ -2644,6 +2644,30 @@ paths:
           schema:
             type: integer
             minimum: 2
+        - name: exercise_type
+          in: query
+          description: The type of exercise for which content is being requested (game or pdf)
+          schema:
+            type: string
+            enum:
+              [
+                game,
+                pdf,
+              ]
+        - name: applicable_game_types
+          in: query
+          description: The applicable game types for which content is being requested
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                [
+                  drag and drop,
+                  spinner,
+                  word/image matching, 
+                  flashcards,
+                ]
       responses:
         "200":
           description: The Game Content (corresponding category and level)
@@ -3920,6 +3944,8 @@ components:
         - question
         - options
         - answer
+        - exercise_type
+        - applicable_game_types
         - created_at
         - updated_at
       properties:
@@ -3988,6 +4014,18 @@ components:
           type: string
           description: The answer to the game.
           example: "Crocodile"
+        exercise_type:
+          type: string
+          enum: [game, pdf]
+          description: The exercise type of the game content
+          example: "game"
+        applicable_game_types:
+          type: array
+          items:
+            type: string
+            enum: [drag and drop, spinner, word/image matching, flashcards]
+          description: The list of applicable game types for this content
+          example: ["drag and drop", "spinner"]
         created_at:
           type: string
           format: date-time

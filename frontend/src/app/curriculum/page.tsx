@@ -2,21 +2,19 @@
 
 import { AlertCircle, ArrowLeft, BookOpen, Download, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useResources } from '@/hooks/useResources'
+import { useGameContents } from '@/hooks/useGameContents'
 import { ResourceButton } from '@/components/curriculum/resourceButton'
 import { Button } from '@/components/ui/button'
 import { Dropdown } from '@/components/ui/dropdown'
+import type { GameContent } from '@/lib/api/theSpecialStandardAPI.schemas'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ]
-
-function getMonthName(month: number): string {
-  return MONTHS[month - 1] || ''
-}
 
 function getAvailableYears(resources: any[]): number[] {
   const years = new Set<number>()
@@ -25,13 +23,12 @@ function getAvailableYears(resources: any[]): number[] {
       years.add(resource.theme.theme_year)
     }
   })
-  return Array.from(years).sort((a, b) => b - a) // Sort descending
+  return Array.from(years).sort((a, b) => b - a)
 }
 
 function groupResourcesByMonthAndWeek(resources: any[], selectedYear: number) {
   const monthsMap = new Map()
   
-  // Initialize all months with empty structure for selected year
   MONTHS.forEach((monthName, index) => {
     const month = index + 1
     const monthKey = `${month}`
@@ -44,7 +41,6 @@ function groupResourcesByMonthAndWeek(resources: any[], selectedYear: number) {
     })
   })
   
-  // Populate with actual resources for the selected year
   resources.forEach(resource => {
     if (!resource.theme?.theme_month || resource.week === null || resource.week === undefined) return
     if (resource.theme.theme_year !== selectedYear) return
@@ -59,7 +55,8 @@ function groupResourcesByMonthAndWeek(resources: any[], selectedYear: number) {
       if (!monthData.weeks.has(weekNumber)) {
         monthData.weeks.set(weekNumber, {
           weekNumber,
-          resources: []
+          resources: [],
+          themeId: resource.theme?.id
         })
       }
       
@@ -75,9 +72,35 @@ function groupResourcesByMonthAndWeek(resources: any[], selectedYear: number) {
   return monthsArray
 }
 
+// Convert GameContent to a format compatible with ResourceButton
+function gameContentToResource(gameContent: GameContent) {
+  // Format category and question_type for display
+  const formatLabel = (str: string) => {
+    return str
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+  
+  return {
+    id: gameContent.id,
+    title: gameContent.question, // This will be the filename like 'apple.jpg'
+    type: 'pdf',
+    url: null,
+    resource_name: `${formatLabel(gameContent.category)} - ${formatLabel(gameContent.question_type)}`,
+    metadata: {
+      category: gameContent.category,
+      difficulty: gameContent.difficulty_level,
+      question_type: gameContent.question_type
+    }
+  }
+}
+
 export default function Curriculum() {
   const { resources, isLoading, error, refetch } = useResources()
   const [selectedMonth, setSelectedMonth] = useState(1)
+  const [weekGameContents, setWeekGameContents] = useState<Map<string, GameContent[]>>(new Map())
+  const [isLoadingGameContents, setIsLoadingGameContents] = useState(false)
   
   const availableYears = useMemo(() => {
     const years = getAvailableYears(resources)
@@ -88,6 +111,68 @@ export default function Curriculum() {
   
   const monthGroups = useMemo(() => groupResourcesByMonthAndWeek(resources, selectedYear), [resources, selectedYear])
   const activeMonthData = monthGroups.find(m => m.month === selectedMonth) || monthGroups[0]
+
+  // Fetch PDF exercises for all weeks in the active month
+  useEffect(() => {
+    const fetchPdfExercises = async () => {
+      if (!activeMonthData?.weeks || activeMonthData.weeks.length === 0) {
+        setWeekGameContents(new Map())
+        return
+      }
+
+      setIsLoadingGameContents(true)
+      const contentMap = new Map<string, GameContent[]>()
+      
+      try {
+        const categories = ['receptive_language', 'expressive_language', 'social_pragmatic_language', 'speech']
+        const questionTypes = ['sequencing', 'following_directions', 'wh_questions', 'true_false', 'concepts_sorting', 'fill_in_the_blank', 'categorical_language', 'emotions', 'teamwork_talk', 'express_excitement_interest', 'fluency', 'articulation_s', 'articulation_l']
+        
+        for (const week of activeMonthData.weeks) {
+          if (!week.themeId) continue
+          
+          const weekKey = `${week.weekNumber}`
+          const weekContents: GameContent[] = []
+          
+          // Fetch for each category/question_type combination
+          for (const category of categories) {
+            for (const questionType of questionTypes) {
+              try {
+                const api = await import('@/lib/api/game-content').then(m => m.getGameContent())
+                const response = await api.getGameContents({
+                  theme_id: week.themeId,
+                  category: category as any,
+                  question_type: questionType as any,
+                  exercise_type: 'pdf',
+                  difficulty_level: 1
+                })
+                
+                if (response && Array.isArray(response)) {
+                  weekContents.push(...response.filter((item: GameContent) => item.exercise_type === 'pdf'))
+                }
+              } catch {
+                // Silently continue if a specific combination doesn't exist
+                continue
+              }
+            }
+          }
+          
+          // Remove duplicates by id
+          const uniqueContents = Array.from(
+            new Map(weekContents.map(item => [item.id, item])).values()
+          )
+          contentMap.set(weekKey, uniqueContents)
+        }
+        
+        setWeekGameContents(contentMap)
+      } catch (err) {
+        console.error('Error fetching PDF exercises:', err)
+      } finally {
+        setIsLoadingGameContents(false)
+      }
+    }
+
+    fetchPdfExercises()
+  }, [activeMonthData])
 
   if (isLoading) {
     return (
@@ -219,6 +304,9 @@ export default function Curriculum() {
                 const other = week.resources.filter((r: any) => 
                   !r.type || (!['reading', 'Passage', 'Video', 'exercise', 'Worksheet', 'game', 'Game'].includes(r.type))
                 )
+                
+                // Get PDF exercises from game contents
+                const pdfExercises = weekGameContents.get(String(week.weekNumber)) || []
 
                 return (
                   <div key={weekIndex} className='bg-orange-blue rounded-2xl flex flex-col p-6'>
@@ -246,8 +334,8 @@ export default function Curriculum() {
 
                       {/* Exercises */}
                       <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
-                        <h5 className='font-semibold text-black'>Exercises</h5>
-                        {exercises.length === 0 && other.length === 0 ? (
+                        <h5 className='font-semibold text-black'>Exercises {isLoadingGameContents && <span className='text-xs text-secondary'>(loading...)</span>}</h5>
+                        {exercises.length === 0 && other.length === 0 && pdfExercises.length === 0 ? (
                           <div className='text-muted text-sm'>No exercises available</div>
                         ) : (
                           <>
@@ -257,6 +345,31 @@ export default function Curriculum() {
                             {other.map((resource: any) => (
                               <ResourceButton key={resource.id} resource={resource} icon={File} />
                             ))}
+                            {pdfExercises.map((pdfExercise: GameContent) => {
+                              const formatLabel = (str: string) => {
+                                return str
+                                  .split('_')
+                                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                  .join(' ')
+                              }
+                              
+                              return (
+                                <div key={pdfExercise.id} className='flex flex-col gap-1'>
+                                  <ResourceButton 
+                                    resource={gameContentToResource(pdfExercise)} 
+                                    icon={File} 
+                                  />
+                                  <div className='flex gap-2 ml-1'>
+                                    <span className='text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded'>
+                                      {formatLabel(pdfExercise.category)}
+                                    </span>
+                                    <span className='text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded'>
+                                      {formatLabel(pdfExercise.question_type)}
+                                    </span>
+                                  </div>
+                                </div>
+                              )
+                            })}
                           </>
                         )}
                       </div>
