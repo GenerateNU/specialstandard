@@ -9,9 +9,9 @@ import type {
 } from "@/lib/api/theSpecialStandardAPI.schemas";
 import { BookOpen, Brain, Gamepad2, Image, SquareDashedMousePointer} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import React from "react";
+import React, { Suspense } from "react";
 
-export default function GamesPage() {
+function GamesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000";
@@ -157,5 +157,13 @@ export default function GamesPage() {
     <AppLayout>
       <GameContentSelector onSelectionComplete={handleContentSelection} />
     </AppLayout>
+  );
+}
+
+export default function GamesPage() {
+  return (
+    <Suspense fallback={null}>
+      <GamesPageContent />
+    </Suspense>
   );
 }
