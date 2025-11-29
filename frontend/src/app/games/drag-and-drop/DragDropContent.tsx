@@ -31,7 +31,6 @@ export default function SequencingGameContent() {
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
   const sessionId = searchParams.get('sessionId')
-  const studentId = searchParams.get('studentId')
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeId || undefined,
@@ -42,7 +41,6 @@ export default function SequencingGameContent() {
 
   const gameResultsHook = useGameResults({
     session_id: sessionId || undefined,
-    student_id: studentId || undefined,
     session_student_id: sessionStudentId,
   })
 
