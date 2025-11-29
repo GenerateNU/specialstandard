@@ -15,7 +15,8 @@ interface GameResultTracker {
   end_time?: number
   time_taken_sec?: number
   completed: boolean
-  incorrect_attempts: string[]
+  incorrect_attempts: string[] 
+  count_of_incorrect_attempts?: number
 }
 
 interface UseGameResultsProps {
@@ -62,7 +63,7 @@ export function useGameResults({ session_student_id, session_id, student_id }: U
   }, [])
 
   // Mark game complete with optional time override
-  const completeCard = useCallback((content_id: string, time_taken_sec?: number) => {
+  const completeCard = useCallback((content_id: string, time_taken_sec?: number, count_of_incorrect_attempts?: number) => {
     setResults(prev => {
       const newMap = new Map(prev)
       const result = newMap.get(content_id)
@@ -72,7 +73,8 @@ export function useGameResults({ session_student_id, session_id, student_id }: U
           ...result,
           end_time: Date.now(),
           time_taken_sec: calculatedTime,
-          completed: true
+          completed: true,
+          count_of_incorrect_attempts
         })
       }
       return newMap

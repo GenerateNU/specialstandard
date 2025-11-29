@@ -21,6 +21,8 @@ type GameContent struct {
 	UpdatedAt           *time.Time `json:"updated_at" db:"updated_at"`
 	ExerciseType        string     `json:"exercise_type" db:"exercise_type"`
 	ApplicableGameTypes []string   `json:"applicable_game_types" db:"applicable_game_types"`
+	RawAnswer           string     `json:"raw_answer" db:"-"`
+	PresignedOptions    []string   `json:"presigned_options" db:"-"`
 }
 
 type GetGameContentRequest struct {
