@@ -3920,6 +3920,7 @@ components:
         - question
         - options
         - answer
+        - presigned_options
         - created_at
         - updated_at
       properties:
@@ -3986,8 +3987,18 @@ components:
           example: ["Crocorokodile", "Krookodile", "Koorkodile"]
         answer:
           type: string
-          description: The answer to the game.
+          description: The answer to the game (presigned URL)
           example: "Crocodile"
+        raw_answer:
+          type: string
+          description: The raw answer to the game.
+          example: ""
+        presigned_options:
+          type: array
+          items:
+            type: string
+          description: The list of wrong-words that are given for the game.
+          example: ["Crocorokodile", "Krookodile", "Koorkodile"]
         created_at:
           type: string
           format: date-time
