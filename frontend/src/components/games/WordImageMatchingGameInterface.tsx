@@ -40,7 +40,7 @@ export default function WordImageMatchingGameInterface({
 }: WordImageMatchingGameInterfaceProps) {
   const router = useRouter()
 
-  const { gameContents, isLoading, error } = useGameContents({
+  const { gameContents } = useGameContents({
     theme_id: themeID || undefined,
     difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
     category: category as any,
