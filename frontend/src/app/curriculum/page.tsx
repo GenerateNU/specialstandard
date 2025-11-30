@@ -5,11 +5,13 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useResources } from '@/hooks/useResources'
-import { useGameContents } from '@/hooks/useGameContents'
+import { useNewsletter } from '@/hooks/useNewsletter'
+import { getGameContent } from '@/lib/api/game-content'
 import { ResourceButton } from '@/components/curriculum/resourceButton'
 import { Button } from '@/components/ui/button'
 import { Dropdown } from '@/components/ui/dropdown'
 import type { GameContent } from '@/lib/api/theSpecialStandardAPI.schemas'
+import { set } from 'lodash'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -72,22 +74,13 @@ function groupResourcesByMonthAndWeek(resources: any[], selectedYear: number) {
   return monthsArray
 }
 
-// Convert GameContent to a format compatible with ResourceButton
-function gameContentToResource(gameContent: GameContent) {
-  // Format category and question_type for display
-  const formatLabel = (str: string) => {
-    return str
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-  }
-  
+function gameContentToResource(gameContent: GameContent, displayName: string) {
   return {
     id: gameContent.id,
-    title: gameContent.question, // This will be the filename like 'apple.jpg'
+    title: displayName,
     type: 'pdf',
-    url: null,
-    resource_name: `${formatLabel(gameContent.category)} - ${formatLabel(gameContent.question_type)}`,
+    url: gameContent.answer,
+    resource_name: displayName,
     metadata: {
       category: gameContent.category,
       difficulty: gameContent.difficulty_level,
@@ -98,81 +91,69 @@ function gameContentToResource(gameContent: GameContent) {
 
 export default function Curriculum() {
   const { resources, isLoading, error, refetch } = useResources()
+  const { downloadNewsletter, isLoading: isDownloadingNewsletter, error: newsletterError } = useNewsletter()
   const [selectedMonth, setSelectedMonth] = useState(1)
-  const [weekGameContents, setWeekGameContents] = useState<Map<string, GameContent[]>>(new Map())
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [allGameContents, setAllGameContents] = useState<GameContent[]>([])
   const [isLoadingGameContents, setIsLoadingGameContents] = useState(false)
+  const [lastFailedMonth, setLastFailedMonth] = useState<number | null>(null)
+  const [newsletterErrorMessage, setNewsletterErrorMessage] = useState<string | null>(newsletterError ? String(newsletterError) : null)
+  const handleDownloadNewsletter = async () => {
+    // Create date with first day of selected month
+    const firstDayOfMonth = new Date(selectedYear, selectedMonth - 1, 2)
+    try {
+      await downloadNewsletter(firstDayOfMonth)
+      setLastFailedMonth(null)
+      setNewsletterErrorMessage(null)
+    } catch {
+      setLastFailedMonth(selectedMonth)
+      setNewsletterErrorMessage('Failed to download newsletter.')
+    }
+  }
   
   const availableYears = useMemo(() => {
     const years = getAvailableYears(resources)
-    return years.length > 0 ? years : [new Date().getFullYear()]
+    if (years.length > 0) {
+      setSelectedYear(years[0])
+      return years
+    }
+    return [new Date().getFullYear()]
   }, [resources])
-  
-  const [selectedYear, setSelectedYear] = useState(availableYears[0])
   
   const monthGroups = useMemo(() => groupResourcesByMonthAndWeek(resources, selectedYear), [resources, selectedYear])
   const activeMonthData = monthGroups.find(m => m.month === selectedMonth) || monthGroups[0]
 
-  // Fetch PDF exercises for all weeks in the active month
+  // Single API call to fetch all PDFs
   useEffect(() => {
-    const fetchPdfExercises = async () => {
-      if (!activeMonthData?.weeks || activeMonthData.weeks.length === 0) {
-        setWeekGameContents(new Map())
-        return
-      }
-
+    const fetchAllGameContents = async () => {
       setIsLoadingGameContents(true)
-      const contentMap = new Map<string, GameContent[]>()
       
       try {
-        const categories = ['receptive_language', 'expressive_language', 'social_pragmatic_language', 'speech']
-        const questionTypes = ['sequencing', 'following_directions', 'wh_questions', 'true_false', 'concepts_sorting', 'fill_in_the_blank', 'categorical_language', 'emotions', 'teamwork_talk', 'express_excitement_interest', 'fluency', 'articulation_s', 'articulation_l']
+        const api = getGameContent()
         
-        for (const week of activeMonthData.weeks) {
-          if (!week.themeId) continue
-          
-          const weekKey = `${week.weekNumber}`
-          const weekContents: GameContent[] = []
-          
-          // Fetch for each category/question_type combination
-          for (const category of categories) {
-            for (const questionType of questionTypes) {
-              try {
-                const api = await import('@/lib/api/game-content').then(m => m.getGameContent())
-                const response = await api.getGameContents({
-                  theme_id: week.themeId,
-                  category: category as any,
-                  question_type: questionType as any,
-                  exercise_type: 'pdf',
-                  difficulty_level: 1
-                })
-                
-                if (response && Array.isArray(response)) {
-                  weekContents.push(...response.filter((item: GameContent) => item.exercise_type === 'pdf'))
-                }
-              } catch {
-                // Silently continue if a specific combination doesn't exist
-                continue
-              }
-            }
-          }
+        const response = await api.getGameContents({
+          exercise_type: 'pdf'
+        })
+        
+        if (response && Array.isArray(response)) {
+          const pdfItems = response.filter((item: GameContent) => item.exercise_type === 'pdf')
           
           // Remove duplicates by id
           const uniqueContents = Array.from(
-            new Map(weekContents.map(item => [item.id, item])).values()
+            new Map(pdfItems.map(item => [item.id, item])).values()
           )
-          contentMap.set(weekKey, uniqueContents)
+          
+          setAllGameContents(uniqueContents)
         }
-        
-        setWeekGameContents(contentMap)
       } catch (err) {
-        console.error('Error fetching PDF exercises:', err)
+        console.error('💥 Error fetching game contents:', err)
       } finally {
         setIsLoadingGameContents(false)
       }
     }
 
-    fetchPdfExercises()
-  }, [activeMonthData])
+    fetchAllGameContents()
+  }, [])
 
   if (isLoading) {
     return (
@@ -210,7 +191,6 @@ export default function Curriculum() {
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
         <div className="w-full p-10 flex flex-col overflow-y-scroll">
-          {/* Header */}
           <header className="mb-8">
             <Link
               href="/"
@@ -232,7 +212,6 @@ export default function Curriculum() {
               </Link>
             </div>
 
-            {/* Year Selector */}
             <div className="flex items-center gap-2 mb-4">
               <label className="text-sm font-medium text-secondary">Year:</label>
               <Dropdown
@@ -245,10 +224,7 @@ export default function Curriculum() {
               />
             </div>
 
-            {/* Month Selector + Download Button */}
             <div className="flex flex-col gap-3">
-
-              {/* Month Selector (full width, scrollable if needed) */}
               <div className="flex gap-6 overflow-x-auto pb-2 w-full">
                 {MONTHS.map((monthName, index) => {
                   const monthNum = index + 1
@@ -257,7 +233,7 @@ export default function Curriculum() {
                   return (
                     <button
                       key={monthNum}
-                      onClick={() => setSelectedMonth(monthNum)}
+                      onClick={() => { setSelectedMonth(monthNum); setNewsletterErrorMessage(null); }}
                       className={`px-1 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                         isActive
                           ? 'text-primary border-b-2 border-accent'
@@ -270,25 +246,41 @@ export default function Curriculum() {
                 })}
               </div>
 
-              {/* Right-Aligned Download Button */}
               {activeMonthData && (
                 <div className="flex justify-end w-full">
-                  <button className="px-4 py-2 border border-accent text-accent rounded-full hover:bg-accent hover:text-white transition-colors flex items-center gap-2 text-sm font-medium whitespace-nowrap">
-                    <Download className="w-4 h-4" />
-                    Download {activeMonthData.monthName} Newsletter
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {newsletterErrorMessage != null && (
+                      <div className="text-sm text-gray-500 italic">
+                        Newsletter not yet available for {activeMonthData.monthName}
+                      </div>
+                    )}
+                    <button 
+                      onClick={handleDownloadNewsletter}
+                      disabled={Boolean(isDownloadingNewsletter || (newsletterError && lastFailedMonth === selectedMonth))}
+                      className="px-4 py-2 border border-accent text-accent rounded-full hover:bg-accent hover:text-white transition-colors flex items-center gap-2 text-sm font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDownloadingNewsletter ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          Download Newsletter
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Year Description */}
             <p className="text-secondary text-sm mt-4">
               View and access all available learning materials for {selectedYear}.
             </p>
-
           </header>
 
-          {/* Content */}
           {activeMonthData && activeMonthData.weeks.length > 0 ? (
             <div className='w-full flex flex-col gap-6'>
               {activeMonthData.weeks.map((week: any, weekIndex: number) => {
@@ -305,8 +297,8 @@ export default function Curriculum() {
                   !r.type || (!['reading', 'Passage', 'Video', 'exercise', 'Worksheet', 'game', 'Game'].includes(r.type))
                 )
                 
-                // Get PDF exercises from game contents
-                const pdfExercises = weekGameContents.get(String(week.weekNumber)) || []
+                // Filter game contents for this week
+                const pdfExercises = allGameContents.filter(gc => gc.week === week.weekNumber)
 
                 return (
                   <div key={weekIndex} className='bg-orange-blue rounded-2xl flex flex-col p-6'>
@@ -320,7 +312,6 @@ export default function Curriculum() {
                     </div>
                     
                     <div className='grid grid-cols-3 w-full gap-6'>
-                      {/* Readings */}
                       <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
                         <h5 className='font-semibold text-black'>Readings</h5>
                         {readings.length === 0 ? (
@@ -332,7 +323,6 @@ export default function Curriculum() {
                         )}
                       </div>
 
-                      {/* Exercises */}
                       <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
                         <h5 className='font-semibold text-black'>Exercises {isLoadingGameContents && <span className='text-xs text-secondary'>(loading...)</span>}</h5>
                         {exercises.length === 0 && other.length === 0 && pdfExercises.length === 0 ? (
@@ -345,7 +335,8 @@ export default function Curriculum() {
                             {other.map((resource: any) => (
                               <ResourceButton key={resource.id} resource={resource} icon={File} />
                             ))}
-                            {pdfExercises.map((pdfExercise: GameContent) => {
+                            {/* Group PDFs by category */}
+                            {(() => {
                               const formatLabel = (str: string) => {
                                 return str
                                   .split('_')
@@ -353,28 +344,40 @@ export default function Curriculum() {
                                   .join(' ')
                               }
                               
-                              return (
-                                <div key={pdfExercise.id} className='flex flex-col gap-1'>
-                                  <ResourceButton 
-                                    resource={gameContentToResource(pdfExercise)} 
-                                    icon={File} 
-                                  />
-                                  <div className='flex gap-2 ml-1'>
-                                    <span className='text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded'>
-                                      {formatLabel(pdfExercise.category)}
-                                    </span>
-                                    <span className='text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded'>
-                                      {formatLabel(pdfExercise.question_type)}
-                                    </span>
+                              // Group by category
+                              const groupedByCategory = pdfExercises.reduce((acc: any, pdf: GameContent) => {
+                                const category = pdf.category || 'Other'
+                                if (!acc[category]) {
+                                  acc[category] = []
+                                }
+                                acc[category].push(pdf)
+                                return acc
+                              }, {})
+                              
+                              return Object.entries(groupedByCategory).map(([category, pdfs]: [string, any]) => (
+                                <div key={category} className='flex flex-col gap-2'>
+                                  <div className='text-xs font-semibold text-gray-600 uppercase tracking-wide'>
+                                    {formatLabel(category)}
                                   </div>
+                                  {pdfs.map((pdf: GameContent) => (
+                                    <div
+                                      key={pdf.id}
+                                      className='cursor-pointer'
+                                      onClick={() => window.open(pdf.answer, '_blank')}
+                                    >
+                                      <ResourceButton
+                                        resource={gameContentToResource(pdf, formatLabel(pdf.question_type || ''))}
+                                        icon={File}
+                                      />
+                                    </div>
+                                  ))}
                                 </div>
-                              )
-                            })}
+                              ))
+                            })()}
                           </>
                         )}
                       </div>
 
-                      {/* Games */}
                       <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
                         <h5 className='font-semibold text-black'>Games</h5>
                         {games.length === 0 ? (

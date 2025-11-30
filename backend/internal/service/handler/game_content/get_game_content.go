@@ -2,6 +2,7 @@ package game_content
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/models"
@@ -20,6 +21,8 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 	if validationErrors := xvalidator.Validator.Validate(getGameContentReq); len(validationErrors) > 0 {
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
+
+	fmt.Println("GetGameContents Request:", getGameContentReq)
 
 	gameContents, err := h.gameContentRepository.GetGameContents(c.Context(), getGameContentReq)
 	if err != nil {
