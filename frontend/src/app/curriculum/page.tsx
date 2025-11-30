@@ -11,7 +11,6 @@ import { ResourceButton } from '@/components/curriculum/resourceButton'
 import { Button } from '@/components/ui/button'
 import { Dropdown } from '@/components/ui/dropdown'
 import type { GameContent } from '@/lib/api/theSpecialStandardAPI.schemas'
-import { set } from 'lodash'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
