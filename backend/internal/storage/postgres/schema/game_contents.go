@@ -3,9 +3,9 @@ package schema
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"specialstandard/internal/models"
 	"strings"
-	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -57,6 +57,10 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 	if req.ExerciseType != nil {
 		conditions = append(conditions, fmt.Sprintf("exercise_type = $%d", argCount))
 		args = append(args, *req.ExerciseType)
+		argCount++
+	} else {
+		conditions = append(conditions, fmt.Sprintf("exercise_type = $%d", argCount))
+		args = append(args, "game") // Default to "game" exercise type
 		argCount++
 	}
 	if req.ApplicableGameTypes != nil {
