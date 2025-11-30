@@ -118,7 +118,7 @@ const SpinnerWheel: React.FC<{
       {availableWords.length > 1 ? (
         // ----- normal wheel -----
         <div
-          className="w-full h-full rounded-full relative overflow-hidden transition-transform duration-[4000ms] ease-out"
+          className="w-full h-full rounded-full relative overflow-hidden transition-transform duration-[4000] ease-out"
           style={{
             transform: `rotate(${rotation}deg)`,
           }}
@@ -189,7 +189,6 @@ const SpinnerWheel: React.FC<{
 export default function MemorymatchGameInterface({
   session_student_id,
   session_id,
-  student_id,
   themeId,
   themeName,
   difficulty,
@@ -225,7 +224,6 @@ export default function MemorymatchGameInterface({
     ? useGameResults({
         session_student_id,
         session_id,
-        student_id,
       })
     : null;
 

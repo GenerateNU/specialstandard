@@ -3,13 +3,10 @@
 import MemorymatchGameInterface from "@/components/games/MemorymatchInterface";
 import { useSearchParams } from "next/navigation";
 
-const sessionStudentId = 1;
-const sessionId = "c35ceea3-fa7d-4d14-a69d-cbed270c737f";
-const studentId = "89e2d744-eec1-490e-a335-422ce79eae70";
-
 export function MemorymatchContent() {
   const searchParams = useSearchParams();
-
+  const sessionId = searchParams.get("sessionId") || "00000000-0000-0000-0000-000000000000";
+  const sessionStudentId = Number.parseInt(searchParams.get("sessionStudentId") ?? "0");
   const themeId = searchParams.get("themeId");
   const themeName = searchParams.get("themeName");
   const difficulty = searchParams.get("difficulty");
@@ -38,7 +35,6 @@ export function MemorymatchContent() {
     <MemorymatchGameInterface
       session_student_id={sessionStudentId}
       session_id={sessionId}
-      student_id={studentId}
       themeId={themeId}
       themeName={themeName || "Theme"}
       difficulty={Number.parseInt(difficulty)}

@@ -212,7 +212,7 @@ export default function SessionPage({ params }: PageProps) {
 
         <Button
           variant="outline"
-          className={`w-fit p-4 flex flex-row items-center gap-2 flex-shrink-0`}
+          className={`w-fit p-4 flex flex-row items-center gap-2 shrink-0`}
           onClick={handleDelete}
         >
           <Trash />
