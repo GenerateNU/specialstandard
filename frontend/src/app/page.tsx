@@ -150,6 +150,7 @@ export default function Home() {
                               startTime={formatTime(session.start_datetime)}
                               endTime={formatTime(session.end_datetime)}
                               date={formatDateString(session.start_datetime)}
+                              onClick={() => router.push(`/sessions/${session.id}`)}
                             />
                           </div>
                         ))

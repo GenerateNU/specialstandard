@@ -699,6 +699,29 @@ export const GameContentQuestionType = {
   articulation_l: "articulation_l",
 } as const;
 
+/**
+ * The exercise type of the game content
+ */
+export type GameContentExerciseType =
+  (typeof GameContentExerciseType)[keyof typeof GameContentExerciseType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GameContentExerciseType = {
+  game: "game",
+  pdf: "pdf",
+} as const;
+
+export type GameContentApplicableGameTypesItem =
+  (typeof GameContentApplicableGameTypesItem)[keyof typeof GameContentApplicableGameTypesItem];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GameContentApplicableGameTypesItem = {
+  drag_and_drop: "drag and drop",
+  spinner: "spinner",
+  "word/image_matching": "word/image matching",
+  flashcards: "flashcards",
+} as const;
+
 export interface GameContent {
   /** ID of a Game Content. */
   id: string;
@@ -724,6 +747,10 @@ export interface GameContent {
   options: string[];
   /** The answer to the game (presigned URL) */
   answer: string;
+  /** The exercise type of the game content */
+  exercise_type: GameContentExerciseType;
+  /** The list of applicable game types for this content */
+  applicable_game_types: GameContentApplicableGameTypesItem[];
   /** The raw answer to the game. */
   raw_answer?: string;
   /** The list of wrong-words that are given for the game. */
@@ -1230,6 +1257,14 @@ export type GetGameContentsParams = {
    * @minimum 2
    */
   words_count?: number;
+  /**
+   * The type of exercise for which content is being requested (game or pdf)
+   */
+  exercise_type?: GetGameContentsExerciseType;
+  /**
+   * The applicable game types for which content is being requested
+   */
+  applicable_game_types?: GetGameContentsApplicableGameTypesItem[];
 };
 
 export type GetGameContentsCategory =
@@ -1261,6 +1296,26 @@ export const GetGameContentsQuestionType = {
   fluency: "fluency",
   articulation_s: "articulation_s",
   articulation_l: "articulation_l",
+} as const;
+
+export type GetGameContentsExerciseType =
+  (typeof GetGameContentsExerciseType)[keyof typeof GetGameContentsExerciseType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameContentsExerciseType = {
+  game: "game",
+  pdf: "pdf",
+} as const;
+
+export type GetGameContentsApplicableGameTypesItem =
+  (typeof GetGameContentsApplicableGameTypesItem)[keyof typeof GetGameContentsApplicableGameTypesItem];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameContentsApplicableGameTypesItem = {
+  drag_and_drop: "drag and drop",
+  spinner: "spinner",
+  "word/image_matching": "word/image matching",
+  flashcards: "flashcards",
 } as const;
 
 export type GetGameResultsParams = {

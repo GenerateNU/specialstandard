@@ -31,6 +31,7 @@ export function useNewsletter() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to download newsletter'
       setError(errorMessage)
       console.error('Newsletter download error:', err)
+      throw err
     } finally {
       setIsLoading(false)
     }
