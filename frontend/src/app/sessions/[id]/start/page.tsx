@@ -33,18 +33,18 @@ export default function StartSessionPage({ params }: PageProps) {
 
   // Available weeks - 4 weeks per month
   const availableWeeks = [1, 2, 3, 4]
+  const studentTuples = sessionStudents?.map(s => ({
+    studentId: s.id,
+    sessionStudentId: s.session_student_id,
+  })) || []
 
   useEffect(() => {
-    if (session && sessionStudents && !initializedRef.current) {
+    if (session && studentTuples.length > 0 && !initializedRef.current) {
       initializedRef.current = true
       setSession(session)
-      const studentTuples = sessionStudents.map(s => ({
-        studentId: s.id,
-        sessionStudentId: s.session_student_id,
-      }))
       setStudents(studentTuples)
     }
-  }, [session, sessionStudents, setSession, setStudents])
+  }, [session, studentTuples, setSession, setStudents])
 
   const handlePreviousMonth = () => {
     if (selectedMonth === 0) {
@@ -68,16 +68,6 @@ export default function StartSessionPage({ params }: PageProps) {
     setCurrentWeek(selectedWeek)
     setCurrentMonth(selectedMonth)
     setCurrentYear(selectedYear)
-
-    if (!sessionStudents || sessionStudents.length === 0) {
-      console.warn('No session students found, aborting curriculum start')
-      return
-    }
-
-    sessionStorage.setItem('activeStudents', JSON.stringify(sessionStudents.map(s => ({
-      studentId: s.id,
-      sessionStudentId: s.session_student_id,
-    }))))
     router.push(`/sessions/${id}/curriculum`)
   }
 

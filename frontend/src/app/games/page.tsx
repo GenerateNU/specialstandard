@@ -2,6 +2,7 @@
 
 import AppLayout from "@/components/AppLayout";
 import { GameContentSelector } from "@/components/games/GameContentSelector";
+import { useSessionContext } from "@/contexts/sessionContext";
 import type {
   GetGameContentsCategory,
   GetGameContentsQuestionType,
@@ -14,21 +15,15 @@ import React, { Suspense } from "react";
 function GamesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000";
-  const [sessionStudentIds, setSessionStudentIds] = React.useState<string | null>(null);
+  const { session, students } = useSessionContext();
+  const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000"; // could use this or the session context
+  const sessionStudentIds = students ? students.map((student) => student.sessionStudentId?.toString()) : [];
   const [selectedContent, setSelectedContent] = React.useState<{
     theme: Theme;
     difficultyLevel: number;
     category: GetGameContentsCategory;
     questionType: GetGameContentsQuestionType;
   } | null>(null);
-
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = window.sessionStorage.getItem("activeStudents");
-      setSessionStudentIds(stored);
-    }
-  }, []);
 
   const handleContentSelection = (selection: {
     theme: Theme;
@@ -62,7 +57,7 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds ? JSON.parse(sessionStudentIds)[0].sessionStudentId : '',
+                    sessionStudentId: sessionStudentIds[0] ?? '0'
                   });
                   router.push(`/games/flashcards?${params.toString()}`);
                 }}
@@ -82,7 +77,7 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds ? JSON.parse(sessionStudentIds)[0].sessionStudentId : '',
+                    sessionStudentId: sessionStudentIds[0] ?? '0'
                   });
                   router.push(`/games/image-matching?${params.toString()}`);
                 }}
@@ -103,7 +98,7 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds ? JSON.parse(sessionStudentIds)[0].sessionStudentId : '',
+                    sessionStudentId: sessionStudentIds[0] ?? '0',
                   });
                   router.push(`/games/memorymatch?${params.toString()}`);
                 }}
@@ -124,7 +119,7 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds ? JSON.parse(sessionStudentIds)[0].sessionStudentId : '',
+                    sessionStudentId: sessionStudentIds[0] ?? '0', 
                   });
                   router.push(`/games/drag-and-drop?${params.toString()}`);
                 }}
@@ -155,7 +150,11 @@ function GamesPageContent() {
   // Show content selector
   return (
     <AppLayout>
-      <GameContentSelector onSelectionComplete={handleContentSelection} />
+      <GameContentSelector 
+        onSelectionComplete={handleContentSelection} 
+        onBack={session ? () => router.push(`/sessions/${session.id}/curriculum`) : () =>router.back()}
+        backLabel={session ? "Back to Curriculum" : "Back"}
+      />
     </AppLayout>
   );
 }

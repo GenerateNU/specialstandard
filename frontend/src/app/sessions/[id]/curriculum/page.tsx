@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { BookOpen, Dumbbell } from 'lucide-react'
 import Link from 'next/link'
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
@@ -30,6 +31,7 @@ export default function CurriculumPage({ params }: PageProps) {
     setCurrentYear,
     setCurrentLevel,
   } = useSessionContext()
+  const router = useRouter()
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
   
   if (!session) {
@@ -147,7 +149,7 @@ export default function CurriculumPage({ params }: PageProps) {
                   size="lg"
                   className="h-24 text-xl bg-pink hover:bg-pink-hover text-white gap-3"
                   onClick={() => {
-                  window.open(`/games?sessionId=${id}`, '_blank') // figured itd be more useful in a new tab
+                  router.push(`/games?sessionId=${id}`)
                   }}
                 >
                   <Dumbbell className="w-6 h-6" />
