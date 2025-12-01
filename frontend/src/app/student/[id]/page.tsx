@@ -1,16 +1,19 @@
 "use client";
 import {
+  ArrowLeft,
   CirclePlus,
   PencilLine,
   Save,
   Trash,
   Trash2,
+  Trophy,
   User,
   X } from "lucide-react";
 
 import AppLayout from "@/components/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import UpcomingSession from "@/components/sessions/UpcomingSession";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -54,7 +57,7 @@ function StudentPage() {
   });
 
   // Session ratings hook
-  const { ratings, isLoading: ratingsLoading, error: ratingsError } = useStudentRatings({ studentId });
+  const { ratings } = useStudentRatings({ studentId });
 
   // Track this student as recently viewed - only when studentId changes
   useEffect(() => {
@@ -202,25 +205,34 @@ function StudentPage() {
   return (
     <AppLayout>
       <div className="w-full h-screen bg-background">
-        <div className="w-full h-full flex flex-col gap-8 p-10 relative overflow-y-auto">
-          <PageHeader
-            title="Student Profile"
-            icon={User}
-            actions={
-              <Button
-                variant="outline"
-                className={`w-fit p-4 flex flex-row items-center gap-2 ${CORNER_ROUND} shrink-0`}
-                onClick={handleDelete}
-              >
-                <Trash />
-                Delete
-              </Button>
-            }
-          />
+        <div className="w-full h-full flex flex-col gap-6 p-10 relative overflow-y-auto">
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/students"
+              className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors group w-fit"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span className="text-sm font-medium">Back to Students</span>
+            </Link>
+            <PageHeader
+              title="Student Profile"
+              icon={User}
+              className="mb-0!"
+              actions={
+                <Button
+                  variant="outline"
+                  className={`w-fit p-4 flex flex-row items-center gap-2 ${CORNER_ROUND} shrink-0`}
+                  onClick={handleDelete}
+                >
+                  <Trash />
+                  Delete
+                </Button>
+              }
+            />
+          </div>
 
-          <div className="flex flex-col gap-4 shrink-0">
-            {/* Profile and Upcoming Sessions row - fixed to 1/4 screen height */}
-            <div className="flex gap-8 h-[25vh] min-h-[200px]">
+          <div className="flex flex-col gap-6 shrink-0">
+            <div className="grid grid-cols-2 gap-8 h-[25vh] min-h-[200px]">
               {/* Student Profile */}
               <div
                 className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col relative`}
@@ -271,9 +283,9 @@ function StudentPage() {
               <div
                 className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex flex-col gap-4`}
               >
-                <div className="text-2xl font-semibold text-primary flex-shrink-0">
+                <h2>
                   Upcoming Sessions
-                </div>
+                </h2>
                 <div className="flex-1 min-h-0">
                   {/* Upcoming sessions content will go here */}
                   <UpcomingSession studentId={studentId} />
@@ -283,8 +295,11 @@ function StudentPage() {
           </div>
           {/* Attendance */}
           <div
-            className={`bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex-shrink-0`}
-          >
+            className={`bg-card border-2 flex flex-col gap-4 border-default ${CORNER_ROUND} ${PADDING} h-[30vh] min-h-[220px]`}
+          > 
+          <h2>
+            Goal Progress
+          </h2>
             {attendanceLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-sm text-muted-foreground">
@@ -315,20 +330,20 @@ function StudentPage() {
             )}
           </div>
           {/* Goals, Session Notes, and Ratings */}
-          <div className="grid grid-cols-3 gap-8 overflow-hidden">
+          <div className="grid grid-cols-2 gap-8 h-[25vh] min-h-[300px]">
             {/* IEP Goals */}
-            <div className="gap-2 flex flex-col overflow-hidden relative">
-              <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
+            <div className="bg-card border-2 border-default rounded-4xl p-5 gap-6 flex flex-col overflow-hidden relative h-full">
+              <h2>
                 IEP Goals
-              </div>
+              </h2>
               {/* Edit toggle button */}
-              <div className="absolute top-0 right-0 z-10 flex gap-2">
+              <div className="absolute top-5 right-5 z-10 flex gap-2">
                 {edit ? (
                   <>
                     <Button
                       onClick={handleSave}
                       disabled={isSaving}
-                      className="w-12 h-12 p-0 bg-green-600 hover:bg-green-700"
+                      className="w-10 h-10 p-0 bg-green-600 hover:bg-green-700"
                       size="icon"
                     >
                       <Save size={20} />
@@ -336,7 +351,7 @@ function StudentPage() {
                     <Button
                       onClick={handleCancel}
                       disabled={isSaving}
-                      className="w-12 h-12 p-0 bg-red-600 hover:bg-red-700"
+                      className="w-10 h-10 p-0 bg-red-600 hover:bg-red-700"
                       size="icon"
                     >
                       <X size={20} />
@@ -345,7 +360,7 @@ function StudentPage() {
                 ) : (
                   <Button
                     onClick={() => setEdit(!edit)}
-                    className="w-12 h-12 p-0"
+                    className="w-10 h-10 p-0"
                     variant="secondary"
                     size="icon"
                   >
@@ -363,10 +378,13 @@ function StudentPage() {
                     <div
                       key={index}
                       className={`w-full text-lg flex items-center gap-2
-                    rounded-2xl transition bg-background select-none border-2 border-border ${PADDING} ${!edit && "hover:scale-99"}`}
+                    rounded-2xl transition bg-card cursor-pointer select-none border-2 border-border ${PADDING} ${!edit && "hover:scale-99"}`}
+                    onClick={() => setEdit(true)}
                     >
+                      <Trophy size={20} className="flex-shrink-0" />
                       {edit ? (
                         <>
+                          
                           <input
                             value={goal}
                             onChange={(e) => updateGoal(index, e.target.value)}
@@ -375,12 +393,13 @@ function StudentPage() {
                             }
                             className="flex-1 bg-transparent outline-none py-1 leading-normal"
                             placeholder="Enter IEP goal..."
+                            autoFocus
                           />
                           <Button
                             onClick={() => deleteGoal(index)}
                             variant="ghost"
                             size="icon"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-100 flex-shrink-0"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-100 flex-shrink-0 w-8 h-8"
                           >
                             <Trash2 size={18} />
                           </Button>
@@ -405,52 +424,12 @@ function StudentPage() {
             </div>
 
             {/* Session Notes */}
-            <div className="gap-2 flex flex-col overflow-hidden">
-              <div className="gap-2 flex flex-col overflow-hidden">
-                <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
-                  Session Notes
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  <SessionNotes studentId={studentId} />
-                </div>
-              </div>
-            </div>
-
-            {/* Session Ratings */}
-            <div className="gap-2 flex flex-col overflow-hidden">
-              <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
-                Session Ratings
-              </div>
+            <div className="bg-card border-2 border-default rounded-4xl p-5 gap-2 flex flex-col overflow-hidden h-full">
+              <h2 >
+                Session Notes
+              </h2>
               <div className="flex-1 overflow-y-auto">
-                {ratingsLoading ? (
-                  <div className="text-muted-foreground italic">Loading ratings...</div>
-                ) : ratingsError ? (
-                  <div className="text-error">Error loading ratings</div>
-                ) : ratings.length === 0 ? (
-                  <div className="text-muted-foreground italic">No ratings found</div>
-                ) : (
-                  <ul className="flex flex-col gap-2">
-                    {ratings.map((entry, idx) => (
-                      <li key={idx} className={`border rounded-lg p-2 bg-background`}>
-                        <div className="font-semibold">Session: {entry.session_id}</div>
-                        <div className="text-xs text-muted-foreground">Date: {entry.session_date}</div>
-                        <div className="mt-1">
-                          {entry.ratings.length === 0 ? (
-                            <span className="italic text-muted-foreground">No ratings</span>
-                          ) : (
-                            <ul className="ml-2 text-sm">
-                              {entry.ratings.map((rating, rIdx) => (
-                                <li key={rIdx}>
-                                  <span className="font-medium">{rating.category}:</span> {rating.level}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <SessionNotes studentId={studentId} />
               </div>
             </div>
           </div>
@@ -458,7 +437,7 @@ function StudentPage() {
             <h1>Progress History</h1>
             <SessionRatingsChart
               chartData={chartData}
-              title="Session Ratings"
+              title="Ratings"
               categories={[
                 { key: "visual_cue", label: "Visual Cue", color: "var(--color-blue)" },
                 { key: "verbal_cue", label: "Verbal Cue", color: "var(--color-pink)" },
@@ -466,7 +445,7 @@ function StudentPage() {
               ]}
             />
             <SessionRatingsChart 
-              title="Engagement Per Session"
+              title="Engagement"
               chartData={engagementData}
               categories={[
                 { key: "engagement", label: "Engagement", color: "var(--color-blue)" }

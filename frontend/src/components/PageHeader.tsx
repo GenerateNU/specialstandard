@@ -6,11 +6,12 @@ interface PageHeaderProps {
   icon: LucideIcon;
   actions?: React.ReactNode;
   description?: string;
+  className?: string;
 }
 
-export function PageHeader({ title, icon: Icon, actions, description }: PageHeaderProps) {
+export function PageHeader({ title, icon: Icon, actions, description, className }: PageHeaderProps) {
   return (
-    <header className="mb-8">
+    <header className={`mb-8 ${className ?? ""}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex flex-row items-center gap-3">
           <Icon className="w-8 h-8 text-accent" />
