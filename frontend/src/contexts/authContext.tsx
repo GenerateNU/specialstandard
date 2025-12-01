@@ -138,6 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("userId");
     localStorage.removeItem("recentlyViewedStudents");
 
+    setPendingMFAAuth(null);
+
     // Clear any remaining cookies (for backwards compatibility)
     document.cookie.split(";").forEach((cookie) => {
       const eqPos = cookie.indexOf("=");
