@@ -13,3 +13,20 @@ type VerificationCode struct {
 	CreatedAt time.Time  `db:"created_at"`
 	Used      bool 		 `db:"used"`
 }
+
+type SendCodeResponse struct {
+	Success   bool   `json:"success"`
+	MessageID string `json:"messageId,omitempty"`
+	Error     string `json:"error,omitempty"`
+}
+
+type VerifyCodeRequest struct {
+	Code string `json:"code"`
+}
+
+type VerifyCodeResponse struct {
+	Success  bool   `json:"success"`
+	Verified bool   `json:"verified,omitempty"`
+	Message  string `json:"message,omitempty"`
+	Error    string `json:"error,omitempty"`
+}

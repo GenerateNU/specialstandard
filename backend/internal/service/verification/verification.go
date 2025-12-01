@@ -13,23 +13,6 @@ import (
 	"github.com/resend/resend-go/v3"
 )
 
-type SendCodeResponse struct {
-	Success   bool   `json:"success"`
-	MessageID string `json:"messageId,omitempty"`
-	Error     string `json:"error,omitempty"`
-}
-
-type VerifyCodeRequest struct {
-	Code string `json:"code"`
-}
-
-type VerifyCodeResponse struct {
-	Success  bool   `json:"success"`
-	Verified bool   `json:"verified,omitempty"`
-	Message  string `json:"message,omitempty"`
-	Error    string `json:"error,omitempty"`
-}
-
 // extractUserIDFromToken extracts the user ID from a JWT token
 func (h *Handler) extractUserIDFromToken(tokenString string) (string, error) {
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
@@ -55,7 +38,7 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 	// Extract JWT from Authorization header
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(SendCodeResponse{
+		return c.Status(fiber.StatusUnauthorized).JSON(models.SendCodeResponse{
 			Success: false,
 			Error:   "No authentication token provided",
 		})
@@ -66,7 +49,7 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 	// Parse the JWT to get the user ID
 	userID, err := h.extractUserIDFromToken(token)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(SendCodeResponse{
+		return c.Status(fiber.StatusUnauthorized).JSON(models.SendCodeResponse{
 			Success: false,
 			Error:   "Invalid authentication token",
 		})
@@ -77,14 +60,14 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 	query := `SELECT email FROM auth.users WHERE id = $1`
 	err = h.db.QueryRow(c.Context(), query, userID).Scan(&email)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(SendCodeResponse{
+		return c.Status(fiber.StatusInternalServerError).JSON(models.SendCodeResponse{
 			Success: false,
 			Error:   "Failed to get user email",
 		})
 	}
 
 	if email == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(SendCodeResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(models.SendCodeResponse{
 			Success: false,
 			Error:   "User email not found",
 		})
@@ -105,7 +88,7 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 	})
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(SendCodeResponse{
+		return c.Status(fiber.StatusInternalServerError).JSON(models.SendCodeResponse{
 			Success: false,
 			Error:   "Failed to store verification code",
 		})
@@ -123,13 +106,13 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 
 	sent, err := h.resendClient.Emails.Send(params)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(SendCodeResponse{
+		return c.Status(fiber.StatusInternalServerError).JSON(models.SendCodeResponse{
 			Success: false,
 			Error:   "Failed to send email: " + err.Error(),
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(SendCodeResponse{
+	return c.Status(fiber.StatusOK).JSON(models.SendCodeResponse{
 		Success:   true,
 		MessageID: sent.Id,
 	})
@@ -141,7 +124,7 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 	// Extract JWT from Authorization header
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(VerifyCodeResponse{
+		return c.Status(fiber.StatusUnauthorized).JSON(models.VerifyCodeResponse{
 			Success: false,
 			Error:   "No authentication token provided",
 		})
@@ -150,15 +133,15 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 	token := strings.Replace(authHeader, "Bearer ", "", 1)
 	userID, err := h.extractUserIDFromToken(token)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(VerifyCodeResponse{
+		return c.Status(fiber.StatusUnauthorized).JSON(models.VerifyCodeResponse{
 			Success: false,
 			Error:   "Invalid authentication token",
 		})
 	}
 
-	var req VerifyCodeRequest
+	var req models.VerifyCodeRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(VerifyCodeResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(models.VerifyCodeResponse{
 			Success: false,
 			Error:   "Invalid request body",
 		})
@@ -167,7 +150,7 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 	// Validate code format
 	code := strings.TrimSpace(req.Code)
 	if len(code) != 6 {
-		return c.Status(fiber.StatusBadRequest).JSON(VerifyCodeResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(models.VerifyCodeResponse{
 			Success: false,
 			Error:   "Invalid code format",
 		})
@@ -176,14 +159,14 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 	// Verify the code
 	valid, err := h.verificationRepo.VerifyCode(c.Context(), userID, code)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(VerifyCodeResponse{
+		return c.Status(fiber.StatusInternalServerError).JSON(models.VerifyCodeResponse{
 			Success: false,
 			Error:   "Failed to verify code",
 		})
 	}
 
 	if !valid {
-		return c.Status(fiber.StatusBadRequest).JSON(VerifyCodeResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(models.VerifyCodeResponse{
 			Success:  false,
 			Verified: false,
 			Error:    "Invalid or expired code",
@@ -207,7 +190,7 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 		slog.Warn("Failed to update user metadata", slog.Any("err", err))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(VerifyCodeResponse{
+	return c.Status(fiber.StatusOK).JSON(models.VerifyCodeResponse{
 		Success:  true,
 		Verified: true,
 		Message:  "Email verified successfully",
