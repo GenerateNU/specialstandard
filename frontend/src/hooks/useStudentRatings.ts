@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getStudents } from '@/lib/api/students';
-import type { GetStudentsStudentIdRatingsParams, StudentRatingEntry } from '@/lib/api/theSpecialStandardAPI.schemas';
+import type { GetStudentsStudentIdRatingsParams } from '@/lib/api/theSpecialStandardAPI.schemas';
 
 interface UseStudentRatingsProps {
 	studentId: string;

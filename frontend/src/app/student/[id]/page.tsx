@@ -1,16 +1,16 @@
 "use client";
-
-import AppLayout from "@/components/AppLayout";
-import UpcomingSession from "@/components/sessions/UpcomingSession";
 import {
-  ChevronLeft,
   CirclePlus,
   PencilLine,
   Save,
   Trash,
   Trash2,
-  X,
-} from "lucide-react";
+  User,
+  X } from "lucide-react";
+
+import AppLayout from "@/components/AppLayout";
+import { PageHeader } from "@/components/PageHeader";
+import UpcomingSession from "@/components/sessions/UpcomingSession";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -20,10 +20,26 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRecentlyViewedStudents } from "@/hooks/useRecentlyViewedStudents";
 import { useStudents } from "@/hooks/useStudents";
-import { getAvatarVariant } from "@/lib/utils";
+
 
 import CustomPieChart from "@/components/statistics/PieChart";
 import { useStudentAttendance } from "@/hooks/useStudentAttendance";
+import { useStudentRatings } from "@/hooks/useStudentRatings";
+import { getAvatarVariant } from "@/lib/avatarUtils";
+import SessionRatingsChart from "@/components/statistics/SessionRatingsChart";
+
+
+
+function mapLevelToNumber(level: string): number {
+  switch (level) {
+    case "minimal": return 1;
+    case "low": return 2;
+    case "moderate": return 3;
+    case "high": return 4;
+    case "maximal": return 5;
+    default: return 0;
+  }
+}
 
 function StudentPage() {
   const params = useParams();
@@ -36,6 +52,9 @@ function StudentPage() {
   const { attendance, isLoading: attendanceLoading } = useStudentAttendance({
     studentId: studentId || "",
   });
+
+  // Session ratings hook
+  const { ratings, isLoading: ratingsLoading, error: ratingsError } = useStudentRatings({ studentId });
 
   // Track this student as recently viewed - only when studentId changes
   useEffect(() => {
@@ -141,35 +160,67 @@ function StudentPage() {
     );
   }
 
+  // Prepare chart data from ratings
+  const chartData = ratings
+    .map((entry) => {
+      // Separate ratings by category
+      const visualRatings = entry.ratings.filter(r => r.category === 'visual_cue');
+      const verbalRatings = entry.ratings.filter(r => r.category === 'verbal_cue');
+      const gesturalRatings = entry.ratings.filter(r => r.category === 'gestural_cue');
+      
+      const calcAverage = (ratings: any[]) => {
+        if (ratings.length === 0) return null;
+        const sum = ratings.map(r => mapLevelToNumber(r.level)).reduce((a, b) => a + b, 0);
+        return Math.round(sum / ratings.length);
+      };
+
+      // Use session_date or fallback to session_id
+      return {
+        session: entry.session_date || entry.session_id,
+        visual_cue: calcAverage(visualRatings),
+        verbal_cue: calcAverage(verbalRatings),
+        gestural_cue: calcAverage(gesturalRatings),
+      };
+    });
+
+    const engagementData = ratings
+    .map((entry) => {
+      const engagementRatings = entry.ratings.filter(r => r.category === 'engagement');
+
+      const calcAverage = (ratings: any[]) => {
+        if (ratings.length === 0) return null;
+        const sum = ratings.map(r => mapLevelToNumber(r.level)).reduce((a, b) => a + b, 0);
+        return Math.round(sum / ratings.length);
+      };
+
+      return {
+        session: entry.session_date || entry.session_id,
+        engagement: calcAverage(engagementRatings),
+      };
+    });
+
   return (
     <AppLayout>
       <div className="w-full h-screen bg-background">
-        <div
-          className={`w-full h-full flex flex-col gap-8 ${PADDING} relative overflow-y-auto`}
-        >
-          <div className="flex flex-col gap-4 flex-shrink-0">
-            <div className="flex justify-between items-center">
+        <div className="w-full h-full flex flex-col gap-8 p-10 relative overflow-y-auto">
+          <PageHeader
+            title="Student Profile"
+            icon={User}
+            actions={
               <Button
                 variant="outline"
-                className={`w-fit p-4 flex flex-row items-center gap-2 ${CORNER_ROUND} flex-shrink-0`}
-                onClick={() => window.history.back()}
-              >
-                <ChevronLeft />
-                Back
-              </Button>
-
-              <Button
-                variant="outline"
-                className={`w-fit p-4 flex flex-row items-center gap-2 ${CORNER_ROUND} flex-shrink-0`}
+                className={`w-fit p-4 flex flex-row items-center gap-2 ${CORNER_ROUND} shrink-0`}
                 onClick={handleDelete}
               >
                 <Trash />
                 Delete
               </Button>
-            </div>
+            }
+          />
 
-            {/* Profile and Upcoming Sessions row */}
-            <div className="flex gap-8 flex-1 min-h-0">
+          <div className="flex flex-col gap-4 shrink-0">
+            {/* Profile and Upcoming Sessions row - fixed to 1/4 screen height */}
+            <div className="flex gap-8 h-[25vh] min-h-[200px]">
               {/* Student Profile */}
               <div
                 className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col relative`}
@@ -263,8 +314,9 @@ function StudentPage() {
               </div>
             )}
           </div>
-          {/* Goals and Session Notes */}
-          <div className="grid grid-cols-2 gap-8 overflow-hidden">
+          {/* Goals, Session Notes, and Ratings */}
+          <div className="grid grid-cols-3 gap-8 overflow-hidden">
+            {/* IEP Goals */}
             <div className="gap-2 flex flex-col overflow-hidden relative">
               <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
                 IEP Goals
@@ -352,6 +404,7 @@ function StudentPage() {
               )}
             </div>
 
+            {/* Session Notes */}
             <div className="gap-2 flex flex-col overflow-hidden">
               <div className="gap-2 flex flex-col overflow-hidden">
                 <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
@@ -362,6 +415,63 @@ function StudentPage() {
                 </div>
               </div>
             </div>
+
+            {/* Session Ratings */}
+            <div className="gap-2 flex flex-col overflow-hidden">
+              <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
+                Session Ratings
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {ratingsLoading ? (
+                  <div className="text-muted-foreground italic">Loading ratings...</div>
+                ) : ratingsError ? (
+                  <div className="text-error">Error loading ratings</div>
+                ) : ratings.length === 0 ? (
+                  <div className="text-muted-foreground italic">No ratings found</div>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {ratings.map((entry, idx) => (
+                      <li key={idx} className={`border rounded-lg p-2 bg-background`}>
+                        <div className="font-semibold">Session: {entry.session_id}</div>
+                        <div className="text-xs text-muted-foreground">Date: {entry.session_date}</div>
+                        <div className="mt-1">
+                          {entry.ratings.length === 0 ? (
+                            <span className="italic text-muted-foreground">No ratings</span>
+                          ) : (
+                            <ul className="ml-2 text-sm">
+                              {entry.ratings.map((rating, rIdx) => (
+                                <li key={rIdx}>
+                                  <span className="font-medium">{rating.category}:</span> {rating.level}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="w-full flex flex-col gap-8">
+            <h1>Progress History</h1>
+            <SessionRatingsChart
+              chartData={chartData}
+              title="Session Ratings"
+              categories={[
+                { key: "visual_cue", label: "Visual Cue", color: "var(--color-blue)" },
+                { key: "verbal_cue", label: "Verbal Cue", color: "var(--color-pink)" },
+                { key: "gestural_cue", label: "Gestural Cue", color: "var(--color-orange)" }
+              ]}
+            />
+            <SessionRatingsChart 
+              title="Engagement Per Session"
+              chartData={engagementData}
+              categories={[
+                { key: "engagement", label: "Engagement", color: "var(--color-blue)" }
+              ]}
+            />
           </div>
         </div>
       </div>

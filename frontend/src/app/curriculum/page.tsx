@@ -4,6 +4,7 @@ import { AlertCircle, ArrowLeft, BookOpen, Download, File, FileText, Gamepad2, L
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
+import { PageHeader } from '@/components/PageHeader'
 import { useResources } from '@/hooks/useResources'
 import { useNewsletter } from '@/hooks/useNewsletter'
 import { getGameContent } from '@/lib/api/game-content'
@@ -190,26 +191,20 @@ export default function Curriculum() {
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
         <div className="w-full p-10 flex flex-col overflow-y-scroll">
-          <header className="mb-8">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-4 transition-colors group"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-medium">Back to Home</span>
-            </Link>
-            <div className="flex items-center justify-between mb-8">
-              <div className='flex flex-row items-center gap-2'>
-                <FileText className="w-8 h-8 text-accent" />
-                <h1 className="text-3xl font-bold text-primary">Curriculum Calendar</h1>
-              </div>
+          <PageHeader
+            title="Curriculum"
+            icon={FileText}
+            description={`View and access all available learning materials for ${selectedYear}.`}
+            actions={
               <Link href="/games">
                 <Button variant={'outline'} className='px-10 py-5 items-center text-xl font-serif font-bold'>
                   <Gamepad2 size={36} className='!h-6 !w-6 text-xl' />
                   Games
                 </Button>
               </Link>
-            </div>
+            }
+          />
+          <div className="mb-8">
 
             <div className="flex items-center gap-2 mb-4">
               <label className="text-sm font-medium text-secondary">Year:</label>
@@ -274,11 +269,7 @@ export default function Curriculum() {
                 </div>
               )}
             </div>
-
-            <p className="text-secondary text-sm mt-4">
-              View and access all available learning materials for {selectedYear}.
-            </p>
-          </header>
+          </div>
 
           {activeMonthData && activeMonthData.weeks.length > 0 ? (
             <div className='w-full flex flex-col gap-6'>
