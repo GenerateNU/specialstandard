@@ -6,29 +6,46 @@ import { ArrowLeft, CheckCircle, Volume2, XCircle } from 'lucide-react'
 import AppLayout from '@/components/AppLayout'
 import { useGameContents } from '@/hooks/useGameContents'
 import { useGameResults } from '@/hooks/useGameResults'
+import { StudentSelector } from '@/components/games/StudentSelector'
+import { useSessionContext } from '@/contexts/sessionContext'
+import { useStudents } from '@/hooks/useStudents'
 
 function ImageMatchingGameContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const sessionStudentIdsParam = searchParams.get('sessionStudentIds')
+
+  // Show student selector if no students selected yet
+  if (!sessionStudentIdsParam) {
+    return (
+      <StudentSelector
+        gameTitle="Image Matching"
+        onBack={() => router.back()}
+        onStudentsSelected={(studentIds) => {
+          // Update URL with selected students
+          const params = new URLSearchParams(searchParams.toString())
+          params.set('sessionStudentIds', studentIds.join(','))
+          router.replace(`/games/image-matching?${params.toString()}`)
+        }}
+      />
+    )
+  }
+
+  // Students are selected, show the actual game
+  return <ImageMatchingGame />
+}
+
+function ImageMatchingGame() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const themeId = searchParams.get('themeId')
   const difficulty = searchParams.get('difficulty')
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
-  const sessionStudentId = Number.parseInt(searchParams.get('sessionStudentId') || '0')
+  const sessionStudentIdsParam = searchParams.get('sessionStudentIds')!
   const sessionId = searchParams.get('sessionId') || '00000000-0000-0000-0000-000000000000'
 
-  const { gameContents, isLoading, error } = useGameContents({
-    theme_id: themeId || undefined,
-    difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
-    category: category as any,
-    question_type: questionType as any,
-  })
-
-  const gameResultsHook = useGameResults({
-    session_student_id: sessionStudentId,
-    session_id: sessionId || undefined,
-  })
-
+  const selectedStudentIds = sessionStudentIdsParam.split(',')
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [showFeedback, setShowFeedback] = useState<'correct' | 'incorrect' | null>(null)
@@ -37,7 +54,45 @@ function ImageMatchingGameContent() {
   const [imageOptions, setImageOptions] = useState<string[]>([])
   const [cardStartTime, setCardStartTime] = useState<number | null>(null)
   const [resultsSaved, setResultsSaved] = useState(false)
-  const currentQuestion = gameContents?.[currentQuestionIndex]
+
+  const { gameContents, isLoading, error } = useGameContents({
+    theme_id: themeId || undefined,
+    difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
+    category: category as any,
+    question_type: questionType as any,
+  })
+
+  // Get student names from session context
+  const { students: sessionStudents } = useSessionContext()
+  const { students: allStudents } = useStudents()
+
+  // Calculate questions per student and limit total questions
+  const questionsPerStudent = Math.floor(gameContents.length / selectedStudentIds.length)
+  const totalQuestionsToUse = questionsPerStudent * selectedStudentIds.length;
+  const limitedGameContents = gameContents.slice(0, totalQuestionsToUse);
+  
+  // Get current student based on question index
+  const currentStudentIndex = currentQuestionIndex % selectedStudentIds.length;
+  const currentSessionStudentId = Number.parseInt(selectedStudentIds[currentStudentIndex]);
+
+  // Create game results hooks for each student
+  const gameResultsHooks = selectedStudentIds.map(studentId => 
+    useGameResults({
+      session_student_id: Number.parseInt(studentId),
+      session_id: sessionId || undefined,
+    })
+  );
+
+  const gameResultsHook = gameResultsHooks[currentStudentIndex];
+  
+  const getStudentName = (sessionStudentId: number) => {
+    const sessionStudent = sessionStudents.find(s => s.sessionStudentId === sessionStudentId);
+    if (!sessionStudent) return 'Student';
+    const student = allStudents?.find(s => s.id === sessionStudent.studentId);
+    return student ? `${student.first_name} ${student.last_name}` : 'Student';
+  };
+
+  const currentQuestion = limitedGameContents?.[currentQuestionIndex]
 
   type SpeakWordFn = (word: string) => void
 
@@ -72,7 +127,7 @@ function ImageMatchingGameContent() {
 
     setTimeout(() => {
       setShowFeedback(null)
-      if (currentQuestionIndex < gameContents.length - 1) {
+      if (currentQuestionIndex < limitedGameContents.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1)
       } else {
         setGameComplete(true)
@@ -81,15 +136,17 @@ function ImageMatchingGameContent() {
   }
 
   const handleSaveProgress = async () => {
-    if (gameResultsHook) {
-      await gameResultsHook.saveAllResults()
-      setResultsSaved(true)
+    // Save all results for all students
+    for (const hook of gameResultsHooks) {
+      await hook.saveAllResults()
     }
+    setResultsSaved(true)
   }
 
   const handlePlayAgain = async () => {
-    if (gameResultsHook) {
-      await gameResultsHook.saveAllResults()
+    // Save all results for all students
+    for (const hook of gameResultsHooks) {
+      await hook.saveAllResults()
     }
     
     setCurrentQuestionIndex(0)
@@ -107,14 +164,14 @@ function ImageMatchingGameContent() {
   }, [currentQuestion, wrongAnswerUrl])
 
   useEffect(() => {
-    if (gameContents && currentQuestion) {
-      const otherQuestions = gameContents.filter((_, idx) => idx !== currentQuestionIndex)
+    if (limitedGameContents && currentQuestion) {
+      const otherQuestions = limitedGameContents.filter((_, idx) => idx !== currentQuestionIndex)
       if (otherQuestions.length > 0) {
         const randomQuestion = otherQuestions[Math.floor(Math.random() * otherQuestions.length)]
         setWrongAnswerUrl(randomQuestion.answer)
       }
     }
-  }, [currentQuestionIndex, gameContents])
+  }, [currentQuestionIndex, limitedGameContents])
 
   useEffect(() => {
     if (currentQuestion?.question && !showFeedback) {
@@ -127,7 +184,8 @@ function ImageMatchingGameContent() {
       setCardStartTime(Date.now())
       gameResultsHook?.startCard(currentQuestion)
     }
-  }, [currentQuestion])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestionIndex])
 
   if (isLoading) {
     return (
@@ -139,7 +197,7 @@ function ImageMatchingGameContent() {
     )
   }
 
-  if (error || !gameContents || gameContents.length === 0) {
+  if (error || !limitedGameContents || limitedGameContents.length === 0) {
     return (
       <AppLayout>
         <div className="min-h-screen flex items-center justify-center bg-background">
@@ -165,7 +223,7 @@ function ImageMatchingGameContent() {
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h2 className="mb-4">Game Complete!</h2>
             <p className="text-2xl mb-6">
-              Score: {score} / {gameContents.length}
+              Score: {score} / {limitedGameContents.length}
             </p>
             <div className="flex gap-4 justify-center">
               <button
@@ -174,15 +232,13 @@ function ImageMatchingGameContent() {
               >
                 Play Again
               </button>
-              {gameResultsHook && (
-                <button
-                  onClick={handleSaveProgress}
-                  disabled={gameResultsHook.isSaving || resultsSaved}
-                  className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
-                >
-                  {gameResultsHook.isSaving ? 'Saving...' : resultsSaved ? 'Saved!' : 'Save Progress'}
-                </button>
-              )}
+              <button
+                onClick={handleSaveProgress}
+                disabled={gameResultsHooks.some(hook => hook.isSaving) || resultsSaved}
+                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
+              >
+                {gameResultsHooks.some(hook => hook.isSaving) ? 'Saving...' : resultsSaved ? 'Saved!' : 'Save Progress'}
+              </button>
               <button
                 onClick={() => router.push('/games')}
                 className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border"
@@ -190,7 +246,7 @@ function ImageMatchingGameContent() {
                 Back to Games
               </button>
             </div>
-            {gameResultsHook?.saveError && (
+            {gameResultsHooks.some(hook => hook.saveError) && (
               <p className="text-error text-sm mt-2">
                 Failed to save progress. Please try again.
               </p>
@@ -214,11 +270,17 @@ function ImageMatchingGameContent() {
               Back
             </button>
             <div className="text-lg font-semibold">
-              Question {currentQuestionIndex + 1} / {gameContents.length}
+              Question {currentQuestionIndex + 1} / {limitedGameContents.length}
             </div>
             <div className="text-lg font-semibold">
               Score: {score}
             </div>
+          </div>
+
+          {/* Current Student Banner */}
+          <div className="bg-blue text-white rounded-lg p-4 mb-6 text-center">
+            <p className="text-sm opacity-90 mb-1">Current Player</p>
+            <p className="text-2xl font-bold">{getStudentName(currentSessionStudentId)}</p>
           </div>
 
           <div className="bg-card rounded-lg shadow-lg p-8 mb-8 text-center">
@@ -273,7 +335,7 @@ function ImageMatchingGameContent() {
   )
 }
 
-export default function ImageMatchingGame() {
+export default function ImageMatchingPage() {
   return (
     <Suspense fallback={
       <AppLayout>

@@ -12,6 +12,8 @@ import {
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import './flashcard.css'
 import { useGameResults } from '@/hooks/useGameResults'
+import { useSessionContext } from '@/contexts/sessionContext'
+import { useStudents } from '@/hooks/useStudents'
 
 const CATEGORIES = {
   [GetGameContentsCategory.receptive_language]: { 
@@ -46,7 +48,7 @@ interface FlashcardProps {
 }
 
 interface FlashcardGameInterfaceProps {
-  session_student_id?: number
+  session_student_ids: number[]
   session_id?: string
   themeId: string,
   themeName: string,
@@ -112,7 +114,7 @@ const Flashcard: React.FC<FlashcardProps> = ({
 }
 
 export default function FlashcardGameInterface({ 
-  session_student_id, 
+  session_student_ids, 
   session_id, 
   themeId,
   themeName,
@@ -125,7 +127,6 @@ export default function FlashcardGameInterface({
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set())
   const [cardStartTime, setCardStartTime] = useState<number | null>(null)
   const [timeTaken, setTimeTaken] = useState(0)
-  //const [setThemeName] = useState<string>('')
 
   const { gameContents, isLoading: contentsLoading, error: contentsError } = useGameContents({
     theme_id: themeId,
@@ -135,22 +136,47 @@ export default function FlashcardGameInterface({
     question_count: 10,
   })
 
-  const gameResultsHook = session_student_id ? useGameResults({
-    session_student_id,
-    session_id,
-  }) : null
+  // Calculate questions per student and limit total cards
+  const questionsPerStudent = Math.floor(gameContents.length / session_student_ids.length)
+  const totalQuestionsToUse = questionsPerStudent * session_student_ids.length
+  const limitedGameContents = gameContents.slice(0, totalQuestionsToUse)
+  
+  // Get current student based on card index
+  const currentStudentIndex = currentCardIndex % session_student_ids.length
+  const currentSessionStudentId = session_student_ids[currentStudentIndex]
 
-  const startCard = gameResultsHook?.startCard
+  // Create game results hooks for each student
+  const gameResultsHooks = session_student_ids.map(studentId => 
+    useGameResults({
+      session_student_id: studentId,
+      session_id,
+    })
+  )
+
+  const currentGameResultsHook = gameResultsHooks[currentStudentIndex]
+  const startCard = currentGameResultsHook?.startCard
+
+  // Get student names from session context
+  const { students: sessionStudents } = useSessionContext()
+  const { students: allStudents } = useStudents()
+  
+  const getStudentName = (sessionStudentId: number) => {
+    const sessionStudent = sessionStudents.find(s => s.sessionStudentId === sessionStudentId)
+    if (!sessionStudent) return 'Student'
+    const student = allStudents?.find(s => s.id === sessionStudent.studentId)
+    return student ? `${student.first_name} ${student.last_name}` : 'Student'
+  }
 
   // Initialize timer when card loads
   useEffect(() => {
-    if (gameContents[currentCardIndex]) {
+    if (limitedGameContents[currentCardIndex]) {
       setCardStartTime(Date.now())
       setFlippedCards(new Set())
       setTimeTaken(0)
-      startCard?.(gameContents[currentCardIndex])
+      startCard?.(limitedGameContents[currentCardIndex])
     }
-  }, [currentCardIndex, gameContents, startCard])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentCardIndex])
 
   // Update timer display
   useEffect(() => {
@@ -171,10 +197,10 @@ export default function FlashcardGameInterface({
   }, [themeId])
 
   const handleMarkCorrect = () => {
-    if (!gameResultsHook || !gameContents[currentCardIndex]) return
+    if (!currentGameResultsHook || !limitedGameContents[currentCardIndex]) return
     
     const finalTime = Math.floor((Date.now() - (cardStartTime || Date.now())) / 1000)
-    gameResultsHook.completeCard(gameContents[currentCardIndex].id, finalTime)
+    currentGameResultsHook.completeCard(limitedGameContents[currentCardIndex].id, finalTime)
     
     setCurrentCardIndex(prev => prev + 1)
     setCardStartTime(null)
@@ -191,7 +217,7 @@ export default function FlashcardGameInterface({
     )
   }
 
-  if (contentsError || gameContents.length === 0) {
+  if (contentsError || limitedGameContents.length === 0) {
     return (
       <div className="min-h-screen bg-background p-8 flex items-center justify-center">
         <div className="text-center">
@@ -235,6 +261,12 @@ export default function FlashcardGameInterface({
 
         <h1 className="mb-4">Flashcards</h1>
         
+        {/* Current Student Banner */}
+        <div className="bg-blue text-white rounded-lg p-4 mb-6 text-center">
+          <p className="text-sm opacity-90 mb-1">Current Player</p>
+          <p className="text-2xl font-bold">{getStudentName(currentSessionStudentId)}</p>
+        </div>
+
         {/* Display selected options */}
         <div className="bg-card rounded-lg p-4 mb-6 border border-default">
           <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -251,23 +283,23 @@ export default function FlashcardGameInterface({
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between text-sm text-secondary mb-2">
-            <span>Card {currentCardIndex + 1} of {gameContents.length}</span>
-            <span>{Math.round((currentCardIndex / gameContents.length) * 100)}% Complete</span>
+            <span>Card {Math.min(currentCardIndex + 1, limitedGameContents.length)} of {limitedGameContents.length}</span>
+            <span>{Math.round((Math.min(currentCardIndex + 1, limitedGameContents.length) / limitedGameContents.length) * 100)}% Complete</span>
           </div>
           <div className="w-full bg-card rounded-full h-2 border border-default">
             <div 
               className="bg-blue h-full rounded-full transition-all duration-300"
-              style={{ width: `${(currentCardIndex / gameContents.length) * 100}%` }}
+              style={{ width: `${(Math.min(currentCardIndex + 1, limitedGameContents.length) / limitedGameContents.length) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Current flashcard */}
-        {gameContents[currentCardIndex] && (
+        {limitedGameContents[currentCardIndex] && (
           <div className="mb-8">
             <Flashcard
-              question={gameContents[currentCardIndex].question}
-              answer={gameContents[currentCardIndex].answer}
+              question={limitedGameContents[currentCardIndex].question}
+              answer={limitedGameContents[currentCardIndex].answer}
               isFlipped={flippedCards.has(currentCardIndex)}
               onFlip={() => {
                 setFlippedCards(prev => {
@@ -280,7 +312,7 @@ export default function FlashcardGameInterface({
                   return newSet
                 })
               }}
-              onMarkCorrect={gameResultsHook ? handleMarkCorrect : undefined}
+              onMarkCorrect={currentGameResultsHook ? handleMarkCorrect : undefined}
               timeTaken={flippedCards.has(currentCardIndex) ? timeTaken : undefined}
             />
             <p className="text-center text-muted mt-4 text-sm">Click card to flip</p>
@@ -302,7 +334,7 @@ export default function FlashcardGameInterface({
           </button>
 
           <div className="flex gap-2">
-            {gameContents.map((_, index) => (
+            {limitedGameContents.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentCardIndex(index)}
@@ -315,13 +347,13 @@ export default function FlashcardGameInterface({
 
           <button
             onClick={() => {
-              if (currentCardIndex < gameContents.length - 1) {
+              if (currentCardIndex < limitedGameContents.length) {
                 setCurrentCardIndex(prev => prev + 1)
               }
             }}
-            disabled={currentCardIndex === gameContents.length - 1}
+            disabled={currentCardIndex >= limitedGameContents.length}
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              currentCardIndex === gameContents.length - 1
+              currentCardIndex >= limitedGameContents.length
                 ? 'bg-blue-disabled text-white cursor-not-allowed'
                 : 'bg-blue text-white hover:bg-blue-hover'
             }`}
@@ -330,7 +362,7 @@ export default function FlashcardGameInterface({
           </button>
         </div>
 
-        {currentCardIndex >= gameContents.length && (
+        {currentCardIndex >= limitedGameContents.length && (
           <div className="mt-8 p-6 bg-blue-light border border-blue rounded-lg text-center">
             <p className="text-blue font-semibold">Great job! You've completed all flashcards!</p>
             <div className="mt-4 flex gap-3 justify-center">
@@ -346,18 +378,21 @@ export default function FlashcardGameInterface({
                 Start Over
               </button>
               
-              {gameResultsHook && (
-                <button
-                  onClick={() => gameResultsHook.saveAllResults()}
-                  disabled={gameResultsHook.isSaving}
-                  className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled"
-                >
-                  {gameResultsHook.isSaving ? 'Saving...' : 'Save Progress'}
-                </button>
-              )}
+              <button
+                onClick={async () => {
+                  // Save all results for all students
+                  for (const hook of gameResultsHooks) {
+                    await hook.saveAllResults()
+                  }
+                }}
+                disabled={gameResultsHooks.some(hook => hook.isSaving)}
+                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled"
+              >
+                {gameResultsHooks.some(hook => hook.isSaving) ? 'Saving...' : 'Save Progress'}
+              </button>
             </div>
             
-            {gameResultsHook?.saveError && (
+            {gameResultsHooks.some(hook => hook.saveError) && (
               <p className="text-error text-sm mt-2">
                 Failed to save progress. Please try again.
               </p>
@@ -365,10 +400,10 @@ export default function FlashcardGameInterface({
           </div>
         )}
 
-        {gameResultsHook && gameContents[currentCardIndex] && (
+        {currentGameResultsHook && limitedGameContents[currentCardIndex] && (
           <div className="text-center mt-2">
             {(() => {
-              const existingResult = gameResultsHook.getResultForContent(gameContents[currentCardIndex].id)
+              const existingResult = currentGameResultsHook.getResultForContent(limitedGameContents[currentCardIndex].id)
               if (existingResult?.completed) {
                 return (
                   <span className="text-success text-sm">
