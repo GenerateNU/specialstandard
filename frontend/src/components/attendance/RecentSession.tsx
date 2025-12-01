@@ -28,26 +28,32 @@ export default function RecentSession({ studentId }: RecentSessionProps) {
   }
 
   // Sort sessions by date (most recent first)
-  const sortedSessions = [...sessions].sort((a, b) =>
-    new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime(),
-  )
+  const sortedSessions = [...sessions]
+    .map(item => ({
+      ...item,
+      sessionData: (item as any).session
+    }))
+    .sort((a, b) =>
+      new Date(b.sessionData.start_datetime).getTime() - new Date(a.sessionData.start_datetime).getTime()
+    )
 
   return (
     <div className="h-full  overflow-y-auto space-y-2 text-background w-full">
-      {sortedSessions.map((session) => {
-        const startMoment = moment(session.start_datetime)
-        const endMoment = moment(session.end_datetime)
+      {sortedSessions.map((item, index) => {
+        const { sessionData } = item
+        const startMoment = moment(sessionData.start_datetime)
+        const endMoment = moment(sessionData.end_datetime)
 
         return (
           <div
-            key={session.id}
+            key={sessionData.id}
             className="p-4 bg-background border-b border-background/20 rounded-2xl flex flex-col justify-center h-20 w-full text-primary last:border-b-0"
           >
             {/* Session title and date */}
             <div className="w-full flex justify-between items-center">
               <div className="font-semibold text-base">
                 Session #
-                {sortedSessions.length - sortedSessions.indexOf(session)}
+                {sortedSessions.length - index}
               </div>
               <div className="text-sm opacity-90">
                 {startMoment.format('MM/DD/YYYY')}
@@ -55,7 +61,7 @@ export default function RecentSession({ studentId }: RecentSessionProps) {
             </div>
             {/* Present/Absent status */}
             <div className="text-sm mb-1">
-              {session.present
+              {sessionData.present
                 ? (
                     <span className="font-medium">Present ✓</span>
                   )

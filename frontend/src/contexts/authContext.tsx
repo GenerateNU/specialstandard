@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserId(response.user.id);
       }
 
-      router.push("/");
+      router.push("/signup/link");
     } catch (error) {
       console.error("Signup failed:", error);
       throw error;
@@ -133,10 +133,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    // Clear localStorage
     localStorage.removeItem("jwt");
     localStorage.removeItem("userId");
-    setPendingMFAAuth(null);
+    localStorage.removeItem("recentlyViewedStudents");
 
+    // Clear any remaining cookies (for backwards compatibility)
     document.cookie.split(";").forEach((cookie) => {
       const eqPos = cookie.indexOf("=");
       const name =

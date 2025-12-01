@@ -64,6 +64,7 @@ apiClient.interceptors.response.use(
           // Clear localStorage
           localStorage.removeItem("jwt");
           localStorage.removeItem("userId");
+          localStorage.removeItem("recentlyViewedStudents");
 
           // Clear cookies for backwards compatibility
           document.cookie.split(";").forEach((cookie) => {

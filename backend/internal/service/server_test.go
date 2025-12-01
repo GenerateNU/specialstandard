@@ -82,10 +82,12 @@ func TestGetSessionsEndpoint(t *testing.T) {
 				sessions := []models.Session{
 					{
 						ID:            uuid.New(),
+						SessionName:   "successful get sessions and default pagination",
 						TherapistID:   testTherapistID,
 						StartDateTime: time.Now(),
 						EndDateTime:   time.Now().Add(time.Hour),
 						Notes:         ptrString("Test session"),
+						Location:      ptrString("123 Oz St."),
 						CreatedAt:     ptrTime(time.Now()),
 						UpdatedAt:     ptrTime(time.Now()),
 					},
@@ -630,6 +632,7 @@ func TestGetSessionByIDEndpoint(t *testing.T) {
 			mockSetup: func(m *mocks.MockSessionRepository) {
 				session := models.Session{
 					ID:          uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
+					SessionName: "successful get session by valid UUID",
 					TherapistID: uuid.New(),
 					Notes:       ptrString("Test session"),
 				}
@@ -746,6 +749,7 @@ func TestHandler_PostSessions(t *testing.T) {
 	}, repo, &s3_client.Client{})
 
 	body := fmt.Sprintf(`{
+		"session_name": "post session for server",
 		"start_datetime": "2025-09-14T14:00:00Z",
 		"end_datetime": "2025-09-14T16:00:00Z",
 		"therapist_id": "%s",
@@ -874,10 +878,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 			id:   uuid.New(),
 			name: "Successfully changed all patchable fields",
 			payload: `{
+				"session_name": "all success",
 				"start_datetime": "2025-09-14T12:00:00Z", 
 				"end_datetime": "2025-09-14T13:00:00Z", 
 				"therapist_id": "28eedfdc-81e1-44e5-a42c-022dc4c3b64d", 
-				"notes": "Starting Over"
+				"notes": "Starting Over",
+				"location": "Temperature Zero"
 			}`,
 			mockSetup: func(m *mocks.MockSessionRepository, id uuid.UUID) {
 				startTime, _ := time.Parse(time.RFC3339, "2025-09-14T12:00:00Z")
@@ -888,10 +894,12 @@ func TestHandler_PatchSessions(t *testing.T) {
 				now := time.Now()
 
 				patch := &models.PatchSessionInput{
+					SessionName: ptrString("all success"),
 					StartTime:   &startTime,
 					EndTime:     &endTime,
 					TherapistID: &therapistID,
 					Notes:       notes,
+					Location:    ptrString("Temperature Zero"),
 				}
 
 				patchedSession := &models.Session{
@@ -2320,8 +2328,13 @@ func TestEndpoint_PromoteStudents(t *testing.T) {
 }
 
 func TestGetGameContentEndpoint(t *testing.T) {
-	mockRepo := new(mocks.MockGameContentRepository)
-	mockRepo.On("GetGameContents", mock.Anything, mock.Anything).Return([]models.GameContent{
+	// Create mock for GameContent (the one we're actually testing)
+	mockGameContentRepo := new(mocks.MockGameContentRepository)
+
+	mockGameContentRepo.On("GetGameContents",
+		mock.Anything, // context
+		mock.Anything, // *models.GetGameContentRequest
+	).Return([]models.GameContent{
 		{
 			ID:              uuid.New(),
 			ThemeID:         uuid.New(),
@@ -2337,19 +2350,47 @@ func TestGetGameContentEndpoint(t *testing.T) {
 		},
 	}, nil)
 
+	// Create mock repositories for all other dependencies that SetupApp needs
+	mockResourceRepo := new(mocks.MockResourceRepository)
+	mockSessionRepo := new(mocks.MockSessionRepository)
+	mockStudentRepo := new(mocks.MockStudentRepository)
+	mockTherapistRepo := new(mocks.MockTherapistRepository)
+	mockSessionStudentRepo := new(mocks.MockSessionStudentRepository)
+	mockSessionResourceRepo := new(mocks.MockSessionResourceRepository)
+	mockThemeRepo := new(mocks.MockThemeRepository)
+	mockGameResultRepo := new(mocks.MockGameResultRepository)
+
+	// SetupApp requires all repositories to be non-nil
 	repo := &storage.Repository{
-		GameContent: mockRepo,
+		GameContent:     mockGameContentRepo,
+		Resource:        mockResourceRepo,
+		Session:         mockSessionRepo,
+		Student:         mockStudentRepo,
+		Therapist:       mockTherapistRepo,
+		SessionStudent:  mockSessionStudentRepo,
+		SessionResource: mockSessionResourceRepo,
+		Theme:           mockThemeRepo,
+		GameResult:      mockGameResultRepo,
 	}
+
 	app := service.SetupApp(config.Config{
 		TestMode: true,
-	}, repo, &s3_client.Client{})
+	}, repo, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/game-contents?category=speech&level=5&count=4", nil)
 	res, err := app.Test(req, -1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	mockRepo.AssertExpectations(t)
+
+	// Verify response body
+	var gameContents []models.GameContent
+	err = json.NewDecoder(res.Body).Decode(&gameContents)
+	assert.NoError(t, err)
+	assert.Len(t, gameContents, 1)
+	assert.Equal(t, "speech", *gameContents[0].Category)
+
+	mockGameContentRepo.AssertExpectations(t)
 }
 
 func TestGetGameResultsEndpoint(t *testing.T) {

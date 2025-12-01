@@ -1,194 +1,233 @@
-import { Calendar, Repeat } from 'lucide-react'
-import React from 'react'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { cn } from '@/lib/utils'
-import { FormLabel } from '../ui/form'
+import React from "react";
+import { ChevronDown, ChevronUp, Repeat } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export interface RepetitionConfig {
-  enabled: boolean
-  recur_start: string
-  recur_end: string
-  every_n_weeks: number
+  recur_start: string; // ISO datetime string
+  recur_end: string; // ISO datetime string
+  every_n_weeks: number;
+  days: number[]; // 0-6 representing Sun-Sat
 }
 
-interface RepetitionFieldProps {
-  value?: Partial<RepetitionConfig>
-  onChange: (value: RepetitionConfig | undefined) => void
-  sessionDate: string
-  sessionTime?: string
+interface RepetitionSelectorProps {
+  value: RepetitionConfig | undefined;
+  onChange: (config: RepetitionConfig | undefined) => void;
+  sessionDate: string;
+  sessionTime: string;
 }
+
+const DAYS_OF_WEEK = [
+  { label: "Mon", value: 1 },
+  { label: "Tue", value: 2 },
+  { label: "Wed", value: 3 },
+  { label: "Thu", value: 4 },
+  { label: "Fri", value: 5 },
+];
 
 export function RepetitionSelector({
   value,
   onChange,
   sessionDate,
-  sessionTime = '09:00',
-}: RepetitionFieldProps) {
-  const [isEnabled, setIsEnabled] = React.useState(value?.enabled || false)
-  const [recurStart, setRecurStart] = React.useState(value?.recur_start || sessionDate)
-  const [recurEnd, setRecurEnd] = React.useState(value?.recur_end || '')
-  const [everyNWeeks, setEveryNWeeks] = React.useState(value?.every_n_weeks || 1)
+  sessionTime,
+}: RepetitionSelectorProps) {
+  const [isExpanded, setIsExpanded] = React.useState(!!value);
+  const [isRecurring, setIsRecurring] = React.useState(!!value);
+  const [endDate, setEndDate] = React.useState(
+    value?.recur_end.split("T")[0] || sessionDate
+  );
+  const [everyNWeeks, setEveryNWeeks] = React.useState(
+    value?.every_n_weeks || 1
+  );
+  const [selectedDays, setSelectedDays] = React.useState<number[]>(
+    value?.days || [new Date(sessionDate).getDay()]
+  );
 
-  React.useEffect(() => {
-    // Update recur_start when sessionDate changes
-    if (!isEnabled) {
-      setRecurStart(sessionDate)
-    }
-  }, [sessionDate, isEnabled])
+  const handleDayToggle = (day: number) => {
+    const newDays = selectedDays.includes(day)
+      ? selectedDays.filter((d) => d !== day)
+      : [...selectedDays, day];
+    setSelectedDays(newDays);
+  };
 
-  React.useEffect(() => {
-    if (isEnabled) {
-      // Combine date and time for datetime values
-      const startDateTime = new Date(`${recurStart}T${sessionTime}:00`)
-      const endDateTime = recurEnd ? new Date(`${recurEnd}T${sessionTime}:00`) : null
-      if (endDateTime && startDateTime <= endDateTime) {
-        onChange({
-          enabled: true,
-          recur_start: startDateTime.toISOString(),
-          recur_end: endDateTime.toISOString(),
-          every_n_weeks: everyNWeeks,
-        })
-      }
-    }
-    else {
-      onChange(undefined)
-    }
-  }, [isEnabled, recurStart, recurEnd, everyNWeeks, sessionTime, onChange])
+  const updateRepetition = (
+    days: number[],
+    weeks: number,
+    end: string
+  ) => {
+    if (days.length === 0) return;
+    if (new Date(end) <= new Date(sessionDate)) return;
 
-  const handleToggle = (checked: boolean) => {
-    setIsEnabled(checked)
+    const config: RepetitionConfig = {
+      recur_start: new Date(`${sessionDate}T${sessionTime}`).toISOString(),
+      recur_end: new Date(`${end}T${sessionTime}`).toISOString(),
+      every_n_weeks: weeks,
+      days: days.sort((a, b) => a - b),
+    };
+
+    onChange(config);
+  };
+
+  const handleToggleRecurring = (checked: boolean) => {
+    setIsRecurring(checked);
+    setIsExpanded(checked);
+
     if (!checked) {
-      // Reset values when disabled
-      setRecurStart(sessionDate)
-      setRecurEnd('')
-      setEveryNWeeks(1)
+      onChange(undefined);
+      return;
     }
-  }
 
-  // Calculate default end date (3 months from start)
-  const getDefaultEndDate = () => {
-    const date = new Date(recurStart || sessionDate)
-    date.setMonth(date.getMonth() + 3)
-    return date.toISOString().split('T')[0]
-  }
+    // Auto-apply when toggling on
+    updateRepetition(selectedDays, everyNWeeks, endDate);
+  };
 
-  // Calculate number of sessions
-  const calculateSessionCount = () => {
-    if (!isEnabled || !recurEnd || !recurStart) {
-      return 0
+  React.useEffect(() => {
+    if (isRecurring) {
+      updateRepetition(selectedDays, everyNWeeks, endDate);
     }
-    const start = new Date(recurStart)
-    const end = new Date(recurEnd)
-    const diffTime = Math.abs(end.getTime() - start.getTime())
-    const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7))
-    return Math.floor(diffWeeks / everyNWeeks) + 1
-  }
+  }, [selectedDays, everyNWeeks, endDate, isRecurring]);
+
+  const getRecurrenceSummary = () => {
+    if (!isRecurring || selectedDays.length === 0) return "";
+
+    const dayNames = selectedDays
+      .map((d) => DAYS_OF_WEEK.find((day) => day.value === d)?.label)
+      .join(", ");
+
+    const endDateFormatted = new Date(endDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    return `Every ${everyNWeeks} week${everyNWeeks !== 1 ? "s" : ""} on ${dayNames} until ${endDateFormatted}`;
+  };
 
   return (
-    <Card className="border-none bg-transparent shadow-none">
-      <CardHeader className="pb-4 -mt-3 px-0">
-        <div className="flex items-center justify-between">
-          <FormLabel className="flex items-center gap-3 ">
-            <>
-              <Repeat className="w-4 h-4" />
-              Repetition
-            </>
-            <Switch
-              checked={isEnabled}
-              onCheckedChange={handleToggle}
-              aria-label="Enable recurring sessions"
-              className={cn(isEnabled ? 'bg-accent' : 'bg-border', 'transition-colors')}
-            />
-          </FormLabel>
-        </div>
-      </CardHeader>
-      {isEnabled && (
-        <CardContent className="space-y-4 pt-0 border border-border rounded-md">
-          {/* Frequency Selector */}
-          <div className="space-y-2 rounded-md pt-3">
-            <Label htmlFor="frequency" className="text-sm font-medium">
-              Frequency
-            </Label>
+    <div className="border border-gray-300 rounded-lg overflow-hidden">
+      {/* Header */}
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-3 hover:bg-gray-50 border border-gray-300 transition-colors"
+      >
+        <label className="flex items-center gap-3 cursor-pointer flex-1">
+          <Repeat className="w-4 h-4 text-secondary" />
+          <div className="text-left">
+            <p className="text-sm font-medium text-primary">Recurring Session</p>
+            {isRecurring && selectedDays.length > 0 && (
+              <p className="text-xs text-secondary mt-1">{getRecurrenceSummary()}</p>
+            )}
+          </div>
+          <Switch
+            checked={isRecurring}
+            onCheckedChange={handleToggleRecurring}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "data-[state=checked]:bg-primary",
+              "data-[state=unchecked]:bg-gray-300",
+              "data-[state=unchecked]:border-gray-400"
+            )}          />
+        </label>
+        {isExpanded ? (
+          <ChevronUp className="w-4 h-4 text-secondary ml-2" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-secondary ml-2" />
+        )}
+      </button>
+
+      {/* Expanded Content */}
+      {isExpanded && isRecurring && (
+        <div className="p-4 space-y-4 border-t">
+          {/* Every N Weeks */}
+          <div>
+            <p className="text-xs text-secondary mb-1">Frequency</p>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Repeat every</span>
+              <span className="text-sm">Every</span>
               <Input
                 type="number"
                 min="1"
-                max="52"
+                max="12"
                 value={everyNWeeks}
                 onChange={(e) => {
-                  const val = Number.parseInt(e.target.value)
-                  if (!Number.isNaN(val) && val > 0) {
-                    setEveryNWeeks(val)
-                  }
+                  const val = Math.max(1, Number.parseInt(e.target.value) || 1);
+                  setEveryNWeeks(val);
                 }}
-                className="w-min max-w-[4rem]"
+                className="w-16 border border-gray-300"
               />
-              <span className="text-sm text-muted-foreground">
-                {everyNWeeks === 1 ? 'week' : 'weeks'}
-              </span>
+              <span className="text-sm">week{everyNWeeks !== 1 ? "s" : ""}</span>
             </div>
           </div>
 
-          {/* Date Range */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="recur-start" className="text-sm font-medium flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                Starts on
-              </Label>
-              <Input
-                id="recur-start"
-                type="date"
-                value={recurStart}
-                onChange={e => setRecurStart(e.target.value)}
-                min={sessionDate}
-                className="text-sm"
-              />
+          {/* Days of Week Selection */}
+          <div>
+            <p className="text-xs text-secondary mb-2">Days of Week</p>
+            <div className="grid grid-cols-5 gap-1">
+              {DAYS_OF_WEEK.map((day) => (
+                <button
+                  key={day.value}
+                  type="button"
+                  onClick={() => handleDayToggle(day.value)}
+                  className={cn(
+                    "py-2 px-1 text-xs font-medium rounded transition-all",
+                    selectedDays.includes(day.value)
+                      ? "bg-primary text-white"
+                      : "bg-gray-50 text-secondary hover:bg-gray-100"
+                  )}
+                >
+                  {day.label}
+                </button>
+              ))}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="recur-end" className="text-sm font-medium flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                Ends on
-              </Label>
-              <Input
-                id="recur-end"
-                type="date"
-                value={recurEnd}
-                onChange={e => setRecurEnd(e.target.value)}
-                min={recurStart || sessionDate}
-                placeholder={getDefaultEndDate()}
-                className="text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Session Count Preview */}
-          {recurEnd && (
-            <div className="bg-muted/50 rounded-md p-3">
-              <p className="text-sm text-muted-foreground">
-                This will create approximately
-                {' '}
-                <span className="font-semibold text-foreground">
-                  {calculateSessionCount()}
-                  {' '}
-                  sessions
-                </span>
-                {everyNWeeks === 1
-                  ? ' (weekly)'
-                  : ` (every ${everyNWeeks} weeks)`}
+            {selectedDays.length === 0 && (
+              <p className="text-xs text-red-500 mt-1">
+                Please select at least one day
               </p>
-            </div>
-          )}
-        </CardContent>
+            )}
+          </div>
+
+          {/* End Date */}
+          <div>
+            <p className="text-xs text-secondary mb-1">Recurrence End Date</p>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              min={sessionDate}
+              className="border border-gray-300"
+            />
+            {new Date(endDate) <= new Date(sessionDate) && (
+              <p className="text-xs text-red-500 mt-1">
+                End date must be after the session date
+              </p>
+            )}
+          </div>
+
+          {/* Summary Card */}
+          {selectedDays.length > 0 &&
+            new Date(endDate) > new Date(sessionDate) && (
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded">
+                <p className="text-sm font-medium text-primary mb-2">Summary:</p>
+                <ul className="text-xs text-secondary space-y-1">
+                  <li>
+                    • First session: {new Date(sessionDate).toLocaleDateString()}
+                  </li>
+                  <li>
+                    • Repeats every {everyNWeeks} week
+                    {everyNWeeks !== 1 ? "s" : ""} on{" "}
+                    {selectedDays
+                      .map((d) => DAYS_OF_WEEK.find((day) => day.value === d)?.label)
+                      .join(", ")}
+                  </li>
+                  <li>
+                    • Until: {new Date(endDate).toLocaleDateString()}
+                  </li>
+                </ul>
+              </div>
+            )}
+        </div>
       )}
-    </Card>
-  )
+    </div>
+  );
 }

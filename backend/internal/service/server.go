@@ -8,7 +8,10 @@ import (
 	"specialstandard/internal/service/handler/auth"
 	"specialstandard/internal/service/handler/game_content"
 	"specialstandard/internal/service/handler/game_result"
+	newsletterhandler "specialstandard/internal/service/handler/newsletter"
 	"specialstandard/internal/service/handler/resource"
+	s3handler "specialstandard/internal/service/handler/s3"
+	"specialstandard/internal/service/handler/school"
 	"specialstandard/internal/service/handler/session"
 	"specialstandard/internal/service/handler/session_resource"
 	sessionstudent "specialstandard/internal/service/handler/session_student"
@@ -22,6 +25,8 @@ import (
 	"context"
 	"net/http"
 	supabase_auth "specialstandard/internal/auth"
+
+	"specialstandard/internal/service/handler/district"
 
 	go_json "github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
@@ -74,12 +79,12 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	// Use logging middleware
 	app.Use(logger.New())
 
-	// Use CORS middleware to configure CORS and handle preflight/OPTIONS requests.
+	// Use CORS middleware
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:3000,http://localhost:3001,http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:3000,https://clownfish-app-wq7as.ondigitalocean.app,https://king-prawn-app-n5vk6.ondigitalocean.app",
-		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS", // Using these methods.
+		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowCredentials: true, // Allow cookies
+		AllowCredentials: true,
 		ExposeHeaders:    "Content-Length, X-Request-ID",
 	}))
 
@@ -96,16 +101,21 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 
 	apiV1 := app.Group("/api/v1")
 
+	// S3 presign endpoint - ONLY ONCE, AFTER apiV1 is created
+	s3Handler := s3handler.NewHandler(bucket)
+	apiV1.Post("/s3/presign", s3Handler.GeneratePresignedURL)
+
 	apiV1.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusOK)
 	})
-	// Setup
 
 	SupabaseAuthHandler := auth.NewHandler(config.Supabase, repo.Therapist)
 
 	authGroup := apiV1.Group("/auth")
 	authGroup.Post("/login", SupabaseAuthHandler.Login)
 	authGroup.Post("/signup", SupabaseAuthHandler.SignUp)
+	authGroup.Post("/forgot-password", SupabaseAuthHandler.ForgotPassword)
+	authGroup.Put("/update-password", SupabaseAuthHandler.UpdatePassword)
 
 	verificationHandler := verification.NewHandler(
 		repo.Verification,
@@ -128,6 +138,8 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 			return c.Next()
 		})
 	}
+
+	authGroup.Delete("/delete-account/:id", SupabaseAuthHandler.DeleteAccount)
 
 	themeHandler := theme.NewHandler(repo.Theme)
 	apiV1.Route("/themes", func(r fiber.Router) {
@@ -193,9 +205,10 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Patch("/:id", sessionHandler.PatchSessions)
 		r.Get("/:id/students", sessionHandler.GetSessionStudents)
 		r.Delete("/:id", sessionHandler.DeleteSessions)
+		r.Delete("/:id/recurring", sessionHandler.DeleteRecurringSessions)
 	})
 
-	gameContentHandler := game_content.NewHandler(repo.GameContent)
+	gameContentHandler := game_content.NewHandler(repo.GameContent, bucket)
 	apiV1.Route("/game-contents", func(r fiber.Router) {
 		r.Get("/", gameContentHandler.GetGameContents)
 	})
@@ -205,6 +218,21 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Get("/", gameResultsHandler.GetGameResults)
 		r.Post("/", gameResultsHandler.PostGameResult)
 	})
+
+	districtHandler := district.NewHandler(repo.District)
+	apiV1.Route("/districts", func(r fiber.Router) {
+		r.Get("/", districtHandler.GetDistricts)
+		r.Get("/:id", districtHandler.GetDistrictByID)
+	})
+
+	schoolHandler := school.NewHandler(repo.School)
+	apiV1.Route("/schools", func(r fiber.Router) {
+		r.Get("/", schoolHandler.GetSchools)
+	})
+
+	// Newsletter endpoint
+	newsletterHandler := newsletterhandler.NewHandler(repo.Newsletter, bucket)
+	apiV1.Get("/newsletter/by-date", newsletterHandler.GetNewsletterByDate)
 
 	// Handle 404 - Route not found
 	app.Use(func(c *fiber.Ctx) error {

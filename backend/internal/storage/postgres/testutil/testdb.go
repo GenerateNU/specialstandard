@@ -129,6 +129,23 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 
+	_, err = pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS session_parent (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    therapist_id UUID NOT NULL REFERENCES therapist(id) ON DELETE RESTRICT,
+    days SMALLINT[],
+    every_n_weeks INT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    CHECK (end_date >= start_date)
+);
+CREATE INDEX IF NOT EXISTS idx_session_parent_therapist ON session_parent(therapist_id);
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Create student table (with foreign key to therapist)
 	_, err = pool.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS student (
@@ -148,16 +165,17 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 
 	// Create sessions table
 	_, err = pool.Exec(ctx, `
-        CREATE TABLE IF NOT EXISTS sessions (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-			therapist_id UUID NOT NULL,
-			session_date DATE NOT NULL,
-			start_time TIME,
-			end_time TIME,
-			notes TEXT,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`)
+        CREATE TABLE IF NOT EXISTS session (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    start_datetime TIMESTAMPTZ NOT NULL,
+    end_datetime TIMESTAMPTZ NOT NULL,
+    session_parent_id UUID NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (session_parent_id) REFERENCES session_parent(id) ON DELETE CASCADE,
+    CHECK (end_datetime > start_datetime)
+);`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +218,7 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
    			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
    			theme_id UUID NOT NULL,
    			grade_level INTEGER CHECK (grade_level >= 0 AND grade_level <= 12),
-   			date DATE,
+   			week INT CHECK (week >= 0 AND week <= 4),
    			type VARCHAR(50),
    			title VARCHAR(100),
    			category VARCHAR(100),
@@ -244,6 +262,10 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 		ALTER TABLE session_rating
 		ADD CONSTRAINT unique_session_student_category 
 		UNIQUE (session_student_id, category);
+
+		ALTER TABLE session
+			ADD COLUMN session_name VARCHAR(255) NOT NULL,
+			ADD COLUMN location VARCHAR(255);
 	`)
 	if err != nil {
 		t.Fatal(err)
@@ -318,6 +340,19 @@ func createTables(t testing.TB, pool *pgxpool.Pool) {
 			FOREIGN KEY (session_student_id) REFERENCES session_student(id) ON DELETE CASCADE,
 			FOREIGN KEY (content_id) REFERENCES game_content(id) ON DELETE RESTRICT
 		);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = pool.Exec(ctx, `CREATE TYPE exercise_type AS ENUM ('game', 'pdf');
+		CREATE TYPE game_type AS ENUM ('drag and drop', 'spinner', 'word/image matching', 'flashcards');
+
+		ALTER TABLE game_content
+		ADD COLUMN exercise_type exercise_type NOT NULL DEFAULT 'game';
+
+		ALTER TABLE game_content
+		ADD COLUMN applicable_game_types game_type[] DEFAULT '{}';
+		`)
 	if err != nil {
 		t.Fatal(err)
 	}
