@@ -20,7 +20,6 @@ export interface MatchingCardContent {
 interface WordImageMatchingGameInterfaceProps {
   session_student_id: number
   session_id: string
-  student_id: string
   themeID: string
   themeName: string | null
   difficulty: string
@@ -31,7 +30,6 @@ interface WordImageMatchingGameInterfaceProps {
 export default function WordImageMatchingGameInterface({
   session_student_id,
   session_id,
-  student_id,
   themeID,
   themeName,
   difficulty,
@@ -49,7 +47,6 @@ export default function WordImageMatchingGameInterface({
   const gameResultsHook = useGameResults({
     session_student_id,
     session_id,
-    student_id
   })
 
   const [shuffledCards, setShuffledCards] = useState<MatchingCardContent[]>([])
