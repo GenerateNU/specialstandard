@@ -139,6 +139,8 @@ function GamesPageContent() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds[0] ?? '0',
                   });
                   router.push(`/games/word-image-match?${params.toString()}`);
                 }}
