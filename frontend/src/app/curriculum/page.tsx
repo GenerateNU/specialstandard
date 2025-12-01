@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, ArrowLeft, BookOpen, Download, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
+import { AlertCircle, BookOpen, Download, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
