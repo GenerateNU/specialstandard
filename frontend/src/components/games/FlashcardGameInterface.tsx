@@ -13,7 +13,7 @@ import {
 import './flashcard.css'
 import { useGameResults } from '@/hooks/useGameResults'
 
-const CATEGORIES = {
+export const CATEGORIES = {
   [GetGameContentsCategory.receptive_language]: { 
     label: 'Receptive Language', 
     icon: '👂', 
