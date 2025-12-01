@@ -11,6 +11,7 @@ export default function CompletePage() {
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [needsMFA, setNeedsMFA] = useState(true);
+  const [tempUserId, setTempUserId] = useState<string | null>(null);
 
   const { completeMFALogin } = useAuthContext();
 
@@ -21,7 +22,17 @@ export default function CompletePage() {
       const data = JSON.parse(onboardingData);
       setUserName(data.firstName || "");
     }
-  }, []);
+
+    // Get temp userId from localStorage (stored during signup)
+    const storedTempUserId = localStorage.getItem("temp_userId");
+    if (storedTempUserId) {
+      setTempUserId(storedTempUserId);
+    } else {
+      // If no temp userId, something went wrong - redirect to signup
+      console.error("No temp userId found");
+      router.push("/signup");
+    }
+  }, [router]);
 
   const handleMFAVerified = () => {
     completeMFALogin();
@@ -37,11 +48,23 @@ export default function CompletePage() {
     router.push("/");
   };
 
+  // Show loading if we don't have userId yet
+  if (!tempUserId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   // Show MFA verification first
   if (needsMFA) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <EmailMFAVerification onVerified={handleMFAVerified} />
+        <EmailMFAVerification
+          onVerified={handleMFAVerified}
+          userId={tempUserId}
+        />
       </div>
     );
   }

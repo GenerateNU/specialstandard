@@ -1,112 +1,70 @@
+import type {
+  PostVerificationSendCodeBody,
+  PostVerificationVerifyBody,
+} from "@/lib/api/theSpecialStandardAPI.schemas";
+import { getVerification } from "@/lib/api/verification";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
-export interface SendVerificationResponse {
-  success: boolean;
-  messageId?: string;
-  error?: string;
-}
-
-export interface VerifyCodeResponse {
-  success: boolean;
-  verified?: boolean;
-  error?: string;
-}
-
-export const useEmailMFA = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export const useEmailMFA = (userId: string) => {
   const [codeSent, setCodeSent] = useState(false);
+  const api = getVerification();
+
+  const sendCodeMutation = useMutation({
+    mutationFn: (body: PostVerificationSendCodeBody) =>
+      api.postVerificationSendCode(body),
+    onSuccess: () => {
+      setCodeSent(true);
+    },
+  });
+
+  const verifyCodeMutation = useMutation({
+    mutationFn: (body: PostVerificationVerifyBody) =>
+      api.postVerificationVerify(body),
+  });
 
   const sendVerificationCode = async (): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-
     try {
-      // Get the temp JWT from localStorage
-      const jwt =
-        localStorage.getItem("temp_jwt") || localStorage.getItem("jwt");
-
-      const response = await fetch(
-        "http://localhost:8080/api/v1/verification/send-code",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`, // Add JWT to header
-          },
-        }
-      );
-
-      const data: SendVerificationResponse = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to send verification code");
-      }
-
-      setCodeSent(true);
+      await sendCodeMutation.mutateAsync({ user_id: userId });
       return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
+      console.error("Send code error:", err);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   const verifyCode = async (code: string): Promise<boolean> => {
     if (!code || code.length !== 6) {
-      setError("Please enter a valid 6-digit code");
       return false;
     }
 
-    setLoading(true);
-    setError(null);
-
     try {
-      // Get the temp JWT from localStorage
-      const jwt =
-        localStorage.getItem("temp_jwt") || localStorage.getItem("jwt");
-
-      const response = await fetch(
-        "http://localhost:8080/api/v1/verification/verify",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
-          },
-          body: JSON.stringify({ code }),
-        }
-      );
-
-      const data: VerifyCodeResponse = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Verification failed");
-      }
-
-      return data.verified || false;
+      const response = await verifyCodeMutation.mutateAsync({
+        code,
+        user_id: userId,
+      });
+      return response.verified || false;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
+      console.error("Verify code error:", err);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   const resetState = () => {
     setCodeSent(false);
-    setError(null);
+    sendCodeMutation.reset();
+    verifyCodeMutation.reset();
   };
 
   return {
     sendVerificationCode,
     verifyCode,
     resetState,
-    loading,
-    error,
+    loading: sendCodeMutation.isPending || verifyCodeMutation.isPending,
+    error:
+      sendCodeMutation.error?.message ||
+      verifyCodeMutation.error?.message ||
+      null,
     codeSent,
   };
 };

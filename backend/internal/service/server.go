@@ -117,6 +117,15 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 	authGroup.Post("/forgot-password", SupabaseAuthHandler.ForgotPassword)
 	authGroup.Put("/update-password", SupabaseAuthHandler.UpdatePassword)
 
+	if !config.TestMode {
+		apiV1.Use(supabase_auth.Middleware(&config.Supabase))
+	} else {
+		apiV1.Use(func(c *fiber.Ctx) error {
+			c.Locals("user", "test-user")
+			return c.Next()
+		})
+	}
+
 	verificationHandler := verification.NewHandler(
 		repo.Verification,
 		repo.GetDB(),
@@ -129,15 +138,6 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		r.Post("/verify", verificationHandler.VerifyCode)
 		r.Post("/resend", verificationHandler.ResendCode)
 	})
-
-	if !config.TestMode {
-		apiV1.Use(supabase_auth.Middleware(&config.Supabase))
-	} else {
-		apiV1.Use(func(c *fiber.Ctx) error {
-			c.Locals("user", "test-user")
-			return c.Next()
-		})
-	}
 
 	authGroup.Delete("/delete-account/:id", SupabaseAuthHandler.DeleteAccount)
 

@@ -11,7 +11,9 @@ interface AuthContextType {
   userId: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: PostAuthLoginBody) => Promise<{ requiresMFA: boolean }>;
+  login: (
+    credentials: PostAuthLoginBody
+  ) => Promise<{ requiresMFA: boolean; userId?: string | null }>;
   completeMFALogin: () => void;
   signup: (credentials: PostAuthSignupBody) => Promise<void>;
   logout: () => void;
@@ -32,27 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if user is authenticated on mount
   useEffect(() => {
     const checkAuth = () => {
-      // Dev mode bypass - DISABLED - uncomment to use mock auth in dev
-
-      // const isDevMode = process.env.NODE_ENV === 'development'
-      // if (isDevMode) {
-      //   const mockUserId = 'dev-user-123'
-      //   const mockToken = 'dev-mock-token'
-
-      //   // Only set if not already set
-      //   if (!localStorage.getItem('userId')) {
-      //     localStorage.setItem('userId', mockUserId)
-      //     localStorage.setItem('jwt', mockToken)
-      //   }
-
-      //   setUserId(localStorage.getItem("userId"));
-      //   setIsLoading(false);
-      //   return;
-      // }
-
       const storedUserId = localStorage.getItem("userId");
       const storedJwt = localStorage.getItem("jwt");
 
+      // Only authenticate if we have REAL jwt and userId (not temp ones)
       if (storedJwt && storedUserId) {
         setUserId(storedUserId);
       } else {
@@ -78,8 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userId: response.user.id,
         });
 
-        // Return that MFA is required
-        return { requiresMFA: true };
+        // Return that MFA is required AND return the userId
+        return { requiresMFA: true, userId: response.user.id };
       }
 
       // If no MFA required (shouldn't happen in your case), authenticate immediately
@@ -91,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserId(response.user.id);
       }
 
-      return { requiresMFA: false };
+      return { requiresMFA: false, userId: response.user?.id || null };
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -110,6 +95,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUserId(pendingMFAAuth.userId);
       setPendingMFAAuth(null);
+    } else {
+      // Fallback: if pendingMFAAuth is null but we have temp credentials
+      const tempJwt = localStorage.getItem("temp_jwt");
+      const tempUserId = localStorage.getItem("temp_userId");
+
+      if (tempJwt && tempUserId) {
+        localStorage.setItem("jwt", tempJwt);
+        localStorage.setItem("userId", tempUserId);
+
+        // Clean up temp storage
+        localStorage.removeItem("temp_jwt");
+        localStorage.removeItem("temp_userId");
+
+        setUserId(tempUserId);
+      }
     }
   };
 
@@ -117,14 +117,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await userSignup(credentials);
 
-      if (response.access_token) {
-        localStorage.setItem("jwt", response.access_token);
-      }
-      if (response.user?.id) {
-        localStorage.setItem("userId", response.user.id);
-        setUserId(response.user.id);
+      // Store as temp credentials (similar to login) - DON'T authenticate yet
+      if (response.access_token && response.user?.id) {
+        localStorage.setItem("temp_jwt", response.access_token);
+        localStorage.setItem("temp_userId", response.user.id);
+
+        setPendingMFAAuth({
+          jwt: response.access_token,
+          userId: response.user.id,
+        });
       }
 
+      // DON'T set userId or authenticate - wait for MFA
       router.push("/signup/link");
     } catch (error) {
       console.error("Signup failed:", error);
@@ -136,6 +140,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clear localStorage
     localStorage.removeItem("jwt");
     localStorage.removeItem("userId");
+    localStorage.removeItem("temp_jwt");
+    localStorage.removeItem("temp_userId");
     localStorage.removeItem("recentlyViewedStudents");
 
     setPendingMFAAuth(null);

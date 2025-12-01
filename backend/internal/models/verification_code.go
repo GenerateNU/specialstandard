@@ -30,3 +30,8 @@ type VerifyCodeResponse struct {
 	Message  string `json:"message,omitempty"`
 	Error    string `json:"error,omitempty"`
 }
+
+type SupabaseUser struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+}

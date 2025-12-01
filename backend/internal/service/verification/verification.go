@@ -9,56 +9,17 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/resend/resend-go/v3"
 )
 
-// extractUserIDFromToken extracts the user ID from a JWT token
-func (h *Handler) extractUserIDFromToken(tokenString string) (string, error) {
-	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
-	if err != nil {
-		return "", err
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return "", fmt.Errorf("invalid token claims")
-	}
-
-	userID, ok := claims["sub"].(string)
-	if !ok {
-		return "", fmt.Errorf("user ID not found in token")
-	}
-
-	return userID, nil
-}
-
 // SendVerificationCode handles sending verification codes via email
 func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
-	// Extract JWT from Authorization header
-	authHeader := c.Get("Authorization")
-	if authHeader == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(models.SendCodeResponse{
-			Success: false,
-			Error:   "No authentication token provided",
-		})
-	}
-
-	token := strings.Replace(authHeader, "Bearer ", "", 1)
-	
-	// Parse the JWT to get the user ID
-	userID, err := h.extractUserIDFromToken(token)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(models.SendCodeResponse{
-			Success: false,
-			Error:   "Invalid authentication token",
-		})
-	}
+	userID := c.Locals("userID").(string)
 
 	// Get user email from auth.users table
 	var email string
 	query := `SELECT email FROM auth.users WHERE id = $1`
-	err = h.db.QueryRow(c.Context(), query, userID).Scan(&email)
+	err := h.db.QueryRow(c.Context(), query, userID).Scan(&email)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.SendCodeResponse{
 			Success: false,
@@ -121,24 +82,8 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 // Temporarily update your VerifyCode function with debugging:
 
 func (h *Handler) VerifyCode(c *fiber.Ctx) error {
-	// Extract JWT from Authorization header
-	authHeader := c.Get("Authorization")
-	if authHeader == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(models.VerifyCodeResponse{
-			Success: false,
-			Error:   "No authentication token provided",
-		})
-	}
-
-	token := strings.Replace(authHeader, "Bearer ", "", 1)
-	userID, err := h.extractUserIDFromToken(token)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(models.VerifyCodeResponse{
-			Success: false,
-			Error:   "Invalid authentication token",
-		})
-	}
-
+	userID := c.Locals("userID").(string)
+	
 	var req models.VerifyCodeRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.VerifyCodeResponse{

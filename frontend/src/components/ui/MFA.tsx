@@ -3,14 +3,16 @@ import React, { useState } from "react";
 
 interface EmailMFAVerificationProps {
   onVerified: () => void;
+  userId: string;
 }
 
 export const EmailMFAVerification: React.FC<EmailMFAVerificationProps> = ({
   onVerified,
+  userId,
 }) => {
   const [code, setCode] = useState("");
   const { sendVerificationCode, verifyCode, loading, error, codeSent } =
-    useEmailMFA();
+    useEmailMFA(userId);
 
   const handleSendCode = async () => {
     const success = await sendVerificationCode();

@@ -1,9 +1,12 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"specialstandard/internal/config"
+	"specialstandard/internal/models"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -52,6 +55,23 @@ func Middleware(cfg *config.Supabase) fiber.Handler {
 		if res.StatusCode != http.StatusOK {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid/Expired Token"})
 		}
+
+		// Read and parse the response body to get user data
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read response"})
+		}
+
+		var user models.SupabaseUser
+		if err := json.Unmarshal(body, &user); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to parse user data"})
+		}
+
+		// Store user ID in context for handlers to use
+		c.Locals("userID", user.ID)
+		
+		// Optionally store email too if handlers need it
+		c.Locals("email", user.Email)
 
 		return c.Next()
 	}

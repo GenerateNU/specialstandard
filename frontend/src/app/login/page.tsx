@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showError, setShowError] = useState(false);
   const [needsMFA, setNeedsMFA] = useState(false);
+  const [tempUserId, setTempUserId] = useState<string | null>(null); // Add this
   const hasRedirected = useRef(false);
 
   const { login, completeMFALogin, isAuthenticated } = useAuthContext();
@@ -53,10 +54,10 @@ export default function LoginPage() {
 
     try {
       const result = await login({ email, password, remember_me: rememberMe });
-      if (result.requiresMFA) {
+      if (result.requiresMFA && result.userId) {
+        setTempUserId(result.userId);
         setNeedsMFA(true);
       } else {
-        // No MFA required, redirect
         router.push("/");
       }
     } catch (err: any) {
@@ -71,14 +72,18 @@ export default function LoginPage() {
     completeMFALogin(); // Now set as authenticated
     hasRedirected.current = true;
     setNeedsMFA(false);
+    setTempUserId(null); // Clear temp userId
     router.push("/");
   };
 
   // Show MFA screen when needed
-  if (needsMFA) {
+  if (needsMFA && tempUserId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <EmailMFAVerification onVerified={handleMFAVerified} />
+        <EmailMFAVerification
+          userId={tempUserId}
+          onVerified={handleMFAVerified}
+        />
       </div>
     );
   }
@@ -197,12 +202,11 @@ export default function LoginPage() {
 
           <div className="text-center">
             <p className="text-sm text-secondary">
-              Forgot your password?
-              {' '}
+              Forgot your password?{" "}
               <Link href="/forgotPassword">
-                  <Button variant="link" size="sm">
-                    Reset
-                  </Button>
+                <Button variant="link" size="sm">
+                  Reset
+                </Button>
               </Link>
             </p>
           </div>
