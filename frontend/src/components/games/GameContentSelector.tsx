@@ -57,9 +57,10 @@ interface GameContentSelectorProps {
     questionType: GetGameContentsQuestionType
   }) => void
   onBack?: () => void
+  backLabel?: string
 }
 
-export function GameContentSelector({ onSelectionComplete, onBack }: GameContentSelectorProps) {
+export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: GameContentSelectorProps) {
   const [selectedTheme, setSelectedTheme] = React.useState<Theme | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = React.useState<number | null>(null)
   const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(null)
@@ -95,7 +96,7 @@ export function GameContentSelector({ onSelectionComplete, onBack }: GameContent
               onClick={onBack}
               className="mb-6 text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
             >
-              ← Back
+              ← {backLabel || 'Back'}
             </button>
           )}
           <h1 className="mb-8">Select Difficulty Level</h1>

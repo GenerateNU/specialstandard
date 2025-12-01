@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { BookOpen, Dumbbell } from 'lucide-react'
 import Link from 'next/link'
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
@@ -30,8 +31,9 @@ export default function CurriculumPage({ params }: PageProps) {
     setCurrentYear,
     setCurrentLevel,
   } = useSessionContext()
+  const router = useRouter()
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
-
+  
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -147,7 +149,7 @@ export default function CurriculumPage({ params }: PageProps) {
                   size="lg"
                   className="h-24 text-xl bg-pink hover:bg-pink-hover text-white gap-3"
                   onClick={() => {
-                    // TODO: Navigate to exercises page
+                  router.push(`/games?sessionId=${id}`)
                   }}
                 >
                   <Dumbbell className="w-6 h-6" />

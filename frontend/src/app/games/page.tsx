@@ -2,17 +2,22 @@
 
 import AppLayout from "@/components/AppLayout";
 import { GameContentSelector } from "@/components/games/GameContentSelector";
+import { useSessionContext } from "@/contexts/sessionContext";
 import type {
   GetGameContentsCategory,
   GetGameContentsQuestionType,
   Theme,
 } from "@/lib/api/theSpecialStandardAPI.schemas";
 import { BookOpen, Brain, Gamepad2, Image, Shuffle, SquareDashedMousePointer} from "lucide-react";
-import { useRouter } from "next/navigation";
-import React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense } from "react";
 
-export default function GamesPage() {
+function GamesPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { session, students } = useSessionContext();
+  const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000"; // could use this or the session context
+  const sessionStudentIds = students ? students.map((student) => student.sessionStudentId?.toString()) : [];
   const [selectedContent, setSelectedContent] = React.useState<{
     theme: Theme;
     difficultyLevel: number;
@@ -51,6 +56,8 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds[0] ?? '0'
                   });
                   router.push(`/games/flashcards?${params.toString()}`);
                 }}
@@ -69,6 +76,8 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds[0] ?? '0'
                   });
                   router.push(`/games/image-matching?${params.toString()}`);
                 }}
@@ -88,6 +97,8 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds[0] ?? '0',
                   });
                   router.push(`/games/memorymatch?${params.toString()}`);
                 }}
@@ -99,7 +110,7 @@ export default function GamesPage() {
                   Spin a wheel to test your skills!
                 </p>
               </button>
-
+              
               <button
                 onClick={() => {
                   const params = new URLSearchParams({
@@ -107,6 +118,8 @@ export default function GamesPage() {
                     difficulty: String(selectedContent.difficultyLevel),
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds[0] ?? '0',
                   });
                   router.push(`/games/drag-and-drop?${params.toString()}`);
                 }}
@@ -156,7 +169,19 @@ export default function GamesPage() {
   // Show content selector
   return (
     <AppLayout>
-      <GameContentSelector onSelectionComplete={handleContentSelection} />
+      <GameContentSelector
+        onSelectionComplete={handleContentSelection}
+        onBack={session ? () => router.push(`/sessions/${session.id}/curriculum`) : () =>router.back()}
+        backLabel={session ? "Back to Curriculum" : "Back"}
+      />
     </AppLayout>
+  );
+}
+
+export default function GamesPage() {
+  return (
+    <Suspense fallback={null}>
+      <GamesPageContent />
+    </Suspense>
   );
 }
