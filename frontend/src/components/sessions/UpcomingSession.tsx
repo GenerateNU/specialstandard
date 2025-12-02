@@ -2,11 +2,7 @@
 import moment from 'moment'
 import { useStudentSessions } from '@/hooks/useStudentSessions'
 import {Badge} from "@/components/ui/badge";
-import {getSchoolColor} from "@/lib/utils";
-import {yellow} from "ansis";
-import {useSessionStudents} from "@/hooks/useSessionStudents";
-import {useSession} from "@/hooks/useSessions";
-import {useStudents} from "@/hooks/useStudents";
+import {useSessionStudentsForSession} from "@/hooks/useSessionStudents";
 
 interface UpcomingSessionProps {
   studentId?: string
@@ -14,12 +10,19 @@ interface UpcomingSessionProps {
   latest: boolean
   individuality?: boolean
 }
-//
-// function determineIndividuality(sessionID: string) {
-//   // const { sessions } = useStudents({ sessionID })
-// }
 
-export default function UpcomingSession({ studentId, count, latest, individuality = false }: UpcomingSessionProps) {
+function IndividualityBadge({ sessionId }: { sessionId: string }) {
+    const { students } = useSessionStudentsForSession(sessionId)
+    const isIndividual = students && students.length <= 1
+
+    return (
+        <Badge className="bg-orange-disabled text-primary">
+            {isIndividual ? 'Individual' : 'Group'}
+        </Badge>
+    )
+}
+
+export default function UpcomingSession({ studentId, count, latest }: UpcomingSessionProps) {
   const { sessions, isLoading, error } = useStudentSessions(studentId || '')
 
   // Handle no studentId case
@@ -105,15 +108,7 @@ export default function UpcomingSession({ studentId, count, latest, individualit
                       </div>
                   </div>
                   <div>
-                      {/*<Badge className={}>*/}
-
-                      {/*</Badge>*/}
-
-
-
-                      <Badge className="">
-                          {sessionData.id}
-                      </Badge>
+                      <IndividualityBadge sessionId={sessionData.id} />
                   </div>
               </div>
             </div>
