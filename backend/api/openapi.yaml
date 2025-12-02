@@ -3031,7 +3031,7 @@ components:
           nullable: true
           description: When the session record was last updated
           example: "2024-01-15T10:35:00Z"
-        repitition:
+        repetition:
           $ref: "#/components/schemas/Repetition"
           nullable: true
           description: Repetition details for recurring sessions
