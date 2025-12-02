@@ -1,9 +1,12 @@
 'use client'
 
 import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
-import { Calendar, Clock, MapPin, Users } from 'lucide-react'
+import { Calendar, Clock, MapPin, Maximize2, Repeat, Users, X } from 'lucide-react'
 import Link from 'next/link'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
+import { formatRecurrence } from '@/hooks/useSessions'
+import { Avatar } from '@/components/ui/avatar'
+import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 
 interface SessionPreviewModalProps {
   session: Session
@@ -17,6 +20,7 @@ export default function SessionPreviewModal({
   onClose,
 }: SessionPreviewModalProps) {
   const { students } = useSessionStudentsForSession(session.id)
+  const isRecurring = !!session.repetition
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -41,8 +45,8 @@ export default function SessionPreviewModal({
   }
 
   // Smart positioning to stay on screen (only on client-side)
-  const MODAL_WIDTH = 360
-  const MODAL_HEIGHT = 400
+  const MODAL_WIDTH = 520
+  const MODAL_HEIGHT = 320
   const SPACING = 10
 
   let adjustedX = position.x
@@ -81,100 +85,124 @@ export default function SessionPreviewModal({
 
       {/* Modal Card - positioned next to the event */}
       <div
-        className="absolute bg-white border border-gray-300 rounded-xl shadow-2xl w-[360px] overflow-hidden"
+        className="absolute bg-white border-4 border-pink-500 rounded-3xl shadow-2xl w-[520px] overflow-hidden"
         style={{
           left: `${adjustedX}px`,
           top: `${adjustedY}px`,
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Content */}
-        <div className="p-5 space-y-3">
-          {/* Date */}
-          <div>
-            <div className="text-xs text-gray-500 mb-1 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
-              <span className="font-medium">Date</span>
-            </div>
-            <div className="bg-gray-50 rounded-md px-3 py-2 text-sm text-gray-900">
-              {formatDateTime(session.start_datetime)}
-            </div>
-          </div>
-
-          {/* Time */}
-          <div>
-            <div className="text-xs text-gray-500 mb-1 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
-              <span className="font-medium">Time</span>
-            </div>
-            <div className="bg-gray-50 rounded-md px-3 py-2 text-sm text-gray-900">
-              {formatTimeRange()}
-            </div>
-          </div>
-
-          {/* Location */}
-          <div>
-            <div className="text-xs text-gray-500 mb-1 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" />
-              <span className="font-medium">Location</span>
-            </div>
-            <div className="bg-gray-50 rounded-md px-3 py-2 text-sm text-gray-900">
-              {session.notes || 'No location specified'}
-            </div>
-          </div>
-
-          {/* Students */}
-          <div>
-            <div className="text-xs text-gray-500 mb-1 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5" />
-              <span className="font-medium">Students</span>
-            </div>
-            <div className="bg-gray-50 rounded-md px-3 py-2 text-sm text-gray-900">
-              {students.length === 0
-                ? (
-                    <span className="text-gray-500">No students assigned</span>
-                  )
-                : (
-                    <>
-                      {students.slice(0, 3).map((student, index) => (
-                        <div key={student.id || index}>
-                          {student.first_name}
-                          {' '}
-                          {student.last_name}
-                        </div>
-                      ))}
-                      {students.length > 3 && (
-                        <div className="text-gray-500 mt-1">
-                          and
-                          {' '}
-                          {students.length - 3}
-                          {' '}
-                          more
-                          {' '}
-                          {students.length - 3 === 1 ? 'student' : 'students'}
-                        </div>
-                      )}
-                    </>
-                  )}
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="border-t border-gray-200 p-3 bg-gray-50 flex gap-2">
+        {/* Header with buttons */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
           <Link
             href={`/sessions/${session.id}`}
-            className="flex-1 bg-blue hover:bg-blue-hover text-white text-center py-2 px-3 rounded-md text-sm font-medium transition-colors"
+            className="bg-white hover:bg-gray-100 rounded-lg p-2 transition-colors"
             onClick={onClose}
+            title="View full details"
           >
-            View Details
+            <Maximize2 className="w-5 h-5 text-pink-500" />
           </Link>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition-colors border border-gray-300"
+            className="bg-white hover:bg-gray-100 rounded-full p-2 transition-colors"
+            aria-label="Close"
           >
-            Close
+            <X className="w-5 h-5 text-pink-500" />
           </button>
+        </div>
+
+        {/* Content - Two column layout */}
+        <div className="p-6 pt-12 flex gap-6">
+          {/* Left Column - Session Details */}
+          <div className="flex-1 space-y-4">
+            {/* Session Name */}
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                {session.session_name}
+              </h2>
+              <p className="text-sm text-gray-600">
+                {session.location || 'School 3'}
+              </p>
+            </div>
+
+            {/* Date */}
+            <div className="flex items-start gap-2">
+              <Calendar className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-900 font-medium">
+                  {formatDateTime(session.start_datetime)}
+                </p>
+              </div>
+            </div>
+
+            {/* Time */}
+            <div className="flex items-start gap-2">
+              <Clock className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-900 font-medium">
+                  {formatTimeRange()}
+                </p>
+              </div>
+            </div>
+
+            {/* Location */}
+            {session.location && (
+              <div className="flex items-start gap-2">
+                <MapPin className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-900 font-medium">
+                    {session.location}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Recurring Info */}
+            {isRecurring && session.repetition && (
+              <div className="flex items-start gap-2">
+                <Repeat className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-900 font-medium">
+                    {formatRecurrence(session.repetition)}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Students */}
+          <div className="flex flex-col items-center">
+            <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">
+              Students
+            </p>
+            <div className="space-y-2">
+              {students.length === 0
+                ? (
+                    <p className="text-xs text-gray-500 text-center">
+                      No students assigned
+                    </p>
+                  )
+                : (
+                    students.slice(0, 4).map((student) => (
+                      <Avatar
+                        key={student.id}
+                        name={getAvatarName(
+                          student.first_name || 'Unknown',
+                          student.last_name || 'Student',
+                          student.id,
+                        )}
+                        variant={getAvatarVariant(student.id)}
+                        className="w-10 h-10 ring-2 ring-pink-200"
+                      />
+                    ))
+                  )}
+              {students.length > 4 && (
+                <div className="text-xs text-gray-500 text-center mt-1">
+                  +{students.length - 4} more
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useSession, useSessions } from "@/hooks/useSessions";
+import { formatRecurrence, useSession, useSessions } from "@/hooks/useSessions";
 import {
   useSessionStudents,
   useSessionStudentsForSession,
@@ -24,6 +24,7 @@ import {
   NotepadText,
   Pencil,
   Plus,
+  Repeat,
   Trash,
   X,
 } from "lucide-react";
@@ -38,7 +39,7 @@ interface PageProps {
 
 export default function SessionPage({ params }: PageProps) {
   const { id } = use(params);
-  const { session, isLoading: sessionLoading } = useSession(id);
+  const { session, isLoading: sessionLoading, isRecurring } = useSession(id);
   const { updateSession, deleteSession } = useSessions();
   const { students: sessionStudents, isLoading: studentsLoading } =
     useSessionStudentsForSession(id);
@@ -150,7 +151,7 @@ export default function SessionPage({ params }: PageProps) {
       location: session.location || "",
     });
     setIsEditingSession(true);
-    setMode("editStudents"); // Also enable student editing
+    setMode("editStudents");
   };
 
   const handleDelete = async () => {
@@ -185,15 +186,14 @@ export default function SessionPage({ params }: PageProps) {
       location: editedSession.location,
     });
     setIsEditingSession(false);
-    setMode("view"); // Exit student editing mode
+    setMode("view");
   };
 
   const handleCancelEdit = () => {
     setIsEditingSession(false);
-    setMode("view"); // Exit student editing mode
+    setMode("view");
   };
 
-  // Filter out students already in session
   const availableStudents = allStudents.filter(
     (student) => !sessionStudents.some((s) => s.id === student.id)
   );
@@ -270,34 +270,66 @@ export default function SessionPage({ params }: PageProps) {
         </div>
 
         {!isEditingSession ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {/* Date */}
-            <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-accent" />
-              <span className="text-lg">
-                {formatDateTime(session.start_datetime)}
-              </span>
+          <div className="mb-6 space-y-4">
+            {/* First row: Location, Date, Time, Recurring */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Location */}
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <MapPin className="w-4 h-4 text-accent" />
+                  Location
+                </label>
+                <p className="text-lg text-gray-900">
+                  {session.location || "No location"}
+                </p>
+              </div>
+
+              {/* Date */}
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Calendar className="w-4 h-4 text-accent" />
+                  Date
+                </label>
+                <p className="text-lg text-gray-900">
+                  {formatDateTime(session.start_datetime)}
+                </p>
+              </div>
+
+              {/* Time */}
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Clock className="w-4 h-4 text-accent" />
+                  Time
+                </label>
+                <p className="text-lg text-gray-900">
+                  {formatTimeRange()}
+                </p>
+              </div>
+
+              {/* Recurring Status */}
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Repeat className="w-4 h-4 text-accent" />
+                  Recurrence
+                </label>
+                <p className="text-lg text-gray-900">
+                  {isRecurring && session.repetition
+                    ? formatRecurrence(session.repetition)
+                    : "Does not repeat"}
+                </p>
+              </div>
             </div>
 
-            {/* Time */}
-            <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-              <Clock className="w-5 h-5 text-accent" />
-              <span className="text-lg">{formatTimeRange()}</span>
-            </div>
-
-            {/* Notes */}
-            <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-              <NotepadText className="w-5 h-5 text-accent" />
-              <span className="text-lg">{session.notes || "No notes"}</span>
-            </div>
-
-            {/* Location */}
-            <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-accent" />
-              <span className="text-lg">
-                {session.location || "No location"}
-              </span>
-            </div>
+            {/* Notes section - if exists */}
+            {session.notes && (
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <NotepadText className="w-4 h-4 text-accent" />
+                  Notes
+                </label>
+                <p className="text-lg text-gray-900">{session.notes}</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4 mb-6">
@@ -435,9 +467,10 @@ export default function SessionPage({ params }: PageProps) {
         {/* Current students list */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {sessionStudents.map((student, index) => (
-            <div
+            <Link
               key={student.id || `student-${index}`}
-              className="bg-card rounded-2xl p-6 shadow-sm border border-default flex items-center justify-between"
+              href={`/student/${student.id}`}
+              className="bg-card rounded-2xl p-6 shadow-sm border border-default flex items-center justify-between hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-4">
                 <Avatar
@@ -497,7 +530,7 @@ export default function SessionPage({ params }: PageProps) {
                   <X className="w-5 h-5" />
                 </Button>
               )}
-            </div>
+            </Link>
           ))}
         </div>
 
