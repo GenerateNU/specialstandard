@@ -204,8 +204,7 @@ function DragAndDropGame() {
       setCardStartTime(Date.now())
       gameResultsHook?.startCard(currentQuestion)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestionIndex])
+  }, [currentQuestionIndex, currentQuestion, gameResultsHook])
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)

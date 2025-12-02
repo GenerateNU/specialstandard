@@ -119,9 +119,10 @@ const SpinnerWheel: React.FC<{
       {availableWords.length > 1 ? (
         // ----- normal wheel -----
         <div
-          className="w-full h-full rounded-full relative overflow-hidden transition-transform duration-[4000] ease-out"
+          className="w-full h-full rounded-full relative overflow-hidden"
           style={{
             transform: `rotate(${rotation}deg)`,
+            transition: 'transform 4000ms ease-out'
           }}
         >
           <svg viewBox="0 0 100 100" className="w-full h-full">
@@ -209,6 +210,7 @@ export default function MemorymatchGameInterface({
   const [spinRotation, setSpinRotation] = useState(0);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [questionCount, setQuestionCount] = useState(0);
+  const [resultsSaved, setResultsSaved] = useState(false);
 
   const {
     gameContents,
@@ -367,6 +369,7 @@ export default function MemorymatchGameInterface({
     setCardStartTime(null);
     setTimeTaken(0);
     setQuestionCount(0);
+    setResultsSaved(false);
   };
 
   if (contentsLoading) {
@@ -560,11 +563,12 @@ export default function MemorymatchGameInterface({
                   for (const hook of gameResultsHooks) {
                     await hook.saveAllResults();
                   }
+                  setResultsSaved(true);
                 }}
-                disabled={gameResultsHooks.some(hook => hook.isSaving)}
-                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled"
+                disabled={gameResultsHooks.some(hook => hook.isSaving) || resultsSaved}
+                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
               >
-                {gameResultsHooks.some(hook => hook.isSaving) ? "Saving..." : "Save Progress"}
+                {gameResultsHooks.some(hook => hook.isSaving) ? "Saving..." : resultsSaved ? "Saved!" : "Save Progress"}
               </button>
             </div>
 

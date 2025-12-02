@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Check, RotateCw } from 'lucide-react'
+import { Check, RotateCw, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useGameContents } from '@/hooks/useGameContents'
 import type { 
@@ -44,7 +44,9 @@ interface FlashcardProps {
   isFlipped: boolean
   onFlip: () => void
   onMarkCorrect?: () => void
+  onMarkIncorrect?: () => void
   timeTaken?: number
+  incorrectAttempts?: number
 }
 
 interface FlashcardGameInterfaceProps {
@@ -57,13 +59,15 @@ interface FlashcardGameInterfaceProps {
   questionType: string
 }
 
-const Flashcard: React.FC<FlashcardProps> = ({ 
-  question, 
-  answer, 
-  isFlipped, 
+const Flashcard: React.FC<FlashcardProps> = ({
+  question,
+  answer,
+  isFlipped,
   onFlip,
   onMarkCorrect,
-  timeTaken
+  onMarkIncorrect,
+  timeTaken,
+  incorrectAttempts
 }) => {
   return (
     <div 
@@ -71,41 +75,89 @@ const Flashcard: React.FC<FlashcardProps> = ({
       style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(180deg)' : '' }}
       onClick={onFlip}
     >
-      {/* Front of card */}
+      {/* Front of card - Shows Image */}
       <div 
-        className="absolute inset-0 w-full h-full bg-card rounded-xl shadow-lg p-8 flex items-center justify-center backface-hidden border-2 border-default"
+        className="absolute inset-0 w-full h-full bg-card rounded-xl shadow-lg p-8 flex items-center justify-center backface-hidden border-2 border-default overflow-hidden"
+        
         style={{ backfaceVisibility: 'hidden' }}
       >
-        <div className="text-center">
-          <p className="text-muted text-sm mb-2">Question</p>
-          <p className="text-xl font-semibold text-primary">{question}</p>
+        <div className="text-center flex items-center justify-center w-full h-full">
+          {answer.startsWith('http') || answer.startsWith('https') ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <img 
+                src={answer} 
+                alt="Flashcard image"
+                className="max-w-full max-h-full object-contain rounded-lg"
+                style={{ maxHeight: '200px' }}
+                onError={(e) => {
+                  // Fallback to text if image fails to load
+                  e.currentTarget.style.display = 'none'
+                  const parent = e.currentTarget.parentElement
+                  if (parent) {
+                    const text = document.createElement('p')
+                    text.className = 'text-2xl font-bold text-primary'
+                    text.textContent = answer
+                    parent.appendChild(text)
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <p className="text-2xl font-bold text-primary">{answer}</p>
+          )}
         </div>
       </div>
       
-      {/* Back of card */}
+      {/* Back of card - Shows Word/Question */}
       <div 
-        className="absolute inset-0 w-full h-full bg-blue rounded-xl shadow-lg p-8 flex flex-col items-center justify-center backface-hidden"
+        className="absolute inset-0 w-full h-full bg-blue rounded-xl shadow-lg p-4 flex flex-col items-center justify-between backface-hidden overflow-hidden"
         style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
       >
-        <div className="text-center flex-1 flex items-center">
-          <p className="text-2xl font-bold text-white">{answer}</p>
+        <div className="text-center flex items-center justify-center w-full flex-1">
+          <div>
+            <p className="text-white/70 text-sm mb-2">Answer</p>
+            <p className="text-2xl font-semibold text-white">{question}</p>
+          </div>
         </div>
         
-        {onMarkCorrect && (
-          <div className="mt-4 flex items-center gap-3 text-white/70 text-sm">
-            {timeTaken !== undefined && (
-              <span>{timeTaken}s</span>
-            )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onMarkCorrect()
-              }}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors"
-              title="Mark as correct"
-            >
-              <Check className="w-5 h-5" />
-            </button>
+        {(onMarkCorrect || onMarkIncorrect) && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-2 text-white/70 text-sm">
+              {timeTaken !== undefined && (
+                <span>{timeTaken}s</span>
+              )}
+              {incorrectAttempts !== undefined && incorrectAttempts > 0 && (
+                <span className="text-red-300">• {incorrectAttempts} incorrect</span>
+              )}
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              {onMarkIncorrect && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onMarkIncorrect()
+                  }}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                  title="Mark as incorrect"
+                >
+                  <X className="w-4 h-4" />
+                  Incorrect
+                </button>
+              )}
+              {onMarkCorrect && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onMarkCorrect()
+                  }}
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                  title="Mark as correct"
+                >
+                  <Check className="w-4 h-4" />
+                  Correct
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -127,6 +179,8 @@ export default function FlashcardGameInterface({
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set())
   const [cardStartTime, setCardStartTime] = useState<number | null>(null)
   const [timeTaken, setTimeTaken] = useState(0)
+  const [resultsSaved, setResultsSaved] = useState(false)
+  const [incorrectAttempts, setIncorrectAttempts] = useState<Map<number, number>>(new Map())
 
   const { gameContents, isLoading: contentsLoading, error: contentsError } = useGameContents({
     theme_id: themeId,
@@ -175,8 +229,7 @@ export default function FlashcardGameInterface({
       setTimeTaken(0)
       startCard?.(limitedGameContents[currentCardIndex])
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCardIndex])
+  }, [currentCardIndex, limitedGameContents.length, startCard])
 
   // Update timer display
   useEffect(() => {
@@ -200,10 +253,50 @@ export default function FlashcardGameInterface({
     if (!currentGameResultsHook || !limitedGameContents[currentCardIndex]) return
     
     const finalTime = Math.floor((Date.now() - (cardStartTime || Date.now())) / 1000)
-    currentGameResultsHook.completeCard(limitedGameContents[currentCardIndex].id, finalTime)
+    const attempts = incorrectAttempts.get(currentCardIndex) || 0
     
-    setCurrentCardIndex(prev => prev + 1)
-    setCardStartTime(null)
+    console.log('✅ Marking card correct:', {
+      contentId: limitedGameContents[currentCardIndex].id,
+      finalTime,
+      attempts,
+      studentIndex: currentStudentIndex,
+      sessionStudentId: currentSessionStudentId
+    })
+    
+    currentGameResultsHook.completeCard(limitedGameContents[currentCardIndex].id, finalTime, attempts)
+    
+    console.log('📊 Current results after marking correct:', currentGameResultsHook.currentResults)
+    
+    // Unflip the card first, then advance after a small delay for smooth transition
+    setFlippedCards(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(currentCardIndex)
+      return newSet
+    })
+    
+    setTimeout(() => {
+      setCurrentCardIndex(prev => prev + 1)
+      setCardStartTime(null)
+    }, 300) // Wait for flip animation
+  }
+
+  const handleMarkIncorrect = () => {
+    if (!limitedGameContents[currentCardIndex]) return
+    
+    // Increment incorrect attempts for this card
+    setIncorrectAttempts(prev => {
+      const newMap = new Map(prev)
+      const current = newMap.get(currentCardIndex) || 0
+      newMap.set(currentCardIndex, current + 1)
+      return newMap
+    })
+    
+    // Flip the card back to show the image (front side)
+    setFlippedCards(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(currentCardIndex)
+      return newSet
+    })
   }
 
   if (contentsLoading) {
@@ -251,6 +344,7 @@ export default function FlashcardGameInterface({
               setFlippedCards(new Set())
               setCardStartTime(null)
               setTimeTaken(0)
+              setIncorrectAttempts(new Map())
             }}
             className="flex items-center gap-2 text-secondary hover:text-primary transition-colors"
           >
@@ -313,7 +407,9 @@ export default function FlashcardGameInterface({
                 })
               }}
               onMarkCorrect={currentGameResultsHook ? handleMarkCorrect : undefined}
+              onMarkIncorrect={currentGameResultsHook ? handleMarkIncorrect : undefined}
               timeTaken={flippedCards.has(currentCardIndex) ? timeTaken : undefined}
+              incorrectAttempts={incorrectAttempts.get(currentCardIndex) || 0}
             />
             <p className="text-center text-muted mt-4 text-sm">Click card to flip</p>
           </div>
@@ -372,6 +468,8 @@ export default function FlashcardGameInterface({
                   setFlippedCards(new Set())
                   setCardStartTime(null)
                   setTimeTaken(0)
+                  setResultsSaved(false)
+                  setIncorrectAttempts(new Map())
                 }}
                 className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover transition-colors"
               >
@@ -380,15 +478,34 @@ export default function FlashcardGameInterface({
               
               <button
                 onClick={async () => {
+                  console.log('💾 Save Progress clicked!')
+                  console.log('📊 All hooks and their results:')
+                  gameResultsHooks.forEach((hook, index) => {
+                    console.log(`Student ${index}:`, {
+                      sessionStudentId: session_student_ids[index],
+                      results: hook.currentResults,
+                      resultsCount: hook.currentResults.size
+                    })
+                  })
+                  
                   // Save all results for all students
-                  for (const hook of gameResultsHooks) {
-                    await hook.saveAllResults()
+                  try {
+                    for (let i = 0; i < gameResultsHooks.length; i++) {
+                      const hook = gameResultsHooks[i]
+                      console.log(`🔄 Saving for student ${i} (ID: ${session_student_ids[i]})...`)
+                      await hook.saveAllResults()
+                      console.log(`✅ Saved for student ${i}`)
+                    }
+                    setResultsSaved(true)
+                    console.log('✅ All results saved!')
+                  } catch (error) {
+                    console.error('❌ Error saving results:', error)
                   }
                 }}
-                disabled={gameResultsHooks.some(hook => hook.isSaving)}
-                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled"
+                disabled={gameResultsHooks.some(hook => hook.isSaving) || resultsSaved}
+                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
               >
-                {gameResultsHooks.some(hook => hook.isSaving) ? 'Saving...' : 'Save Progress'}
+                {gameResultsHooks.some(hook => hook.isSaving) ? 'Saving...' : resultsSaved ? 'Saved!' : 'Save Progress'}
               </button>
             </div>
             

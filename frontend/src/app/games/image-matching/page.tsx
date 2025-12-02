@@ -184,8 +184,7 @@ function ImageMatchingGame() {
       setCardStartTime(Date.now())
       gameResultsHook?.startCard(currentQuestion)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestionIndex])
+  }, [currentQuestionIndex, currentQuestion, gameResultsHook])
 
   if (isLoading) {
     return (
