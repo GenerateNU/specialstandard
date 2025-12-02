@@ -47,39 +47,26 @@ export default function UpcomingSession({ studentId }: UpcomingSessionProps) {
   }
 
   return (
-    <div className="h-full overflow-y-auto space-y-2 w-full p-2">
+    <div className="space-y-2 overflow-y-scroll h-[140px]">
       {upcomingSessionsWithStudentInfo.map((item, index) => {
         const { sessionData } = item
         const startMoment = moment(sessionData.start_datetime)
         const endMoment = moment(sessionData.end_datetime)
-        // const daysUntil = startMoment.diff(now, 'days')
 
         return (
           <div
             key={sessionData.id}
-            className="p-4 bg-card border-2 border-default rounded-[32px] flex flex-col justify-center min-h-20 w-full shadow-card"
+            className="p-4 bg-card h-[90px] border-2 border-default rounded-xl flex flex-col gap-1"
           >
-            {/* Session title and relative time */}
-            <div className="w-full flex justify-between items-center mb-2">
-              <div className="font-semibold text-base">
-                {sessionData.session_name || `Session #${index + 1}`}
-              </div>
-              {/* <div className="text-sm text-muted-foreground">
-                {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
-              </div> */}
-            </div>
-            
-            {/* Date */}
-            <div className="text-sm mb-1">
+            <span className="font-semibold text-sm">
+              {sessionData.session_name || `Session #${index + 1}`}
+            </span>
+            <span className="text-xs">
               {startMoment.format('dddd, MMMM D, YYYY')}
-            </div>
-            
-            {/* Time range */}
-            <div className="text-sm text-muted-foreground">
-              {startMoment.format('h:mm A')}
-              {' - '}
-              {endMoment.format('h:mm A')}
-            </div>
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {startMoment.format('h:mm A')} - {endMoment.format('h:mm A')}
+            </span>
           </div>
         )
       })}

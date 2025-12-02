@@ -232,7 +232,7 @@ function StudentPage() {
           </div>
 
           <div className="flex flex-col gap-6 shrink-0">
-            <div className="grid grid-cols-2 gap-8 h-[25vh] min-h-[200px]">
+            <div className="grid grid-cols-2 gap-8 h-60">
               {/* Student Profile */}
               <div
                 className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col relative`}
@@ -286,10 +286,7 @@ function StudentPage() {
                 <h2>
                   Upcoming Sessions
                 </h2>
-                <div className="flex-1 min-h-0">
-                  {/* Upcoming sessions content will go here */}
                   <UpcomingSession studentId={studentId} />
-                </div>
               </div>
             </div>
           </div>
