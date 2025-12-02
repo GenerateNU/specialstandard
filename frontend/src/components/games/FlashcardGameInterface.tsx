@@ -255,17 +255,7 @@ export default function FlashcardGameInterface({
     const finalTime = Math.floor((Date.now() - (cardStartTime || Date.now())) / 1000)
     const attempts = incorrectAttempts.get(currentCardIndex) || 0
     
-    console.log('✅ Marking card correct:', {
-      contentId: limitedGameContents[currentCardIndex].id,
-      finalTime,
-      attempts,
-      studentIndex: currentStudentIndex,
-      sessionStudentId: currentSessionStudentId
-    })
-    
     currentGameResultsHook.completeCard(limitedGameContents[currentCardIndex].id, finalTime, attempts)
-    
-    console.log('📊 Current results after marking correct:', currentGameResultsHook.currentResults)
     
     // Unflip the card first, then advance after a small delay for smooth transition
     setFlippedCards(prev => {
@@ -332,12 +322,14 @@ export default function FlashcardGameInterface({
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => router.back()}
-            className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
-          >
-            ← Back
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/games')}
+              className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
+            >
+              ← Back to Content
+            </button>
+          </div>
           <button
             onClick={() => {
               setCurrentCardIndex(0)
@@ -478,26 +470,13 @@ export default function FlashcardGameInterface({
               
               <button
                 onClick={async () => {
-                  console.log('💾 Save Progress clicked!')
-                  console.log('📊 All hooks and their results:')
-                  gameResultsHooks.forEach((hook, index) => {
-                    console.log(`Student ${index}:`, {
-                      sessionStudentId: session_student_ids[index],
-                      results: hook.currentResults,
-                      resultsCount: hook.currentResults.size
-                    })
-                  })
-                  
                   // Save all results for all students
                   try {
                     for (let i = 0; i < gameResultsHooks.length; i++) {
                       const hook = gameResultsHooks[i]
-                      console.log(`🔄 Saving for student ${i} (ID: ${session_student_ids[i]})...`)
                       await hook.saveAllResults()
-                      console.log(`✅ Saved for student ${i}`)
                     }
                     setResultsSaved(true)
-                    console.log('✅ All results saved!')
                   } catch (error) {
                     console.error('❌ Error saving results:', error)
                   }

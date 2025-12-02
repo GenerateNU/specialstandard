@@ -385,7 +385,7 @@ function DragAndDropGame() {
               className="text-blue hover:text-blue-hover flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              Back to Content
             </button>
             <div className="text-lg font-semibold">
               Question {currentQuestionIndex + 1} / {limitedGameContents.length}

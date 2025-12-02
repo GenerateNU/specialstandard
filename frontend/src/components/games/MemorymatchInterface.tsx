@@ -116,17 +116,39 @@ const SpinnerWheel: React.FC<{
         }}
       ></div>
       {/* Wheel - SVG based for clean pie segments */}
-      {availableWords.length > 1 ? (
-        // ----- normal wheel -----
-        <div
-          className="w-full h-full rounded-full relative overflow-hidden"
-          style={{
-            transform: `rotate(${rotation}deg)`,
-            transition: 'transform 4000ms ease-out'
-          }}
-        >
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            {availableWords.map((word, index) => (
+      <div
+        className="w-full h-full rounded-full relative overflow-hidden"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transition: 'transform 4000ms ease-out'
+        }}
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          {availableWords.length === 1 ? (
+            // Single word - full circle
+            <g key={availableWords[0].id}>
+              <circle
+                cx="50"
+                cy="50"
+                r="50"
+                fill={colors[0]}
+                stroke="#333"
+                strokeWidth="0.5"
+              />
+              <text
+                x="50"
+                y="30"
+                fill="black"
+                fontSize="6"
+                fontWeight="600"
+                textAnchor="middle"
+              >
+                {availableWords[0].question}
+              </text>
+            </g>
+          ) : (
+            // Multiple words - pie segments
+            availableWords.map((word, index) => (
               <g key={word.id}>
                 <path
                   d={createPieSlice(index)}
@@ -148,18 +170,11 @@ const SpinnerWheel: React.FC<{
                   {word.question}
                 </text>
               </g>
-            ))}
-          </svg>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 rounded-full border-2 border-gray-700"></div>
-        </div>
-      ) : (
-        // ----- clean placeholder -----
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="text-xl font-semibold text-primary">
-            Only one word left!
-          </div>
-        </div>
-      )}
+            ))
+          )}
+        </svg>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 rounded-full border-2 border-gray-700"></div>
+      </div>
 
       {/* Spin button */}
       <button
@@ -423,12 +438,14 @@ export default function MemorymatchGameInterface({
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => router.back()}
-            className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
-          >
-            ← Back
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/games')}
+              className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
+            >
+              ← Back to Content
+            </button>
+          </div>
           <button
             onClick={handleReset}
             className="flex items-center gap-2 text-secondary hover:text-primary transition-colors"
