@@ -8,7 +8,7 @@ import type {
   GetGameContentsQuestionType,
   Theme,
 } from "@/lib/api/theSpecialStandardAPI.schemas";
-import { BookOpen, Brain, Gamepad2, Image, SquareDashedMousePointer} from "lucide-react";
+import { BookOpen, Brain, Gamepad2, Image, Shuffle, SquareDashedMousePointer} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
 
@@ -119,7 +119,7 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0', 
+                    sessionStudentId: sessionStudentIds[0] ?? '0',
                   });
                   router.push(`/games/drag-and-drop?${params.toString()}`);
                 }}
@@ -129,6 +129,27 @@ function GamesPageContent() {
                 <h3 className="mb-2">Drag and Drop</h3>
                 <p className="text-secondary text-sm">
                   Drag and drop the story in order!
+                </p>
+              </button>
+
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    themeId: selectedContent.theme.id,
+                    difficulty: String(selectedContent.difficultyLevel),
+                    category: selectedContent.category,
+                    questionType: selectedContent.questionType,
+                    sessionId,
+                    sessionStudentId: sessionStudentIds[0] ?? '0',
+                  });
+                  router.push(`/games/word-image-match?${params.toString()}`);
+                }}
+                className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
+              >
+                <Shuffle className="w-12 h-12 text-blue mb-4 mx-auto" />
+                <h3 className="mb-2">Word-Image Matching</h3>
+                <p className="text-secondary text-sm">
+                  Match many words to many images in this game!
                 </p>
               </button>
 
@@ -150,8 +171,8 @@ function GamesPageContent() {
   // Show content selector
   return (
     <AppLayout>
-      <GameContentSelector 
-        onSelectionComplete={handleContentSelection} 
+      <GameContentSelector
+        onSelectionComplete={handleContentSelection}
         onBack={session ? () => router.push(`/sessions/${session.id}/curriculum`) : () =>router.back()}
         backLabel={session ? "Back to Curriculum" : "Back"}
       />
