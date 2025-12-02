@@ -15,6 +15,7 @@ import {
   getStudentInitials,
 } from "@/lib/avatarUtils";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Calendar,
@@ -26,6 +27,7 @@ import {
   Plus,
   Repeat,
   Trash,
+  Trash2,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -40,7 +42,7 @@ interface PageProps {
 export default function SessionPage({ params }: PageProps) {
   const { id } = use(params);
   const { session, isLoading: sessionLoading, isRecurring } = useSession(id);
-  const { updateSession, deleteSession } = useSessions();
+  const { updateSession, deleteSession, deleteRecurringSessions } = useSessions();
   const { students: sessionStudents, isLoading: studentsLoading } =
     useSessionStudentsForSession(id);
   const { students: allStudents } = useStudents();
@@ -69,6 +71,11 @@ export default function SessionPage({ params }: PageProps) {
     notes: "",
     location: "",
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState<"single" | "recurring" | null>(
+    null
+  );
 
   if (sessionLoading || studentsLoading) {
     return (
@@ -154,20 +161,34 @@ export default function SessionPage({ params }: PageProps) {
     setMode("editStudents");
   };
 
-  const handleDelete = async () => {
-    if (
-      // eslint-disable-next-line no-alert
-      window.confirm(
-        `Are you sure you want to delete the session: ${session.session_name}? This action cannot be undone.`
-      )
-    ) {
-      try {
-        await deleteSession(id);
-        window.history.back();
-      } catch (error) {
-        console.error("Failed to delete session:", error);
-      }
+  const handleDeleteClick = () => {
+    if (isRecurring) {
+      setDeleteDialogOpen(true);
+    } else {
+      setDeleteType("single");
+      setDeleteConfirmOpen(true);
     }
+  };
+
+  const handleConfirmDelete = async (type: "single" | "recurring") => {
+    try {
+      if (type === "single") {
+        await deleteSession(id);
+      } else if (type === "recurring") {
+        await deleteRecurringSessions(id);
+      }
+      window.history.back();
+    } catch (error) {
+      console.error("Failed to delete session:", error);
+    }
+  };
+
+  const confirmDeleteSingle = () => {
+    handleConfirmDelete("single");
+  };
+
+  const confirmDeleteRecurring = () => {
+    handleConfirmDelete("recurring");
   };
 
   const handleSaveSession = () => {
@@ -213,7 +234,7 @@ export default function SessionPage({ params }: PageProps) {
         <Button
           variant="outline"
           className={`w-fit p-4 flex flex-row items-center gap-2 shrink-0`}
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
         >
           <Trash />
           Delete
@@ -595,6 +616,116 @@ export default function SessionPage({ params }: PageProps) {
         cancelText="Cancel"
         variant="danger"
         isLoading={isRemoving}
+      />
+
+      {/* Delete options dialog - for recurring sessions */}
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center transition-all ${
+          deleteDialogOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setDeleteDialogOpen(false)}
+      >
+        <div className="absolute inset-0 bg-black/20" />
+        <div
+          className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md mx-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header with icon */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="rounded-full bg-red-100 p-3">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+          </div>
+
+          {/* Title and description */}
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+            Delete Session
+          </h2>
+          <p className="text-gray-600 text-center mb-8">
+            This is a recurring session. Choose how you want to delete it.
+          </p>
+
+          {/* Option buttons */}
+          <div className="space-y-3 mb-8">
+            {/* Delete single session */}
+            <button
+              onClick={() => {
+                setDeleteType("single");
+                setDeleteDialogOpen(false);
+                setDeleteConfirmOpen(true);
+              }}
+              className="w-full p-4 border-2 border-gray-200 rounded-2xl hover:border-red-300 hover:bg-red-50 transition-all text-left group"
+            >
+              <div className="flex items-start gap-3">
+                <Trash2 className="w-5 h-5 text-gray-400 group-hover:text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    Delete this session only
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Removes only this single instance
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            {/* Delete recurring sessions */}
+            <button
+              onClick={() => {
+                setDeleteType("recurring");
+                setDeleteDialogOpen(false);
+                setDeleteConfirmOpen(true);
+              }}
+              className="w-full p-4 border-2 border-gray-200 rounded-2xl hover:border-red-300 hover:bg-red-50 transition-all text-left group"
+            >
+              <div className="flex items-start gap-3">
+                <Trash className="w-5 h-5 text-gray-400 group-hover:text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    Delete this and future sessions
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Removes this instance and all upcoming occurrences
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Footer buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setDeleteDialogOpen(false)}
+              variant="secondary"
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation dialog for actual deletion */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setDeleteType(null);
+        }}
+        onConfirm={
+          deleteType === "single"
+            ? confirmDeleteSingle
+            : confirmDeleteRecurring
+        }
+        title="Confirm Delete"
+        description={
+          deleteType === "single"
+            ? `Are you sure you want to delete this session: ${session.session_name}? This action cannot be undone.`
+            : `Are you sure you want to delete this session and all future occurrences? This action cannot be undone.`
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
       />
 
       {/* Fixed Start Session Button - Lower Right */}
