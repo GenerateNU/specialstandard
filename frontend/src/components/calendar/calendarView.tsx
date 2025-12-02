@@ -9,6 +9,27 @@ import '@/app/calendar/override-calendar.css'
 
 const localizer = momentLocalizer(moment)
 
+// Color mapping matching CardView
+const colorMap = {
+  pink: '#F9AEDA',
+  blue: '#BAC0FF',
+  yellow: '#F4B860',
+}
+
+// Hash function to consistently map session ID to a color
+function hashIdToColor(id: string | number): keyof typeof colorMap {
+  const colors: Array<keyof typeof colorMap> = ['blue', 'yellow', 'pink']
+  
+  let hash = 0
+  const idStr = String(id)
+  for (let i = 0; i < idStr.length; i++) {
+    hash = ((hash << 5) - hash) + idStr.charCodeAt(i)
+    hash = hash & hash
+  }
+  
+  return colors[Math.abs(hash) % colors.length]
+}
+
 interface CalendarViewProps {
   date: Date
   view: View
@@ -63,7 +84,7 @@ export default function CalendarView({
       events={events}
       startAccessor="start"
       endAccessor="end"
-      style={{ height: '75vh', width: '90vw' }}
+      style={{ height: '72vh', width: '90vw' }}
       date={date}
       view={view}
       onNavigate={onNavigate}
@@ -73,11 +94,23 @@ export default function CalendarView({
       selectable
       onSelectSlot={onSelectSlot}
       toolbar={false}
-      eventPropGetter={() => ({
-        style: {
-          borderRadius: '8px',
-        },
-      })}
+      eventPropGetter={(event) => {
+        const colorKey = hashIdToColor(event.id)
+        const backgroundColor = colorMap[colorKey]
+        
+        return {
+          style: {
+            backgroundColor,
+            borderRadius: '12px',
+            border: 'none',
+            boxShadow: `0 4px 12px ${backgroundColor}40`,
+            color: '#000',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            padding: '6px 8px',
+          },
+        }
+      }}
       formats={{
         eventTimeRangeFormat: () => '',
         timeGutterFormat: (date, culture, localizer) =>

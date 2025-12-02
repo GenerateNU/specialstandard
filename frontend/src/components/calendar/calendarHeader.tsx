@@ -1,7 +1,8 @@
 import type { View } from 'react-big-calendar'
-import { Book, Calendar, Plus } from 'lucide-react'
+import { Book, Calendar, CalendarDays, Plus } from 'lucide-react'
 import moment from 'moment'
 import CustomToolbar from './customToolbar'
+import { PageHeader } from '@/components/PageHeader'
 
 interface CalendarHeaderProps {
   viewMode: 'calendar' | 'card'
@@ -45,40 +46,40 @@ export default function CalendarHeader({
 
   return (
     <>
-      <div
-        className="flex justify-between items-end"
-        style={{ paddingLeft: '24px', paddingRight: '24px' }}
-      >
-        <div className="flex flex-col items-left justify-start">
-          <h1>Your Schedule</h1>
-        </div>
-        <div className="flex gap-4">
-          <button
-            type="button"
-            onClick={() => onViewModeChange(viewMode === 'calendar' ? 'card' : 'calendar')}
-            className="inline-flex items-center gap-2 text-pink hover:text-primary-hover cursor-pointer transition-colors group"
-          >
-            <span className="font-bold text-pink hover:inherit">
-              {viewMode === 'calendar' ? 'Card View' : 'Calendar View'}
-            </span>
-            <span className="group-hover:scale-110 transition will-change-transform">
-              {viewMode === 'card' ? <Calendar /> : <Book />}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={onAddSession}
-            className="inline-flex items-center gap-2 text-pink hover:text-primary-hover cursor-pointer transition-colors group"
-          >
-            <span className="font-bold text-pink hover:inherit">Add Session</span>
-            <span className="flex items-center justify-center w-6 h-6 bg-pink text-white rounded text-sm font-bold transition-transform cursor-pointer group-hover:scale-110 will-change-transform">
-              <Plus strokeWidth={3} size={16} />
-            </span>
-          </button>
-        </div>
+      <div>
+        <PageHeader
+          title="Calendar"
+          icon={CalendarDays}
+          actions={
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => onViewModeChange(viewMode === 'calendar' ? 'card' : 'calendar')}
+                className="inline-flex items-center gap-2 text-pink hover:text-primary-hover cursor-pointer transition-colors group"
+              >
+                <span className="font-bold text-pink hover:inherit">
+                  {viewMode === 'calendar' ? 'Card View' : 'Calendar View'}
+                </span>
+                <span className="group-hover:scale-110 transition will-change-transform">
+                  {viewMode === 'card' ? <Calendar /> : <Book />}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={onAddSession}
+                className="inline-flex items-center gap-2 text-pink hover:text-primary-hover cursor-pointer transition-colors group"
+              >
+                <span className="font-bold text-pink hover:inherit">Add Session</span>
+                <span className="flex items-center justify-center w-6 h-6 bg-pink text-white rounded text-sm font-bold transition-transform cursor-pointer group-hover:scale-110 will-change-transform">
+                  <Plus strokeWidth={3} size={16} />
+                </span>
+              </button>
+            </div>
+          }
+        />
       </div>
 
-      <div className="" style={{ paddingLeft: '24px', paddingRight: '24px' }}>
+      <div>
         <CustomToolbar
           label={label}
           onNavigate={handleNavigate}

@@ -183,10 +183,11 @@ func NewStudentRepository(db *pgxpool.Pool) *StudentRepository {
 func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uuid.UUID, pagination utils.Pagination, filter *models.GetStudentSessionsRepositoryRequest) ([]models.StudentSessionsOutput, error) {
 	query := `
 	SELECT ss.student_id, ss.present, ss.notes, ss.created_at, ss.updated_at,
-	       s.id, s.start_datetime, s.end_datetime, s.notes, s.created_at, s.updated_at, 
-	       s.session_name, s.location, s.session_parent_id
+	       s.id, s.session_name, s.start_datetime, s.end_datetime, sp.therapist_id, s.notes, s.location,
+	       s.created_at, s.updated_at, s.session_parent_id
 	FROM session_student ss
 	JOIN session s ON ss.session_id = s.id
+	JOIN session_parent sp ON s.session_parent_id = sp.id
 	WHERE ss.student_id = $1`
 
 	conditions := []string{}
@@ -254,9 +255,8 @@ func (r *StudentRepository) GetStudentSessions(ctx context.Context, studentID uu
 
 		err := rows.Scan(
 			&result.StudentID, &result.Present, &result.Notes, &result.CreatedAt, &result.UpdatedAt,
-			&session.ID, &session.StartDateTime, &session.EndDateTime, &session.Notes,
-			&session.CreatedAt, &session.UpdatedAt, &session.SessionName, &session.Location,
-			&session.SessionParentID,
+			&session.ID, &session.SessionName, &session.StartDateTime, &session.EndDateTime, &session.TherapistID, &session.Notes, &session.Location,
+			&session.CreatedAt, &session.UpdatedAt, &session.SessionParentID,
 		)
 		if err != nil {
 			return nil, err
