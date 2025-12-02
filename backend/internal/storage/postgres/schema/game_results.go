@@ -24,7 +24,8 @@ func NewGameResultRepository(db *pgxpool.Pool) *GameResultRepository {
 func (r *GameResultRepository) GetGameResults(ctx context.Context, inputQuery *models.GetGameResultQuery, pagination utils.Pagination) ([]models.GameResult, error) {
 	query := `SELECT gr.id, gr.session_student_id, gr.content_id, gr.time_taken_sec, gr.completed,
        					gr.count_of_incorrect_attempts, gr.incorrect_attempts, gr.created_at, gr.updated_at
-			  FROM game_result gr JOIN session_student ss ON gr.session_student_id = ss.id`
+			  FROM game_result gr JOIN session_student ss ON gr.session_student_id = ss.id
+				JOIN game_content gc on gr.content_id = gc.id`
 
 	var conditions []string
 	var args []interface{}
@@ -40,6 +41,46 @@ func (r *GameResultRepository) GetGameResults(ctx context.Context, inputQuery *m
 		if inputQuery.StudentID != nil {
 			conditions = append(conditions, fmt.Sprintf("ss.student_id = $%d", argCount))
 			args = append(args, inputQuery.StudentID)
+			argCount++
+		}
+
+		if inputQuery.Category != nil {
+			conditions = append(conditions, fmt.Sprintf("gc.category = $%d", argCount))
+			args = append(args, inputQuery.Category)
+			argCount++
+		}
+
+		if inputQuery.QuestionType != nil {
+			conditions = append(conditions, fmt.Sprintf("gc.question_type = $%d", argCount))
+			args = append(args, inputQuery.QuestionType)
+			argCount++
+		}
+
+		if inputQuery.DifficultyLevel != nil {
+			conditions = append(conditions, fmt.Sprintf("gc.difficulty_level = $%d", argCount))
+			args = append(args, inputQuery.DifficultyLevel)
+			argCount++
+		}
+
+		if inputQuery.ExerciseType != nil {
+			conditions = append(conditions, fmt.Sprintf("gc.exercise_type = $%d", argCount))
+			args = append(args, inputQuery.ExerciseType)
+			argCount++
+		}
+
+		if inputQuery.GameType != nil {
+			conditions = append(conditions, fmt.Sprintf("gc.applicable_game_types @> ARRAY[$%d]::text[]", argCount))
+			args = append(args, inputQuery.GameType)
+			argCount++
+		}
+		if inputQuery.DateFrom != nil {
+			conditions = append(conditions, fmt.Sprintf("gc.created_at >= $%d", argCount))
+			args = append(args, inputQuery.DateFrom)
+			argCount++
+		}
+		if inputQuery.DateTo != nil {
+			conditions = append(conditions, fmt.Sprintf("gc.created_at <= $%d", argCount))
+			args = append(args, inputQuery.DateTo)
 			argCount++
 		}
 	}
