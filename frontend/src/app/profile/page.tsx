@@ -9,7 +9,7 @@ import React from "react";
 
 const AdminProfile: React.FC = () => {
   const { userId: therapistId } = useAuthContext();
-  const { therapist, isLoading, error } = useTherapist(therapistId);
+  const { therapist, error } = useTherapist(therapistId);
 
   if (error || !therapist) {
     return (
