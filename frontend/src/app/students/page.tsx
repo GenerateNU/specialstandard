@@ -1,9 +1,10 @@
 'use client'
 
-import { AlertCircle, ArrowLeft, Loader2, Plus, Users, X } from 'lucide-react'
+import { AlertCircle, Loader2, Plus, Users, X } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
+import { PageHeader } from '@/components/PageHeader'
 import AddStudentModal from '@/components/students/AddStudentModal'
 import StudentCard from '@/components/students/studentCard'
 import { Badge } from '@/components/ui/badge'
@@ -81,29 +82,14 @@ export default function StudentsPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-background py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <header className="mb-8">
-            {/* Back button */}
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-4 transition-colors group"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-medium">Back to Home</span>
-            </Link>
-
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-3">
-                <Users className="w-8 h-8 text-accent" />
-                <h1>Students</h1>
-              </div>
-              <AddStudentModal />
-            </div>
-            <p className="text-secondary">
-              View and manage all student information
-            </p>
-          </header>
+      <div className="min-h-screen bg-background">
+        <div className="w-full p-10">
+          <PageHeader
+            title="Students"
+            icon={Users}
+            description="View and manage all student information"
+            actions={<AddStudentModal />}
+          />
 
           {/* School Filters */}
           {uniqueSchools.length > 0 && (

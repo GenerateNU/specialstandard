@@ -15,7 +15,7 @@ import { useGameResults } from '@/hooks/useGameResults'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useStudents } from '@/hooks/useStudents'
 
-const CATEGORIES = {
+export const CATEGORIES = {
   [GetGameContentsCategory.receptive_language]: { 
     label: 'Receptive Language', 
     icon: '👂', 
