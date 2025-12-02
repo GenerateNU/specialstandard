@@ -1,6 +1,7 @@
 package session
 
 import (
+	"fmt"
 	"log/slog"
 	"specialstandard/internal/errs"
 
@@ -19,6 +20,8 @@ func (h *Handler) DeleteRecurringSessions(c *fiber.Ctx) error {
 		slog.Error("Failed to delete sessions", "id", id, "err", err)
 		return errs.InternalServerError("Internal Server Error")
 	}
+
+	fmt.Println("Deleted recurring sessions with ID:", id)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Sessions deleted successfully",

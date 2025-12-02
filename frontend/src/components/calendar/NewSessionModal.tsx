@@ -243,9 +243,9 @@ export function CreateSessionDialog({
                     <span className="font-semibold">{createdSessions.length}</span>{" "}
                     session{createdSessions.length !== 1 ? "s" : ""} created
                   </p>
-                  {firstSession.repitition && (
+                  {firstSession.repetition && (
                     <p className="text-sm text-blue-800">
-                      {formatRecurrence(firstSession.repitition)}
+                      {formatRecurrence(firstSession.repetition)}
                     </p>
                   )}
                 </div>
