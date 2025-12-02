@@ -54,6 +54,7 @@ function ImageMatchingGame() {
   const [imageOptions, setImageOptions] = useState<string[]>([])
   const [cardStartTime, setCardStartTime] = useState<number | null>(null)
   const [resultsSaved, setResultsSaved] = useState(false)
+  const [incorrectAttempts, setIncorrectAttempts] = useState<Map<number, number>>(new Map())
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeId || undefined,
@@ -119,10 +120,23 @@ function ImageMatchingGame() {
       
       if (gameResultsHook && currentQuestion && cardStartTime) {
         const timeTaken = Math.floor((Date.now() - cardStartTime) / 1000)
-        gameResultsHook.completeCard(currentQuestion.id, timeTaken)
+        const attempts = incorrectAttempts.get(currentQuestionIndex) || 0
+        gameResultsHook.completeCard(currentQuestion.id, timeTaken, attempts)
       }
     } else {
       setShowFeedback('incorrect')
+      // Track incorrect attempt
+      setIncorrectAttempts(prev => {
+        const newMap = new Map(prev)
+        const current = newMap.get(currentQuestionIndex) || 0
+        newMap.set(currentQuestionIndex, current + 1)
+        return newMap
+      })
+      // Don't advance to next question, let them try again
+      setTimeout(() => {
+        setShowFeedback(null)
+      }, 1500)
+      return
     }
 
     setTimeout(() => {
@@ -154,6 +168,7 @@ function ImageMatchingGame() {
     setGameComplete(false)
     setCardStartTime(null)
     setResultsSaved(false)
+    setIncorrectAttempts(new Map())
   }
 
   useEffect(() => {
@@ -164,27 +179,27 @@ function ImageMatchingGame() {
   }, [currentQuestion, wrongAnswerUrl])
 
   useEffect(() => {
-    if (limitedGameContents && currentQuestion) {
+    if (limitedGameContents && limitedGameContents[currentQuestionIndex]) {
       const otherQuestions = limitedGameContents.filter((_, idx) => idx !== currentQuestionIndex)
       if (otherQuestions.length > 0) {
         const randomQuestion = otherQuestions[Math.floor(Math.random() * otherQuestions.length)]
         setWrongAnswerUrl(randomQuestion.answer)
       }
     }
-  }, [currentQuestionIndex, limitedGameContents])
+  }, [currentQuestionIndex, limitedGameContents.length])
 
   useEffect(() => {
     if (currentQuestion?.question && !showFeedback) {
       speakWord(currentQuestion.question)
     }
-  }, [currentQuestionIndex, currentQuestion])
+  }, [currentQuestionIndex, currentQuestion?.question, showFeedback, speakWord])
 
   useEffect(() => {
     if (currentQuestion) {
       setCardStartTime(Date.now())
       gameResultsHook?.startCard(currentQuestion)
     }
-  }, [currentQuestionIndex, currentQuestion, gameResultsHook])
+  }, [currentQuestionIndex])
 
   if (isLoading) {
     return (
@@ -221,9 +236,28 @@ function ImageMatchingGame() {
           <div className="text-center bg-card p-8 rounded-sm shadow-lg max-w-md">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h2 className="mb-4">Game Complete!</h2>
-            <p className="text-2xl mb-6">
-              Score: {score} / {limitedGameContents.length}
+            <p className="text-2xl mb-4">
+              Total Score: {score} / {limitedGameContents.length}
             </p>
+            
+            {/* Individual Student Scores */}
+            <div className="mb-6 text-left bg-background rounded-lg p-4">
+              <p className="text-sm font-semibold mb-2 text-center">Student Scores:</p>
+              {selectedStudentIds.map((studentId, index) => {
+                const studentSessionId = Number.parseInt(studentId)
+                const hook = gameResultsHooks[index]
+                const studentResults = Array.from(hook.currentResults.values())
+                const correctCount = studentResults.filter(r => r.completed).length
+                const totalForStudent = questionsPerStudent
+                
+                return (
+                  <div key={studentId} className="flex justify-between items-center py-1">
+                    <span className="text-sm">{getStudentName(studentSessionId)}</span>
+                    <span className="text-sm font-medium">{correctCount} / {totalForStudent}</span>
+                  </div>
+                )
+              })}
+            </div>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handlePlayAgain}

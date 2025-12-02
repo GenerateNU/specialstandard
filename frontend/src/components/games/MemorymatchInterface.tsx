@@ -211,6 +211,7 @@ export default function MemorymatchGameInterface({
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [questionCount, setQuestionCount] = useState(0);
   const [resultsSaved, setResultsSaved] = useState(false);
+  const [incorrectAttempts, setIncorrectAttempts] = useState<Map<string, number>>(new Map());
 
   const {
     gameContents,
@@ -338,8 +339,6 @@ export default function MemorymatchGameInterface({
 
     if (!selectedContent) return;
 
-    setShowActionButtons(false);
-
     if (isCorrect) {
       // Mark as completed by adding ID
       setCompletedIds((prev) => new Set([...prev, selectedContent.id]));
@@ -348,17 +347,33 @@ export default function MemorymatchGameInterface({
         const finalTime = Math.floor(
           (Date.now() - (cardStartTime || Date.now())) / 1000
         );
-        currentGameResultsHook.completeCard(selectedContent.id, finalTime);
+        const attempts = incorrectAttempts.get(selectedContent.id) || 0;
+        currentGameResultsHook.completeCard(selectedContent.id, finalTime, attempts);
       }
       
       // Increment question count to move to next student
       setQuestionCount(prev => prev + 1);
+      
+      // Reset for next word
+      setShowActionButtons(false);
+      setSelectedWordIndex(null);
+      setCardStartTime(null);
+      setTimeTaken(0);
+    } else {
+      // Track incorrect attempt
+      setIncorrectAttempts(prev => {
+        const newMap = new Map(prev);
+        const current = newMap.get(selectedContent.id) || 0;
+        newMap.set(selectedContent.id, current + 1);
+        return newMap;
+      });
+      
+      // Hide buttons and reset to let them spin again
+      setShowActionButtons(false);
+      setSelectedWordIndex(null);
+      setCardStartTime(null);
+      setTimeTaken(0);
     }
-
-    // Reset immediately for snappier feel
-    setSelectedWordIndex(null);
-    setCardStartTime(null);
-    setTimeTaken(0);
   };
 
   const handleReset = () => {
@@ -370,6 +385,7 @@ export default function MemorymatchGameInterface({
     setTimeTaken(0);
     setQuestionCount(0);
     setResultsSaved(false);
+    setIncorrectAttempts(new Map());
   };
 
   if (contentsLoading) {
