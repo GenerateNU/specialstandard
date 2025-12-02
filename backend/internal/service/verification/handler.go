@@ -2,6 +2,7 @@ package verification
 
 import (
 	"specialstandard/internal/storage"
+	"specialstandard/internal/storage/postgres/schema"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/resend/resend-go/v3"
@@ -12,6 +13,7 @@ type Handler struct {
 	db               *pgxpool.Pool
 	resendClient     *resend.Client
 	fromEmail        string
+    authRepo          *schema.AuthRepository          
 }
 
 // Createing a new verification handler
@@ -23,5 +25,6 @@ func NewHandler(verificationRepo storage.VerificationRepository, db *pgxpool.Poo
 		db:               db,
 		resendClient:     resendClient,
 		fromEmail:        fromEmail,
+		authRepo:         schema.NewAuthRepository(db),
 	}
 }

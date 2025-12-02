@@ -16,10 +16,7 @@ import (
 func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(string)
 
-	// Get user email from auth.users table
-	var email string
-	query := `SELECT email FROM auth.users WHERE id = $1`
-	err := h.db.QueryRow(c.Context(), query, userID).Scan(&email)
+	email, err := h.authRepo.GetUserEmail(c.Context(), userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.SendCodeResponse{
 			Success: false,
@@ -118,22 +115,10 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 		})
 	}
 
-	// Update user metadata to mark as verified
-	updateQuery := `
-		UPDATE auth.users 
-		SET raw_user_meta_data = jsonb_set(
-			COALESCE(raw_user_meta_data, '{}'::jsonb),
-			'{email_verified}',
-			'true'
-		),
-		updated_at = NOW()
-		WHERE id = $1
-	`
-	
-	_, err = h.db.Exec(c.Context(), updateQuery, userID)
+	err = h.authRepo.MarkEmailVerified(c.Context(), userID)
 	if err != nil {
-		slog.Warn("Failed to update user metadata", slog.Any("err", err))
-	}
+        slog.Warn("Failed to update user metadata", slog.Any("err", err))
+    }
 
 	return c.Status(fiber.StatusOK).JSON(models.VerifyCodeResponse{
 		Success:  true,
