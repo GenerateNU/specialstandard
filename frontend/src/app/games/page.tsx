@@ -17,7 +17,7 @@ function GamesPageContent() {
   const searchParams = useSearchParams();
   const { session, students } = useSessionContext();
   const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000"; // could use this or the session context
-  const sessionStudentIds = students ? students.map((student) => student.sessionStudentId?.toString()) : [];
+  const _sessionStudentIds = students ? students.map((student) => student.sessionStudentId?.toString()) : [];
   const [selectedContent, setSelectedContent] = React.useState<{
     theme: Theme;
     difficultyLevel: number;
