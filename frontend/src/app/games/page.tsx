@@ -4,17 +4,17 @@ import AppLayout from "@/components/AppLayout";
 import { GameContentSelector } from "@/components/games/GameContentSelector";
 import { useSessionContext } from "@/contexts/sessionContext";
 import type {
+  GameContent,
   GetGameContentsCategory,
   GetGameContentsQuestionType,
   Theme,
-  GameContent,
 } from "@/lib/api/theSpecialStandardAPI.schemas";
 import { GameContentExerciseType } from "@/lib/api/theSpecialStandardAPI.schemas";
 import { getGameContent } from "@/lib/api/game-content";
-import { BookOpen, Brain, Gamepad2, Image, Shuffle, SquareDashedMousePointer, Loader2, FileText, Download} from "lucide-react";
+import { BadgeCheck, BookOpen, Brain, FileText, Gamepad2, Image, Loader2, Shuffle, SquareDashedMousePointer} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
-import { useGameResults } from "@/hooks/useGameResults";
+import { useManualGameResult } from "@/hooks/useManualGameResults";
 
 
 function GamesPageContent() {
@@ -39,10 +39,10 @@ function GamesPageContent() {
   const [completed, setCompleted] = React.useState(true);
   const [incorrectAttempts, setIncorrectAttempts] = React.useState<number>(0);
 
-  const gameResultsHook = useGameResults({
-    session_student_id: sessionStudentIds[0] ? Number.parseInt(sessionStudentIds[0]) : 0,
-    session_id: sessionId,
-  });
+  const [selectedStudentId, setSelectedStudentId] = React.useState<string>('');
+
+
+  const { submitResultAsync, isSubmitting, error } = useManualGameResult();
 
   // Fetch PDFs when content is selected
   React.useEffect(() => {
@@ -91,27 +91,36 @@ function GamesPageContent() {
   };
 
   const handleOpenResultModal = (pdf: GameContent) => {
+
     setSelectedPdf(pdf);
     setShowResultModal(true);
     setTimeTaken(0);
     setCompleted(true);
     setIncorrectAttempts(0);
+    setSelectedStudentId(sessionStudentIds[0] || ''); // Set default student
+
   };
 
-  const handleSubmitResult = async () => {
-    if (!selectedPdf || !gameResultsHook) return;
-
-    // Start and complete the card with the provided data
-    gameResultsHook.startCard(selectedPdf);
-    gameResultsHook.completeCard(selectedPdf.id, timeTaken, incorrectAttempts);
+const handleSubmitResult = async () => {
+  if (!selectedPdf || !selectedStudentId) {
+    return;
+  }  
+  try {
+    await submitResultAsync({
+      session_student_id: Number.parseInt(selectedStudentId),
+      content_id: selectedPdf.id,
+      time_taken_sec: timeTaken,
+      completed,
+      count_of_incorrect_attempts: incorrectAttempts,
+    });
     
-    // Save the result
-    await gameResultsHook.saveAllResults();
     
-    // Close modal and reset
     setShowResultModal(false);
     setSelectedPdf(null);
-  };
+  } catch (error) {
+    console.error('Error saving result:', error);
+  }
+};
 
   // Show game selection after content is selected
   if (selectedContent) {
@@ -135,22 +144,32 @@ function GamesPageContent() {
                   <span className="text-secondary">Loading PDF exercises...</span>
                 </div>
               ) : pdfExercises.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {pdfExercises.map((pdf, index) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pdfExercises.map((pdf, index) => (
+                  <div
+                    key={pdf.id}
+                    onClick={() => handleDownloadPdf(pdf.answer)}
+                    className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover text-center relative cursor-pointer"
+                  >
                     <button
-                      key={pdf.id}
-                      onClick={() => handleDownloadPdf(pdf.answer)}
-                      className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover relative"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenResultModal(pdf);
+                      }}
+                      className="absolute top-4 right-4 p-1.5 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors"
+                      title="Submit Result"
                     >
-                      <Download className="w-5 h-5 text-muted group-hover:text-primary transition-colors absolute top-4 right-4" />
-                      <FileText className="w-12 h-12 text-blue mb-4 mx-auto" />
-                      <h3 className="mb-2">
-                        {pdf.question_type ? `${pdf.question_type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} ${index + 1}` : `PDF Exercise ${index + 1}`}
-                      </h3>
-                      <p className="text-secondary text-sm">Click to download</p>
+                      <BadgeCheck className="w-4 h-4" />
                     </button>
-                  ))}
-                </div>
+                    
+                    <FileText className="w-12 h-12 text-blue mb-4 mx-auto" />
+                    <h3 className="mb-2">
+                      {pdf.question_type ? `${pdf.question_type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} ${index + 1}` : `PDF Exercise ${index + 1}`}
+                    </h3>
+                    <p className="text-secondary text-sm">Click to download</p>
+                  </div>
+                ))}
+              </div>
               ) : (
                 <div className="bg-card rounded-lg shadow-md p-6 text-center text-secondary">
                   No PDF exercises available for this selection
@@ -277,6 +296,115 @@ function GamesPageContent() {
             </div>
           </div>
         </div>
+    {/* Result Submission Modal */}
+    {showResultModal && selectedPdf && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-card rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Submit Exercise Result</h2>
+            <button
+              onClick={() => setShowResultModal(false)}
+              className="text-muted hover:text-primary transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Exercise: {selectedPdf.question_type?.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {pdfExercises.findIndex(pdf => pdf.id === selectedPdf.id) + 1}
+              </label>
+            </div>
+
+            <div>
+              <label htmlFor="student" className="block text-sm font-medium mb-2">
+                Select Student
+              </label>
+              <select
+                id="student"
+                value={selectedStudentId}
+                onChange={(e) => setSelectedStudentId(e.target.value)}
+                className="w-full px-4 py-2 border border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-blue bg-background"
+              >
+                <option value="">Select a student...</option>
+                {students?.map((student) => (
+                  <option key={student.sessionStudentId} value={student.sessionStudentId?.toString()}>
+                    {`${student.firstName || ''} ${student.lastName || ''}`.trim()}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="timeTaken" className="block text-sm font-medium mb-2">
+                Time Taken (minutes)
+              </label>
+              <input
+                id="timeTaken"
+                type="number"
+                min="0"
+                step="0.5"
+                value={timeTaken / 60}
+                onChange={(e) => setTimeTaken(Math.round((Number.parseFloat(e.target.value) || 0) * 60))}
+                className="w-full px-4 py-2 border border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-blue bg-background text-base"
+                placeholder="e.g. 5 or 5.5"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="incorrectAttempts" className="block text-sm font-medium mb-2">
+                Number of Incorrect Attempts
+              </label>
+              <input
+                id="incorrectAttempts"
+                type="number"
+                min="0"
+                value={incorrectAttempts}
+                onChange={(e) => setIncorrectAttempts(Number.parseInt(e.target.value) || 0)}
+                className="w-full px-4 py-2 border border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-blue bg-background"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="completed"
+                type="checkbox"
+                checked={completed}
+                onChange={(e) => setCompleted(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <label htmlFor="completed" className="text-sm font-medium">
+                Completed
+              </label>
+            </div>
+          </div>
+
+          <div className="flex gap-4 mt-6">
+            <button
+              onClick={() => setShowResultModal(false)}
+              className="flex-1 px-4 py-2 border border-default rounded-lg hover:bg-card-hover transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmitResult}
+              disabled={!selectedStudentId || isSubmitting}
+              className="flex-1 px-4 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </button>
+          </div>
+
+          {error && (
+            <p className="text-error text-sm mt-4 text-center">
+              Failed to submit result. Please try again.
+            </p>
+          )}
+        </div>
+      </div>
+    )}
+
       </AppLayout>
     );
   }
