@@ -1,7 +1,7 @@
 'use client'
 
 import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
-import { Calendar, Clock, MapPin, Maximize2, Repeat, Users, X } from 'lucide-react'
+import { Calendar, Clock, MapPin, Maximize2, Repeat, X } from 'lucide-react'
 import Link from 'next/link'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { formatRecurrence } from '@/hooks/useSessions'
