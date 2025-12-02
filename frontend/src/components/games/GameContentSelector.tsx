@@ -86,8 +86,6 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: 
 
   React.useEffect(() => {
       const fetchPdfs = async () => {
-        if (!selectedTheme || !selectedDifficulty || !selectedCategory) return
-
         setIsLoadingPdfs(true)
         
         try {
