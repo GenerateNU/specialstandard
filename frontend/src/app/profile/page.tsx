@@ -1,6 +1,7 @@
 "use client";
 
 import AppLayout from "@/components/AppLayout";
+import ComputerGirl from "@/components/ui/computer-girl";
 import { useAuthContext } from "@/contexts/authContext";
 import { useTherapist } from "@/hooks/useTherapists";
 import { Edit2, ExternalLink } from "lucide-react";
@@ -10,29 +11,13 @@ const AdminProfile: React.FC = () => {
   const { userId: therapistId } = useAuthContext();
   const { therapist, isLoading, error } = useTherapist(therapistId);
 
-  if (isLoading) {
-    return (
-      <AppLayout>
-        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 p-8">
-          <div className="max-w-4xl">
-            <div className="text-center py-12">
-              <p className="text-gray-600">Loading profile...</p>
-            </div>
-          </div>
-        </div>
-      </AppLayout>
-    );
-  }
-
   if (error || !therapist) {
     return (
       <AppLayout>
         <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 p-8">
           <div className="max-w-4xl">
             <div className="text-center py-12">
-              <p className="text-red-600">
-                {error || "Failed to load profile"}
-              </p>
+              <p className="text-black">{error || "Loading Data..."}</p>
             </div>
           </div>
         </div>
@@ -58,7 +43,8 @@ const AdminProfile: React.FC = () => {
             </button>
 
             <div className="flex flex-col items-center mb-8">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-4">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-grey-600 flex items-center justify-center mb-2">
+                {/*I AM NOT SURE HOW WE ARE GOING TO HAVE IMAGES ON FILE FOR THE THERAPIST, SO I USED THIS HACK*/}
                 <span className="text-4xl font-bold text-white">
                   {therapist.first_name[0]}
                   {therapist.last_name[0]}
@@ -68,12 +54,6 @@ const AdminProfile: React.FC = () => {
                 {fullName}
               </h2>
               <p className="text-gray-600">Speech-Language Pathologist</p>
-              <p className="text-sm text-gray-500 mt-1">{therapist.email}</p>
-              {!therapist.active && (
-                <span className="mt-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                  Inactive
-                </span>
-              )}
             </div>
 
             <div className="space-y-6">
@@ -111,11 +91,16 @@ const AdminProfile: React.FC = () => {
             <h3 className="text-lg font-semibold text-black mb-3">Resources</h3>
             <a
               href="ADD EDPLAN HERE"
-              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition-colors"
+              className="inline-flex items-center gap-2 text-black hover:text-grey-600 transition-colors"
             >
               <span>EdPlan</span>
               <ExternalLink size={16} />
             </a>
+          </div>
+
+          {/* Computer Girl on the side */}
+          <div className="fixed bottom-4 right-5 pointer-events-none">
+            <ComputerGirl />
           </div>
         </div>
       </div>
