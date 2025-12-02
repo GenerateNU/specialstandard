@@ -1,7 +1,7 @@
 import type { CalendarEvent } from '@/hooks/useCalendar'
 import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
 
-import { Clock } from 'lucide-react'
+import { Clock, Repeat } from 'lucide-react'
 import moment from 'moment'
 import CardBookBg from './CardBookBg'
 import CardViewSessionStudents from './cardViewSessionStudents'
@@ -25,6 +25,16 @@ function hashIdToColor(id: string | number): 'blue' | 'yellow' | 'pink' {
   }
   
   return colors[Math.abs(hash) % colors.length]
+}
+
+// Helper function to get recurring days string
+function getRecurringDays(repetition: any): string {
+  if (!repetition) return ''
+  
+  const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  return repetition.days
+    .map((d: number) => DAYS_OF_WEEK[d])
+    .join(', ')
 }
 
 export default function CardView({ date, events, onSelectSession }: CardViewProps) {
@@ -72,37 +82,52 @@ export default function CardView({ date, events, onSelectSession }: CardViewProp
                   )
                 : (
                     // Map through sessions for the day
-                    daySessions.map(event => (
-                      <div key={event.id} className="flex flex-col gap-1 items-center">
-                        <CardBookBg 
-                          className="hover:scale-102 transition" 
-                          size="md" 
-                          color={hashIdToColor(event.id)}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelectSession(event.resource, {
-                                x: window.innerWidth / 2,
-                                y: window.innerHeight / 2,
-                              })
-                            }}
-                            className="flex flex-col items-start gap-1 p-4 rounded-lg border-0 cursor-pointer transition-transform text-black transition-inherit focus:outline-none bg-transparent shadow-none w-full h-full min-h-[120px]"
-                            style={{ background: 'none' }}
+                    daySessions.map(event => {
+                      const isRecurring = !!event.resource.repetition
+                      const recurringDays = getRecurringDays(event.resource.repetition)
+
+                      return (
+                        <div key={event.id} className="flex flex-col gap-1 items-center">
+                          <CardBookBg 
+                            className="hover:scale-102 transition" 
+                            size="md" 
+                            color={hashIdToColor(event.id)}
                           >
-                            <div className="text-sm font-semibold">{event.resource.session_name}</div>
-                            <div className="text-sm">{event.resource.location ?? ''}</div>
-                            <br />
-                            <div className="text-sm">{moment(event.start).format('D MMM YYYY')}</div>
-                            <div className="flex items-center gap-1.5 text-xs font-medium">
-                              <Clock size={14} />
-                              {moment(event.start).format('h:mm A')}
-                            </div>
-                          </button>
-                        </CardBookBg>
-                        <CardViewSessionStudents sessionId={event.id} />
-                      </div>
-                    ))
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSelectSession(event.resource, {
+                                  x: window.innerWidth / 2,
+                                  y: window.innerHeight / 2,
+                                })
+                              }}
+                              className="flex flex-col items-start gap-1 p-4 rounded-lg border-0 cursor-pointer transition-transform text-black transition-inherit focus:outline-none bg-transparent shadow-none w-full h-full min-h-[120px]"
+                              style={{ background: 'none' }}
+                            >
+                              <div className="text-sm font-semibold">{event.resource.session_name}</div>
+                              <div className="text-sm">{event.resource.location ?? ''}</div>
+                              <br />
+                              
+                              {/* Show recurring days if recurring, otherwise show date */}
+                              {isRecurring ? (
+                                <div className="flex items-center gap-1.5 text-xs font-medium">
+                                  <Repeat size={14} />
+                                  {recurringDays}
+                                </div>
+                              ) : (
+                                <div className="text-sm">{moment(event.start).format('D MMM YYYY')}</div>
+                              )}
+                              
+                              <div className="flex items-center gap-1.5 text-xs font-medium">
+                                <Clock size={14} />
+                                {moment(event.start).format('h:mm A')}
+                              </div>
+                            </button>
+                          </CardBookBg>
+                          <CardViewSessionStudents sessionId={event.id} />
+                        </div>
+                      )
+                    })
                   )}
             </div>
           </div>
