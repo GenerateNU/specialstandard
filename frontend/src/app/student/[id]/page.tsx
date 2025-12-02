@@ -232,7 +232,7 @@ function StudentPage() {
           </div>
 
           <div className="flex flex-col gap-6 shrink-0">
-            <div className="grid grid-cols-2 gap-8 h-60">
+            <div className="grid grid-cols-2 gap-6 h-60">
               {/* Student Profile */}
               <div
                 className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col relative`}
@@ -327,7 +327,7 @@ function StudentPage() {
             )}
           </div>
           {/* Goals, Session Notes, and Ratings */}
-          <div className="grid grid-cols-2 gap-8 h-[25vh] min-h-[300px]">
+          <div className="grid grid-cols-2 gap-6 h-[25vh] min-h-[300px]">
             {/* IEP Goals */}
             <div className="bg-card border-2 border-default rounded-4xl p-5 gap-6 flex flex-col overflow-hidden relative h-full">
               <h2>
