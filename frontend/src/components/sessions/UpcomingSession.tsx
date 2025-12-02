@@ -1,14 +1,25 @@
 'use client'
 import moment from 'moment'
 import { useStudentSessions } from '@/hooks/useStudentSessions'
+import {Badge} from "@/components/ui/badge";
+import {getSchoolColor} from "@/lib/utils";
+import {yellow} from "ansis";
+import {useSessionStudents} from "@/hooks/useSessionStudents";
+import {useSession} from "@/hooks/useSessions";
+import {useStudents} from "@/hooks/useStudents";
 
 interface UpcomingSessionProps {
   studentId?: string
   count?: number
   latest: boolean
+  individuality?: boolean
 }
+//
+// function determineIndividuality(sessionID: string) {
+//   // const { sessions } = useStudents({ sessionID })
+// }
 
-export default function UpcomingSession({ studentId, count, latest }: UpcomingSessionProps) {
+export default function UpcomingSession({ studentId, count, latest, individuality = false }: UpcomingSessionProps) {
   const { sessions, isLoading, error } = useStudentSessions(studentId || '')
 
   // Handle no studentId case
@@ -69,28 +80,42 @@ export default function UpcomingSession({ studentId, count, latest }: UpcomingSe
         return (
           <div
             key={sessionData.id}
-            className="p-4 bg-card border-2 border-default rounded-[32px] flex flex-col justify-center min-h-20 w-full shadow-card"
+            className="p-4 bg-card border-2 border-default rounded-[32px] flex flex-col justify-center min-h-20 w-full shadow-md"
           >
-            {/* Session title and relative time */}
-            <div className="w-full flex justify-between items-center mb-2">
-              <div className="font-semibold text-base">
-                {sessionData.session_name || `Session #${index + 1}`}
+            <div className="ml-2 my-4">
+              <div className="flex flex-row">
+                  <div>
+                      {/* Session title and relative time */}
+                      <div className="w-full flex justify-between items-center mb-1">
+                        <div className="font-semibold text-base">
+                          <h3>{sessionData.session_name || `Session #${index + 1}`}</h3>
+                        </div>
+                        {/* <div className="text-sm text-muted-foreground">
+                          {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
+                        </div> */}
+                      </div>
+
+                      {/* Date & Time Range */}
+                      <div className="text-md text-muted-foreground">
+                        {startMoment.format('dddd, MMMM D, YYYY')}
+                        {' | '}
+                        {startMoment.format('h:mm A')}
+                        {' - '}
+                        {endMoment.format('h:mm A')}
+                      </div>
+                  </div>
+                  <div>
+                      {/*<Badge className={}>*/}
+
+                      {/*</Badge>*/}
+
+
+
+                      <Badge className="">
+                          {sessionData.id}
+                      </Badge>
+                  </div>
               </div>
-              {/* <div className="text-sm text-muted-foreground">
-                {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
-              </div> */}
-            </div>
-            
-            {/* Date */}
-            <div className="text-sm mb-1">
-              {startMoment.format('dddd, MMMM D, YYYY')}
-            </div>
-            
-            {/* Time range */}
-            <div className="text-sm text-muted-foreground">
-              {startMoment.format('h:mm A')}
-              {' - '}
-              {endMoment.format('h:mm A')}
             </div>
           </div>
         )

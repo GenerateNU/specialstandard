@@ -3,16 +3,17 @@
 import AppLayout from "@/components/AppLayout";
 import UpcomingSession from "@/components/sessions/UpcomingSession";
 import {
-  ChevronLeft,
-  CirclePlus,
-  PencilLine,
-  Save,
-  Trash,
-  Trash2,
-  X,
+    ChevronLeft,
+    CirclePlus,
+    PencilLine,
+    RotateCw,
+    Save,
+    Trash,
+    Trash2,
+    X,
 } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import {useParams, useRouter} from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 import SchoolTag from "@/components/school/schoolTag";
 import { Avatar } from "@/components/ui/avatar";
@@ -46,6 +47,7 @@ function StudentPage() {
   const [edit, setEdit] = useState(false);
   const [iepGoals, setIepGoals] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter()
 
   // Initialize IEP goals from student data
   useEffect(() => {
@@ -142,7 +144,7 @@ function StudentPage() {
 
   return (
     <AppLayout>
-      <div className="w-full h-screen bg-background">
+      <div className="w-full min-h-screen bg-background">
         <div
           className={`w-full h-full flex flex-col gap-8 ${PADDING} relative overflow-y-auto`}
         >
@@ -355,8 +357,16 @@ function StudentPage() {
               <div
                   className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex flex-col gap-4`}
               >
-                  <div className="text-2xl font-semibold text-primary flex-shrink-0">
-                      Previous Sessions
+                  <div className="flex items-center justify-between">
+                      <div className="text-2xl font-semibold text-primary flex-shrink-0">
+                          Previous Sessions
+                      </div>
+                      <button className="flex items-center gap-2 text-secondary hover:text-primary
+                                         text-lg transition-colors cursor-pointer"
+                              onClick={() => router.push(`/student/${studentId}/session-history`)}>
+                          View All Sessions
+                          <RotateCw className="w-4 h-4" />
+                      </button>
                   </div>
                   <div className="flex-1 min-h-0">
                       <UpcomingSession studentId={studentId} count={2} latest={false} />
