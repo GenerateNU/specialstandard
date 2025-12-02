@@ -73,6 +73,7 @@ function DragAndDropGame() {
   const [sequence, setSequence] = useState<(string | null)[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [showIncorrect, setShowIncorrect] = useState(false)
   const [correctAnswerFilenames, setCorrectAnswerFilenames] = useState<string[]>([])
   const [loadingAnswer, setLoadingAnswer] = useState(false)
 
@@ -206,14 +207,11 @@ function DragAndDropGame() {
       setCardStartTime(Date.now())
       gameResultsHook?.startCard(currentQuestion)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestionIndex])
+  }, [currentQuestionIndex]) // eslint-disable-line
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
   }
-
-  const [showIncorrect, setShowIncorrect] = useState(false)
 
   const checkSequence = (currentSequence: (string | null)[], currentIncorrectAttempts: number) => {
     // Only check if all slots are filled
