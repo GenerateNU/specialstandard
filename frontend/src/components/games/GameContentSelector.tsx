@@ -2,15 +2,13 @@
 'use client'
 
 import React from 'react'
-import { ChevronRight, FileText, Loader2} from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { useThemes } from '@/hooks/useThemes'
 import { 
   GetGameContentsCategory, 
   GetGameContentsQuestionType
 } from '@/lib/api/theSpecialStandardAPI.schemas'
-import type { Theme, GameContent } from '@/lib/api/theSpecialStandardAPI.schemas'
-import { getGameContent } from '@/lib/api/game-content'
-
+import type { Theme } from '@/lib/api/theSpecialStandardAPI.schemas'
 
 const CATEGORIES = {
   [GetGameContentsCategory.receptive_language]: { 
@@ -67,8 +65,6 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: 
   const [selectedDifficulty, setSelectedDifficulty] = React.useState<number | null>(null)
   const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(null)
   const [selectedQuestionType, setSelectedQuestionType] = React.useState<GetGameContentsQuestionType | null>(null)
-  const [pdfExercises, setPdfExercises] = React.useState<GameContent[]>([])
-  const [isLoadingPdfs, setIsLoadingPdfs] = React.useState(false)
 
   const { themes, isLoading: themesLoading, error: themesError, refetch: refetchThemes } = useThemes()
 
@@ -79,57 +75,15 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: 
         difficultyLevel: selectedDifficulty,
         category: selectedCategory,
         questionType: selectedQuestionType,
-
       })
     }
   }, [selectedTheme, selectedDifficulty, selectedCategory, selectedQuestionType, onSelectionComplete])
-
-  React.useEffect(() => {
-      const fetchPdfs = async () => {
-        setIsLoadingPdfs(true)
-        
-        try {
-          const api = getGameContent()
-          
-          const response = await api.getGameContents({
-            exercise_type: 'pdf',
-            theme_id: selectedTheme.id,
-            difficulty_level: selectedDifficulty,
-            category: selectedCategory
-          })
-          
-          if (response && Array.isArray(response)) {
-            const pdfItems = response.filter((item: GameContent) => item.exercise_type === 'pdf')
-            
-            // Remove duplicates by id
-            const uniqueContents = Array.from(
-              new Map(pdfItems.map(item => [item.id, item])).values()
-            )
-            
-            setPdfExercises(uniqueContents)
-          }
-        } catch (err) {
-          console.error('💥 Error fetching pdf exercises:', err)
-        } finally {
-          setIsLoadingPdfs(false)
-        }
-      }
-      fetchPdfs()
-    }, [selectedTheme, selectedDifficulty, selectedCategory])
-  
-  
 
   const handleReset = () => {
     setSelectedDifficulty(null)
     setSelectedTheme(null)
     setSelectedCategory(null)
     setSelectedQuestionType(null)
-    setPdfExercises([])
-
-  }
-
-  const handleDownloadPdf = (pdfUrl: string) => { // TODO: also put the answers??
-    window.open(pdfUrl, '_blank')
   }
 
   // Step 0: Difficulty Selection
@@ -284,61 +238,22 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: 
         >
           ← Back to Categories
         </button>
-<h1 className="mb-2">Select Exercise Type</h1>
+        <h1 className="mb-2">Select Question Type</h1>
         <p className="text-secondary mb-8">
           Theme: {selectedTheme?.name} / Category: {category.label}
         </p>
         
-        {/* PDF Exercises Section */}
-        <div className="mb-12">
-          <h2 className="text-lg font-semibold mb-4 text-primary">PDF Exercises</h2>
-          {isLoadingPdfs ? (
-            <div className="bg-card rounded-lg shadow-md p-6 flex items-center justify-center">
-              <Loader2 className="w-5 h-5 animate-spin text-accent mr-2" />
-              <span className="text-secondary">Loading PDF exercises...</span>
-            </div>
-          ) : pdfExercises.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {pdfExercises.map((pdf) => (
-                <button
-                  key={pdf.id}
-                  onClick={() => handleDownloadPdf(pdf.answer)}
-                  className="bg-card rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-200 text-left group flex items-center justify-between hover:bg-card-hover border border-default hover:border-hover"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple rounded-full flex items-center justify-center text-white">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <span className="font-medium text-primary">
-                      {pdf.question_type ? pdf.question_type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'PDF Exercise'}
-                    </span>
-                  </div>
-                  <Download className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-card rounded-lg shadow-md p-6 text-center text-secondary">
-              No PDF exercises available for this selection
-            </div>
-          )}
-        </div>
-
-        {/* Interactive Games Section */}
-        <div>
-          <h2 className="text-lg font-semibold mb-4 text-primary">Interactive Games</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.entries(QUESTION_TYPES).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedQuestionType(key as GetGameContentsQuestionType)}
-                className="bg-card rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-200 text-left group flex items-center justify-between hover:bg-card-hover border border-default hover:border-hover"
-              >
-                <span className="font-medium text-primary">{label}</span>
-                <ChevronRight className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
-              </button>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(QUESTION_TYPES).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedQuestionType(key as GetGameContentsQuestionType)}
+              className="bg-card rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-200 text-left group flex items-center justify-between hover:bg-card-hover border border-default hover:border-hover"
+            >
+              <span className="font-medium text-primary">{label}</span>
+              <ChevronRight className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
+            </button>
+          ))}
         </div>
       </div>
     </div>
