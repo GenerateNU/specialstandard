@@ -78,8 +78,8 @@ function CalendarPage() {
   }
 
   return (
-    <div className="flex justify-center">
-      <div style={{ width: '90vw', maxHeight: 'calc(115vh - 100px)' }} className="pt-10 flex flex-col gap-6 overflow-hidden">
+    <div className="w-full h-screen bg-background">
+      <div className="w-full p-10 pb-16 flex flex-col gap-6 overflow-hidden" style={{ maxHeight: 'calc(100vh)' }}>
         <CreateSessionDialog
           open={newSessionOpen}
           therapistId={userId}
