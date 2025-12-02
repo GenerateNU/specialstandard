@@ -14,6 +14,8 @@ import { getGameContent } from "@/lib/api/game-content";
 import { BookOpen, Brain, Gamepad2, Image, Shuffle, SquareDashedMousePointer, Loader2, FileText, Download} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
+import { useGameResults } from "@/hooks/useGameResults";
+
 
 function GamesPageContent() {
   const router = useRouter();
@@ -30,6 +32,17 @@ function GamesPageContent() {
 
   const [pdfExercises, setPdfExercises] = React.useState<GameContent[]>([]);
   const [isLoadingPdfs, setIsLoadingPdfs] = React.useState(false);
+
+  const [showResultModal, setShowResultModal] = React.useState(false);
+  const [selectedPdf, setSelectedPdf] = React.useState<GameContent | null>(null);
+  const [timeTaken, setTimeTaken] = React.useState<number>(0);
+  const [completed, setCompleted] = React.useState(true);
+  const [incorrectAttempts, setIncorrectAttempts] = React.useState<number>(0);
+
+  const gameResultsHook = useGameResults({
+    session_student_id: sessionStudentIds[0] ? Number.parseInt(sessionStudentIds[0]) : 0,
+    session_id: sessionId,
+  });
 
   // Fetch PDFs when content is selected
   React.useEffect(() => {
@@ -75,6 +88,29 @@ function GamesPageContent() {
 
   const handleDownloadPdf = (pdfUrl: string) => {
     window.open(pdfUrl, '_blank');
+  };
+
+  const handleOpenResultModal = (pdf: GameContent) => {
+    setSelectedPdf(pdf);
+    setShowResultModal(true);
+    setTimeTaken(0);
+    setCompleted(true);
+    setIncorrectAttempts(0);
+  };
+
+  const handleSubmitResult = async () => {
+    if (!selectedPdf || !gameResultsHook) return;
+
+    // Start and complete the card with the provided data
+    gameResultsHook.startCard(selectedPdf);
+    gameResultsHook.completeCard(selectedPdf.id, timeTaken, incorrectAttempts);
+    
+    // Save the result
+    await gameResultsHook.saveAllResults();
+    
+    // Close modal and reset
+    setShowResultModal(false);
+    setSelectedPdf(null);
   };
 
   // Show game selection after content is selected
