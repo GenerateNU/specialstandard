@@ -171,6 +171,7 @@
   background-color: var(--card-hover) !important;
   transform: none !important;
 }
+
 /* ========================================
    GRID LINES & BORDERS
    ======================================== */
@@ -283,34 +284,30 @@
 }
 
 /* ========================================
-   EVENT STYLING (The Important Part!)
+   EVENT STYLING (Colorful Events!)
    ======================================== */
 
 /* Base event styling with rounded corners */
 .rbc-event {
-  background-color: var(--color-blue) !important;
   border: none !important;
-  border-radius: 8px !important;
-  padding: 4px 8px !important;
-  box-shadow: 0 2px 4px rgba(108, 120, 255, 0.3) !important;
-  transition: all 0.2s ease !important;
-  color: var(--color-white) !important;
+  border-radius: 12px !important;
+  padding: 6px 8px !important;
+  transition: all 0.3s ease !important;
+  color: #000 !important;
   font-weight: 500 !important;
   font-size: 0.875rem !important;
+  overflow: hidden;
 }
 
-/* Event hover state */
+/* Event hover state - lift up and enhance shadow */
 .rbc-event:hover {
-  background-color: var(--color-blue-hover) !important;
-  box-shadow: 0 4px 8px rgba(108, 120, 255, 0.4) !important;
-  transform: translateY(-1px) !important;
+  transform: translateY(-2px) !important;
   cursor: pointer !important;
 }
 
 /* Selected event */
 .rbc-event.rbc-selected {
-  background-color: var(--color-pink) !important;
-  box-shadow: 0 4px 8px rgba(205, 10, 125, 0.4) !important;
+  transform: translateY(-2px) !important;
 }
 
 /* Event content */
@@ -319,6 +316,7 @@
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Event label (time) */
@@ -442,5 +440,6 @@
   .rbc-event {
     font-size: 0.75rem !important;
     padding: 2px 4px !important;
+    border-radius: 8px !important;
   }
 }
