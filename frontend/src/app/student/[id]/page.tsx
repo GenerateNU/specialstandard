@@ -15,7 +15,6 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import SchoolTag from "@/components/school/schoolTag";
-import SessionNotes from "@/components/sessions/sessionNotes";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRecentlyViewedStudents } from "@/hooks/useRecentlyViewedStudents";
@@ -225,7 +224,7 @@ function StudentPage() {
                 </div>
                 <div className="flex-1 min-h-0">
                   {/* Upcoming sessions content will go here */}
-                  <UpcomingSession studentId={studentId} />
+                  <UpcomingSession studentId={studentId} count={2} latest={true} />
                 </div>
               </div>
             </div>
@@ -352,16 +351,17 @@ function StudentPage() {
               )}
             </div>
 
-            <div className="gap-2 flex flex-col overflow-hidden">
-              <div className="gap-2 flex flex-col overflow-hidden">
-                <div className="w-full text-2xl text-primary flex items-baseline font-semibold">
-                  Session Notes
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  <SessionNotes studentId={studentId} />
-                </div>
+              {/* Recent Sessions */}
+              <div
+                  className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex flex-col gap-4`}
+              >
+                  <div className="text-2xl font-semibold text-primary flex-shrink-0">
+                      Previous Sessions
+                  </div>
+                  <div className="flex-1 min-h-0">
+                      <UpcomingSession studentId={studentId} count={2} latest={false} />
+                  </div>
               </div>
-            </div>
           </div>
         </div>
       </div>

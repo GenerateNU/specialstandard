@@ -4,9 +4,11 @@ import { useStudentSessions } from '@/hooks/useStudentSessions'
 
 interface UpcomingSessionProps {
   studentId?: string
+  count?: number
+  latest: boolean
 }
 
-export default function UpcomingSession({ studentId }: UpcomingSessionProps) {
+export default function UpcomingSession({ studentId, count, latest }: UpcomingSessionProps) {
   const { sessions, isLoading, error } = useStudentSessions(studentId || '')
 
   // Handle no studentId case
@@ -28,15 +30,25 @@ export default function UpcomingSession({ studentId }: UpcomingSessionProps) {
 
   // Filter for upcoming sessions (future dates only)
   const now = moment()
-  const upcomingSessionsWithStudentInfo = sessions
-    .map(item => ({
-      ...item,
-      sessionData: (item as any).session
-    }))
-    .filter(item => moment(item.sessionData.start_datetime).isAfter(now))
-    .sort((a, b) => 
-      new Date(a.sessionData.start_datetime).getTime() - new Date(b.sessionData.start_datetime).getTime()
-    )
+  let upcomingSessionsWithStudentInfo
+  if (latest) {
+    upcomingSessionsWithStudentInfo = sessions
+      .map(item => ({ ...item, sessionData: (item as any).session }))
+      .filter(item => moment(item.sessionData.start_datetime).isAfter(now))
+      .sort((a, b) =>
+        new Date(a.sessionData.start_datetime).getTime() - new Date(b.sessionData.start_datetime).getTime()
+      )
+  } else {
+    upcomingSessionsWithStudentInfo = sessions
+      .map(item => ({ ...item, sessionData: (item as any).session }))
+      .filter(item => moment(item.sessionData.start_datetime).isBefore(now))
+      .sort((a, b) =>
+        new Date(b.sessionData.start_datetime).getTime() - new Date(a.sessionData.start_datetime).getTime()
+      )
+  }
+  if (count && upcomingSessionsWithStudentInfo.length > count) {
+    upcomingSessionsWithStudentInfo = upcomingSessionsWithStudentInfo.slice(0, count)
+  }
 
   if (error || upcomingSessionsWithStudentInfo.length === 0) {
     return (
