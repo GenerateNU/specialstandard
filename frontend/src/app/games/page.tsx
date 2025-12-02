@@ -7,8 +7,11 @@ import type {
   GetGameContentsCategory,
   GetGameContentsQuestionType,
   Theme,
+  GameContent,
 } from "@/lib/api/theSpecialStandardAPI.schemas";
-import { BookOpen, Brain, Gamepad2, Image, Shuffle, SquareDashedMousePointer} from "lucide-react";
+import { GameContentExerciseType } from "@/lib/api/theSpecialStandardAPI.schemas";
+import { getGameContent } from "@/lib/api/game-content";
+import { BookOpen, Brain, Gamepad2, Image, Shuffle, SquareDashedMousePointer, Loader2, FileText, Download} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
 
@@ -25,6 +28,42 @@ function GamesPageContent() {
     questionType: GetGameContentsQuestionType;
   } | null>(null);
 
+  const [pdfExercises, setPdfExercises] = React.useState<GameContent[]>([]);
+  const [isLoadingPdfs, setIsLoadingPdfs] = React.useState(false);
+
+  // Fetch PDFs when content is selected
+  React.useEffect(() => {
+    const fetchPdfs = async () => {
+      if (!selectedContent) return;
+
+      setIsLoadingPdfs(true);
+      try {
+        const api = getGameContent();
+        const response = await api.getGameContents({
+          exercise_type: GameContentExerciseType.pdf,
+          theme_id: selectedContent.theme.id,
+          difficulty_level: selectedContent.difficultyLevel,
+          category: selectedContent.category,
+        });
+
+        if (response && Array.isArray(response)) {
+          const pdfItems = response.filter((item: GameContent) => item.exercise_type === GameContentExerciseType.pdf);
+          const uniqueContents = Array.from(
+            new Map(pdfItems.map(item => [item.id, item])).values()
+          );
+          setPdfExercises(uniqueContents);
+        }
+      } catch (err) {
+        console.error('Error fetching PDFs:', err);
+        setPdfExercises([]);
+      } finally {
+        setIsLoadingPdfs(false);
+      }
+    };
+
+    fetchPdfs();
+  }, [selectedContent]);
+
   const handleContentSelection = (selection: {
     theme: Theme;
     difficultyLevel: number;
@@ -32,6 +71,10 @@ function GamesPageContent() {
     questionType: GetGameContentsQuestionType;
   }) => {
     setSelectedContent(selection);
+  };
+
+  const handleDownloadPdf = (pdfUrl: string) => {
+    window.open(pdfUrl, '_blank');
   };
 
   // Show game selection after content is selected
@@ -46,121 +89,155 @@ function GamesPageContent() {
             >
               ← Back to Content
             </button>
-            <h1 className="mb-8">Select a Game</h1>
+            <h1 className="mb-8">Select an Exercise</h1>
+            {/* PDF Exercises Section */}
+            <div className="mb-12">
+              <h2 className="text-lg font-semibold mb-4 text-primary">PDF Exercises</h2>
+              {isLoadingPdfs ? (
+                <div className="bg-card rounded-lg shadow-md p-6 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 animate-spin text-accent mr-2" />
+                  <span className="text-secondary">Loading PDF exercises...</span>
+                </div>
+              ) : pdfExercises.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pdfExercises.map((pdf, index) => (
+                    <button
+                      key={pdf.id}
+                      onClick={() => handleDownloadPdf(pdf.answer)}
+                      className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover relative"
+                    >
+                      <Download className="w-5 h-5 text-muted group-hover:text-primary transition-colors absolute top-4 right-4" />
+                      <FileText className="w-12 h-12 text-blue mb-4 mx-auto" />
+                      <h3 className="mb-2">
+                        {pdf.question_type ? `${pdf.question_type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} ${index + 1}` : `PDF Exercise ${index + 1}`}
+                      </h3>
+                      <p className="text-secondary text-sm">Click to download</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-card rounded-lg shadow-md p-6 text-center text-secondary">
+                  No PDF exercises available for this selection
+                </div>
+              )}
+            </div>
+            {/* Interactive Games Section */}
+            <div>
+              <h2 className="text-lg font-semibold mb-4 text-primary">Interactive Games</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      themeId: selectedContent.theme.id,
+                      difficulty: String(selectedContent.difficultyLevel),
+                      category: selectedContent.category,
+                      questionType: selectedContent.questionType,
+                      sessionId,
+                      sessionStudentId: sessionStudentIds[0] ?? '0'
+                    });
+                    router.push(`/games/flashcards?${params.toString()}`);
+                  }}
+                  className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
+                >
+                  <BookOpen className="w-12 h-12 text-blue mb-4 mx-auto" />
+                  <h3 className="mb-2">Flashcards</h3>
+                  <p className="text-secondary text-sm">
+                    Practice with interactive flashcards
+                  </p>
+                </button>
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      themeId: selectedContent.theme.id,
+                      difficulty: String(selectedContent.difficultyLevel),
+                      category: selectedContent.category,
+                      questionType: selectedContent.questionType,
+                      sessionId,
+                      sessionStudentId: sessionStudentIds[0] ?? '0'
+                    });
+                    router.push(`/games/image-matching?${params.toString()}`);
+                  }}
+                  className="cursor-pointer bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
+                >
+                  <Image className="w-12 h-12 text-blue mb-4 mx-auto" />
+                  <h3 className="mb-2">Image Matching</h3>
+                  <p className="text-secondary text-sm">
+                    Match words with images
+                  </p>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      themeId: selectedContent.theme.id,
+                      difficulty: String(selectedContent.difficultyLevel),
+                      category: selectedContent.category,
+                      questionType: selectedContent.questionType,
+                      sessionId,
+                      sessionStudentId: sessionStudentIds[0] ?? '0',
+                    });
+                    router.push(`/games/memorymatch?${params.toString()}`);
+                  }}
+                  className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
+                >
+                  <Brain className="w-12 h-12 text-blue mb-4 mx-auto" />
+                  <h3 className="mb-2">Memory Match</h3>
+                  <p className="text-secondary text-sm">
+                    Spin a wheel to test your skills!
+                  </p>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      themeId: selectedContent.theme.id,
+                      difficulty: String(selectedContent.difficultyLevel),
+                      category: selectedContent.category,
+                      questionType: selectedContent.questionType,
+                      sessionId,
+                      sessionStudentId: sessionStudentIds[0] ?? '0',
+                    });
+                    router.push(`/games/drag-and-drop?${params.toString()}`);
+                  }}
+                  className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
+                >
+                  <SquareDashedMousePointer className="w-12 h-12 text-blue mb-4 mx-auto" />
+                  <h3 className="mb-2">Drag and Drop</h3>
+                  <p className="text-secondary text-sm">
+                    Drag and drop the story in order!
+                  </p>
+                </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams({
-                    themeId: selectedContent.theme.id,
-                    difficulty: String(selectedContent.difficultyLevel),
-                    category: selectedContent.category,
-                    questionType: selectedContent.questionType,
-                    sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0'
-                  });
-                  router.push(`/games/flashcards?${params.toString()}`);
-                }}
-                className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
-              >
-                <BookOpen className="w-12 h-12 text-blue mb-4 mx-auto" />
-                <h3 className="mb-2">Flashcards</h3>
-                <p className="text-secondary text-sm">
-                  Practice with interactive flashcards
-                </p>
-              </button>
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams({
-                    themeId: selectedContent.theme.id,
-                    difficulty: String(selectedContent.difficultyLevel),
-                    category: selectedContent.category,
-                    questionType: selectedContent.questionType,
-                    sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0'
-                  });
-                  router.push(`/games/image-matching?${params.toString()}`);
-                }}
-                className="cursor-pointer bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
-              >
-                <Image className="w-12 h-12 text-blue mb-4 mx-auto" />
-                <h3 className="mb-2">Image Matching</h3>
-                <p className="text-secondary text-sm">
-                  Match words with images
-                </p>
-              </button>
-              
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams({
-                    themeId: selectedContent.theme.id,
-                    difficulty: String(selectedContent.difficultyLevel),
-                    category: selectedContent.category,
-                    questionType: selectedContent.questionType,
-                    sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0',
-                  });
-                  router.push(`/games/memorymatch?${params.toString()}`);
-                }}
-                className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
-              >
-                <Brain className="w-12 h-12 text-blue mb-4 mx-auto" />
-                <h3 className="mb-2">Memory Match</h3>
-                <p className="text-secondary text-sm">
-                  Spin a wheel to test your skills!
-                </p>
-              </button>
-              
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams({
-                    themeId: selectedContent.theme.id,
-                    difficulty: String(selectedContent.difficultyLevel),
-                    category: selectedContent.category,
-                    questionType: selectedContent.questionType,
-                    sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0',
-                  });
-                  router.push(`/games/drag-and-drop?${params.toString()}`);
-                }}
-                className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
-              >
-                <SquareDashedMousePointer className="w-12 h-12 text-blue mb-4 mx-auto" />
-                <h3 className="mb-2">Drag and Drop</h3>
-                <p className="text-secondary text-sm">
-                  Drag and drop the story in order!
-                </p>
-              </button>
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      themeId: selectedContent.theme.id,
+                      difficulty: String(selectedContent.difficultyLevel),
+                      category: selectedContent.category,
+                      questionType: selectedContent.questionType,
+                      sessionId,
+                      sessionStudentId: sessionStudentIds[0] ?? '0',
+                    });
+                    router.push(`/games/word-image-match?${params.toString()}`);
+                  }}
+                  className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
+                >
+                  <Shuffle className="w-12 h-12 text-blue mb-4 mx-auto" />
+                  <h3 className="mb-2">Word-Image Matching</h3>
+                  <p className="text-secondary text-sm">
+                    Match many words to many images in this game!
+                  </p>
+                </button>
 
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams({
-                    themeId: selectedContent.theme.id,
-                    difficulty: String(selectedContent.difficultyLevel),
-                    category: selectedContent.category,
-                    questionType: selectedContent.questionType,
-                    sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0',
-                  });
-                  router.push(`/games/word-image-match?${params.toString()}`);
-                }}
-                className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover"
-              >
-                <Shuffle className="w-12 h-12 text-blue mb-4 mx-auto" />
-                <h3 className="mb-2">Word-Image Matching</h3>
-                <p className="text-secondary text-sm">
-                  Match many words to many images in this game!
-                </p>
-              </button>
-
-              <button
-                disabled
-                className="bg-card rounded-lg shadow-md p-8 opacity-50 cursor-not-allowed border border-default"
-              >
-                <Gamepad2 className="w-12 h-12 text-muted mb-4 mx-auto" />
-                <h3 className="mb-2 text-muted">Quiz Game</h3>
-                <p className="text-disabled text-sm">Coming soon</p>
-              </button>
+                <button
+                  disabled
+                  className="bg-card rounded-lg shadow-md p-8 opacity-50 cursor-not-allowed border border-default"
+                >
+                  <Gamepad2 className="w-12 h-12 text-muted mb-4 mx-auto" />
+                  <h3 className="mb-2 text-muted">Quiz Game</h3>
+                  <p className="text-disabled text-sm">Coming soon</p>
+                </button>
+              </div>
             </div>
           </div>
         </div>
