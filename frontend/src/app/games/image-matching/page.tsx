@@ -68,9 +68,10 @@ function ImageMatchingGame() {
   const { students: allStudents } = useStudents()
 
   // Calculate questions per student and limit total questions
-  const questionsPerStudent = Math.floor(gameContents.length / selectedStudentIds.length)
-  const totalQuestionsToUse = questionsPerStudent * selectedStudentIds.length;
-  const limitedGameContents = gameContents.slice(0, totalQuestionsToUse);
+  // Ensure at least 1 question per student, or use all available if fewer questions than students
+  const questionsPerStudent = Math.max(1, Math.floor(gameContents.length / selectedStudentIds.length))
+  const totalQuestionsToUse = Math.min(questionsPerStudent * selectedStudentIds.length, gameContents.length);
+  const limitedGameContents = gameContents.length > 0 ? gameContents.slice(0, totalQuestionsToUse) : gameContents;
   
   // Get current student based on question index
   const currentStudentIndex = currentQuestionIndex % selectedStudentIds.length;

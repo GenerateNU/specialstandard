@@ -241,9 +241,10 @@ export default function MemorymatchGameInterface({
   });
 
   // Calculate questions per student and limit total cards
-  const questionsPerStudent = Math.floor(gameContents.length / session_student_ids.length);
-  const totalQuestionsToUse = questionsPerStudent * session_student_ids.length;
-  const limitedGameContents = gameContents.slice(0, totalQuestionsToUse);
+  // Ensure at least 1 question per student, or use all available if fewer questions than students
+  const questionsPerStudent = Math.max(1, Math.floor(gameContents.length / session_student_ids.length));
+  const totalQuestionsToUse = Math.min(questionsPerStudent * session_student_ids.length, gameContents.length);
+  const limitedGameContents = gameContents.length > 0 ? gameContents.slice(0, totalQuestionsToUse) : gameContents;
   
   // Get current student based on question count
   const currentStudentIndex = questionCount % session_student_ids.length;

@@ -57,7 +57,6 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0'
                   });
                   router.push(`/games/flashcards?${params.toString()}`);
                 }}
@@ -77,7 +76,6 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0'
                   });
                   router.push(`/games/image-matching?${params.toString()}`);
                 }}
@@ -98,7 +96,6 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0',
                   });
                   router.push(`/games/memorymatch?${params.toString()}`);
                 }}
@@ -119,7 +116,6 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0',
                   });
                   router.push(`/games/drag-and-drop?${params.toString()}`);
                 }}
@@ -140,7 +136,6 @@ function GamesPageContent() {
                     category: selectedContent.category,
                     questionType: selectedContent.questionType,
                     sessionId,
-                    sessionStudentId: sessionStudentIds[0] ?? '0',
                   });
                   router.push(`/games/word-image-match?${params.toString()}`);
                 }}

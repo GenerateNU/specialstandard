@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, CheckCircle, Volume2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Volume2, XCircle } from 'lucide-react'
 import { StudentSelector } from '@/components/games/StudentSelector'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useStudents } from '@/hooks/useStudents'
@@ -88,9 +88,10 @@ function DragAndDropGame() {
   const { students: allStudents } = useStudents()
 
   // Calculate questions per student and limit total questions
-  const questionsPerStudent = Math.floor(gameContents.length / selectedStudentIds.length);
-  const totalQuestionsToUse = questionsPerStudent * selectedStudentIds.length;
-  const limitedGameContents = gameContents.slice(0, totalQuestionsToUse);
+  // Ensure at least 1 question per student, or use all available if fewer questions than students
+  const questionsPerStudent = Math.max(1, Math.floor(gameContents.length / selectedStudentIds.length));
+  const totalQuestionsToUse = Math.min(questionsPerStudent * selectedStudentIds.length, gameContents.length);
+  const limitedGameContents = gameContents.length > 0 ? gameContents.slice(0, totalQuestionsToUse) : gameContents;
   
   // Get current student based on question index
   const currentStudentIndex = currentQuestionIndex % selectedStudentIds.length;
@@ -187,6 +188,7 @@ function DragAndDropGame() {
       setAvailableFilenames(shuffled)
       setSequence(Array.from({ length: correctAnswerFilenames.length }, () => null))
       setShowSuccess(false)
+      setShowIncorrect(false)
       setIncorrectAttempts(0)
     }
   }, [currentQuestionIndex, currentQuestion, correctAnswerFilenames])
@@ -204,20 +206,24 @@ function DragAndDropGame() {
       setCardStartTime(Date.now())
       gameResultsHook?.startCard(currentQuestion)
     }
-  }, [currentQuestionIndex, currentQuestion, gameResultsHook])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestionIndex])
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
   }
 
-  const checkSequence = (currentSequence: (string | null)[]) => {
+  const [showIncorrect, setShowIncorrect] = useState(false)
+
+  const checkSequence = (currentSequence: (string | null)[], currentIncorrectAttempts: number) => {
     // Only check if all slots are filled
     if (currentSequence.every(item => item !== null)) {
       const isCorrect = currentSequence.every((filename, idx) => filename === correctAnswerFilenames[idx])
       
       if (isCorrect) {
         setShowSuccess(true)
-        setScore(score + 1)
+        setShowIncorrect(false)
+        setScore(prev => prev + 1)
         
         // Save result using the hook
         if (gameResultsHook && currentQuestion && cardStartTime) {
@@ -225,20 +231,28 @@ function DragAndDropGame() {
           gameResultsHook.completeCard(
             currentQuestion.id, 
             timeTaken, 
-            incorrectAttempts,
+            currentIncorrectAttempts,
           )
         }
 
         setTimeout(() => {
           if (currentQuestionIndex < limitedGameContents.length - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1)
+            setCurrentQuestionIndex(prev => prev + 1)
           } else {
             setGameComplete(true)
           }
         }, 2000)
       } else {
-        setIncorrectAttempts(incorrectAttempts + 1)
-        // Could track the incorrect attempt here if needed
+        setIncorrectAttempts(prev => prev + 1)
+        setShowIncorrect(true)
+        
+        // Return all pieces to available pool after a brief delay
+        setTimeout(() => {
+          const filledFilenames = currentSequence.filter((f): f is string => f !== null)
+          setAvailableFilenames(prev => [...prev, ...filledFilenames])
+          setSequence(Array.from({ length: correctAnswerFilenames.length }, () => null))
+          setShowIncorrect(false)
+        }, 1500)
       }
     }
   }
@@ -270,7 +284,7 @@ function DragAndDropGame() {
       setAvailableFilenames(availableFilenames.filter(f => f !== draggedFilename))
       
       // Check if sequence is correct
-      checkSequence(newSequence)
+      checkSequence(newSequence, incorrectAttempts)
     }
   }
 
@@ -303,6 +317,13 @@ function DragAndDropGame() {
     setGameComplete(false)
     setCardStartTime(null)
     setResultsSaved(false)
+    setShowSuccess(false)
+    setShowIncorrect(false)
+    setIncorrectAttempts(0)
+    // Reset images - these will be re-populated by the useEffect
+    setAvailableFilenames([])
+    setSequence([])
+    setCorrectAnswerFilenames([])
   }
 
   if (isLoading || loadingAnswer) {
@@ -446,6 +467,12 @@ function DragAndDropGame() {
                   <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg flex items-center gap-2">
                     <CheckCircle className="w-5 h-5" />
                     <span>Correct! Moving to next question...</span>
+                  </div>
+                )}
+                {showIncorrect && (
+                  <div className="mt-4 p-4 bg-red-100 text-red-800 rounded-lg flex items-center gap-2">
+                    <XCircle className="w-5 h-5" />
+                    <span>Incorrect, try again!</span>
                   </div>
                 )}
               </div>
