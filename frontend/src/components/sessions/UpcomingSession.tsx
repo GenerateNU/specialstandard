@@ -72,30 +72,52 @@ export default function UpcomingSession({ studentId, count, latest }: UpcomingSe
     )
   }
 
-  return (
-    <div className="space-y-2 overflow-y-scroll h-[140px]">
-      {upcomingSessionsWithStudentInfo.map((item, index) => {
-        const { sessionData } = item
-        const startMoment = moment(sessionData.start_datetime)
-        const endMoment = moment(sessionData.end_datetime)
+    return (
+        <div className="h-full overflow-y-auto space-y-2 w-full p-2">
+            {upcomingSessionsWithStudentInfo.map((item, index) => {
+                const { sessionData } = item
+                const startMoment = moment(sessionData.start_datetime)
+                const endMoment = moment(sessionData.end_datetime)
+                // const daysUntil = startMoment.diff(now, 'days')
 
-        return (
-          <div
-            key={sessionData.id}
-            className="p-4 bg-card h-[90px] border-2 border-default rounded-xl flex flex-col gap-1"
-          >
-            <span className="font-semibold text-sm">
-              {sessionData.session_name || `Session #${index + 1}`}
-            </span>
-            <span className="text-xs">
-              {startMoment.format('dddd, MMMM D, YYYY')}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {startMoment.format('h:mm A')} - {endMoment.format('h:mm A')}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
+
+                return (
+                    <div
+                        key={sessionData.id}
+                        className="p-4 bg-card border-2 border-default rounded-[32px] flex flex-col justify-center min-h-20 w-full shadow-md"
+                    >
+                        <div className="ml-2 my-4">
+                            <div className="flex flex-row">
+                                <div>
+                                    {/* Session title and relative time */}
+                                    <div className="w-full flex justify-between items-center mb-1">
+                                        <div className="font-semibold text-base">
+                                            <h3>{sessionData.session_name || `Session #${index + 1}`}</h3>
+                                        </div>
+                                        {/* <div className="text-sm text-muted-foreground">
+                         {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
+                       </div> */}
+                                    </div>
+
+
+                                    {/* Date & Time Range */}
+                                    <div className="text-md text-muted-foreground">
+                                        {startMoment.format('dddd, MMMM D, YYYY')}
+                                        {' | '}
+                                        {startMoment.format('h:mm A')}
+                                        {' - '}
+                                        {endMoment.format('h:mm A')}
+                                    </div>
+                                </div>
+                                <div>
+                                    <IndividualityBadge sessionId={sessionData.id} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
+    )
+
 }

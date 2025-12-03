@@ -45,7 +45,7 @@ function mapLevelToNumber(level: string): number {
   }
 }
 
-function StudentPage() {
+export function StudentPage() {
   const params = useParams();
   const studentId = params.id as string;
 
@@ -206,7 +206,7 @@ function StudentPage() {
 
   return (
     <AppLayout>
-      <div className="w-full h-screen bg-background">
+      <div className="w-full min-h-screen bg-background">
         <div className="w-full h-full flex flex-col gap-6 p-10 relative overflow-y-auto">
           <div className="flex flex-col gap-3">
             <Link
@@ -234,7 +234,7 @@ function StudentPage() {
           </div>
 
           <div className="flex flex-col gap-6 shrink-0">
-            <div className="grid grid-cols-2 gap-6 h-60">
+            <div className="grid grid-cols-2 gap-6 h-90">
               {/* Student Profile */}
               <div
                 className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col relative`}
@@ -281,15 +281,15 @@ function StudentPage() {
                 </div>
               </div>
 
-              {/* Upcoming Sessions */}
-              <div
-                className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex flex-col gap-4`}
-              >
-                <h2>
-                  Upcoming Sessions
-                </h2>
-                  <UpcomingSession studentId={studentId} />
-              </div>
+                {/* Recent Sessions */}
+                <div className="bg-card border-2 border-default rounded-4xl p-5 gap-2 flex flex-col overflow-hidden h-full">
+                    <h2 >
+                        Upcoming Sessions
+                    </h2>
+                    <div className="flex-1 overflow-y-auto">
+                        <UpcomingSession studentId={studentId} latest={true} />
+                    </div>
+                </div>
             </div>
           </div>
           {/* Attendance */}
@@ -329,7 +329,7 @@ function StudentPage() {
             )}
           </div>
           {/* Goals, Session Notes, and Ratings */}
-          <div className="grid grid-cols-2 gap-6 h-[25vh] min-h-[300px]">
+          <div className="grid grid-cols-2 gap-6 h-90 min-h-[300px]">
             {/* IEP Goals */}
             <div className="bg-card border-2 border-default rounded-4xl p-5 gap-6 flex flex-col overflow-hidden relative h-full">
               <h2>
@@ -422,13 +422,13 @@ function StudentPage() {
               )}
             </div>
 
-            {/* Session Notes */}
+            {/* Recent Sessions */}
             <div className="bg-card border-2 border-default rounded-4xl p-5 gap-2 flex flex-col overflow-hidden h-full">
               <h2 >
                 Session Notes
               </h2>
               <div className="flex-1 overflow-y-auto">
-                <SessionNotes studentId={studentId} />
+                <UpcomingSession studentId={studentId} latest={false} />
               </div>
             </div>
           </div>
