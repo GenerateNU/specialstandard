@@ -483,7 +483,8 @@ export default function MemorymatchGameInterface({
           </div>
         </div>
 
-        {/* Progress indicator */}
+        {/* Progress indicator - hide when all complete */}
+        {completedIds.size < limitedGameContents.length && (
         <div className="mb-8">
           <div className="flex items-center justify-between text-sm text-secondary mb-2">
             <span>
@@ -503,9 +504,10 @@ export default function MemorymatchGameInterface({
             />
           </div>
         </div>
+        )}
 
-        {/* Spinner Game */}
-        {limitedGameContents.length > 0 && (
+        {/* Spinner Game - hide when all complete */}
+        {limitedGameContents.length > 0 && completedIds.size < limitedGameContents.length && (
           <div className="mb-8">
             {/* Container for wheel and side buttons */}
             <div className="relative flex items-center justify-center gap-4">
