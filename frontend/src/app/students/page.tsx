@@ -14,6 +14,7 @@ import { getSchoolColor } from '@/lib/utils'
 export default function StudentsPage() {
   const { students, isLoading, error, refetch } = useStudents()
   const [selectedSchools, setSelectedSchools] = useState<string[]>([])
+  const [selectedGrades, setSelectedGrades] = useState<string[]>([])
 
   // Get unique schools from students
   const uniqueSchools = useMemo(() => {
@@ -23,13 +24,19 @@ export default function StudentsPage() {
     return Array.from(new Set(schools)).sort()
   }, [students])
 
+  const uniqueGrades = useMemo(() => {
+    const grades = students.map(s => s.grade).filter((g): g is string => !!g)
+    return Array.from(new Set(grades)).sort()
+  }, [students])
+
   // Filter students based on selected schools
   const filteredStudents = useMemo(() => {
-    if (selectedSchools.length === 0) {
+    if (selectedSchools.length === 0 && selectedGrades.length === 0) {
       return students
     }
-    return students.filter(student => 
-      student.school_name && selectedSchools.includes(student.school_name)
+    return students.filter(student =>
+      (student.school_name && selectedSchools.includes(student.school_name))
+      || (student.grade && selectedGrades.includes(student.grade))
     )
   }, [students, selectedSchools])
 
@@ -42,9 +49,16 @@ export default function StudentsPage() {
     )
   }
 
+  const toggleGradeFilter = (grade: string) => {
+    setSelectedGrades(prev => prev.includes(grade)
+                                        ? prev.filter(g => g !== grade)
+                                        : [...prev, grade])
+  }
+
   // Clear all filters
   const clearFilters = () => {
     setSelectedSchools([])
+    setSelectedGrades([])
   }
 
   if (isLoading) {
@@ -109,6 +123,28 @@ export default function StudentsPage() {
                   >
                     <Badge className={`${getSchoolColor(schoolName)} ${isSelected ? 'ring-2 ring-accent ring-offset-2' : ''}`}>
                       {schoolName}
+                      {isSelected && <X className="w-3 h-3 ml-1 inline" />}
+                    </Badge>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Grade Filters */}
+          {uniqueGrades.length > 0 && (
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-secondary">Filter:</span>
+              {uniqueGrades.map(grade => {
+                const isSelected = selectedGrades.includes(grade)
+                return (
+                  <button key={grade}
+                          onClick={() => toggleGradeFilter(grade)}
+                          className={`transition-all ${
+                            isSelected ? 'opacity-100' : 'opacity-40 hover:opacity-70'  
+                          }`}>
+                    <Badge className={`bg-orange ${isSelected ? 'ring-2 ring-accent ring-offset-2' : '' }`}>
+                      Grade {grade}
                       {isSelected && <X className="w-3 h-3 ml-1 inline" />}
                     </Badge>
                   </button>
