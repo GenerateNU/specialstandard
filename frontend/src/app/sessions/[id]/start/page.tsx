@@ -38,7 +38,6 @@ export default function StartSessionPage({ params }: PageProps) {
     sessionStudentId: s.session_student_id,
   })) || []
 
-
   useEffect(() => {
     if (session && studentTuples.length > 0 && !initializedRef.current) {
       initializedRef.current = true
