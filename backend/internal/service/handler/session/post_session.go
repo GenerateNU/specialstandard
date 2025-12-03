@@ -74,6 +74,7 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 	for _, newSession := range *newSessions {
 		sessionIDs = append(sessionIDs, newSession.ID)
 	}
+
 	postSessionStudent.SessionIDs = sessionIDs
 
 	if session.StudentIDs != nil {
@@ -93,6 +94,7 @@ func (h *Handler) PostSessions(c *fiber.Ctx) error {
 					"error": "Student is already in this session",
 				})
 			}
+
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Failed to create session student",
 			})

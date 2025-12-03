@@ -251,8 +251,6 @@ func (r *SessionRepository) PostSession(
 		}
 	}
 
-	// Insert all session occurrences
-
 	type insertedSession struct {
 		ID    uuid.UUID
 		Start time.Time
@@ -261,13 +259,59 @@ func (r *SessionRepository) PostSession(
 
 	var sessionsInserted []insertedSession
 
-	// Always insert the first session
-	{
+	// Generate sessions only on specified recurrence days
+	if input.Repetition != nil {
+		rp := input.Repetition
 
-		fmt.Printf("Posting session with data: %+v\n", input)
+		// Start from the week containing the recurrence start
+		startOfWeek := rp.RecurStart
+
+		// For each N-week interval until rp.RecurEnd
+		for wkStart := startOfWeek; !wkStart.After(rp.RecurEnd); wkStart = addNWeeks(wkStart, rp.EveryNWeeks) {
+
+			// Only iterate through the explicitly selected recurrence days
+			for _, dayIndex := range rp.Days {
+				// Calculate when this day occurs in this week interval
+				occStart := setToWeekday(wkStart, dayIndex, input.StartTime)
+				occEnd := setToWeekday(wkStart, dayIndex, input.EndTime)
+
+				// Skip if this occurrence is before the recurrence should start
+				if occStart.Before(rp.RecurStart) {
+					continue
+				}
+
+				// Skip if this occurrence is after the recurrence should end
+				if occStart.After(rp.RecurEnd) {
+					continue
+				}
+
+				fmt.Printf("Inserting session for %s (day %d) at %v\n", occStart.Format("Monday"), dayIndex, occStart)
+				fmt.Printf("START > END? %v\n", occStart.After(occEnd))
+				fmt.Printf("START == END? %v\n", occStart.Equal(occEnd))
+
+				var id uuid.UUID
+				err := q.QueryRow(ctx,
+					`INSERT INTO session (session_name, start_datetime, end_datetime, notes, location, session_parent_id)
+                 VALUES ($1, $2, $3, $4, $5, $6)
+                 RETURNING id, start_datetime, end_datetime`,
+					input.SessionName, occStart, occEnd,
+					input.Notes, input.Location, parentID,
+				).Scan(&id, &occStart, &occEnd)
+				if err != nil {
+					return nil, err
+				}
+
+				sessionsInserted = append(sessionsInserted, insertedSession{
+					ID:    id,
+					Start: occStart,
+					End:   occEnd,
+				})
+			}
+		}
+	} else {
+		// Single non-recurring session
+		fmt.Printf("Posting single session with data: %+v\n", input)
 		fmt.Printf("Time details: %+v\n", input.StartTime)
-
-		// Add these right before the INSERT:
 		fmt.Printf("About to insert START: %v, END: %v\n", input.StartTime, input.EndTime)
 		fmt.Printf("START > END? %v\n", input.StartTime.After(input.EndTime))
 		fmt.Printf("START == END? %v\n", input.StartTime.Equal(input.EndTime))
@@ -291,57 +335,7 @@ func (r *SessionRepository) PostSession(
 		})
 	}
 
-	// Generate repeating sessions only if repetition exists
-	if input.Repetition != nil {
-		rp := input.Repetition
-
-		// We start from the week of the initial session start date.
-		startOfInitialWeek := input.StartTime
-
-		// For each N-week interval until rp.RecurEnd
-		for wkStart := startOfInitialWeek; !wkStart.After(rp.RecurEnd); wkStart = addNWeeks(wkStart, rp.EveryNWeeks) {
-
-			for _, dayIndex := range rp.Days {
-				// Compute the occurrence for this weekday in the repeating week.
-				occStart := setToWeekday(wkStart, dayIndex, input.StartTime)
-				occEnd := setToWeekday(wkStart, dayIndex, input.EndTime)
-
-				if occStart.Before(rp.RecurStart) {
-					continue
-				}
-
-				// Skip if the occurrence is beyond the recurrence end
-				if occStart.After(rp.RecurEnd) {
-					continue
-				}
-
-				fmt.Printf("About to insert repeating session START: %v, END: %v\n", occStart, occEnd)
-				fmt.Printf("START > END? %v\n", occStart.After(occEnd))
-				fmt.Printf("START == END? %v\n", occStart.Equal(occEnd))
-
-				var id uuid.UUID
-				err := q.QueryRow(ctx,
-					`INSERT INTO session (session_name, start_datetime, end_datetime, notes, location, session_parent_id)
-                 VALUES ($1, $2, $3, $4, $5, $6)
-                 RETURNING id, start_datetime, end_datetime`,
-					input.SessionName, occStart, occEnd,
-					input.Notes, input.Location, parentID,
-				).Scan(&id, &occStart, &occEnd)
-				if err != nil {
-					return nil, err
-				}
-
-				sessionsInserted = append(sessionsInserted, insertedSession{
-					ID:    id,
-					Start: occStart,
-					End:   occEnd,
-				})
-			}
-		}
-	}
-
 	// Fetch full session objects using same logic as GetSessionByID (JOIN + scan repetition)
-
 	sessions := make([]models.Session, 0, len(sessionsInserted))
 
 	for _, sInserted := range sessionsInserted {
@@ -445,13 +439,22 @@ func (r *SessionRepository) PatchSession(ctx context.Context, id uuid.UUID, inpu
 }
 
 func (r *SessionRepository) DeleteRecurringSessions(ctx context.Context, id uuid.UUID) error {
-	query := `
+	query := `SELECT session_parent_id, start_datetime FROM session WHERE id = $1`
+
+	var sessionParentID uuid.UUID
+	var startDatetime time.Time
+	err := r.db.QueryRow(ctx, query, id).Scan(&sessionParentID, &startDatetime)
+	if err != nil {
+		return err
+	}
+
+	query = `
         DELETE FROM session
         WHERE session_parent_id = $1
-        AND start_datetime > NOW();
+        AND start_datetime >= $2;
     `
 
-	_, err := r.db.Exec(ctx, query, id)
+	_, err = r.db.Exec(ctx, query, sessionParentID, startDatetime)
 	return err
 }
 

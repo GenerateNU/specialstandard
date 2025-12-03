@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   CirclePlus,
   PencilLine,
+  RotateCw,
   Save,
   Trash,
   Trash2,
@@ -14,11 +15,10 @@ import AppLayout from "@/components/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import UpcomingSession from "@/components/sessions/UpcomingSession";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import {useParams, useRouter} from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 import SchoolTag from "@/components/school/schoolTag";
-import SessionNotes from "@/components/sessions/sessionNotes";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRecentlyViewedStudents } from "@/hooks/useRecentlyViewedStudents";
@@ -49,9 +49,9 @@ function mapLevelToNumber(level: string): number {
   }
 }
 
-function StudentPage() {
+export default function StudentPage() {
   const params = useParams();
-  const studentId = params.id as string;
+  const studentId = params.studentID as string;
 
   const { students, isLoading, updateStudent, deleteStudent } = useStudents();
   const student = students.find((s) => s.id === studentId);
@@ -74,6 +74,7 @@ function StudentPage() {
   const [edit, setEdit] = useState(false);
   const [iepGoals, setIepGoals] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter()
 
   // Initialize IEP goals from student data
   useEffect(() => {
@@ -179,7 +180,7 @@ function StudentPage() {
       const visualRatings = entry.ratings.filter(r => r.category === 'visual_cue');
       const verbalRatings = entry.ratings.filter(r => r.category === 'verbal_cue');
       const gesturalRatings = entry.ratings.filter(r => r.category === 'gestural_cue');
-      
+
       const calcAverage = (ratings: any[]) => {
         if (ratings.length === 0) return null;
         const sum = ratings.map(r => mapLevelToNumber(r.level)).reduce((a, b) => a + b, 0);
@@ -213,7 +214,7 @@ function StudentPage() {
 
   return (
     <AppLayout>
-      <div className="w-full h-screen bg-background">
+      <div className="w-full min-h-screen bg-background">
         <div className="w-full h-full flex flex-col gap-6 p-10 relative overflow-y-auto">
           <div className="flex flex-col gap-3">
             <Link
@@ -241,7 +242,7 @@ function StudentPage() {
           </div>
 
           <div className="flex flex-col gap-6 shrink-0">
-            <div className="grid grid-cols-2 gap-6 h-60">
+            <div className="grid grid-cols-2 gap-6 h-90">
               {/* Student Profile */}
               <div
                 className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} overflow-hidden flex flex-col relative`}
@@ -288,21 +289,21 @@ function StudentPage() {
                 </div>
               </div>
 
-              {/* Upcoming Sessions */}
-              <div
-                className={`flex-1 bg-card border-2 border-default ${CORNER_ROUND} ${PADDING} flex flex-col gap-4`}
-              >
-                <h2>
-                  Upcoming Sessions
-                </h2>
-                  <UpcomingSession studentId={studentId} />
-              </div>
+                {/* Recent Sessions */}
+                <div className="bg-card border-2 border-default rounded-4xl p-5 gap-2 flex flex-col overflow-hidden h-full">
+                    <h2 >
+                        Upcoming Sessions
+                    </h2>
+                    <div className="flex-1 overflow-y-auto">
+                        <UpcomingSession studentId={studentId} latest={true} />
+                    </div>
+                </div>
             </div>
           </div>
           {/* Attendance */}
           <div
-            className={`bg-card border-2 flex flex-col gap-4 border-default ${CORNER_ROUND} ${PADDING} h-[30vh] min-h-[220px]`}
-          > 
+            className={`bg-card border-2 flex flex-col gap-4 border-default ${CORNER_ROUND} ${PADDING} h-[25vh] min-h-[220px]`}
+          >
           <h2>
             Goal Progress
           </h2>
@@ -336,7 +337,7 @@ function StudentPage() {
             )}
           </div>
           {/* Goals, Session Notes, and Ratings */}
-          <div className="grid grid-cols-2 gap-6 h-[25vh] min-h-[300px]">
+          <div className="grid grid-cols-2 gap-6 h-90 min-h-[300px]">
             {/* IEP Goals */}
             <div className="bg-card border-2 border-default rounded-4xl p-5 gap-6 flex flex-col overflow-hidden relative h-full">
               <h2>
@@ -390,7 +391,7 @@ function StudentPage() {
                       <Trophy size={20} className="flex-shrink-0" />
                       {edit ? (
                         <>
-                          
+
                           <input
                             value={goal}
                             onChange={(e) => updateGoal(index, e.target.value)}
@@ -429,13 +430,21 @@ function StudentPage() {
               )}
             </div>
 
-            {/* Session Notes */}
+            {/* Recent Sessions */}
             <div className="bg-card border-2 border-default rounded-4xl p-5 gap-2 flex flex-col overflow-hidden h-full">
-              <h2 >
-                Session Notes
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2>
+                  Recent Session History
+                </h2>
+                <button className="flex items-center gap-2 text-secondary hover:text-primary text-lg
+                                   mr-2 pr-2 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/student/${studentId}/session-history`)}>
+                  View All Sessions
+                  <RotateCw className="w-4 h-4" />
+                </button>
+              </div>
               <div className="flex-1 overflow-y-auto">
-                <SessionNotes studentId={studentId} />
+                <UpcomingSession studentId={studentId} latest={false} />
               </div>
             </div>
           </div>
@@ -450,7 +459,7 @@ function StudentPage() {
                 { key: "gestural_cue", label: "Gestural Cue", color: "var(--color-orange)" }
               ]}
             />
-            <SessionRatingsChart 
+            <SessionRatingsChart
               title="Engagement"
               chartData={engagementData}
               categories={[
@@ -484,5 +493,3 @@ function StudentPage() {
     </AppLayout>
   );
 }
-
-export default StudentPage;
