@@ -9,6 +9,7 @@ import {CATEGORIES} from "@/components/games/FlashcardGameInterface";
 import {useGameContents} from "@/hooks/useGameContents";
 import AppLayout from "@/components/AppLayout";
 import {useGameResults} from "@/hooks/useGameResults";
+import { useSessionContext } from "@/contexts/sessionContext";
 
 export interface MatchingCardContent {
   id: string
@@ -37,6 +38,10 @@ export default function WordImageMatchingGameInterface({
   questionType
 }: WordImageMatchingGameInterfaceProps) {
   const router = useRouter()
+  const { session } = useSessionContext()
+  
+  // Prefer session context ID over prop
+  const effectiveSessionId = session?.id || session_id
 
   const { gameContents } = useGameContents({
     theme_id: themeID || undefined,
@@ -179,16 +184,22 @@ export default function WordImageMatchingGameInterface({
                         </button>
                         {gameResultsHook && (
                             <button
-                                onClick={() => {
-                                  handleSaveProgress()
-                                  router.push('/games')
+                                onClick={async () => {
+                                  await handleSaveProgress()
+                                  setResultsSaved(true)
                                 }}
                                 disabled={gameResultsHook.isSaving || resultsSaved}
-                                className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border cursor-pointer"
+                                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
                             >
-                                Save Progress & Exit
+                                {gameResultsHook.isSaving ? 'Saving...' : resultsSaved ? 'Saved!' : 'Save Progress'}
                             </button>
                         )}
+                        <button
+                            onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
+                            className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border cursor-pointer"
+                        >
+                            Back to Content
+                        </button>
                     </div>
                     {gameResultsHook?.saveError && (
                         <p className="text-error text-sm mt-2">
@@ -205,9 +216,9 @@ export default function WordImageMatchingGameInterface({
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <button onClick={() => router.back()}
+          <button onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
                   className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors cursor-pointer">
-            ← Back
+            ← Back to Content
           </button>
           <button onClick={resetGame}
                   className="flex items-center gap-2 text-secondary hover:text-primary transition-colors cursor-pointer">

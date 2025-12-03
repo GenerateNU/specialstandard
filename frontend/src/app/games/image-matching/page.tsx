@@ -63,9 +63,12 @@ function ImageMatchingGame() {
     question_type: questionType as any,
   })
 
-  // Get student names from session context
-  const { students: sessionStudents } = useSessionContext()
+  // Get student names and session from context
+  const { students: sessionStudents, session } = useSessionContext()
   const { students: allStudents } = useStudents()
+  
+  // Prefer session context ID over URL param
+  const effectiveSessionId = session?.id || sessionId
 
   // Calculate questions per student and limit total questions
   // Ensure at least 1 question per student, or use all available if fewer questions than students
@@ -219,10 +222,10 @@ function ImageMatchingGame() {
           <div className="text-center">
             <p className="text-error mb-4">No questions available for this selection.</p>
             <button
-              onClick={() => router.push('/games')}
+              onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
               className="px-4 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover"
             >
-              Back to Games
+              Back to Content
             </button>
           </div>
         </div>
@@ -274,10 +277,10 @@ function ImageMatchingGame() {
                 {gameResultsHooks.some(hook => hook.isSaving) ? 'Saving...' : resultsSaved ? 'Saved!' : 'Save Progress'}
               </button>
               <button
-                onClick={() => router.push('/games')}
+                onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
                 className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border"
               >
-                Back to Games
+                Back to Content
               </button>
             </div>
             {gameResultsHooks.some(hook => hook.saveError) && (
@@ -297,7 +300,7 @@ function ImageMatchingGame() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <button
-              onClick={() => router.push('/games')}
+              onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
               className="text-blue hover:text-blue-hover flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />

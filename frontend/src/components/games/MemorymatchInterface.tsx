@@ -262,8 +262,11 @@ export default function MemorymatchGameInterface({
   const startCard = currentGameResultsHook?.startCard;
 
   // Get student names from session context
-  const { students: sessionStudents } = useSessionContext();
+  const { students: sessionStudents, session } = useSessionContext();
   const { students: allStudents } = useStudents();
+  
+  // Prefer session context ID over prop
+  const effectiveSessionId = session?.id || session_id;
   
   const getStudentName = (sessionStudentId: number) => {
     const sessionStudent = sessionStudents.find(s => s.sessionStudentId === sessionStudentId);
@@ -441,7 +444,7 @@ export default function MemorymatchGameInterface({
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push('/games')}
+              onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
               className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
             >
               ← Back to Content
@@ -603,6 +606,13 @@ export default function MemorymatchGameInterface({
                 className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
               >
                 {gameResultsHooks.some(hook => hook.isSaving) ? "Saving..." : resultsSaved ? "Saved!" : "Save Progress"}
+              </button>
+              
+              <button
+                onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
+                className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border"
+              >
+                Back to Content
               </button>
             </div>
 
