@@ -15,6 +15,7 @@ import { BadgeCheck, BookOpen, Brain, FileText, Gamepad2, Image, Loader2, Shuffl
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
 import { useManualGameResult } from "@/hooks/useManualGameResults";
+import Tooltip from '@/components/ui/tooltip'
 
 
 function GamesPageContent() {
@@ -157,16 +158,17 @@ const handleSubmitResult = async () => {
                     onClick={() => handleDownloadPdf(pdf.answer)}
                     className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 group hover:bg-card-hover border border-default hover:border-hover text-center relative cursor-pointer"
                   >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenResultModal(pdf);
-                      }}
-                      className="absolute top-4 right-4 p-1.5 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors"
-                      title="Submit Result"
-                    >
-                      <BadgeCheck className="w-4 h-4" />
-                    </button>
+                    <Tooltip content="Submit Result">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenResultModal(pdf);
+                        }}
+                        className="absolute top-4 right-4 p-1.5 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors"
+                      >
+                        <BadgeCheck className="w-4 h-4" />
+                      </button>
+                    </Tooltip>
                     
                     <FileText className="w-12 h-12 text-blue mb-4 mx-auto" />
                     <h3 className="mb-2">
