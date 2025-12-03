@@ -36,9 +36,6 @@ export default function StartSessionPage({ params }: PageProps) {
   const studentTuples = sessionStudents?.map(s => ({
     studentId: s.id,
     sessionStudentId: s.session_student_id,
-    firstName: s.first_name,
-    lastName: s.last_name
-
   })) || []
 
 

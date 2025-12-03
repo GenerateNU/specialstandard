@@ -3,6 +3,7 @@
 import AppLayout from "@/components/AppLayout";
 import { GameContentSelector } from "@/components/games/GameContentSelector";
 import { useSessionContext } from "@/contexts/sessionContext";
+import { useStudents } from '@/hooks/useStudents'
 import type {
   GameContent,
   GetGameContentsCategory,
@@ -24,6 +25,7 @@ function GamesPageContent() {
   const { session, students } = useSessionContext();
   const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000"; // could use this or the session context
   const sessionStudentIds = students ? students.map((student) => student.sessionStudentId?.toString()) : [];
+  const { students: allStudents } = useStudents()
   const [selectedContent, setSelectedContent] = React.useState<{
     theme: Theme;
     difficultyLevel: number;
@@ -336,11 +338,15 @@ const handleSubmitResult = async () => {
                 className="w-full px-4 py-2 border border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-blue bg-background"
               >
                 <option value="">Select a student...</option>
-                {students?.map((student) => (
-                  <option key={student.sessionStudentId} value={student.sessionStudentId?.toString()}>
-                    {`${student.firstName || ''} ${student.lastName || ''}`.trim()}
-                  </option>
-                ))}
+                {students?.map((student) => {
+                  const studentDetails = allStudents?.find(s => s.id === student.studentId);
+                  const fullName = `${studentDetails?.first_name || ''} ${studentDetails?.last_name || ''}`.trim();
+                  return (
+                    <option key={student.sessionStudentId} value={student.sessionStudentId?.toString()}>
+                      {fullName}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

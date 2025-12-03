@@ -6,8 +6,6 @@ import { createContext, useCallback, useContext, useState } from 'react'
 export interface StudentTuple {
   studentId: string
   sessionStudentId: number
-  firstName: string
-  lastName: string
 }
 
 interface SessionContextType {
