@@ -40,6 +40,7 @@ function GamesPageContent() {
   const [incorrectAttempts, setIncorrectAttempts] = React.useState<number>(0);
 
   const [selectedStudentId, setSelectedStudentId] = React.useState<string>('');
+  const [showSuccessMessage, setShowSuccessMessage] = React.useState(false);
 
 
   const { submitResultAsync, isSubmitting, error } = useManualGameResult();
@@ -114,9 +115,14 @@ const handleSubmitResult = async () => {
       count_of_incorrect_attempts: incorrectAttempts,
     });
     
+    setShowSuccessMessage(true); // Show success
     
-    setShowResultModal(false);
-    setSelectedPdf(null);
+    // Hide modal after brief delay
+    setTimeout(() => {
+      setShowResultModal(false);
+      setSelectedPdf(null);
+      setShowSuccessMessage(false);
+    }, 1500);
   } catch (error) {
     console.error('Error saving result:', error);
   }
@@ -392,7 +398,7 @@ const handleSubmitResult = async () => {
               disabled={!selectedStudentId || isSubmitting}
               className="flex-1 px-4 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+              {showSuccessMessage ? '✓ Saved!' : isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
           </div>
 
