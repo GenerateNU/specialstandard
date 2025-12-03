@@ -46,7 +46,7 @@ function mapLevelToNumber(level: string): number {
 
 export function StudentPage() {
   const params = useParams();
-  const studentId = params.id as string;
+  const studentId = params.studentID as string;
 
   const { students, isLoading, updateStudent, deleteStudent } = useStudents();
   const student = students.find((s) => s.id === studentId);

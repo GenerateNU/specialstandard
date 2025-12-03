@@ -1,8 +1,10 @@
 'use client'
+
 import moment from 'moment'
 import { useStudentSessions } from '@/hooks/useStudentSessions'
-import {Badge} from "@/components/ui/badge";
-import {useSessionStudentsForSession} from "@/hooks/useSessionStudents";
+import {Badge} from "@/components/ui/badge"
+import {useSessionStudentsForSession} from "@/hooks/useSessionStudents"
+import {useRouter} from "next/navigation";
 
 interface UpcomingSessionProps {
   studentId?: string
@@ -11,7 +13,7 @@ interface UpcomingSessionProps {
   individuality?: boolean
 }
 
-function IndividualityBadge({ sessionId }: { sessionId: string }) {
+export function IndividualityBadge({ sessionId }: { sessionId: string }) {
     const { students } = useSessionStudentsForSession(sessionId)
     const isIndividual = students && students.length <= 1
 
@@ -24,6 +26,7 @@ function IndividualityBadge({ sessionId }: { sessionId: string }) {
 
 export default function UpcomingSession({ studentId, count, latest, individuality = false }: UpcomingSessionProps) {
   const { sessions, isLoading, error } = useStudentSessions(studentId || '')
+  const router = useRouter()
 
   // Handle no studentId case
   if (!studentId) {
@@ -82,7 +85,11 @@ export default function UpcomingSession({ studentId, count, latest, individualit
                 return (
                     <div
                         key={sessionData.id}
-                        className="p-4 bg-card border-2 border-default rounded-[32px] flex flex-col justify-center min-h-20 w-full shadow-md"
+                        onClick={() => {
+                          if (individuality) router.push(`/student/${studentId}/session-history/${sessionData.id}`)
+                        }}
+                        className={`p-4 bg-card border-2 border-default rounded-[32px] flex flex-col
+                                   justify-center min-h-20 w-full shadow-md hover:shadow-lg ${individuality && "cursor-pointer"}`}
                     >
                         <div className="ml-2 my-4">
                             <div className="flex flex-row">
@@ -104,7 +111,7 @@ export default function UpcomingSession({ studentId, count, latest, individualit
                                     </div>
                                 </div>
                                 {individuality && (
-                                  <div className="pl-[5%] mt-[1vh] flex flex-col items-center">
+                                  <div className="pl-[3%] mt-[1vh] flex flex-col items-center">
                                     <IndividualityBadge sessionId={sessionData.id} />
                                   </div>
                                 )}
