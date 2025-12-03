@@ -120,7 +120,7 @@ export interface Session {
    * Repetition details for recurring sessions
    * @nullable
    */
-  repitition?: Repetition;
+  repetition?: Repetition;
 }
 
 export interface CreateSessionInput {
