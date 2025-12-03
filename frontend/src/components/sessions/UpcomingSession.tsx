@@ -16,13 +16,13 @@ function IndividualityBadge({ sessionId }: { sessionId: string }) {
     const isIndividual = students && students.length <= 1
 
     return (
-        <Badge className="bg-orange-disabled text-primary">
-            {isIndividual ? 'Individual' : 'Group'}
-        </Badge>
+      <Badge className="bg-orange-disabled text-primary w-full h-full text-md px-5">
+        {isIndividual ? 'Individual' : 'Group'}
+      </Badge>
     )
 }
 
-export default function UpcomingSession({ studentId, count, latest }: UpcomingSessionProps) {
+export default function UpcomingSession({ studentId, count, latest, individuality = false }: UpcomingSessionProps) {
   const { sessions, isLoading, error } = useStudentSessions(studentId || '')
 
   // Handle no studentId case
@@ -78,8 +78,6 @@ export default function UpcomingSession({ studentId, count, latest }: UpcomingSe
                 const { sessionData } = item
                 const startMoment = moment(sessionData.start_datetime)
                 const endMoment = moment(sessionData.end_datetime)
-                // const daysUntil = startMoment.diff(now, 'days')
-
 
                 return (
                     <div
@@ -94,11 +92,7 @@ export default function UpcomingSession({ studentId, count, latest }: UpcomingSe
                                         <div className="font-semibold text-base">
                                             <h3>{sessionData.session_name || `Session #${index + 1}`}</h3>
                                         </div>
-                                        {/* <div className="text-sm text-muted-foreground">
-                         {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
-                       </div> */}
                                     </div>
-
 
                                     {/* Date & Time Range */}
                                     <div className="text-md text-muted-foreground">
@@ -109,9 +103,11 @@ export default function UpcomingSession({ studentId, count, latest }: UpcomingSe
                                         {endMoment.format('h:mm A')}
                                     </div>
                                 </div>
-                                <div>
+                                {individuality && (
+                                  <div className="pl-[5%] mt-[1vh] flex flex-col items-center">
                                     <IndividualityBadge sessionId={sessionData.id} />
-                                </div>
+                                  </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -1,7 +1,6 @@
 "use client";
 import {
   ArrowLeft,
-  ChevronLeft,
   CirclePlus,
   PencilLine,
   RotateCw,
@@ -294,7 +293,7 @@ export function StudentPage() {
           </div>
           {/* Attendance */}
           <div
-            className={`bg-card border-2 flex flex-col gap-4 border-default ${CORNER_ROUND} ${PADDING} h-[30vh] min-h-[220px]`}
+            className={`bg-card border-2 flex flex-col gap-4 border-default ${CORNER_ROUND} ${PADDING} h-[25vh] min-h-[220px]`}
           >
           <h2>
             Goal Progress
@@ -424,9 +423,17 @@ export function StudentPage() {
 
             {/* Recent Sessions */}
             <div className="bg-card border-2 border-default rounded-4xl p-5 gap-2 flex flex-col overflow-hidden h-full">
-              <h2 >
-                Session Notes
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2>
+                  Recent Session History
+                </h2>
+                <button className="flex items-center gap-2 text-secondary hover:text-primary text-lg
+                                   mr-2 pr-2 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/student/${studentId}/session-history`)}>
+                  View All Sessions
+                  <RotateCw className="w-4 h-4" />
+                </button>
+              </div>
               <div className="flex-1 overflow-y-auto">
                 <UpcomingSession studentId={studentId} latest={false} />
               </div>

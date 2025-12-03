@@ -29,7 +29,7 @@ export default function StudentSessionHistory() {
             <h1 className="text-3xl font-bold text-primary">{initials}'{initials.endsWith('S') ? '' : 's'} Sessions</h1>
           </div>
 
-          <UpcomingSession studentId={studentID} latest={false} />
+          <UpcomingSession studentId={studentID} latest={false} individuality={true} />
         </div>
       </div>
     </AppLayout>
