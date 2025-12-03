@@ -1,17 +1,16 @@
 'use client'
 
-import React, {useEffect, useState, useCallback} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import MatchingCard from "@/components/games/word-image-match/MatchingCard";
 import { useRouter } from 'next/navigation'
 import {CheckCircle, RotateCw} from "lucide-react";
-import type {GetGameContentsCategory} from "@/lib/api/theSpecialStandardAPI.schemas";
+import type {GetGameContentsCategory, PostGameResultInput} from "@/lib/api/theSpecialStandardAPI.schemas";
 import {CATEGORIES} from "@/components/games/FlashcardGameInterface";
 import {useGameContents} from "@/hooks/useGameContents";
 import AppLayout from "@/components/AppLayout";
 import { useSessionContext } from "@/contexts/sessionContext";
 import { useStudents } from "@/hooks/useStudents";
 import { getGameResult } from "@/lib/api/game-result";
-import type { PostGameResultInput } from "@/lib/api/theSpecialStandardAPI.schemas";
 
 export interface MatchingCardContent {
   id: string

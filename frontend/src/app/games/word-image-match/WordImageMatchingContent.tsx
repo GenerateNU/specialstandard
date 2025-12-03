@@ -1,6 +1,6 @@
 'use client'
 
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import WordImageMatchingGameInterface from "@/components/games/WordImageMatchingGameInterface";
 import { StudentSelector } from "@/components/games/StudentSelector";
