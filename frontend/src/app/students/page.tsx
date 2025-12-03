@@ -24,6 +24,15 @@ export default function StudentsPage() {
     return Array.from(new Set(schools)).sort()
   }, [students])
 
+  const gradeColor = useMemo(() => {
+    const freq: Record<string, number> = {}
+    students.forEach(s => {
+      if (s.school_name) freq[s.school_name] = (freq[s.school_name] || 0) + 1
+    })
+    const mostFreqSchool = Object.entries(freq).sort((a, b) => b[1] - a[1])[0]?.[0]
+    return mostFreqSchool ? getSchoolColor(mostFreqSchool) : 'bg-orange'
+  }, [students])
+
   const uniqueGrades = useMemo(() => {
     const grades = students.map(s => s.grade).filter((g): g is string => !!g)
     return Array.from(new Set(grades)).sort()
@@ -143,7 +152,7 @@ export default function StudentsPage() {
                           className={`transition-all ${
                             isSelected ? 'opacity-100' : 'opacity-40 hover:opacity-70'  
                           }`}>
-                    <Badge className={`bg-orange ${isSelected ? 'ring-2 ring-accent ring-offset-2' : '' }`}>
+                    <Badge className={`${gradeColor} ${isSelected ? 'ring-2 ring-accent ring-offset-2' : '' }`}>
                       Grade {grade}
                       {isSelected && <X className="w-3 h-3 ml-1 inline" />}
                     </Badge>
