@@ -44,7 +44,7 @@ function mapLevelToNumber(level: string): number {
   }
 }
 
-export function StudentPage() {
+export default function StudentPage() {
   const params = useParams();
   const studentId = params.studentID as string;
 
@@ -463,5 +463,3 @@ export function StudentPage() {
     </AppLayout>
   );
 }
-
-export default StudentPage;
