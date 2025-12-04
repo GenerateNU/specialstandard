@@ -22,8 +22,15 @@ import Tooltip from '@/components/ui/tooltip'
 function GamesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session, students } = useSessionContext();
+  const { session, students, currentLevel } = useSessionContext();
   const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000"; // could use this or the session context
+  
+  // Redirect to curriculum if no level is selected
+  React.useEffect(() => {
+    if (sessionId !== "00000000-0000-0000-0000-000000000000" && !currentLevel) {
+      router.push(`/sessions/${sessionId}/curriculum`);
+    }
+  }, [sessionId, currentLevel, router]);
   const sessionStudentIds = students ? students.map((student) => student.sessionStudentId?.toString()) : [];
   const { students: allStudents } = useStudents()
   const [selectedContent, setSelectedContent] = React.useState<{
@@ -425,6 +432,7 @@ const handleSubmitResult = async () => {
         onSelectionComplete={handleContentSelection}
         onBack={session ? () => router.push(`/sessions/${session.id}/curriculum`) : () =>router.back()}
         backLabel={session ? "Back to Curriculum" : "Back"}
+        initialDifficultyLevel={currentLevel || undefined}
       />
     </AppLayout>
   );

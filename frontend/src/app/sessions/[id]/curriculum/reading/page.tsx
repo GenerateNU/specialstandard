@@ -1,9 +1,9 @@
 'use client'
 
-import { ArrowLeft, BookOpen } from 'lucide-react'
-import Link from 'next/link'
+import { BookOpen } from 'lucide-react'
 import { use, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useResources } from '@/hooks/useResources'
 
@@ -68,34 +68,20 @@ export default function ReadingPage({ params }: PageProps) {
   const isLoadingPdfs = readingLoading || imagesLoading
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-blue text-white px-8 py-6">
-        <div>
-          <h1 className="text-5xl font-bold mb-2">Curriculum</h1>
-          <p className="text-xl opacity-90">
-            {formattedDate} | Week {currentWeek}
-          </p>
-        </div>
-      </div>
-
-      {/* Content Area */}
+    <CurriculumLayout
+      title="Curriculum"
+      subtitle={formattedDate}
+      backHref={`/sessions/${id}/curriculum`}
+      backLabel="Back to Map"
+    >
       <div className="px-8 py-6">
         {/* Navigation Bar */}
         <div className="flex items-center justify-between mb-6">
-          <Link
-            href={`/sessions/${id}/curriculum`}
-            className="inline-flex items-center gap-2 text-primary hover:text-secondary transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-lg font-medium">Back to Map</span>
-          </Link>
-
           <div className="flex items-center gap-4">
             <BookOpen className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold text-primary">
-              Week {currentWeek} {viewMode === 'reading' ? 'Reading' : 'Reading Images'}
-            </h2>
+            <h1 className="text-2xl font-bold text-primary">
+              Week {currentWeek} – Level {currentLevel} {viewMode === 'reading' ? 'Reading' : 'Reading Images'}
+            </h1>
           </div>
 
           <Button
@@ -169,7 +155,7 @@ export default function ReadingPage({ params }: PageProps) {
           )}
         </div>
       </div>
-    </div>
+    </CurriculumLayout>
   )
 }
 

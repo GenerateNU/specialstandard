@@ -64,53 +64,65 @@ interface GameContentSelectorProps {
   }) => void
   onBack?: () => void
   backLabel?: string
+  initialDifficultyLevel?: number
 }
 
-export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: GameContentSelectorProps) {
-  const { currentMonth, currentYear, currentLevel } = useSessionContext()
+export function GameContentSelector({ onSelectionComplete, onBack, backLabel, initialDifficultyLevel }: GameContentSelectorProps) {
+  const [selectedTheme, setSelectedTheme] = React.useState<Theme | null>(null)
   const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(null)
   const [selectedQuestionType, setSelectedQuestionType] = React.useState<GetGameContentsQuestionType | null>(null)
 
-  // Fetch theme by current month and year (currentMonth is 0-11, API expects 1-12)
-  const { themes, isLoading: themesLoading, error: themesError, refetch: refetchThemes } = useThemes({
-    month: currentMonth + 1,
-    year: currentYear,
-  })
+  const { themes, isLoading: themesLoading, error: themesError, refetch: refetchThemes } = useThemes()
 
-  // Get the first theme for the current month/year
-  const theme = themes.length > 0 ? themes[0] : null
-
-  // Use currentLevel from session context (set in curriculum page)
-  const difficultyLevel = currentLevel ?? 1
+  // Use the passed-in difficulty level
+  const difficultyLevel = initialDifficultyLevel || 1
 
   React.useEffect(() => {
-    if (theme && selectedCategory && selectedQuestionType) {
+    if (selectedTheme && selectedCategory && selectedQuestionType) {
       onSelectionComplete({
-        theme,
+        theme: selectedTheme,
         difficultyLevel,
         category: selectedCategory,
         questionType: selectedQuestionType,
       })
     }
-  }, [theme, difficultyLevel, selectedCategory, selectedQuestionType, onSelectionComplete])
+  }, [selectedTheme, selectedCategory, selectedQuestionType, difficultyLevel, onSelectionComplete])
 
-  // Loading state for theme
-  if (themesLoading) {
-    return (
-      <div className="min-h-screen bg-background p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue mx-auto mb-4"></div>
-          <p className="text-muted">Loading theme for {MONTHS[currentMonth]} {currentYear}...</p>
-        </div>
-      </div>
-    )
+  const handleReset = () => {
+    setSelectedTheme(null)
+    setSelectedCategory(null)
+    setSelectedQuestionType(null)
   }
 
-  // Error state or no theme found
-  if (themesError || !theme) {
+  // Step 1: Theme Selection
+  if (!selectedTheme) {
+    if (themesError) {
+      return (
+        <div className="min-h-screen bg-background p-8 flex items-center justify-center">
+          <div className="text-center">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="mb-6 text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
+              >
+                ← {backLabel || 'Back'}
+              </button>
+            )}
+            <p className="text-error mb-4">Failed to load themes</p>
+            <button 
+              onClick={() => refetchThemes()}
+              className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     return (
-      <div className="min-h-screen bg-background p-8 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-6xl mx-auto">
           {onBack && (
             <button
               onClick={onBack}
@@ -119,21 +131,38 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: 
               ← {backLabel || 'Back'}
             </button>
           )}
-          <p className="text-error mb-4">
-            {themesError ? 'Failed to load theme' : `No theme found for ${MONTHS[currentMonth]} ${currentYear}`}
-          </p>
-          <button 
-            onClick={() => refetchThemes()}
-            className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover transition-colors"
-          >
-            Retry
-          </button>
+          <h1 className="mb-2">Select a Theme</h1>
+          <p className="text-secondary mb-8">Level: {difficultyLevel}</p>
+          {themesLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue mx-auto mb-4"></div>
+              <p className="text-muted">Loading themes...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {themes.map((theme) => (
+                <button
+                  key={theme.id}
+                  onClick={() => setSelectedTheme(theme)}
+                  className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-200 text-left group hover:bg-card-hover border border-default hover:border-hover"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3>{theme.name}</h3>
+                    <ChevronRight className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
+                  </div>
+                  <p className="text-secondary mt-2">
+                    {`Explore ${theme.name} themed content`}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
   }
 
-  // Step 1: Category Selection
+  // Step 2: Category Selection
   if (!selectedCategory) {
     return (
       <div className="min-h-screen bg-background p-8">
