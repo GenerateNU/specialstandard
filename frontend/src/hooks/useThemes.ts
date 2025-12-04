@@ -2,10 +2,16 @@ import { useAuthContext } from '@/contexts/authContext'
 import { getThemes as getThemesApi } from '@/lib/api/themes'
 import type {
   CreateThemeInput,
+  GetThemesParams,
   Theme,
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import type { QueryObserverResult } from '@tanstack/react-query'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+interface UseThemesOptions {
+  month?: number // 1-12
+  year?: number
+}
 
 interface UseThemesReturn {
   themes: Theme[]
@@ -15,10 +21,14 @@ interface UseThemesReturn {
   addTheme: (theme: CreateThemeInput) => void
 }
 
-export function useThemes(): UseThemesReturn {
+export function useThemes(options?: UseThemesOptions): UseThemesReturn {
   const queryClient = useQueryClient()
   const api = getThemesApi()
   const { userId: therapistId } = useAuthContext()
+
+  const params: GetThemesParams | undefined = options?.month || options?.year 
+    ? { month: options.month, year: options.year }
+    : undefined
 
   const {
     data: themesResponse,
@@ -26,8 +36,8 @@ export function useThemes(): UseThemesReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['themes', therapistId],
-    queryFn: () => api.getThemes(),
+    queryKey: ['themes', therapistId, options?.month, options?.year],
+    queryFn: () => api.getThemes(params),
   })
 
   const themes = themesResponse ?? []

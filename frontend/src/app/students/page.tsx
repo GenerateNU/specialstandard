@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, Loader2, Plus, Users, X } from 'lucide-react'
+import {AlertCircle, ChevronsUpDown, ListFilter, Loader2, Plus, Users, X} from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
@@ -10,10 +10,15 @@ import StudentCard from '@/components/students/studentCard'
 import { Badge } from '@/components/ui/badge'
 import { useStudents } from '@/hooks/useStudents'
 import { getSchoolColor } from '@/lib/utils'
+import {gradeToDisplay} from "@/lib/gradeUtils";
 
 export default function StudentsPage() {
   const { students, isLoading, error, refetch } = useStudents()
   const [selectedSchools, setSelectedSchools] = useState<string[]>([])
+  const [selectedGrades, setSelectedGrades] = useState<string[]>([])
+
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [sortAZ, setSortAZ] = useState(true)
 
   // Get unique schools from students
   const uniqueSchools = useMemo(() => {
@@ -23,15 +28,41 @@ export default function StudentsPage() {
     return Array.from(new Set(schools)).sort()
   }, [students])
 
+  const gradeColor = useMemo(() => {
+    const freq: Record<string, number> = {}
+    students.forEach(s => {
+      if (s.school_name) freq[s.school_name] = (freq[s.school_name] || 0) + 1
+    })
+    const mostFreqSchool = Object.entries(freq).sort((a, b) => b[1] - a[1])[0]?.[0]
+    return mostFreqSchool ? getSchoolColor(mostFreqSchool) : 'bg-orange'
+  }, [students])
+
+  const uniqueGrades = useMemo(() => {
+    const grades = students.map(s => s.grade).filter((g): g is string => !!g)
+    return Array.from(new Set(grades)).sort()
+  }, [students])
+
   // Filter students based on selected schools
   const filteredStudents = useMemo(() => {
-    if (selectedSchools.length === 0) {
-      return students
+    let results = students
+
+    if (selectedSchools.length > 0 || selectedGrades.length > 0) {
+      results = students.filter(student =>
+        (student.school_name && selectedSchools.includes(student.school_name))
+        || (student.grade && selectedGrades.includes(student.grade))
+      )
     }
-    return students.filter(student => 
-      student.school_name && selectedSchools.includes(student.school_name)
-    )
-  }, [students, selectedSchools])
+
+    return results.sort((stuA, stuB) => {
+      const firstCheck = sortAZ
+        ? stuA.first_name.toLowerCase().localeCompare(stuB.first_name.toLowerCase())
+        : stuB.first_name.toLowerCase().localeCompare(stuA.first_name.toLowerCase())
+      const secondCheck = sortAZ
+        ? stuA.last_name.toLowerCase().localeCompare(stuB.last_name.toLowerCase())
+        : stuB.last_name.toLowerCase().localeCompare(stuA.last_name.toLowerCase())
+      return (firstCheck !== 0) ? firstCheck : secondCheck
+    })
+  }, [students, selectedSchools, selectedGrades])
 
   // Toggle school filter
   const toggleSchoolFilter = (schoolName: string) => {
@@ -42,10 +73,19 @@ export default function StudentsPage() {
     )
   }
 
+  const toggleGradeFilter = (grade: string) => {
+    setSelectedGrades(prev => prev.includes(grade)
+                                        ? prev.filter(g => g !== grade)
+                                        : [...prev, grade])
+  }
+
   // Clear all filters
   const clearFilters = () => {
     setSelectedSchools([])
+    setSelectedGrades([])
   }
+
+  const numFilters = selectedSchools.length + selectedGrades.length
 
   if (isLoading) {
     return (
@@ -80,10 +120,10 @@ export default function StudentsPage() {
     )
   }
 
-  return (
+    return (
     <AppLayout>
       <div className="min-h-screen bg-background">
-        <div className="w-full p-10">
+        <div className="w-full p-10 relative">
           <PageHeader
             title="Students"
             icon={Users}
@@ -91,31 +131,107 @@ export default function StudentsPage() {
             actions={<AddStudentModal />}
           />
 
-          {/* School Filters */}
-          {uniqueSchools.length > 0 && (
-            <div className="mb-6 flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-secondary">Filter:</span>
-              {uniqueSchools.map(schoolName => {
-                const isSelected = selectedSchools.includes(schoolName)
+          <div className="mb-3 relative flex flex-wrap gap-y-2">
+            <Badge className={`border border-pink text-primary h-full text-md px-5 py-2 
+                               ${filterOpen ? "bg-pink text-white" : "bg-background text-primary"}`}
+                   onClick={() => setFilterOpen(!filterOpen)}>
+              <ListFilter className={`w-4 h-4 mr-2 ${filterOpen ? "text-white" : ""}`} />
+              Filter
+              {(numFilters > 0) && (
+                <div className={`ml-2 flex justify-center items-center w-6 h-6 text-sm rounded-full
+                                 ${filterOpen ? "bg-background text-pink" : "bg-pink text-white"}`}>
+                  {numFilters}
+                </div>
+              )}
+            </Badge>
+
+              {filterOpen && (
+                  <div className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg p-2 max-w-[50%] z-50">
+                      <div className="w-full h-full bg-white/55 p-4 w-50 h-50">
+                          <h3 className="mb-4">School</h3>
+                          {uniqueSchools.length > 0 && (
+                              <div className="mb-4 flex flex-wrap items-center gap-2">
+                                  {uniqueSchools.map(schoolName => {
+                                      const isSelected = selectedSchools.includes(schoolName)
+                                      return (
+                                          <button
+                                              key={schoolName}
+                                              onClick={() => toggleSchoolFilter(schoolName)}
+                                              className={`transition-all ${
+                                                  isSelected
+                                                      ? 'opacity-100'
+                                                      : 'opacity-40 hover:opacity-70'
+                                              }`}
+                                          >
+                                              <Badge className={`${getSchoolColor(schoolName)} text-md h-full px-4 py-0.5`}>
+                                                  {schoolName}
+                                                  {isSelected && <X className="w-3 h-3 ml-2 inline" />}
+                                              </Badge>
+                                          </button>
+                                      )
+                                  })}
+                              </div>
+                          )}
+                          <h3 className="mb-4">Grade Level</h3>
+                          {uniqueGrades.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-2">
+                                  {uniqueGrades.map(grade => {
+                                      const isSelected = selectedGrades.includes(grade)
+                                      return (
+                                          <button key={grade}
+                                                  onClick={() => toggleGradeFilter(grade)}
+                                                  className={`transition-all ${
+                                                      isSelected ? 'opacity-100' : 'opacity-40 hover:opacity-70'
+                                                  }`}>
+                                              <Badge className={`${gradeColor} ${isSelected ? 'ring-2 ring-accent ring-offset-2' : '' }
+                                                         text-md h-full px-4 py-0.5`}>
+                                                  Grade {grade}
+                                                  {isSelected && <X className="w-3 h-3 ml-1 inline" />}
+                                              </Badge>
+                                          </button>
+                                      )
+                                  })}
+                              </div>
+                          )}
+                      </div>
+                  </div>
+              )}
+              <Badge className="mx-4 border border-pink text-primary h-full text-md px-5 py-2"
+                     onClick={() => setSortAZ(!sortAZ)}>
+                  <ChevronsUpDown className="w-4 h-4 mr-2 text-primary" />
+                  Sort {sortAZ ? 'A-Z' : 'Z-A'}
+              </Badge>
+
+              {selectedSchools.length > 0 && selectedSchools.map(schoolName => {
+                          return (
+                              <button
+                                  key={schoolName}
+                                  onClick={() => toggleSchoolFilter(schoolName)}
+                                  className="transition-all opacity-100"
+                              >
+                                  <Badge className={`${getSchoolColor(schoolName)}
+                                                    text-md h-full mx-1.5 text-primary text-md px-5 py-2`}>
+                                      {schoolName}
+                                      <X className="w-3 h-3 ml-2 inline" />
+                                  </Badge>
+                              </button>
+                          )
+              })}
+              {selectedGrades.length > 0 && selectedGrades.map(grade => {
                 return (
                   <button
-                    key={schoolName}
-                    onClick={() => toggleSchoolFilter(schoolName)}
-                    className={`transition-all ${
-                      isSelected 
-                        ? 'opacity-100' 
-                        : 'opacity-40 hover:opacity-70'
-                    }`}
+                    key={grade}
+                    onClick={() => toggleGradeFilter(grade)}
+                    className="transition-all opacity-100"
                   >
-                    <Badge className={`${getSchoolColor(schoolName)} ${isSelected ? 'ring-2 ring-accent ring-offset-2' : ''}`}>
-                      {schoolName}
-                      {isSelected && <X className="w-3 h-3 ml-1 inline" />}
-                    </Badge>
+                      <Badge className={`${gradeColor} text-md h-full mx-1.5 text-primary text-md px-5 py-2`}>
+                        Grade {gradeToDisplay(grade)}
+                        <X className="w-3 h-3 ml-2 inline" />
+                      </Badge>
                   </button>
                 )
               })}
-            </div>
-          )}
+          </div>
 
           {students.length === 0
             ? (

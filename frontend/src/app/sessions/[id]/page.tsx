@@ -3,7 +3,7 @@
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useSession, useSessions } from "@/hooks/useSessions";
+import { formatRecurrence, useSession, useSessions } from "@/hooks/useSessions";
 import {
   useSessionStudents,
   useSessionStudentsForSession,
@@ -15,6 +15,7 @@ import {
   getStudentInitials,
 } from "@/lib/avatarUtils";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Calendar,
@@ -24,7 +25,9 @@ import {
   NotepadText,
   Pencil,
   Plus,
+  Repeat,
   Trash,
+  Trash2,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -38,8 +41,8 @@ interface PageProps {
 
 export default function SessionPage({ params }: PageProps) {
   const { id } = use(params);
-  const { session, isLoading: sessionLoading } = useSession(id);
-  const { updateSession, deleteSession } = useSessions();
+  const { session, isLoading: sessionLoading, isRecurring } = useSession(id);
+  const { updateSession, deleteSession, deleteRecurringSessions } = useSessions();
   const { students: sessionStudents, isLoading: studentsLoading } =
     useSessionStudentsForSession(id);
   const { students: allStudents } = useStudents();
@@ -68,6 +71,11 @@ export default function SessionPage({ params }: PageProps) {
     notes: "",
     location: "",
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState<"single" | "recurring" | null>(
+    null
+  );
 
   if (sessionLoading || studentsLoading) {
     return (
@@ -150,23 +158,37 @@ export default function SessionPage({ params }: PageProps) {
       location: session.location || "",
     });
     setIsEditingSession(true);
-    setMode("editStudents"); // Also enable student editing
+    setMode("editStudents");
   };
 
-  const handleDelete = async () => {
-    if (
-      // eslint-disable-next-line no-alert
-      window.confirm(
-        `Are you sure you want to delete the session: ${session.session_name}? This action cannot be undone.`
-      )
-    ) {
-      try {
-        await deleteSession(id);
-        window.history.back();
-      } catch (error) {
-        console.error("Failed to delete session:", error);
-      }
+  const handleDeleteClick = () => {
+    if (isRecurring) {
+      setDeleteDialogOpen(true);
+    } else {
+      setDeleteType("single");
+      setDeleteConfirmOpen(true);
     }
+  };
+
+  const handleConfirmDelete = async (type: "single" | "recurring") => {
+    try {
+      if (type === "single") {
+        await deleteSession(id);
+      } else if (type === "recurring") {
+        await deleteRecurringSessions(id);
+      }
+      window.history.back();
+    } catch (error) {
+      console.error("Failed to delete session:", error);
+    }
+  };
+
+  const confirmDeleteSingle = () => {
+    handleConfirmDelete("single");
+  };
+
+  const confirmDeleteRecurring = () => {
+    handleConfirmDelete("recurring");
   };
 
   const handleSaveSession = () => {
@@ -185,15 +207,14 @@ export default function SessionPage({ params }: PageProps) {
       location: editedSession.location,
     });
     setIsEditingSession(false);
-    setMode("view"); // Exit student editing mode
+    setMode("view");
   };
 
   const handleCancelEdit = () => {
     setIsEditingSession(false);
-    setMode("view"); // Exit student editing mode
+    setMode("view");
   };
 
-  // Filter out students already in session
   const availableStudents = allStudents.filter(
     (student) => !sessionStudents.some((s) => s.id === student.id)
   );
@@ -213,7 +234,7 @@ export default function SessionPage({ params }: PageProps) {
         <Button
           variant="outline"
           className={`w-fit p-4 flex flex-row items-center gap-2 shrink-0`}
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
         >
           <Trash />
           Delete
@@ -270,34 +291,66 @@ export default function SessionPage({ params }: PageProps) {
         </div>
 
         {!isEditingSession ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {/* Date */}
-            <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-accent" />
-              <span className="text-lg">
-                {formatDateTime(session.start_datetime)}
-              </span>
+          <div className="mb-6 space-y-4">
+            {/* First row: Location, Date, Time, Recurring */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Location */}
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <MapPin className="w-4 h-4 text-accent" />
+                  Location
+                </label>
+                <p className="text-lg text-gray-900">
+                  {session.location || "No location"}
+                </p>
+              </div>
+
+              {/* Date */}
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Calendar className="w-4 h-4 text-accent" />
+                  Date
+                </label>
+                <p className="text-lg text-gray-900">
+                  {formatDateTime(session.start_datetime)}
+                </p>
+              </div>
+
+              {/* Time */}
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Clock className="w-4 h-4 text-accent" />
+                  Time
+                </label>
+                <p className="text-lg text-gray-900">
+                  {formatTimeRange()}
+                </p>
+              </div>
+
+              {/* Recurring Status */}
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Repeat className="w-4 h-4 text-accent" />
+                  Recurrence
+                </label>
+                <p className="text-lg text-gray-900">
+                  {isRecurring && session.repetition
+                    ? formatRecurrence(session.repetition)
+                    : "Does not repeat"}
+                </p>
+              </div>
             </div>
 
-            {/* Time */}
-            <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-              <Clock className="w-5 h-5 text-accent" />
-              <span className="text-lg">{formatTimeRange()}</span>
-            </div>
-
-            {/* Notes */}
-            <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-              <NotepadText className="w-5 h-5 text-accent" />
-              <span className="text-lg">{session.notes || "No notes"}</span>
-            </div>
-
-            {/* Location */}
-            <div className="bg-card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-accent" />
-              <span className="text-lg">
-                {session.location || "No location"}
-              </span>
-            </div>
+            {/* Notes section - if exists */}
+            {session.notes && (
+              <div className="bg-card-hover rounded-2xl px-6 py-4 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <NotepadText className="w-4 h-4 text-accent" />
+                  Notes
+                </label>
+                <p className="text-lg text-gray-900">{session.notes}</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4 mb-6">
@@ -435,9 +488,10 @@ export default function SessionPage({ params }: PageProps) {
         {/* Current students list */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {sessionStudents.map((student, index) => (
-            <div
+            <Link
               key={student.id || `student-${index}`}
-              className="bg-card rounded-2xl p-6 shadow-sm border border-default flex items-center justify-between"
+              href={`/student/${student.id}`}
+              className="bg-card rounded-2xl p-6 shadow-sm border border-default flex items-center justify-between hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-4">
                 <Avatar
@@ -497,7 +551,7 @@ export default function SessionPage({ params }: PageProps) {
                   <X className="w-5 h-5" />
                 </Button>
               )}
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -562,6 +616,116 @@ export default function SessionPage({ params }: PageProps) {
         cancelText="Cancel"
         variant="danger"
         isLoading={isRemoving}
+      />
+
+      {/* Delete options dialog - for recurring sessions */}
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center transition-all ${
+          deleteDialogOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setDeleteDialogOpen(false)}
+      >
+        <div className="absolute inset-0 bg-black/20" />
+        <div
+          className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md mx-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header with icon */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="rounded-full bg-red-100 p-3">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+          </div>
+
+          {/* Title and description */}
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+            Delete Session
+          </h2>
+          <p className="text-gray-600 text-center mb-8">
+            This is a recurring session. Choose how you want to delete it.
+          </p>
+
+          {/* Option buttons */}
+          <div className="space-y-3 mb-8">
+            {/* Delete single session */}
+            <button
+              onClick={() => {
+                setDeleteType("single");
+                setDeleteDialogOpen(false);
+                setDeleteConfirmOpen(true);
+              }}
+              className="w-full p-4 border-2 border-gray-200 rounded-2xl hover:border-red-300 hover:bg-red-50 transition-all text-left group"
+            >
+              <div className="flex items-start gap-3">
+                <Trash2 className="w-5 h-5 text-gray-400 group-hover:text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    Delete this session only
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Removes only this single instance
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            {/* Delete recurring sessions */}
+            <button
+              onClick={() => {
+                setDeleteType("recurring");
+                setDeleteDialogOpen(false);
+                setDeleteConfirmOpen(true);
+              }}
+              className="w-full p-4 border-2 border-gray-200 rounded-2xl hover:border-red-300 hover:bg-red-50 transition-all text-left group"
+            >
+              <div className="flex items-start gap-3">
+                <Trash className="w-5 h-5 text-gray-400 group-hover:text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    Delete this and future sessions
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Removes this instance and all upcoming occurrences
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Footer buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setDeleteDialogOpen(false)}
+              variant="secondary"
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation dialog for actual deletion */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setDeleteType(null);
+        }}
+        onConfirm={
+          deleteType === "single"
+            ? confirmDeleteSingle
+            : confirmDeleteRecurring
+        }
+        title="Confirm Delete"
+        description={
+          deleteType === "single"
+            ? `Are you sure you want to delete this session: ${session.session_name}? This action cannot be undone.`
+            : `Are you sure you want to delete this session and all future occurrences? This action cannot be undone.`
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
       />
 
       {/* Fixed Start Session Button - Lower Right */}

@@ -138,7 +138,7 @@ export function useSession(id: string): UseSessionReturn {
     enabled: !!id,
   });
 
-  const isRecurring = !!session?.repitition;
+  const isRecurring = !!session?.repetition;
 
   return {
     session: session || null,
