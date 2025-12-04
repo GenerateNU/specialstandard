@@ -8,19 +8,24 @@ import {IndividualityBadge} from "@/components/sessions/UpcomingSession";
 import AppLayout from "@/components/AppLayout";
 import {useState} from "react";
 import {useSessions} from "@/hooks/useSessions";
+import {useSessionStudents} from "@/hooks/useSessionStudents";
 
 export default function SessionHistory() {
   const params = useParams()
   const studentID = params.studentID as string
   const sessionID = params.sessionID as string
-  const { sessions, isLoading, error } = useStudentSessions(studentID)
+  const { sessions, isLoading, error, refetch } = useStudentSessions(studentID)
   const sessionInfo = sessions?.find(item => item.session.id === sessionID)
   const session = sessionInfo?.session
   const router = useRouter()
 
   const { updateSession } = useSessions()
-  const [isEditing, setIsEditing] = useState(false)
+  const [isStudentSessionNotesEditing, setIsStudentSessionNotesEditing] = useState(false)
+  const [isSessionNotesEditing, setIsSessionNotesEditing] = useState(false)
   const [notesValue, setNotesValue] = useState(session?.notes || "")
+  const [studentSessionNotesValue, setStudentSessionNotesValue] = useState(sessionInfo?.notes || "")
+
+  const { updateSessionStudent } = useSessionStudents()
 
   if (isLoading) {
     return <div className="p-6 text-muted-foreground">Loading Session...</div>
@@ -33,15 +38,30 @@ export default function SessionHistory() {
   const start = moment(session.start_datetime)
   const end = moment(session.end_datetime)
 
-  const handleSave = async () => {
+  const sessionNotesHandleSave = async () => {
     updateSession(sessionID, { notes: notesValue })
 
-    setIsEditing(false)
+    setIsSessionNotesEditing(false)
   }
 
-  const handleCancel = () => {
+  const sessionNotesHandleCancel = () => {
     setNotesValue(session.notes || "")
-    setIsEditing(false)
+    setIsSessionNotesEditing(false)
+  }
+
+  const studentSessionNotesHandleSave = async () => {
+    updateSessionStudent({
+      session_id: session.id,
+      student_id: sessionInfo?.student_id,
+      notes: studentSessionNotesValue })
+
+    setStudentSessionNotesValue(studentSessionNotesValue || "")
+    setIsStudentSessionNotesEditing(false)
+  }
+
+  const studentSessionNotesHandleCancel = () => {
+    setStudentSessionNotesValue(sessionInfo?.notes || "")
+    setIsStudentSessionNotesEditing(false)
   }
 
   return (
@@ -89,17 +109,76 @@ export default function SessionHistory() {
                       </div>
                   </div>
 
-                  {/* Notes Section */}
+                  {/* Session-Student Notes  */}
+                  <div className="p-4 bg-card border-2 border-default rounded-[32px] flex flex-col
+                                  mt-10 justify-center min-h-20 w-full shadow-md">
+                      <div className="ml-2 my-4">
+                          <div className="w-full flex flex-row justify-between items-center mb-3">
+                              <h3>Session-Student Notes</h3>
+
+                              {isStudentSessionNotesEditing ? (
+                                  <div className="flex flex-row gap-3 mt-2">
+                                      <button
+                                          onClick={studentSessionNotesHandleSave}
+                                          className="px-4 py-2 rounded-2xl bg-primary font-semibold
+                                               bg-orange-disabled flex items-center gap-2"
+                                      >
+                                          <Check className="w-4 h-4" />
+                                          Save
+                                      </button>
+
+                                      <button
+                                          onClick={studentSessionNotesHandleCancel}
+                                          className="px-4 py-2 rounded-2xl bg-primary font-semibold
+                                               bg-orange-disabled flex items-center gap-2"
+                                      >
+                                          <X className="w-4 h-4" />
+                                          Cancel
+                                      </button>
+                                  </div>
+                              ) : (
+                                  <button onClick={() => setIsStudentSessionNotesEditing(true)}
+                                          className="flex items-center gap-1 px-3 py-1 rounded-xl
+                                                   border border-default bg-orange-disabled hover:shadow-md
+                                                   transition text-sm font-medium cursor-pointer">
+                                      <Pencil className="w-4 h-4" />
+                                      Edit
+                                  </button>
+                              )}
+                          </div>
+                          {!isStudentSessionNotesEditing ? (
+                              <div className="text-md">
+                                  {studentSessionNotesValue || (
+                                      <span className="text-muted-foreground italic">No notes added.</span>
+                                  )}
+                              </div>
+                          ) : (
+                              <div className="flex flex-col gap-3">
+                              <textarea
+                                  value={studentSessionNotesValue}
+                                  onChange={(e) => setStudentSessionNotesValue(e.target.value)}
+                                  className="w-full p-4 rounded-2xl border border-default
+                                           min-h-[180px] bg-white-hover text-md focus:outline-none
+                                           focus:ring-2 focus:ring-primary"
+                                  placeholder="Add session-student notes here..."
+                                  title="Session-Student Notes"
+                              />
+                              </div>
+                          )}
+                      </div>
+                  </div>
+
+                  {/* Session Notes  */}
                   <div className="p-4 bg-card border-2 border-default rounded-[32px] flex flex-col
                                   mt-10 justify-center min-h-20 w-full shadow-md">
                       <div className="ml-2 my-4">
                           <div className="w-full flex flex-row justify-between items-center mb-3">
                               <h3>Session Notes</h3>
 
-                              {isEditing ? (
+                              {isSessionNotesEditing ? (
                                 <div className="flex flex-row gap-3 mt-2">
                                   <button
-                                    onClick={handleSave}
+                                    onClick={sessionNotesHandleSave}
                                     className="px-4 py-2 rounded-2xl bg-primary font-semibold
                                                bg-orange-disabled flex items-center gap-2"
                                   >
@@ -108,7 +187,7 @@ export default function SessionHistory() {
                                   </button>
 
                                   <button
-                                    onClick={handleCancel}
+                                    onClick={sessionNotesHandleCancel}
                                     className="px-4 py-2 rounded-2xl bg-primary font-semibold
                                                bg-orange-disabled flex items-center gap-2"
                                   >
@@ -117,7 +196,7 @@ export default function SessionHistory() {
                                   </button>
                                 </div>
                               ) : (
-                                <button onClick={() => setIsEditing(true)}
+                                <button onClick={() => setIsSessionNotesEditing(true)}
                                         className="flex items-center gap-1 px-3 py-1 rounded-xl
                                                    border border-default bg-orange-disabled hover:shadow-md
                                                    transition text-sm font-medium cursor-pointer">
@@ -126,7 +205,7 @@ export default function SessionHistory() {
                                 </button>
                               )}
                           </div>
-                          {!isEditing ? (
+                          {!isSessionNotesEditing ? (
                             <div className="text-md">
                               {session.notes || (
                                 <span className="text-muted-foreground italic">No notes added.</span>
