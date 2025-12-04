@@ -76,14 +76,19 @@ export function GameContentSelector({
 
   const difficultyLevel = initialDifficultyLevel || 1
 
-  // Fetch available question types for the current selection
-  const { gameContents, isLoading } = useGameContents(
-    selectedCategory ? {
+  // Memoize the query params to prevent unnecessary refetches
+  const queryParams = React.useMemo(() => {
+    if (!selectedCategory) return undefined
+    return {
       theme_id: theme.id,
       category: selectedCategory,
       difficulty_level: difficultyLevel,
-    } : undefined
-  )
+      limit: 1000, // Fetch all data
+    }
+  }, [theme.id, selectedCategory, difficultyLevel])
+
+  // Fetch available question types for the current selection
+  const { gameContents, isLoading } = useGameContents(queryParams)
 
   // Extract unique question types from fetched content
   const availableQuestionTypes = React.useMemo(() => {
