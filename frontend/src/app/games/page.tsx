@@ -198,7 +198,6 @@ const handleSubmitResult = async () => {
                       category: selectedContent.category,
                       questionType: selectedContent.questionType,
                       sessionId,
-                      sessionStudentId: sessionStudentIds[0] ?? '0'
                     });
                     router.push(`/games/flashcards?${params.toString()}`);
                   }}
@@ -218,7 +217,6 @@ const handleSubmitResult = async () => {
                       category: selectedContent.category,
                       questionType: selectedContent.questionType,
                       sessionId,
-                      sessionStudentId: sessionStudentIds[0] ?? '0'
                     });
                     router.push(`/games/image-matching?${params.toString()}`);
                   }}
@@ -239,7 +237,6 @@ const handleSubmitResult = async () => {
                       category: selectedContent.category,
                       questionType: selectedContent.questionType,
                       sessionId,
-                      sessionStudentId: sessionStudentIds[0] ?? '0',
                     });
                     router.push(`/games/memorymatch?${params.toString()}`);
                   }}
@@ -260,7 +257,6 @@ const handleSubmitResult = async () => {
                       category: selectedContent.category,
                       questionType: selectedContent.questionType,
                       sessionId,
-                      sessionStudentId: sessionStudentIds[0] ?? '0',
                     });
                     router.push(`/games/drag-and-drop?${params.toString()}`);
                   }}
@@ -281,7 +277,6 @@ const handleSubmitResult = async () => {
                       category: selectedContent.category,
                       questionType: selectedContent.questionType,
                       sessionId,
-                      sessionStudentId: sessionStudentIds[0] ?? '0',
                     });
                     router.push(`/games/word-image-match?${params.toString()}`);
                   }}
