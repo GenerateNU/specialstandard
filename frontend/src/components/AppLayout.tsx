@@ -2,7 +2,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Calendar, Component, GraduationCap, Home, LogOut, PanelLeft, Users } from 'lucide-react'
+import { Calendar, GraduationCap, Home, LogOut, PanelLeft, Users } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -24,7 +24,6 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/students', label: 'Students', icon: Users },
-  { href: '/showcase', label: 'Components', icon: Component },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/curriculum', label: 'Curriculum', icon: GraduationCap },
 ]
