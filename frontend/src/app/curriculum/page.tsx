@@ -1,7 +1,6 @@
 'use client'
 
 import { AlertCircle, BookOpen, Download, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
-import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { PageHeader } from '@/components/PageHeader'
@@ -9,7 +8,6 @@ import { useResources } from '@/hooks/useResources'
 import { useNewsletter } from '@/hooks/useNewsletter'
 import { getGameContent } from '@/lib/api/game-content'
 import { ResourceButton } from '@/components/curriculum/resourceButton'
-import { Button } from '@/components/ui/button'
 import { Dropdown } from '@/components/ui/dropdown'
 import type { GameContent } from '@/lib/api/theSpecialStandardAPI.schemas'
 
