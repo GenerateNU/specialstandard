@@ -22,13 +22,13 @@ export default function CurriculumLayout({
   headerContent,
 }: CurriculumLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-blue text-white px-8 py-6">
+      <div className="px-8 py-6">
         <div className="flex items-center justify-between mb-4">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors group"
+            className="inline-flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="text-sm font-medium">{backLabel}</span>
@@ -44,7 +44,7 @@ export default function CurriculumLayout({
       </div>
 
       {/* Content */}
-      <div className="p-8">
+      <div className="">
         {children}
       </div>
     </div>

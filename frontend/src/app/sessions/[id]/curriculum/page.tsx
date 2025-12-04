@@ -1,14 +1,12 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Dumbbell } from 'lucide-react'
-import Link from 'next/link'
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
 import LevelButton from '@/components/curriculum/LevelButton'
 import WeekNavigator from '@/components/curriculum/WeekNavigator'
+import CurriculumRoad from '@/components/curriculum/CurriculumRoad'
 import { useSessionContext } from '@/contexts/sessionContext'
-import { Button } from '@/components/ui/button'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -32,7 +30,6 @@ export default function CurriculumPage({ params }: PageProps) {
     setCurrentLevel,
   } = useSessionContext()
   const router = useRouter()
-  const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
   
   if (!session) {
     return (
@@ -45,7 +42,6 @@ export default function CurriculumPage({ params }: PageProps) {
   const handlePreviousWeek = () => {
     if (currentWeek > 1) {
       setCurrentWeek(currentWeek - 1)
-      setSelectedLevel(null)
     } else {
       // Go to previous month, week 4
       if (currentMonth === 0) {
@@ -55,14 +51,12 @@ export default function CurriculumPage({ params }: PageProps) {
         setCurrentMonth(currentMonth - 1)
       }
       setCurrentWeek(4)
-      setSelectedLevel(null)
     }
   }
 
   const handleNextWeek = () => {
     if (currentWeek < 4) {
       setCurrentWeek(currentWeek + 1)
-      setSelectedLevel(null)
     } else {
       // Go to next month, week 1
       if (currentMonth === 11) {
@@ -72,12 +66,12 @@ export default function CurriculumPage({ params }: PageProps) {
         setCurrentMonth(currentMonth + 1)
       }
       setCurrentWeek(1)
-      setSelectedLevel(null)
     }
   }
 
   const handleLevelClick = (level: number) => {
-    setSelectedLevel(level)
+    setCurrentLevel(level)
+    router.push(`/sessions/${id}/curriculum/level/${level}`)
   }
 
   // Format date from session
@@ -107,60 +101,33 @@ export default function CurriculumPage({ params }: PageProps) {
         </div>
       )}
     >
-      <div className="max-w-5xl mx-auto py-8">
-        {/* Level Selection Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
-          {[1, 2, 3, 4, 5].map(level => (
-            <div key={level} className="flex justify-center">
-              <LevelButton 
-                level={level} 
-                onClick={() => handleLevelClick(level)} 
-                isSelected={selectedLevel === level} 
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Book Component - Shows when a level is selected */}
-        {selectedLevel && (
-          <div className="flex justify-center mt-12">
-            <div className="bg-card rounded-3xl shadow-2xl border border-default px-12 py-16 max-w-2xl w-full">
-              <div className="text-center mb-2">
-                <p className="text-lg font-medium text-secondary">Week {currentWeek}</p>
-              </div>
-              <div className="flex items-center justify-center gap-4 mb-8">
-                <BookOpen className="w-12 h-12 text-pink" />
-                <h2 className="text-3xl font-bold text-primary">
-                  Level {selectedLevel} Materials
-                </h2>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Link
-                  href={`/sessions/${id}/curriculum/reading`}
-                  onClick={() => setCurrentLevel(selectedLevel)}
-                  className="h-24 text-xl bg-blue hover:bg-blue-hover text-white gap-3 flex items-center justify-center rounded-lg font-semibold transition-all hover:scale-105"
-                >
-                  <BookOpen className="w-6 h-6" />
-                  Open Reading
-                </Link>
-                
-                <Button
-                  size="lg"
-                  className="h-24 text-xl bg-pink hover:bg-pink-hover text-white gap-3"
-                  onClick={() => {
-                    setCurrentLevel(selectedLevel)
-                    router.push(`/games?sessionId=${id}`)
-                  }}
-                >
-                  <Dumbbell className="w-6 h-6" />
-                  Exercises
-                </Button>
-              </div>
-            </div>
+      {/* Level Selection with Road - Full Width */}
+      <div className="relative w-full h-[500px]">
+        {/* SVG Road Background */}
+        <CurriculumRoad />
+        
+        {/* Level Buttons Positioned on Road */}
+        {[
+          { level: 1, left: '30%', top: '94%' },
+          { level: 2, left: '40%', top: '73%' },
+          { level: 3, left: '50%', top: '51%' },
+          { level: 4, left: '60%', top: '28%' },
+          { level: 5, left: '70%', top: '6%' },
+        ].map(({ level, left, top }) => (
+          <div
+            key={level}
+            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+            style={{ left, top }}
+          >
+            <LevelButton
+              level={level}
+              onClick={() => handleLevelClick(level)}
+            />
           </div>
-        )}
+        ))}
       </div>
+
+
     </CurriculumLayout>
   )
 }

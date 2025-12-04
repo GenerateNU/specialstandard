@@ -14,7 +14,6 @@ import {
 import AppLayout from "@/components/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import UpcomingSession from "@/components/sessions/UpcomingSession";
-import Link from "next/link";
 import {useParams, useRouter} from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -217,13 +216,13 @@ export default function StudentPage() {
       <div className="w-full min-h-screen bg-background">
         <div className="w-full h-full flex flex-col gap-6 p-10 relative overflow-y-auto">
           <div className="flex flex-col gap-3">
-            <Link
-              href="/students"
+            <button
+              onClick={() => router.back()}
               className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors group w-fit"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-medium">Back to Students</span>
-            </Link>
+              <span className="text-sm font-medium">Back</span>
+            </button>
             <PageHeader
               title="Student Profile"
               icon={User}
