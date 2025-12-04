@@ -2667,6 +2667,7 @@ paths:
                   spinner,
                   word/image matching, 
                   flashcards,
+                  multi-match,
                 ]
       responses:
         "200":
@@ -4024,7 +4025,7 @@ components:
           type: array
           items:
             type: string
-            enum: [drag and drop, spinner, word/image matching, flashcards]
+            enum: [drag and drop, spinner, word/image matching, flashcards, multi-match]
           description: The list of applicable game types for this content
           example: ["drag and drop", "spinner"]
         raw_answer:
