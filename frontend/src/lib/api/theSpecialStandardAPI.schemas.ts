@@ -1338,3 +1338,78 @@ export type GetGameResultsParams = {
    */
   limit?: number;
 };
+
+/**
+ * Verification method (defaults to totp for Google Authenticator)
+ */
+export type PostVerificationSendCodeBodyMethod =
+  (typeof PostVerificationSendCodeBodyMethod)[keyof typeof PostVerificationSendCodeBodyMethod];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostVerificationSendCodeBodyMethod = {
+  totp: "totp",
+  email: "email",
+  sms: "sms",
+} as const;
+
+export type PostVerificationSendCodeBody = {
+  /** The UUID of the user requesting verification */
+  user_id: string;
+  /** Verification method (defaults to totp for Google Authenticator) */
+  method?: PostVerificationSendCodeBodyMethod;
+};
+
+export type PostVerificationSendCode200 = {
+  message?: string;
+  /** Base64-encoded QR code image for TOTP setup (only for totp method) */
+  qr_code?: string;
+  /** TOTP secret key for manual entry (only for totp method) */
+  secret?: string;
+  /** One-time backup codes for account recovery */
+  backup_codes?: string[];
+};
+
+export type PostVerificationVerifyBody = {
+  /** The UUID of the user being verified */
+  user_id: string;
+  /**
+   * The 6-digit verification code from Google Authenticator
+   * @pattern ^\d{6}$
+   */
+  code: string;
+};
+
+export type PostVerificationVerify200 = {
+  message?: string;
+  verified?: boolean;
+  /** Indicates if MFA is now enabled for this user */
+  mfa_enabled?: boolean;
+};
+
+/**
+ * Verification method to use for resending
+ */
+export type PostVerificationResendBodyMethod =
+  (typeof PostVerificationResendBodyMethod)[keyof typeof PostVerificationResendBodyMethod];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostVerificationResendBodyMethod = {
+  totp: "totp",
+  email: "email",
+  sms: "sms",
+} as const;
+
+export type PostVerificationResendBody = {
+  /** The UUID of the user requesting code resend */
+  user_id: string;
+  /** Verification method to use for resending */
+  method?: PostVerificationResendBodyMethod;
+};
+
+export type PostVerificationResend200 = {
+  message?: string;
+  /** Base64-encoded QR code image (only for totp method) */
+  qr_code?: string;
+  /** TOTP secret key (only for totp method) */
+  secret?: string;
+};
