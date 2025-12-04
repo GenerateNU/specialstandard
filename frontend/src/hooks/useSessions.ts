@@ -51,7 +51,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["sessions"],
+    queryKey: ["sessions", params],
     queryFn: () =>
       api.getSessions({
         limit: params?.limit ?? 100,

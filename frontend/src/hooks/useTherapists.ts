@@ -13,9 +13,15 @@ interface UseTherapistsReturn {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<QueryObserverResult<Therapist[], Error>>;
-  addTherapist: (therapist: CreateTherapistInput) => void;
-  updateTherapist: (id: string, updatedTherapist: UpdateTherapistInput) => void;
-  deleteTherapist: (id: string) => void;
+  addTherapist: (therapist: CreateTherapistInput) => Promise<Therapist>;
+  updateTherapist: (id: string, updatedTherapist: UpdateTherapistInput) => Promise<Therapist>;
+  deleteTherapist: (id: string) => Promise<void>;
+  isAddingTherapist: boolean;
+  isUpdatingTherapist: boolean;
+  isDeletingTherapist: boolean;
+  addError: string | null;
+  updateError: string | null;
+  deleteError: string | null;
 }
 
 interface UseTherapistsOptions {
@@ -27,7 +33,6 @@ export function useTherapists(
 ): UseTherapistsReturn {
   const queryClient = useQueryClient();
   const api = getTherapistsApi();
-  const { userId: therapistId } = useAuthContext();
 
   const {
     data: therapistsResponse,
@@ -35,7 +40,7 @@ export function useTherapists(
     error,
     refetch,
   } = useQuery({
-    queryKey: ["therapists", therapistId],
+    queryKey: ["therapists"],
     queryFn: () => api.getTherapists({}),
     enabled: _options.fetchOnMount,
   });
@@ -45,7 +50,8 @@ export function useTherapists(
   const addTherapistMutation = useMutation({
     mutationFn: (input: CreateTherapistInput) => api.postTherapists(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["therapists", therapistId] });
+      queryClient.invalidateQueries({ queryKey: ["therapists"] });
+      queryClient.invalidateQueries({ queryKey: ["therapist"] });
     },
   });
 
@@ -53,14 +59,16 @@ export function useTherapists(
     mutationFn: ({ id, data }: { id: string; data: UpdateTherapistInput }) =>
       api.patchTherapistsId(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["therapists", therapistId] });
+      queryClient.invalidateQueries({ queryKey: ["therapists"] });
+      queryClient.invalidateQueries({ queryKey: ["therapist"] });
     },
   });
 
   const deleteTherapistMutation = useMutation({
     mutationFn: (id: string) => api.deleteTherapistsId(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["therapists", therapistId] });
+      queryClient.invalidateQueries({ queryKey: ["therapists"] });
+      queryClient.invalidateQueries({ queryKey: ["therapist"] });
     },
   });
 
@@ -69,15 +77,40 @@ export function useTherapists(
     isLoading,
     error: error?.message || null,
     refetch,
-    addTherapist: (therapist: CreateTherapistInput) =>
-      addTherapistMutation.mutate(therapist),
-    updateTherapist: (id: string, data: UpdateTherapistInput) =>
-      updateTherapistMutation.mutate({ id, data }),
-    deleteTherapist: (id: string) => deleteTherapistMutation.mutate(id),
+    addTherapist: async (therapist: CreateTherapistInput) => {
+      return new Promise((resolve, reject) => {
+        addTherapistMutation.mutate(therapist, {
+          onSuccess: (data) => resolve(data),
+          onError: (err) => reject(err),
+        });
+      });
+    },
+    updateTherapist: async (id: string, data: UpdateTherapistInput) => {
+      return new Promise((resolve, reject) => {
+        updateTherapistMutation.mutate({ id, data }, {
+          onSuccess: (data) => resolve(data),
+          onError: (err) => reject(err),
+        });
+      });
+    },
+    deleteTherapist: async (id: string) => {
+      return new Promise((resolve, reject) => {
+        deleteTherapistMutation.mutate(id, {
+          onSuccess: () => resolve(),
+          onError: (err) => reject(err),
+        });
+      });
+    },
+    isAddingTherapist: addTherapistMutation.isPending,
+    isUpdatingTherapist: updateTherapistMutation.isPending,
+    isDeletingTherapist: deleteTherapistMutation.isPending,
+    addError: addTherapistMutation.error?.message || null,
+    updateError: updateTherapistMutation.error?.message || null,
+    deleteError: deleteTherapistMutation.error?.message || null,
   };
 }
 
-// new hook for fetching a single therapist
+// Hook for fetching a single therapist
 interface UseTherapistReturn {
   therapist: Therapist | null;
   isLoading: boolean;
@@ -87,7 +120,6 @@ interface UseTherapistReturn {
 
 export function useTherapist(therapistId: string | null): UseTherapistReturn {
   const api = getTherapistsApi();
-
   const {
     data: therapist,
     isLoading,
