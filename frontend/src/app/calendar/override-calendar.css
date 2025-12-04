@@ -2,30 +2,30 @@
            CALENDAR CONTAINER & BACKGROUND
            ======================================== */
 
-        .rbc-calendar {
+.rbc-calendar {
   background-color: var(--card-bg);
-          border-radius: 16px;
+  border-radius: 16px;
   overflow: visible;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 24px;
   border: none;
-        }
+}
 
-        /* Remove borders from time view */
-        .rbc-time-view {
-          border: none !important;
-        }
+/* Remove borders from time view */
+.rbc-time-view {
+  border: none !important;
+}
 
-        /* Remove today highlight completely */
-        .rbc-today {
-          background-color: transparent !important;
-        }
+/* Remove today highlight completely */
+.rbc-today {
+  background-color: transparent !important;
+}
 
-        /* ========================================
+/* ========================================
            TOOLBAR STYLING
            ======================================== */
 
-        .rbc-toolbar {
+.rbc-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -168,35 +168,35 @@
 .rbc-toolbar-nav-btn:hover {
   background-color: var(--card-hover) !important;
   transform: none !important;
-        }
+}
 
-        /* ========================================
+/* ========================================
            GRID LINES & BORDERS
            ======================================== */
 
-        /* Time view grid lines */
-        .rbc-time-content {
-          border-top: 1px solid rgba(39, 39, 39, 0.1);
-        }
+/* Time view grid lines */
+.rbc-time-content {
+  border-top: 1px solid rgba(39, 39, 39, 0.1);
+}
 
-        /* Time slot borders */
-        .rbc-timeslot-group {
-          border-bottom: 1px solid rgba(39, 39, 39, 0.1);
-          min-height: 80px;
-        }
+/* Time slot borders */
+.rbc-timeslot-group {
+  border-bottom: 1px solid rgba(39, 39, 39, 0.1);
+  min-height: 80px;
+}
 
-        .rbc-time-slot {
-          border-top: 1px solid rgba(0, 0, 0, 0.05);
-        }
+.rbc-time-slot {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
 
-        /* Day column borders */
-        .rbc-day-slot .rbc-time-column {
-          border-left: 1px solid rgba(39, 39, 39, 0.1);
-        }
+/* Day column borders */
+.rbc-day-slot .rbc-time-column {
+  border-left: 1px solid rgba(39, 39, 39, 0.1);
+}
 
-        .rbc-day-slot .rbc-time-column:first-child {
-          border-left: none;
-        }
+.rbc-day-slot .rbc-time-column:first-child {
+  border-left: none;
+}
 
 /* Month view cell borders */
 .rbc-month-view {
@@ -222,7 +222,7 @@
   border-left: none;
 }
 
-        /* ========================================
+/* ========================================
    HEADER: DAY ABOVE, NUMBER IN CIRCLE
    ======================================== */
 
@@ -279,73 +279,72 @@
   display: none !important;
 }
 
-
-        /* ========================================
+/* ========================================
            EVENT STYLING (Colorful Events!)
            ======================================== */
 
-        /* Base event styling with no rounded corners */
-        .rbc-event {
-          border: none !important;
-          border-radius: 0 !important;
-          padding: 6px 8px !important;
-          transition: all 0.3s ease !important;
-          color: #000 !important;
-          font-weight: 500 !important;
-          font-size: 0.875rem !important;
-          overflow: hidden;
-          box-shadow: none !important;
-        }
+/* Base event styling with no rounded corners */
+.rbc-event {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 6px 8px !important;
+  transition: all 0.3s ease !important;
+  color: #000 !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  overflow: hidden;
+  box-shadow: none !important;
+}
 
-        /* Event hover state */
-        .rbc-event:hover {
-          transform: none !important;
-          cursor: pointer !important;
-          opacity: 0.85 !important;
-        }
+/* Event hover state */
+.rbc-event:hover {
+  transform: none !important;
+  cursor: pointer !important;
+  opacity: 0.85 !important;
+}
 
-        /* Selected event */
-        .rbc-event.rbc-selected {
-          transform: translateY(-2px) !important;
-        }
+/* Selected event */
+.rbc-event.rbc-selected {
+  transform: translateY(-2px) !important;
+}
 
-        /* Event content */
-        .rbc-event-content {
-          font-size: 0.875rem;
-          line-height: 1.4;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: normal;
-        }
+/* Event content */
+.rbc-event-content {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
 
-        /* Event label (time) */
-        .rbc-event-label {
-          font-size: 0.75rem;
-          opacity: 0.9;
-        }
+/* Event label (time) */
+.rbc-event-label {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
 
-        /* ========================================
+/* ========================================
            CURRENT TIME INDICATOR
            ======================================== */
 
-        /* Current time indicator line */
-        .rbc-current-time-indicator {
-          background-color: #cd0a7d !important;
-          height: 2px !important;
-        }
+/* Current time indicator line */
+.rbc-current-time-indicator {
+  background-color: #cd0a7d !important;
+  height: 2px !important;
+}
 
-        /* Current time indicator dot */
-        .rbc-current-time-indicator::before {
-          content: '';
-          position: absolute;
-          left: -4px;
-          top: -3px;
-          width: 8px;
-          height: 8px;
-          background-color: #cd0a7d;
-          border-radius: 50%;
-          box-shadow: 0 0 0 2px var(--card-bg);
-        }
+/* Current time indicator dot */
+.rbc-current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  background-color: #cd0a7d;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--card-bg);
+}
 
 /* ========================================
    SELECTION & INTERACTION
@@ -380,17 +379,17 @@
   color: var(--color-blue-hover);
 }
 
-        /* ========================================
+/* ========================================
            OFF-RANGE DATES (Previous/Next Month)
            ======================================== */
 
-        .rbc-off-range {
-          color: rgba(39, 39, 39, 0.4);
-        }
+.rbc-off-range {
+  color: rgba(39, 39, 39, 0.4);
+}
 
-        .rbc-off-range-bg {
-          background-color: rgba(0, 0, 0, 0.02);
-        }
+.rbc-off-range-bg {
+  background-color: rgba(0, 0, 0, 0.02);
+}
 
 /* ========================================
    AGENDA VIEW
@@ -417,11 +416,11 @@
   padding: 12px 16px;
 }
 
-        /* ========================================
+/* ========================================
            RESPONSIVE & MOBILE
            ======================================== */
 
-        @media (max-width: 768px) {
+@media (max-width: 768px) {
   .rbc-toolbar {
     flex-direction: column;
     gap: 12px;
@@ -431,18 +430,18 @@
     font-size: 1rem;
   }
 
-          .rbc-header {
-            font-size: 0.75rem;
-            padding: 8px 4px;
-          }
+  .rbc-header {
+    font-size: 0.75rem;
+    padding: 8px 4px;
+  }
 
-          .rbc-event {
-            font-size: 0.75rem !important;
-            padding: 2px 4px !important;
-            border-radius: 8px !important;
-          }
+  .rbc-event {
+    font-size: 0.75rem !important;
+    padding: 2px 4px !important;
+    border-radius: 8px !important;
+  }
 
-          .rbc-timeslot-group {
-            min-height: 60px;
-          }
-        }
+  .rbc-timeslot-group {
+    min-height: 60px;
+  }
+}

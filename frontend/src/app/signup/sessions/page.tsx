@@ -185,6 +185,7 @@ export default function SessionsPage() {
                 {sessions.slice(1).map((session) => (
                   <UpcomingSessionCard
                     key={session.id}
+                    sessionID={session.id}
                     sessionName={session.session_name}
                     startTime={formatTime(session.start_datetime)}
                     endTime={formatTime(session.end_datetime)}
