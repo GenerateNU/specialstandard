@@ -7,6 +7,7 @@ import Link from 'next/link'
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
 import WeekNavigator from '@/components/curriculum/WeekNavigator'
 import { useSessionContext } from '@/contexts/sessionContext'
+import { useThemes } from '@/hooks/useThemes'
 import { GetGameContentsCategory } from '@/lib/api/theSpecialStandardAPI.schemas'
 
 interface PageProps {
@@ -55,6 +56,12 @@ export default function LevelPage({ params }: PageProps) {
     setCurrentYear,
     setCurrentLevel,
   } = useSessionContext()
+
+  // Fetch theme for current month and year
+  const { themes, isLoading: themesLoading } = useThemes({
+    month: currentMonth + 1,
+    year: currentYear,
+  })
   
   if (!session) {
     return (
@@ -112,9 +119,16 @@ export default function LevelPage({ params }: PageProps) {
       backLabel="Back to Curriculum"
       headerContent={(
         <div className="flex items-center gap-4">
-          <span className="text-lg font-medium opacity-90">
-            {MONTHS[currentMonth]} {currentYear}
-          </span>
+          <div className="flex flex-col gap-1">
+            <span className="text-lg font-medium opacity-90">
+              {MONTHS[currentMonth]} {currentYear}
+            </span>
+            {!themesLoading && themes.length > 0 && (
+              <span className="text-sm font-semibold text-pink">
+                {themes[0].name}
+              </span>
+            )}
+          </div>
           <WeekNavigator
             currentWeek={currentWeek}
             onPreviousWeek={handlePreviousWeek}
@@ -144,18 +158,16 @@ export default function LevelPage({ params }: PageProps) {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
                   <Link
-              href={`/sessions/${id}/curriculum/reading`}
-              onClick={() => setCurrentLevel(levelNumber)}
-              className="w-full max-w-xs h-16 bg-pink hover:bg-pink-hover text-white gap-3 flex items-center justify-center rounded-full font-semibold transition-all hover:scale-105 text-lg"
-            >
-              <BookOpen className="w-5 h-5" />
-              Open Level {levelNumber} Reading
-            </Link>
+                    href={`/sessions/${id}/curriculum/reading`}
+                    onClick={() => setCurrentLevel(levelNumber)}
+                    className="w-full max-w-xs h-16 bg-pink hover:bg-pink-hover text-white gap-3 flex items-center justify-center rounded-full font-semibold transition-all hover:scale-105 text-lg"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    Open Level {levelNumber} Reading
+                  </Link>
                 </div>
               </div>
             </div>
-            
-            
           </div>
 
           {/* Right: Exercise Categories */}
