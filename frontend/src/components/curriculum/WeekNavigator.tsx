@@ -27,7 +27,7 @@ export default function WeekNavigator({
         <ChevronLeft className="w-6 h-6" />
       </Button>
       
-      <div className="bg-card px-8 py-3 rounded-full shadow-md border border-default">
+      <div className="bg-blue-disabled px-8 py-3 rounded-full shadow-md">
         <span className="text-lg font-semibold text-primary">
           Week
           {' '}
