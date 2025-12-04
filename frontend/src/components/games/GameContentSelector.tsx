@@ -3,18 +3,11 @@
 
 import React from 'react'
 import { ChevronRight } from 'lucide-react'
-import { useThemes } from '@/hooks/useThemes'
-import { useSessionContext } from '@/contexts/sessionContext'
 import { 
   GetGameContentsCategory, 
   GetGameContentsQuestionType
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import type { Theme } from '@/lib/api/theSpecialStandardAPI.schemas'
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
 
 const CATEGORIES = {
   [GetGameContentsCategory.receptive_language]: { 
@@ -64,24 +57,17 @@ interface GameContentSelectorProps {
   }) => void
   onBack?: () => void
   backLabel?: string
+  initialDifficultyLevel?: number
+  initialCategory?: GetGameContentsCategory
+  theme: Theme
 }
 
-export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: GameContentSelectorProps) {
-  const { currentMonth, currentYear, currentLevel } = useSessionContext()
-  const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(null)
+export function GameContentSelector({ onSelectionComplete, onBack, backLabel, initialDifficultyLevel, initialCategory, theme }: GameContentSelectorProps) {
+  const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(initialCategory || null)
   const [selectedQuestionType, setSelectedQuestionType] = React.useState<GetGameContentsQuestionType | null>(null)
 
-  // Fetch theme by current month and year (currentMonth is 0-11, API expects 1-12)
-  const { themes, isLoading: themesLoading, error: themesError, refetch: refetchThemes } = useThemes({
-    month: currentMonth + 1,
-    year: currentYear,
-  })
-
-  // Get the first theme for the current month/year
-  const theme = themes.length > 0 ? themes[0] : null
-
-  // Use currentLevel from session context (set in curriculum page)
-  const difficultyLevel = currentLevel ?? 1
+  // Use the passed-in difficulty level
+  const difficultyLevel = initialDifficultyLevel || 1
 
   React.useEffect(() => {
     if (theme && selectedCategory && selectedQuestionType) {
@@ -92,46 +78,7 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: 
         questionType: selectedQuestionType,
       })
     }
-  }, [theme, difficultyLevel, selectedCategory, selectedQuestionType, onSelectionComplete])
-
-  // Loading state for theme
-  if (themesLoading) {
-    return (
-      <div className="min-h-screen bg-background p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue mx-auto mb-4"></div>
-          <p className="text-muted">Loading theme for {MONTHS[currentMonth]} {currentYear}...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Error state or no theme found
-  if (themesError || !theme) {
-    return (
-      <div className="min-h-screen bg-background p-8 flex items-center justify-center">
-        <div className="text-center">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="mb-6 text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
-            >
-              ← {backLabel || 'Back'}
-            </button>
-          )}
-          <p className="text-error mb-4">
-            {themesError ? 'Failed to load theme' : `No theme found for ${MONTHS[currentMonth]} ${currentYear}`}
-          </p>
-          <button 
-            onClick={() => refetchThemes()}
-            className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    )
-  }
+  }, [theme, selectedCategory, selectedQuestionType, difficultyLevel, onSelectionComplete])
 
   // Step 1: Category Selection
   if (!selectedCategory) {
@@ -148,7 +95,7 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: 
           )}
           <h1 className="mb-2">Select a Category</h1>
           <p className="text-secondary mb-8">
-            Theme: {theme.name} ({MONTHS[currentMonth]} {currentYear}) • Level {difficultyLevel}
+            Theme: {theme.name} • Level {difficultyLevel}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -191,17 +138,21 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel }: 
           Theme: {theme.name} • Category: {category.label} • Level {difficultyLevel}
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(QUESTION_TYPES).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setSelectedQuestionType(key as GetGameContentsQuestionType)}
-              className="bg-card rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-200 text-left group flex items-center justify-between hover:bg-card-hover border border-default hover:border-hover"
-            >
-              <span className="font-medium text-primary">{label}</span>
-              <ChevronRight className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
-            </button>
-          ))}
+        <div className="bg-card border-2 border-default rounded-4xl p-8">
+          <div className='pb-2'>
+          Game – Question Type
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(QUESTION_TYPES).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedQuestionType(key as GetGameContentsQuestionType)}
+                className="bg-pink hover:bg-pink-hover text-white p-6 rounded-xl font-semibold transition-all hover:scale-102 cursor-pointer text-left"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -22,7 +22,9 @@ interface UseTherapistsOptions {
   fetchOnMount: boolean;
 }
 
-export function useTherapists(_options: UseTherapistsOptions = { fetchOnMount: true }): UseTherapistsReturn {
+export function useTherapists(
+  _options: UseTherapistsOptions = { fetchOnMount: true }
+): UseTherapistsReturn {
   const queryClient = useQueryClient();
   const api = getTherapistsApi();
   const { userId: therapistId } = useAuthContext();
@@ -72,5 +74,35 @@ export function useTherapists(_options: UseTherapistsOptions = { fetchOnMount: t
     updateTherapist: (id: string, data: UpdateTherapistInput) =>
       updateTherapistMutation.mutate({ id, data }),
     deleteTherapist: (id: string) => deleteTherapistMutation.mutate(id),
+  };
+}
+
+// new hook for fetching a single therapist
+interface UseTherapistReturn {
+  therapist: Therapist | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<QueryObserverResult<Therapist, Error>>;
+}
+
+export function useTherapist(therapistId: string | null): UseTherapistReturn {
+  const api = getTherapistsApi();
+
+  const {
+    data: therapist,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["therapist", therapistId],
+    queryFn: () => api.getTherapistsId(therapistId!),
+    enabled: !!therapistId,
+  });
+
+  return {
+    therapist: therapist ?? null,
+    isLoading,
+    error: error?.message || null,
+    refetch,
   };
 }

@@ -19,8 +19,15 @@ type GameResult struct {
 }
 
 type GetGameResultQuery struct {
-	SessionID *uuid.UUID `query:"session_id" validate:"omitempty,uuid"`
-	StudentID *uuid.UUID `query:"student_id" validate:"omitempty,uuid"`
+	SessionID       *uuid.UUID `query:"session_id" validate:"omitempty,uuid"`
+	StudentID       *uuid.UUID `query:"student_id" validate:"omitempty,uuid"`
+	Category        *string    `query:"category" validate:"omitempty,oneof=receptive_language expressive_language social_pragmatic_language speech"`
+	QuestionType    *string    `query:"question_type" validate:"omitempty,oneof=sequencing following_directions wh_questions true_false concepts_sorting fill_in_the_blank categorical_language emotions teamwork_talk express_excitement_interest fluency articulation_s articulation_l"`
+	DifficultyLevel *int       `query:"difficulty_level" validate:"omitempty,gte=1"`
+	ExerciseType    *string    `query:"exercise_type" validate:"omitempty,oneof=game pdf"`
+	GameType        *string    `query:"game_type" validate:"omitempty,dive"`
+	DateFrom        *time.Time `query:"date_from" validate:"omitempty"`
+	DateTo          *time.Time `query:"date_to" validate:"omitempty"`
 }
 
 type PostGameResult struct {

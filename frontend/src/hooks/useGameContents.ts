@@ -1,5 +1,4 @@
 // File: hooks/useGameContents.ts
-
 import type { QueryObserverResult } from '@tanstack/react-query'
 import type { GameContent, GetGameContentsParams } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { useQuery } from '@tanstack/react-query'
@@ -23,14 +22,15 @@ export function useGameContents(params?: GetGameContentsParams): UseGameContents
   } = useQuery({
     queryKey: ['game-contents', params],
     queryFn: async () => {
-      const response = await api.getGameContents(params)
-      return response
+      const response = await api.getGameContents(params || {})
+      return Array.isArray(response) ? response : []
     },
-    enabled: !!params?.theme_id && !!params?.category && !!params?.question_type,
+    // Now enabled by default - backend params are optional
+    enabled: true,
   })
-  
+
   const gameContents = gameContentsResponse ?? []
-  
+
   return {
     gameContents,
     isLoading,

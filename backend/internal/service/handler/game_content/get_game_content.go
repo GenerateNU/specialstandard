@@ -17,7 +17,11 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 		return errs.BadRequest("GameContent Query-Parameters Parsing Error")
 	}
 
+	// CHANGE: Only validate if parameters are provided
+	// Skip validation or only validate provided fields
 	if validationErrors := xvalidator.Validator.Validate(getGameContentReq); len(validationErrors) > 0 {
+		// Optional: log but don't fail - allow fetching all contents
+		// Or only fail if specific required fields are invalid
 		return errs.InvalidRequestData(xvalidator.ConvertToMessages(validationErrors))
 	}
 
@@ -25,9 +29,7 @@ func (h *Handler) GetGameContents(c *fiber.Ctx) error {
 	if err != nil {
 		req := getGameContentReq
 		slog.Error("Failed to get game contents", "theme_id", req.ThemeID, "category",
-			req.Category, "question_type", req.QuestionType, "difficulty_level",
-			req.DifficultyLevel, "question_count", req.QuestionCount, "words_count",
-			req.WordsCount)
+			req.Category, "question_type", req.QuestionType)
 		return errs.InternalServerError("Failed to retrieve game contents", err.Error())
 	}
 
