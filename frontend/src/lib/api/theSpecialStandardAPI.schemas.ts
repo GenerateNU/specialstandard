@@ -1368,53 +1368,77 @@ export type GetGameResultsParams = {
   limit?: number;
 };
 
-export type GetGameResultsCategory =
-  (typeof GetGameResultsCategory)[keyof typeof GetGameResultsCategory];
+/**
+ * Verification method (defaults to totp for Google Authenticator)
+ */
+export type PostVerificationSendCodeBodyMethod =
+  (typeof PostVerificationSendCodeBodyMethod)[keyof typeof PostVerificationSendCodeBodyMethod];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetGameResultsCategory = {
-  receptive_language: "receptive_language",
-  expressive_language: "expressive_language",
-  social_pragmatic_language: "social_pragmatic_language",
-  speech: "speech",
+export const PostVerificationSendCodeBodyMethod = {
+  totp: "totp",
+  email: "email",
+  sms: "sms",
 } as const;
 
-export type GetGameResultsQuestionType =
-  (typeof GetGameResultsQuestionType)[keyof typeof GetGameResultsQuestionType];
+export type PostVerificationSendCodeBody = {
+  /** The UUID of the user requesting verification */
+  user_id: string;
+  /** Verification method (defaults to totp for Google Authenticator) */
+  method?: PostVerificationSendCodeBodyMethod;
+};
+
+export type PostVerificationSendCode200 = {
+  message?: string;
+  /** Base64-encoded QR code image for TOTP setup (only for totp method) */
+  qr_code?: string;
+  /** TOTP secret key for manual entry (only for totp method) */
+  secret?: string;
+  /** One-time backup codes for account recovery */
+  backup_codes?: string[];
+};
+
+export type PostVerificationVerifyBody = {
+  /** The UUID of the user being verified */
+  user_id: string;
+  /**
+   * The 6-digit verification code from Google Authenticator
+   * @pattern ^\d{6}$
+   */
+  code: string;
+};
+
+export type PostVerificationVerify200 = {
+  message?: string;
+  verified?: boolean;
+  /** Indicates if MFA is now enabled for this user */
+  mfa_enabled?: boolean;
+};
+
+/**
+ * Verification method to use for resending
+ */
+export type PostVerificationResendBodyMethod =
+  (typeof PostVerificationResendBodyMethod)[keyof typeof PostVerificationResendBodyMethod];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetGameResultsQuestionType = {
-  sequencing: "sequencing",
-  following_directions: "following_directions",
-  wh_questions: "wh_questions",
-  true_false: "true_false",
-  concepts_sorting: "concepts_sorting",
-  fill_in_the_blank: "fill_in_the_blank",
-  categorical_language: "categorical_language",
-  emotions: "emotions",
-  teamwork_talk: "teamwork_talk",
-  express_excitement_interest: "express_excitement_interest",
-  fluency: "fluency",
-  articulation_s: "articulation_s",
-  articulation_l: "articulation_l",
+export const PostVerificationResendBodyMethod = {
+  totp: "totp",
+  email: "email",
+  sms: "sms",
 } as const;
 
-export type GetGameResultsExerciseType =
-  (typeof GetGameResultsExerciseType)[keyof typeof GetGameResultsExerciseType];
+export type PostVerificationResendBody = {
+  /** The UUID of the user requesting code resend */
+  user_id: string;
+  /** Verification method to use for resending */
+  method?: PostVerificationResendBodyMethod;
+};
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetGameResultsExerciseType = {
-  game: "game",
-  pdf: "pdf",
-} as const;
-
-export type GetGameResultsGameType =
-  (typeof GetGameResultsGameType)[keyof typeof GetGameResultsGameType];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetGameResultsGameType = {
-  drag_and_drop: "drag and drop",
-  spinner: "spinner",
-  "word/image_matching": "word/image matching",
-  flashcards: "flashcards",
-} as const;
+export type PostVerificationResend200 = {
+  message?: string;
+  /** Base64-encoded QR code image (only for totp method) */
+  qr_code?: string;
+  /** TOTP secret key (only for totp method) */
+  secret?: string;
+};

@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, CheckCircle, Volume2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Volume2, XCircle } from 'lucide-react'
+import { StudentSelector } from '@/components/games/StudentSelector'
+import { useSessionContext } from '@/contexts/sessionContext'
+import { useStudents } from '@/hooks/useStudents'
 import {
   closestCenter,
   DndContext,
@@ -25,25 +28,39 @@ import SequenceSlot from '@/components/games/drag-and-drop/SequenceSlot'
 export default function SequencingGameContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const sessionStudentId = Number.parseInt(searchParams.get("sessionStudentId") ?? "0");
+  const sessionStudentIdsParam = searchParams.get("sessionStudentIds")
+
+  // Show student selector if no students selected yet
+  if (!sessionStudentIdsParam) {
+    return (
+      <StudentSelector
+        gameTitle="Drag and Drop"
+        onBack={() => router.back()}
+        onStudentsSelected={(studentIds) => {
+          // Update URL with selected students
+          const params = new URLSearchParams(searchParams.toString())
+          params.set('sessionStudentIds', studentIds.join(','))
+          router.replace(`/games/drag-and-drop?${params.toString()}`)
+        }}
+      />
+    )
+  }
+
+  // Students are selected, show the actual game
+  return <DragAndDropGame />
+}
+
+function DragAndDropGame() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const sessionStudentIdsParam = searchParams.get("sessionStudentIds")!
   const themeId = searchParams.get('themeId')
   const difficulty = searchParams.get('difficulty')
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
   const sessionId = searchParams.get('sessionId')
 
-  const { gameContents, isLoading, error } = useGameContents({
-    theme_id: themeId || undefined,
-    difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
-    category: category as 'receptive_language' | 'expressive_language' | 'social_pragmatic_language' | 'speech' | undefined,
-    question_type: questionType as 'sequencing' | 'following_directions' | 'wh_questions' | 'true_false' | 'concepts_sorting' | 'fill_in_the_blank' | 'categorical_language' | 'emotions' | 'teamwork_talk' | 'express_excitement_interest' | 'fluency' | 'articulation_s' | 'articulation_l' | undefined,
-  })
-
-  const gameResultsHook = useGameResults({
-    session_id: sessionId || undefined,
-    session_student_id: sessionStudentId,
-  })
-
+  const selectedStudentIds = sessionStudentIdsParam.split(',')
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [gameComplete, setGameComplete] = useState(false)
@@ -56,10 +73,52 @@ export default function SequencingGameContent() {
   const [sequence, setSequence] = useState<(string | null)[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [showIncorrect, setShowIncorrect] = useState(false)
   const [correctAnswerFilenames, setCorrectAnswerFilenames] = useState<string[]>([])
   const [loadingAnswer, setLoadingAnswer] = useState(false)
 
-  const currentQuestion = gameContents?.[currentQuestionIndex]
+  const { gameContents, isLoading, error } = useGameContents({
+    theme_id: themeId || undefined,
+    difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
+    category: category as 'receptive_language' | 'expressive_language' | 'social_pragmatic_language' | 'speech' | undefined,
+    question_type: questionType as 'sequencing' | 'following_directions' | 'wh_questions' | 'true_false' | 'concepts_sorting' | 'fill_in_the_blank' | 'categorical_language' | 'emotions' | 'teamwork_talk' | 'express_excitement_interest' | 'fluency' | 'articulation_s' | 'articulation_l' | undefined,
+  })
+
+  // Get student names and session from context
+  const { students: sessionStudents, session } = useSessionContext()
+  const { students: allStudents } = useStudents()
+  
+  // Prefer session context ID over URL param
+  const effectiveSessionId = session?.id || sessionId
+
+  // Calculate questions per student and limit total questions
+  // Ensure at least 1 question per student, or use all available if fewer questions than students
+  const questionsPerStudent = Math.max(1, Math.floor(gameContents.length / selectedStudentIds.length));
+  const totalQuestionsToUse = Math.min(questionsPerStudent * selectedStudentIds.length, gameContents.length);
+  const limitedGameContents = gameContents.length > 0 ? gameContents.slice(0, totalQuestionsToUse) : gameContents;
+  
+  // Get current student based on question index
+  const currentStudentIndex = currentQuestionIndex % selectedStudentIds.length;
+  const currentSessionStudentId = Number.parseInt(selectedStudentIds[currentStudentIndex]);
+
+  // Create game results hooks for each student
+  const gameResultsHooks = selectedStudentIds.map(studentId => 
+    useGameResults({
+      session_student_id: Number.parseInt(studentId),
+      session_id: sessionId || undefined,
+    })
+  );
+
+  const gameResultsHook = gameResultsHooks[currentStudentIndex];
+  
+  const getStudentName = (sessionStudentId: number) => {
+    const sessionStudent = sessionStudents.find(s => s.sessionStudentId === sessionStudentId);
+    if (!sessionStudent) return 'Student';
+    const student = allStudents?.find(s => s.id === sessionStudent.studentId);
+    return student ? `${student.first_name} ${student.last_name}` : 'Student';
+  };
+
+  const currentQuestion = limitedGameContents?.[currentQuestionIndex]
 
   // Create a map of filename -> presigned URL
   const filenameToUrlMap = useMemo(() => {
@@ -103,11 +162,20 @@ export default function SequencingGameContent() {
     
     setLoadingAnswer(true)
     try {      
-      // Parse the raw_answer JSON string (might be double-encoded)
-      const parsed = JSON.parse(currentQuestion.raw_answer)
+      let parsed;
+      
+      // Try to parse as JSON first
+      try {
+        parsed = JSON.parse(currentQuestion.raw_answer);
+      } catch {
+        // If JSON parse fails, treat as a single filename or comma-separated list
+        const rawAnswer = currentQuestion.raw_answer.replace(/^"|"$/g, ''); // Remove surrounding quotes if any
+        parsed = rawAnswer.includes(',') ? rawAnswer.split(',').map(s => s.trim()) : [rawAnswer];
+      }
 
-      // Store as filenames directly
-      setCorrectAnswerFilenames(parsed)
+      // Ensure it's an array
+      const filenames = Array.isArray(parsed) ? parsed : [parsed];
+      setCorrectAnswerFilenames(filenames);
     } catch (err) {
       console.error('Error parsing raw_answer:', err)
       setCorrectAnswerFilenames([])
@@ -124,6 +192,7 @@ export default function SequencingGameContent() {
       setAvailableFilenames(shuffled)
       setSequence(Array.from({ length: correctAnswerFilenames.length }, () => null))
       setShowSuccess(false)
+      setShowIncorrect(false)
       setIncorrectAttempts(0)
     }
   }, [currentQuestionIndex, currentQuestion, correctAnswerFilenames])
@@ -141,20 +210,21 @@ export default function SequencingGameContent() {
       setCardStartTime(Date.now())
       gameResultsHook?.startCard(currentQuestion)
     }
-  }, [currentQuestion, gameResultsHook])
+  }, [currentQuestionIndex])
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
   }
 
-  const checkSequence = (currentSequence: (string | null)[]) => {
+  const checkSequence = (currentSequence: (string | null)[], currentIncorrectAttempts: number) => {
     // Only check if all slots are filled
     if (currentSequence.every(item => item !== null)) {
       const isCorrect = currentSequence.every((filename, idx) => filename === correctAnswerFilenames[idx])
       
       if (isCorrect) {
         setShowSuccess(true)
-        setScore(score + 1)
+        setShowIncorrect(false)
+        setScore(prev => prev + 1)
         
         // Save result using the hook
         if (gameResultsHook && currentQuestion && cardStartTime) {
@@ -162,20 +232,28 @@ export default function SequencingGameContent() {
           gameResultsHook.completeCard(
             currentQuestion.id, 
             timeTaken, 
-            incorrectAttempts,
+            currentIncorrectAttempts,
           )
         }
 
         setTimeout(() => {
-          if (currentQuestionIndex < gameContents.length - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1)
+          if (currentQuestionIndex < limitedGameContents.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1)
           } else {
             setGameComplete(true)
           }
         }, 2000)
       } else {
-        setIncorrectAttempts(incorrectAttempts + 1)
-        // Could track the incorrect attempt here if needed
+        setIncorrectAttempts(prev => prev + 1)
+        setShowIncorrect(true)
+        
+        // Return all pieces to available pool after a brief delay
+        setTimeout(() => {
+          const filledFilenames = currentSequence.filter((f): f is string => f !== null)
+          setAvailableFilenames(prev => [...prev, ...filledFilenames])
+          setSequence(Array.from({ length: correctAnswerFilenames.length }, () => null))
+          setShowIncorrect(false)
+        }, 1500)
       }
     }
   }
@@ -207,7 +285,7 @@ export default function SequencingGameContent() {
       setAvailableFilenames(availableFilenames.filter(f => f !== draggedFilename))
       
       // Check if sequence is correct
-      checkSequence(newSequence)
+      checkSequence(newSequence, incorrectAttempts)
     }
   }
 
@@ -222,15 +300,17 @@ export default function SequencingGameContent() {
   }
 
   const handleSaveProgress = async () => {
-    if (gameResultsHook) {
-      await gameResultsHook.saveAllResults()
-      setResultsSaved(true)
+    // Save all results for all students
+    for (const hook of gameResultsHooks) {
+      await hook.saveAllResults()
     }
+    setResultsSaved(true)
   }
 
   const handlePlayAgain = async () => {
-    if (gameResultsHook) {
-      await gameResultsHook.saveAllResults()
+    // Save all results for all students
+    for (const hook of gameResultsHooks) {
+      await hook.saveAllResults()
     }
     
     setCurrentQuestionIndex(0)
@@ -238,6 +318,13 @@ export default function SequencingGameContent() {
     setGameComplete(false)
     setCardStartTime(null)
     setResultsSaved(false)
+    setShowSuccess(false)
+    setShowIncorrect(false)
+    setIncorrectAttempts(0)
+    // Reset images - these will be re-populated by the useEffect
+    setAvailableFilenames([])
+    setSequence([])
+    setCorrectAnswerFilenames([])
   }
 
   if (isLoading || loadingAnswer) {
@@ -257,10 +344,10 @@ export default function SequencingGameContent() {
           <div className="text-center">
             <p className="text-error mb-4">No questions available for this selection.</p>
             <button
-              onClick={() => router.push('/games')}
+              onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
               className="px-4 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover"
             >
-              Back to Games
+              Back to Content
             </button>
           </div>
         </div>
@@ -276,7 +363,7 @@ export default function SequencingGameContent() {
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h2 className="mb-4">Game Complete!</h2>
             <p className="text-2xl mb-6">
-              Score: {score} / {gameContents.length}
+              Score: {score} / {limitedGameContents.length}
             </p>
             <div className="flex gap-4 justify-center">
               <button
@@ -285,23 +372,21 @@ export default function SequencingGameContent() {
               >
                 Play Again
               </button>
-              {gameResultsHook && (
-                <button
-                  onClick={handleSaveProgress}
-                  disabled={gameResultsHook.isSaving || resultsSaved}
-                  className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
-                >
-                  {gameResultsHook.isSaving ? 'Saving...' : resultsSaved ? 'Saved!' : 'Save Progress'}
-                </button>
-              )}
               <button
-                onClick={() => router.push('/games')}
+                onClick={handleSaveProgress}
+                disabled={gameResultsHooks.some(hook => hook.isSaving) || resultsSaved}
+                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
+              >
+                {gameResultsHooks.some(hook => hook.isSaving) ? 'Saving...' : resultsSaved ? 'Saved!' : 'Save Progress'}
+              </button>
+              <button
+                onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
                 className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border"
               >
-                Back to Games
+                Back to Content
               </button>
             </div>
-            {gameResultsHook?.saveError && (
+            {gameResultsHooks.some(hook => hook.saveError) && (
               <p className="text-error text-sm mt-2">
                 Failed to save progress. Please try again.
               </p>
@@ -318,18 +403,24 @@ export default function SequencingGameContent() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <button
-              onClick={() => router.push('/games')}
+              onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
               className="text-blue hover:text-blue-hover flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              Back to Content
             </button>
             <div className="text-lg font-semibold">
-              Question {currentQuestionIndex + 1} / {gameContents.length}
+              Question {currentQuestionIndex + 1} / {limitedGameContents.length}
             </div>
             <div className="text-lg font-semibold">
               Score: {score}
             </div>
+          </div>
+
+          {/* Current Student Banner */}
+          <div className="bg-blue text-white rounded-lg p-4 mb-6 text-center">
+            <p className="text-sm opacity-90 mb-1">Current Player</p>
+            <p className="text-2xl font-bold">{getStudentName(currentSessionStudentId)}</p>
           </div>
 
           <div className="bg-card rounded-lg shadow-lg p-8 mb-8 text-center">
@@ -377,6 +468,12 @@ export default function SequencingGameContent() {
                   <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg flex items-center gap-2">
                     <CheckCircle className="w-5 h-5" />
                     <span>Correct! Moving to next question...</span>
+                  </div>
+                )}
+                {showIncorrect && (
+                  <div className="mt-4 p-4 bg-red-100 text-red-800 rounded-lg flex items-center gap-2">
+                    <XCircle className="w-5 h-5" />
+                    <span>Incorrect, try again!</span>
                   </div>
                 )}
               </div>

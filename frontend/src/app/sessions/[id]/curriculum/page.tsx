@@ -149,7 +149,8 @@ export default function CurriculumPage({ params }: PageProps) {
                   size="lg"
                   className="h-24 text-xl bg-pink hover:bg-pink-hover text-white gap-3"
                   onClick={() => {
-                  router.push(`/games?sessionId=${id}`)
+                    setCurrentLevel(selectedLevel)
+                    router.push(`/games?sessionId=${id}`)
                   }}
                 >
                   <Dumbbell className="w-6 h-6" />
