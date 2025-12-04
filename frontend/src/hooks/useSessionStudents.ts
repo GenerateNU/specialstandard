@@ -64,14 +64,17 @@ export function useSessionStudents() {
     mutationFn: (input: CreateSessionStudentInput) =>
       api.postSessionStudents(input),
     onSuccess: (_, variables) => {
+      // Invalidate all affected session queries
       if (variables.session_ids) {
         variables.session_ids.forEach((id: string) => {
           queryClient.invalidateQueries({
             queryKey: ["sessions", id, "students"],
           });
+          queryClient.invalidateQueries({
+            queryKey: ["session", id],
+          });
         });
       }
-
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
   });
@@ -82,6 +85,9 @@ export function useSessionStudents() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["sessions", variables.session_id, "students"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["session", variables.session_id],
       });
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
@@ -94,16 +100,37 @@ export function useSessionStudents() {
       queryClient.invalidateQueries({
         queryKey: ["sessions", variables.session_id, "students"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["session", variables.session_id],
+      });
     },
   });
 
   return {
-    addStudentToSession: (input: CreateSessionStudentInput) =>
-      addStudentToSessionMutation.mutate(input),
-    removeStudentFromSession: (input: DeleteSessionStudentsBody) =>
-      removeStudentFromSessionMutation.mutate(input),
-    updateSessionStudent: (input: UpdateSessionStudentInput) =>
-      updateSessionStudentMutation.mutate(input),
+    addStudentToSession: async (input: CreateSessionStudentInput) => {
+      return new Promise((resolve, reject) => {
+        addStudentToSessionMutation.mutate(input, {
+          onSuccess: (data) => resolve(data),
+          onError: (err) => reject(err),
+        });
+      });
+    },
+    removeStudentFromSession: async (input: DeleteSessionStudentsBody) => {
+      return new Promise((resolve, reject) => {
+        removeStudentFromSessionMutation.mutate(input, {
+          onSuccess: (data) => resolve(data),
+          onError: (err) => reject(err),
+        });
+      });
+    },
+    updateSessionStudent: async (input: UpdateSessionStudentInput) => {
+      return new Promise((resolve, reject) => {
+        updateSessionStudentMutation.mutate(input, {
+          onSuccess: (data) => resolve(data),
+          onError: (err) => reject(err),
+        });
+      });
+    },
     isAdding: addStudentToSessionMutation.isPending,
     isRemoving: removeStudentFromSessionMutation.isPending,
     isUpdating: updateSessionStudentMutation.isPending,
