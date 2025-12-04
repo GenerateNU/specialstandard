@@ -140,6 +140,8 @@ export default function SessionHistory() {
                                 className="w-full p-4 rounded-2xl border border-default
                                            min-h-[180px] bg-white-hover text-md focus:outline-none
                                            focus:ring-2 focus:ring-primary"
+                                placeholder="Add session notes here..."
+                                title="Session Notes"
                               />
                             </div>
                           )}
