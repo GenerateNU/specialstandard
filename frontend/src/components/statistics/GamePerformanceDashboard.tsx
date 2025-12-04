@@ -141,8 +141,13 @@ export function GamePerformanceDashboard({
     )
   ).sort()
   const uniqueExerciseTypes = Array.from(
-    new Set(gameResults.filter((r) => r.exercise_type).map((r) => r.exercise_type))
+    new Set(
+      gameResults
+        .map((r) => r.exercise_type ?? 'unknown') // Map null/undefined to 'unknown'
+        .filter(Boolean) // Remove any falsy values
+    )
   ).sort()
+
   const uniqueDifficulties: number[] = Array.from(
     new Set(
       gameResults
@@ -156,7 +161,7 @@ export function GamePerformanceDashboard({
       {/* Title and Filter Section */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-primary">Performance Analytics</h1>
+          <h1 className="text-3xl font-bold text-primary">Game Performance Analytics</h1>
           <span className="text-sm text-muted-foreground">
             {filteredResults.length} questions
           </span>

@@ -206,23 +206,6 @@ export function PerformanceByTypeChart({
               name="Completed"
               radius={[4, 4, 0, 0]}
             />
-            <Line 
-              yAxisId="right"
-              type="monotone" 
-              dataKey="completionRate" 
-              stroke="var(--color-blue)" 
-              strokeWidth={3}
-              name="Completion Rate (%)"
-              dot={{ r: 4, fill: 'var(--color-blue)', strokeWidth: 2, stroke: 'white' }}
-              activeDot={{ r: 6 }}
-            />
-            <ReferenceLine 
-              yAxisId="right"
-              y={avgCompletionRate} 
-              stroke="var(--text-muted)" 
-              strokeDasharray="5 5"
-              label={{ value: 'Average', position: 'right', fill: 'var(--text-muted)' }}
-            />
           </ComposedChart>
         </ResponsiveContainer>
       </CardContent>

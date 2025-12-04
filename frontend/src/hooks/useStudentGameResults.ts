@@ -66,22 +66,40 @@ export function useStudentGameResults(studentId: string) {
     enabled: !!studentId && studentId !== 'test-student',
   })
 
-  // Fetch all game contents
-  const { data: gameContents = [], isLoading: contentsLoading } = useQuery({
-    queryKey: ['game-contents'],
+  // Fetch game contents - GAMES
+  const { data: gameContents = [], isLoading: gameContentsLoading } = useQuery({
+    queryKey: ['game-contents-game'],
     queryFn: async () => {
       const response = await gameContentApi.getGameContents({
         question_count: 1000,
-        words_count: 2,
+        exercise_type: 'game',
       })
       return Array.isArray(response) ? response : []
     },
   })
 
+  // Fetch game contents - PDFs
+  const { data: pdfContents = [], isLoading: pdfContentsLoading } = useQuery({
+    queryKey: ['game-contents-pdf'],
+    queryFn: async () => {
+      const response = await gameContentApi.getGameContents({
+        exercise_type: 'pdf',
+      })
+      return Array.isArray(response) ? response : []
+    },
+  })
+
+  // Combine all contents
+  const allGameContents = useMemo(() => {
+    return [...gameContents, ...pdfContents]
+  }, [gameContents, pdfContents])
+
+  const contentsLoading = gameContentsLoading || pdfContentsLoading
+
   // Merge game results with game contents
   const mergedGameResults = useMemo(() => {
     const contentMap = new Map<string, GameContent>()
-    gameContents.forEach((content) => {
+    allGameContents.forEach((content) => {
       contentMap.set(content.id, content)
     })
 
@@ -92,10 +110,10 @@ export function useStudentGameResults(studentId: string) {
         category: content?.category,
         exercise_type: content?.exercise_type,
         difficulty_level: content?.difficulty_level,
-        game_type: content?.applicable_game_types?.[0], // Use first applicable game type
+        game_type: content?.applicable_game_types?.[0],
       }
     })
-  }, [gameResults, gameContents])
+  }, [gameResults, allGameContents])
 
   // Overall stats
   const overallStats = useMemo(() => {
