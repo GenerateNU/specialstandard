@@ -7,6 +7,7 @@ import { use, useEffect, useRef, useState } from 'react'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useSession } from '@/hooks/useSessions'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
+import { useThemes } from '@/hooks/useThemes'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -30,6 +31,13 @@ export default function StartSessionPage({ params }: PageProps) {
   const now = new Date()
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth())
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+
+  // Fetch themes for the selected month and year
+  // Note: useThemes expects month as 1-12, but selectedMonth is 0-11
+  const { themes, isLoading: themesLoading, error: themesError } = useThemes({
+    month: selectedMonth + 1,
+    year: selectedYear,
+  })
 
   // Available weeks - 4 weeks per month
   const availableWeeks = [1, 2, 3, 4]
@@ -100,47 +108,81 @@ export default function StartSessionPage({ params }: PageProps) {
 
       {/* Main content */}
       <div className="max-w-4xl mx-auto">
-        {/* Month/Year Selector */}
-        <div className="flex items-center justify-center gap-4 mb-8">
-          <button
-            onClick={handlePreviousMonth}
-            className="w-12 h-12 rounded-full hover:bg-card-hover flex items-center justify-center transition-colors"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          
-          <h1 className="text-4xl font-bold text-center min-w-[300px]">
-            {MONTHS[selectedMonth]} {selectedYear}
-          </h1>
-          
-          <button
-            onClick={handleNextMonth}
-            className="w-12 h-12 rounded-full hover:bg-card-hover flex items-center justify-center transition-colors"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </div>
-
         {/* Week Selection */}
-        <div className="bg-card rounded-3xl p-8 shadow-lg border border-default">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Select Week</h2>
+        <div className="flex flex-col gap-8">
+          <h1 className=' w-full text-center '>Choose a week to begin!</h1>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {/* Month/Year Selector */}
+          <div className="flex flex-col items-center justify-center gap-6">
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={handlePreviousMonth}
+                aria-label="Previous month"
+                title="Previous month"
+                className="w-12 h-12 cursor-pointer rounded-full hover:bg-card-hover flex items-center justify-center transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              
+              <h1 className="text-4xl font-bold text-center min-w-[300px]">
+                {MONTHS[selectedMonth]} {selectedYear}
+              </h1>
+              
+              <button
+                onClick={handleNextMonth}
+                aria-label="Next month"
+                title="Next month"
+                className="w-12 cursor-pointer h-12 rounded-full hover:bg-card-hover flex items-center justify-center transition-colors"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Theme Display */}
+            <div className="w-full text-center">
+              {themesLoading ? (
+                <p className="text-secondary text-sm">Loading theme...</p>
+              ) : themesError ? (
+                <p className="text-red-500 text-sm">Error loading theme</p>
+              ) : themes.length > 0 ? (
+                <div className="inline-block bg-card-hover rounded-xl p-4 px-6">
+                  <p className="text-xs text-secondary uppercase tracking-wide mb-2">Theme for this month</p>
+                  <p className="text-2xl font-semibold text-primary">{themes[0].name}</p>
+                </div>
+              ) : (
+                <p className="text-secondary text-sm">No theme set for this month</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8">
             {availableWeeks.map(week => (
               <button
                 key={week}
                 onClick={() => setSelectedWeek(week)}
                 className={`
-                  p-6 rounded-2xl font-semibold text-lg transition-all
+                  p-6 rounded-2xl font-semibold text-lg transition-all cursor-pointer
+                  hover:scale-102
                   ${selectedWeek === week
-                    ? 'bg-blue text-white scale-105 shadow-lg'
-                    : 'bg-card-hover text-primary hover:bg-blue-light hover:scale-102'
+                    ? 'bg-pink text-white shadow-lg'
+                    : 'bg-card-hover text-primary hover:bg-blue-light '
                   }
                 `}
               >
                 Week {week}
               </button>
             ))}
+          </div>
+
+           <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={handleStartCurriculum}
+              className="bg-orange cursor-pointer text-white px-12 py-6 text-xl rounded-2xl hover:bg-orange-hover transition-all hover:scale-105 flex items-center gap-3 font-semibold"
+            >
+              Start Week {selectedWeek} – {MONTHS[selectedMonth]} {selectedYear}
+              <ArrowRight className="w-6 h-6" />
+            </button>
           </div>
 
           {/* Student List */}
@@ -167,21 +209,8 @@ export default function StartSessionPage({ params }: PageProps) {
               ))}
             </div>
           </div>
-
-          {/* Start Button */}
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={handleStartCurriculum}
-              className="bg-blue text-white px-12 py-6 text-xl rounded-2xl hover:bg-blue-hover transition-all hover:scale-105 flex items-center gap-3 font-semibold"
-            >
-              Start Week {selectedWeek}
-              <ArrowRight className="w-6 h-6" />
-            </button>
-          </div>
         </div>
       </div>
     </div>
   )
 }
-

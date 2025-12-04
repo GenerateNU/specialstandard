@@ -78,13 +78,20 @@ export default function CalendarView({
     )
   }
 
+  const minTime = new Date()
+  minTime.setHours(7, 0, 0)
+
+  const maxTime = new Date()
+  maxTime.setHours(19, 0, 0)
+
+
   return (
     <Calendar
       localizer={localizer}
       events={events}
       startAccessor="start"
       endAccessor="end"
-      style={{ height: '72vh', width: '90vw' }}
+      style={{ height: '90vh', width: '90vw' }}
       date={date}
       view={view}
       onNavigate={onNavigate}
@@ -94,6 +101,8 @@ export default function CalendarView({
       selectable
       onSelectSlot={onSelectSlot}
       toolbar={false}
+      min={minTime}
+      max={maxTime}
       eventPropGetter={(event) => {
         const colorKey = hashIdToColor(event.id)
         const backgroundColor = colorMap[colorKey]

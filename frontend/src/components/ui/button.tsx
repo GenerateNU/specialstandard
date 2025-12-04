@@ -14,7 +14,7 @@ const buttonVariants = cva(
         outline:
           'border border-border hover:ring-1 transition-all shadow-sm hover:text-primary',
         secondary: 'text-primary hover:-translate-y-1 hover:shadow-md transition-all',
-        ghost: 'text-primary hover:bg-card hover:text-primary',
+        ghost: 'text-secondary hover:text-primary',
         link: 'text-accent underline-offset-4 hover:underline',
         tab: 'px-8 py-2 text-secondary hover:text-primary transition-colors rounded-none',
       },

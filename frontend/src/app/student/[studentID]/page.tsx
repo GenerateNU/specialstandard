@@ -14,7 +14,6 @@ import {
 import AppLayout from "@/components/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import UpcomingSession from "@/components/sessions/UpcomingSession";
-import Link from "next/link";
 import {useParams, useRouter} from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -30,6 +29,11 @@ import { useStudentAttendance } from "@/hooks/useStudentAttendance";
 import { useStudentRatings } from "@/hooks/useStudentRatings";
 import { getAvatarVariant } from "@/lib/avatarUtils";
 import SessionRatingsChart from "@/components/statistics/SessionRatingsChart";
+
+import { useStudentGameResults } from '@/hooks/useStudentGameResults'
+import { GamePerformanceDashboard } from '@/components/statistics/GamePerformanceDashboard'
+
+
 
 
 
@@ -88,6 +92,10 @@ export default function StudentPage() {
     ? `${student.first_name[0]}.${student.last_name[0]}.`
     : "";
   const avatarVariant = student ? getAvatarVariant(student.id) : "lorelei";
+
+  const {
+    gameResults: mergedGameResults,
+  } = useStudentGameResults(studentId)
 
   const handleSave = async () => {
     if (!student) return;
@@ -208,13 +216,13 @@ export default function StudentPage() {
       <div className="w-full min-h-screen bg-background">
         <div className="w-full h-full flex flex-col gap-6 p-10 relative overflow-y-auto">
           <div className="flex flex-col gap-3">
-            <Link
-              href="/students"
+            <button
+              onClick={() => router.back()}
               className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors group w-fit"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-medium">Back to Students</span>
-            </Link>
+              <span className="text-sm font-medium">Back</span>
+            </button>
             <PageHeader
               title="Student Profile"
               icon={User}
@@ -457,6 +465,27 @@ export default function StudentPage() {
                 { key: "engagement", label: "Engagement", color: "var(--color-blue)" }
               ]}
             />
+
+            {/* Game Performance Analytics */}
+            {mergedGameResults.length > 0 ? (
+              <GamePerformanceDashboard
+                gameResults={mergedGameResults}
+              />
+            ) : (
+              <div className="w-full flex flex-col gap-6">
+                <h1 className="text-3xl font-bold text-primary">Game Performance Analytics</h1>
+                <div className="bg-card border-2 border-default rounded-4xl p-12 flex items-center justify-center">
+                  <div className="text-center space-y-2">
+                    <p className="text-lg text-muted-foreground">
+                      No game performance data available yet
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Game results will appear here once the student completes games
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
