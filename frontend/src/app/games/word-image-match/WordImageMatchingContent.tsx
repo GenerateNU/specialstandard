@@ -1,18 +1,29 @@
 'use client'
 
-import {useSearchParams} from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import WordImageMatchingGameInterface from "@/components/games/WordImageMatchingGameInterface";
+import { StudentSelector } from "@/components/games/StudentSelector";
+import { useSessionContext } from "@/contexts/sessionContext";
 
 export default function WordImageMatchingContent() {
     const searchParams = useSearchParams()
+    const router = useRouter()
+    const { session } = useSessionContext()
 
-    const sessionStudentId = Number.parseInt(searchParams.get('sessionStudentId') ?? "0")
     const themeId = searchParams.get('themeId')
     const themeName = searchParams.get('themeName')
     const difficulty = searchParams.get('difficulty')
     const category = searchParams.get('category')
     const questionType = searchParams.get('questionType')
     const sessionId = searchParams.get('sessionId') || '00000000-0000-0000-0000-000000000000'
+    const sessionStudentIdsParam = searchParams.get('sessionStudentIds')
+    
+    const effectiveSessionId = session?.id || sessionId
+
+    const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(
+        sessionStudentIdsParam ? sessionStudentIdsParam.split(',') : []
+    )
 
     if (!themeId || !difficulty || !category || !questionType) {
         return (
@@ -30,9 +41,26 @@ export default function WordImageMatchingContent() {
         )
     }
 
+    // Show student selector if no students selected yet
+    if (selectedStudentIds.length === 0) {
+        return (
+            <StudentSelector
+                gameTitle="Word-Image Matching"
+                onStudentsSelected={(studentIds) => {
+                    setSelectedStudentIds(studentIds)
+                    // Update URL with selected students
+                    const params = new URLSearchParams(searchParams.toString())
+                    params.set('sessionStudentIds', studentIds.join(','))
+                    router.replace(`/games/word-image-match?${params.toString()}`)
+                }}
+                onBack={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
+            />
+        )
+    }
+
     return (
         <WordImageMatchingGameInterface
-            session_student_id={sessionStudentId}
+            session_student_ids={selectedStudentIds.map(id => Number.parseInt(id))}
             session_id={sessionId}
             themeID={themeId}
             themeName={themeName}
