@@ -1,4 +1,3 @@
-// File: components/statistics/GamePerformanceCharts.tsx
 import React from 'react'
 import {
   Bar,
@@ -37,10 +36,10 @@ export function GameOverallStats({ stats }: GameOverallStatsProps) {
     value: number | string
     unit?: string
   }) => (
-    <div className="flex flex-col gap-2 p-4 rounded-2xl bg-card border-2 border-default hover:border-primary/50 transition-colors">
+          <div className="flex flex-col gap-2 p-3 rounded-lg bg-card border border-default hover:border-default transition-colors">
       <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
       <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-bold text-primary">{value}</span>
+        <span className="text-2xl font-bold text-primary">{value}</span>
         {unit && <span className="text-sm text-muted-foreground font-medium">{unit}</span>}
       </div>
     </div>
@@ -73,7 +72,7 @@ export function PerformanceByTypeChart({
 }: PerformanceByTypeChartProps) {
   if (!data || data.length === 0) {
     return (
-      <Card className="bg-card border-2 border-default rounded-4xl shadow-lg">
+      <Card className="bg-card border border-default">
         <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
           No data available
         </CardContent>
@@ -87,20 +86,20 @@ export function PerformanceByTypeChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-card border-2 border-primary/20 rounded-xl p-4 shadow-xl">
-          <p className="font-semibold text-primary mb-2">{data.label}</p>
-          <div className="space-y-1 text-sm">
+        <div className="bg-card border border-default rounded-lg p-3 shadow-lg">
+          <p className="font-semibold text-primary mb-2 text-sm">{data.label}</p>
+          <div className="space-y-1 text-xs">
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Total Attempts:</span>
               <span className="font-semibold">{data.total}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completed:</span>
-              <span className="font-semibold text-green-600">{data.completed}</span>
+              <span className="font-semibold text-blue">{data.completed}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completion Rate:</span>
-              <span className="font-semibold text-blue-600">{data.completionRate.toFixed(1)}%</span>
+              <span className="font-semibold">{data.completionRate.toFixed(1)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -108,7 +107,7 @@ export function PerformanceByTypeChart({
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Errors:</span>
-              <span className="font-semibold text-red-600">{data.avgErrors}</span>
+              <span className="font-semibold text-pink">{data.avgErrors}</span>
             </p>
           </div>
         </div>
@@ -118,10 +117,10 @@ export function PerformanceByTypeChart({
   }
 
   return (
-    <Card className="bg-card border-2 border-default rounded-4xl shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="bg-white border-0">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-bold text-primary">{title}</CardTitle>
+          <CardTitle className="text-lg font-bold text-primary">{title}</CardTitle>
           <div className="text-sm text-muted-foreground">
             Avg: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(1)}%</span>
           </div>
@@ -130,64 +129,99 @@ export function PerformanceByTypeChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
           <ComposedChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis 
               dataKey="label" 
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
             <YAxis 
               yAxisId="left"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               label={{ value: 'Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
             />
             <YAxis 
               yAxisId="right"
               orientation="right"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               label={{ value: 'Rate (%)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle' } }}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              wrapperStyle={{ paddingTop: '20px' }}
-              iconType="rect"
+            <Legend
+              content={({ payload = [] }) => (
+                <div className="w-full flex justify-center pt-4">
+                  <div className="flex gap-6">
+                    {payload.map((entry: any, index: number) => {
+                      const isLine = entry.dataKey === "completionRate";
+
+                      return (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          {/* Icon */}
+                          {isLine ? (
+                            <div
+                              style={{
+                                width: 20,
+                                height: 3,
+                                backgroundColor: entry.color,
+                                borderRadius: 2,
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: 12,
+                                height: 12,
+                                backgroundColor: entry.color,
+                              }}
+                            />
+                          )}
+
+                          {/* Label */}
+                          <span>{entry.value}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             />
+
             <Bar 
               yAxisId="left"
               dataKey="total" 
-              fill="hsl(var(--muted))" 
+              fill="var(--color-orange)" 
               name="Total Attempts"
-              radius={[8, 8, 0, 0]}
-              opacity={0.6}
+              radius={[4, 4, 0, 0]}
+              opacity={0.5}
             />
             <Bar 
               yAxisId="left"
               dataKey="completed" 
-              fill="hsl(142 76% 36%)" 
+              fill="var(--color-blue)" 
               name="Completed"
-              radius={[8, 8, 0, 0]}
+              radius={[4, 4, 0, 0]}
             />
             <Line 
               yAxisId="right"
               type="monotone" 
               dataKey="completionRate" 
-              stroke="hsl(217 91% 60%)" 
+              stroke="var(--color-blue)" 
               strokeWidth={3}
               name="Completion Rate (%)"
-              dot={{ r: 5, fill: 'hsl(217 91% 60%)', strokeWidth: 2, stroke: 'white' }}
-              activeDot={{ r: 7 }}
+              dot={{ r: 4, fill: 'var(--color-blue)', strokeWidth: 2, stroke: 'white' }}
+              activeDot={{ r: 6 }}
             />
             <ReferenceLine 
               yAxisId="right"
               y={avgCompletionRate} 
-              stroke="hsl(var(--muted-foreground))" 
+              stroke="var(--text-muted)" 
               strokeDasharray="5 5"
-              label={{ value: 'Average', position: 'right', fill: 'hsl(var(--muted-foreground))' }}
+              label={{ value: 'Average', position: 'right', fill: 'var(--text-muted)' }}
             />
           </ComposedChart>
         </ResponsiveContainer>
@@ -207,7 +241,7 @@ export function CompletionRateChart({
 }: CompletionRateChartProps) {
   if (!data || data.length === 0) {
     return (
-      <Card className="bg-card border-2 border-default rounded-4xl shadow-lg">
+      <Card className="bg-white border-0">
         <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
           No data available
         </CardContent>
@@ -225,27 +259,27 @@ export function CompletionRateChart({
   }))
 
   const COLORS = [
-    'hsl(142 76% 36%)',
-    'hsl(217 91% 60%)',
-    'hsl(330 81% 60%)',
-    'hsl(25 95% 53%)',
-    'hsl(262 83% 58%)',
+    '#10b981',
+    '#6c78ff',
+    '#ef4444',
+    '#f59e0b',
+    '#cd0a7d',
   ]
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-card border-2 border-primary/20 rounded-xl p-4 shadow-xl">
-          <p className="font-semibold text-primary mb-2">{data.name}</p>
-          <div className="space-y-1 text-sm">
+        <div className="bg-white border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-semibold text-primary mb-2 text-sm">{data.name}</p>
+          <div className="space-y-1 text-xs">
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completion Rate:</span>
-              <span className="font-semibold text-blue-600">{data.value}%</span>
+              <span className="font-semibold">{data.value}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completed:</span>
-              <span className="font-semibold text-green-600">{data.completed} / {data.total}</span>
+              <span className="font-semibold">{data.completed} / {data.total}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -253,7 +287,7 @@ export function CompletionRateChart({
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Errors:</span>
-              <span className="font-semibold text-red-600">{data.avgErrors}</span>
+              <span className="font-semibold">{data.avgErrors}</span>
             </p>
           </div>
         </div>
@@ -262,14 +296,14 @@ export function CompletionRateChart({
     return null
   }
 
-  const renderLabel = ({ name, value, percent }: any) => {
-    return `${name}\n${value}% (${(percent * 100).toFixed(1)}%)`
+  const renderLabel = ({ name, value }: any) => {
+    return `${name}\n${value}%`
   }
 
   return (
-    <Card className="bg-card border-2 border-default rounded-4xl shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="bg-white border-0">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold text-primary">{title}</CardTitle>
+        <CardTitle className="text-lg font-bold text-primary">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-center">
@@ -283,7 +317,7 @@ export function CompletionRateChart({
                 label={renderLabel}
                 outerRadius={100}
                 innerRadius={40}
-                fill="hsl(217 91% 60%)"
+                fill="var(--accent)"
                 dataKey="value"
                 paddingAngle={2}
               >
@@ -291,7 +325,7 @@ export function CompletionRateChart({
                   <Cell 
                     key={`cell-${index}`} 
                     fill={COLORS[index % COLORS.length]}
-                    stroke="hsl(var(--card))"
+                    stroke="white"
                     strokeWidth={2}
                   />
                 ))}
@@ -301,7 +335,7 @@ export function CompletionRateChart({
                 wrapperStyle={{ paddingTop: '20px' }}
                 iconType="circle"
                 formatter={(value, entry: any) => (
-                  <span className="text-foreground" style={{ color: entry.color } as React.CSSProperties}>
+                  <span className="text-foreground text-sm" style={{ color: entry.color }}>
                     {value}: {entry.payload.value}%
                   </span>
                 )}
@@ -321,7 +355,7 @@ interface PerformanceTrendChartProps {
 export function PerformanceTrendChart({ data }: PerformanceTrendChartProps) {
   if (!data || data.length === 0) {
     return (
-      <Card className="bg-card border-2 border-default rounded-4xl shadow-lg">
+      <Card className="bg-white border-0">
         <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
           No data available
         </CardContent>
@@ -349,24 +383,24 @@ export function PerformanceTrendChart({ data }: PerformanceTrendChartProps) {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-card border-2 border-primary/20 rounded-xl p-4 shadow-xl">
-          <p className="font-semibold text-primary mb-2">{data.formattedDate}</p>
-          <div className="space-y-1 text-sm">
+        <div className="bg-white border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-semibold text-primary mb-2 text-sm">{data.formattedDate}</p>
+          <div className="space-y-1 text-xs">
             <p className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Total Sessions:</span>
+              <span className="text-muted-foreground">Total Questions:</span>
               <span className="font-semibold">{data.total}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completed:</span>
-              <span className="font-semibold text-green-600">{data.completed}</span>
+              <span className="font-semibold text-blue">{data.completed}</span>
             </p>
             <p className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Failed:</span>
-              <span className="font-semibold text-red-600">{data.failed}</span>
+              <span className="text-muted-foreground">Incomplete:</span>
+              <span className="font-semibold text-error">{data.failed}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Success Rate:</span>
-              <span className="font-semibold text-blue-600">{data.successRate.toFixed(1)}%</span>
+              <span className="font-semibold">{data.successRate.toFixed(1)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -374,7 +408,7 @@ export function PerformanceTrendChart({ data }: PerformanceTrendChartProps) {
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Total Errors:</span>
-              <span className="font-semibold text-orange-600">{data.totalErrors}</span>
+              <span className="font-semibold">{data.totalErrors}</span>
             </p>
           </div>
         </div>
@@ -384,10 +418,10 @@ export function PerformanceTrendChart({ data }: PerformanceTrendChartProps) {
   }
 
   return (
-    <Card className="bg-card border-2 border-default rounded-4xl shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="bg-white border-0">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-bold text-primary">Performance Trend Over Time</CardTitle>
+          <CardTitle className="text-lg font-bold text-primary">Performance Trend Over Time</CardTitle>
           <div className="text-sm text-muted-foreground">
             Avg Success: <span className="font-semibold text-primary">{avgSuccessRate.toFixed(1)}%</span>
           </div>
@@ -396,52 +430,80 @@ export function PerformanceTrendChart({ data }: PerformanceTrendChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
           <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis 
               dataKey="formattedDate" 
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
             <YAxis 
               yAxisId="left"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               label={{ value: 'Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
             />
             <YAxis 
               yAxisId="right"
               orientation="right"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               label={{ value: 'Rate (%)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle' } }}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              wrapperStyle={{ paddingTop: '20px' }}
-              iconType="line"
+            <Legend
+              content={({ payload = [] }) => (
+                <div className="w-full flex justify-center pt-4">
+                  <div className="flex gap-6">
+                    {payload.map((entry: any, index: number) => {
+                      const isLine = entry.dataKey === "successRate";
+
+                      return (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          {/* Icon */}
+                          {isLine ? (
+                            <div
+                              style={{
+                                width: 20,
+                                height: 3,
+                                backgroundColor: entry.color,
+                                borderRadius: 2,
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: 12,
+                                height: 12,
+                                backgroundColor: entry.color,
+                              }}
+                            />
+                          )}
+
+                          {/* Label */}
+                          <span>{entry.value}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             />
-            <Bar 
-              yAxisId="left"
-              dataKey="total" 
-              fill="hsl(var(--muted))" 
-              name="Total Sessions"
-              radius={[4, 4, 0, 0]}
-              opacity={0.3}
-            />
+
+
             <Bar 
               yAxisId="left"
               dataKey="completed" 
-              fill="hsl(142 76% 36%)" 
+              fill="var(--color-blue)" 
               name="Completed"
               radius={[4, 4, 0, 0]}
             />
             <Bar 
               yAxisId="left"
               dataKey="failed" 
-              fill="hsl(0 84% 60%)" 
+              fill="var(--color-pink)" 
               name="Failed"
               radius={[4, 4, 0, 0]}
             />
@@ -449,18 +511,18 @@ export function PerformanceTrendChart({ data }: PerformanceTrendChartProps) {
               yAxisId="right"
               type="monotone" 
               dataKey="successRate" 
-              stroke="hsl(217 91% 60%)" 
+              stroke="var(--color-orange)" 
               strokeWidth={3}
               name="Success Rate (%)"
-              dot={{ r: 5, fill: 'hsl(217 91% 60%)', strokeWidth: 2, stroke: 'white' }}
-              activeDot={{ r: 7 }}
+              dot={{ r: 4, fill: 'var(--color-orange)', strokeWidth: 2, stroke: 'white' }}
+              activeDot={{ r: 6 }}
             />
             <ReferenceLine 
               yAxisId="right"
               y={avgSuccessRate} 
-              stroke="hsl(var(--muted-foreground))" 
+              stroke="var(--text-muted)" 
               strokeDasharray="5 5"
-              label={{ value: 'Average', position: 'right', fill: 'hsl(var(--muted-foreground))' }}
+              label={{ value: 'Average', position: 'right', fill: 'var(--text-muted)' }}
             />
           </ComposedChart>
         </ResponsiveContainer>
@@ -478,7 +540,7 @@ export function CategoryPerformanceChart({
 }: CategoryPerformanceChartProps) {
   if (!data || data.length === 0) {
     return (
-      <Card className="bg-card border-2 border-default rounded-4xl shadow-lg">
+      <Card className="bg-white border-0">
         <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
           No data available
         </CardContent>
@@ -493,20 +555,20 @@ export function CategoryPerformanceChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-card border-2 border-primary/20 rounded-xl p-4 shadow-xl">
-          <p className="font-semibold text-primary mb-2">{data.label}</p>
-          <div className="space-y-1 text-sm">
+        <div className="bg-white border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-semibold text-primary mb-2 text-sm">{data.label}</p>
+          <div className="space-y-1 text-xs">
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Total Attempts:</span>
               <span className="font-semibold">{data.total}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completed:</span>
-              <span className="font-semibold text-green-600">{data.completed}</span>
+              <span className="font-semibold text-success">{data.completed}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completion Rate:</span>
-              <span className="font-semibold text-blue-600">{data.completionRate.toFixed(1)}%</span>
+              <span className="font-semibold">{data.completionRate.toFixed(1)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -514,7 +576,7 @@ export function CategoryPerformanceChart({
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Errors:</span>
-              <span className="font-semibold text-red-600">{data.avgErrors}</span>
+              <span className="font-semibold">{data.avgErrors}</span>
             </p>
           </div>
         </div>
@@ -524,10 +586,10 @@ export function CategoryPerformanceChart({
   }
 
   return (
-    <Card className="bg-card border-2 border-default rounded-4xl shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="bg-white border-0">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-bold text-primary">Performance by Category</CardTitle>
+          <CardTitle className="text-lg font-bold text-primary">Performance by Category</CardTitle>
           <div className="text-sm text-muted-foreground">
             Avg: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(1)}%</span>
           </div>
@@ -536,26 +598,26 @@ export function CategoryPerformanceChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
           <ComposedChart data={sortedData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis 
               dataKey="label" 
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
               angle={-45}
               textAnchor="end"
               height={100}
             />
             <YAxis 
               yAxisId="left"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               label={{ value: 'Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
             />
             <YAxis 
               yAxisId="right"
               orientation="right"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               label={{ value: 'Rate (%)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle' } }}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -566,34 +628,34 @@ export function CategoryPerformanceChart({
             <Bar 
               yAxisId="left"
               dataKey="total" 
-              fill="hsl(var(--muted))" 
+              fill="var(--color-orange)" 
               name="Total Attempts"
-              radius={[8, 8, 0, 0]}
-              opacity={0.6}
+              radius={[4, 4, 0, 0]}
+              opacity={0.5}
             />
             <Bar 
               yAxisId="left"
               dataKey="completed" 
-              fill="hsl(142 76% 36%)" 
+              fill="var(--color-blue)" 
               name="Completed"
-              radius={[8, 8, 0, 0]}
+              radius={[4, 4, 0, 0]}
             />
             <Line 
               yAxisId="right"
               type="monotone" 
               dataKey="completionRate" 
-              stroke="hsl(217 91% 60%)" 
+              stroke="var(--color-pink)" 
               strokeWidth={3}
               name="Completion Rate (%)"
-              dot={{ r: 5, fill: 'hsl(217 91% 60%)', strokeWidth: 2, stroke: 'white' }}
-              activeDot={{ r: 7 }}
+              dot={{ r: 4, fill: 'var(--color-pink)', strokeWidth: 2, stroke: 'white' }}
+              activeDot={{ r: 6 }}
             />
             <ReferenceLine 
               yAxisId="right"
               y={avgCompletionRate} 
-              stroke="hsl(var(--muted-foreground))" 
+              stroke="var(--text-muted)" 
               strokeDasharray="5 5"
-              label={{ value: 'Average', position: 'right', fill: 'hsl(var(--muted-foreground))' }}
+              label={{ value: 'Average', position: 'right', fill: 'var(--text-muted)' }}
             />
           </ComposedChart>
         </ResponsiveContainer>
@@ -618,7 +680,7 @@ export function DifficultyPerformanceChart({
 }: DifficultyPerformanceChartProps) {
   if (!data || data.length === 0) {
     return (
-      <Card className="bg-card border-2 border-default rounded-4xl shadow-lg">
+      <Card className="bg-white border-0">
         <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
           No data available
         </CardContent>
@@ -638,20 +700,20 @@ export function DifficultyPerformanceChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-card border-2 border-primary/20 rounded-xl p-4 shadow-xl">
-          <p className="font-semibold text-primary mb-2">{data.name}</p>
-          <div className="space-y-1 text-sm">
+        <div className="bg-white border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-semibold text-primary mb-2 text-sm">{data.name}</p>
+          <div className="space-y-1 text-xs">
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Total Attempts:</span>
               <span className="font-semibold">{data.total}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completed:</span>
-              <span className="font-semibold text-green-600">{data.completed}</span>
+              <span className="font-semibold text-success">{data.completed}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completion Rate:</span>
-              <span className="font-semibold text-blue-600">{data.completionRate.toFixed(1)}%</span>
+              <span className="font-semibold">{data.completionRate.toFixed(1)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -659,7 +721,7 @@ export function DifficultyPerformanceChart({
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Errors:</span>
-              <span className="font-semibold text-red-600">{data.avgErrors}</span>
+              <span className="font-semibold">{data.avgErrors}</span>
             </p>
           </div>
         </div>
@@ -669,10 +731,10 @@ export function DifficultyPerformanceChart({
   }
 
   return (
-    <Card className="bg-card border-2 border-default rounded-4xl shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="bg-white border-0">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-bold text-primary">Performance by Difficulty Level</CardTitle>
+          <CardTitle className="text-lg font-bold text-primary">Performance by Difficulty Level</CardTitle>
           <div className="text-sm text-muted-foreground space-x-4">
             <span>
               Avg Rate: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(1)}%</span>
@@ -686,23 +748,23 @@ export function DifficultyPerformanceChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
           <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis 
               dataKey="name" 
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
             />
             <YAxis 
               yAxisId="left"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               label={{ value: 'Errors', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
             />
             <YAxis 
               yAxisId="right"
               orientation="right"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              stroke="var(--text-muted)"
+              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
               label={{ value: 'Rate (%)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle' } }}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -713,45 +775,45 @@ export function DifficultyPerformanceChart({
             <Bar 
               yAxisId="left"
               dataKey="avgErrors" 
-              fill="hsl(0 84% 60%)" 
+              fill="var(--color-pink)" 
               name="Avg Errors"
-              radius={[8, 8, 0, 0]}
-              opacity={0.7}
+              radius={[4, 4, 0, 0]}
+              opacity={0.6}
             />
             <Line 
               yAxisId="right"
               type="monotone" 
               dataKey="completionRate" 
-              stroke="hsl(217 91% 60%)" 
+              stroke="var(--color-blue)" 
               strokeWidth={3}
               name="Completion Rate (%)"
-              dot={{ r: 6, fill: 'hsl(217 91% 60%)', strokeWidth: 2, stroke: 'white' }}
-              activeDot={{ r: 8 }}
+              dot={{ r: 4, fill: 'var(--color-blue)', strokeWidth: 2, stroke: 'white' }}
+              activeDot={{ r: 6 }}
             />
             <Line 
               yAxisId="left"
               type="monotone" 
               dataKey="avgTimeSeconds" 
-              stroke="hsl(25 95% 53%)" 
+              stroke="var(--color-orange)" 
               strokeWidth={2}
               name="Avg Time (s)"
-              dot={{ r: 4, fill: 'hsl(25 95% 53%)', strokeWidth: 2, stroke: 'white' }}
+              dot={{ r: 3, fill: 'var(--color-orange)', strokeWidth: 2, stroke: 'white' }}
               strokeDasharray="5 5"
               opacity={0.7}
             />
             <ReferenceLine 
               yAxisId="right"
               y={avgCompletionRate} 
-              stroke="hsl(var(--muted-foreground))" 
+              stroke="var(--text-muted)" 
               strokeDasharray="5 5"
-              label={{ value: 'Avg Rate', position: 'right', fill: 'hsl(var(--muted-foreground))' }}
+              label={{ value: 'Avg Rate', position: 'right', fill: 'var(--text-muted)' }}
             />
             <ReferenceLine 
               yAxisId="left"
               y={avgErrors} 
-              stroke="hsl(var(--muted-foreground))" 
+              stroke="var(--text-muted)" 
               strokeDasharray="5 5"
-              label={{ value: 'Avg Errors', position: 'left', fill: 'hsl(var(--muted-foreground))' }}
+              label={{ value: 'Avg Errors', position: 'left', fill: 'var(--text-muted)' }}
             />
           </ComposedChart>
         </ResponsiveContainer>

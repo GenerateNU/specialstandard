@@ -102,6 +102,9 @@ func (r *GameResultRepository) GetGameResults(ctx context.Context, inputQuery *m
 		return nil, err
 	}
 
+	fmt.Print("fetched results")
+	fmt.Println(gameResults)
+
 	return gameResults, nil
 }
 
