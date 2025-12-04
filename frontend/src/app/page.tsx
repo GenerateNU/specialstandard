@@ -38,19 +38,16 @@ export default function Home() {
   const currentTherapist =
     therapists.find((t) => t.id === userId) || therapists[0];
 
-  // Fetch all sessions for today (backend doesn't support therapist_id filtering yet)
-  // TODO: Add therapist_id query param to backend API for better performance d
+  // Fetch all sessions for today
   const { sessions: allSessions, isLoading: sessionsLoading } = useSessions({
-    startdate: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(), // Today at midnight
+    startdate: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
   });
 
-  // Show all upcoming sessions (limit to 5)
-  // TODO: Re-enable therapist filtering once auth assigns c orrect therapist IDs
   const sessions = allSessions.slice(0, 5);
 
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [openSection, setOpenSection] = useState<
-    "students" | "curriculum" | "calendar" | null
+    "students" | "curriculum" | null
   >("students");
 
   // Fetch students for the selected session
@@ -83,7 +80,6 @@ export default function Home() {
     return null;
   }
 
-  // Newsletter download handler
   const handleDownloadNewsletter = async () => {
     await downloadNewsletter();
   };
@@ -92,11 +88,12 @@ export default function Home() {
     <AppLayout>
       <div className="grow bg-background flex flex-row h-screen">
         {/* Main Content */}
-        <div className="w-full md:w-7/10 p-10 flex flex-col gap-10 overflow-y-scroll">
+        <div className="w-full md:w-7/10 p-10 flex flex-col gap-8 overflow-y-scroll">
+          {/* Header */}
           <div className="flex flex-row justify-between items-end shrink-0">
             <div className="flex flex-col items-left justify-start">
-              <h1>Your Educator Dashboard</h1>
-              <p className="text-2xl">
+              <h1 className="text-4xl font-bold">Your Educator Dashboard</h1>
+              <p className="text-2xl text-secondary">
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "long",
                   month: "long",
@@ -105,11 +102,11 @@ export default function Home() {
               </p>
             </div>
             <div className="flex gap-2">
-              {/* Updated button with loading state */}
               <Button
                 variant="outline"
                 onClick={handleDownloadNewsletter}
                 disabled={newsletterLoading}
+                className="text-pink border-pink hover:bg-pink hover:text-white"
               >
                 {newsletterLoading ? (
                   <>
@@ -117,28 +114,33 @@ export default function Home() {
                     Downloading...
                   </>
                 ) : (
-                  "Download Newsletter"
+                  "This Month's Newsletter ↓"
                 )}
               </Button>
               {newsletterError && (
-                <span className="text-sm text-red-500">{newsletterError}</span>
+                <span className="text-sm text-error">{newsletterError}</span>
               )}
             </div>
           </div>
+
+          {/* Upcoming Sessions */}
           <div
             className={`w-full bg-card p-6 gap-4 ${CORNER_ROUND} flex flex-col transition`}
           >
             <div className="w-full flex items-center justify-between">
-              <h3>Upcoming Sessions</h3>
+              <h3 className="text-xl font-semibold">Upcoming Sessions</h3>
               <Button
                 size="sm"
                 variant="default"
                 onClick={() => router.push("/calendar?view=card")}
+                className="bg-pink hover:bg-pink-hover text-white"
               >
                 View All Sessions
               </Button>
             </div>
-            <div className="grid grid-cols-[1fr_2fr] w-full gap-3 items-start">
+
+            <div className="grid grid-cols-[1fr_2fr] w-full gap-4 items-start">
+              {/* Sessions List */}
               <div className="gap-2 flex flex-col">
                 {sessionsLoading ? (
                   <div className="flex items-center justify-center py-8">
@@ -153,81 +155,88 @@ export default function Home() {
                       style={{ animationDelay: `${index * 75}ms` }}
                     >
                       <UpcomingSessionCard
-                        className={`transition-all duration-200 ${selectedSession?.id === session.id ? "ring-2 ring-offset-1 ring-blue-disabled scale-[1.02]" : "hover:scale-[1.01]"}`}
+                        className={`transition-all duration-200 ${
+                          selectedSession?.id === session.id
+                            ? "bg-orange-disabled ring-2 ring-offset-1 ring-blue-disabled scale-[1.02]"
+                            : "bg-white-disabled hover:scale-[1.01]"
+                        }`}
+                        sessionID={session.id}
                         sessionName={session.session_name}
                         startTime={formatTime(session.start_datetime)}
                         endTime={formatTime(session.end_datetime)}
                         date={formatDateString(session.start_datetime)}
-                        onClick={() => router.push(`/sessions/${session.id}`)}
                       />
                     </div>
                   ))
                 ) : (
-                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <div className="flex items-center justify-center py-8 text-muted">
                     No upcoming sessions
                   </div>
                 )}
               </div>
+
+
+              {/* Session Details Panel */}
               <div
-                className={`p-4 text-sm font-normal ${CORNER_ROUND} justify-start flex flex-col gap-2 self-start transition-all duration-300`}
+                className={`p-4 text-sm font-normal ${CORNER_ROUND} justify-start flex flex-col gap-4 self-start transition-all duration-300 bg-orange-disabled`}
               >
                 {selectedSession ? (
                   <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-                    <div className="flex flex-row flex-1 ">
+                    <div className="flex flex-row flex-1">
                       <div className="flex flex-col flex-1">
-                        <strong>{selectedSession.session_name}</strong>
-                        <strong>
+                        <strong className="text-primary">{selectedSession.session_name}</strong>
+                        <strong className="text-secondary">
                           {getTherapistName(
                             selectedSession.therapist_id,
                             therapists
                           )}
                         </strong>
                       </div>
-                      <div className="flex flex-col flex-1">
-                        <span>
+                      <div className="flex flex-col flex-1 text-right">
+                        <span className="text-secondary">
                           {formatTime(selectedSession.start_datetime)} –{" "}
                           {formatTime(selectedSession.end_datetime)}
                         </span>
-                        <span>
+                        <span className="text-secondary">
                           {formatDateString(selectedSession.start_datetime)}
                         </span>
-                        <span>
-                          {selectedSession.location && (
-                            <div className="text-sm">
-                              <strong>Location:</strong>{" "}
-                              {selectedSession.location}
-                            </div>
-                          )}
-                        </span>
+                        {selectedSession.location && (
+                          <div className="text-sm text-secondary">
+                            <strong>Location:</strong> {selectedSession.location}
+                          </div>
+                        )}
                       </div>
                     </div>
                     {selectedSession.notes && (
-                      <div className="text-sm">
+                      <div className="text-sm text-secondary">
                         <strong>Notes:</strong> {selectedSession.notes}
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center justify-center py-8 text-muted">
                     <span>Select a session to view details</span>
                   </div>
                 )}
+
                 {selectedSession && (
                   <div className="w-full gap-3 flex flex-col mt-2">
                     {/* Students Section */}
                     <div className="flex flex-col w-full border-b-2 border-border overflow-hidden">
                       <button
-                        className="flex items-center justify-between px-2 py-2 cursor-pointer group hover:bg-card-hover transition-colors"
+                        className="flex items-center justify-between px-2 py-2 cursor-pointer group hover:bg-orange/20 transition-colors"
                         onClick={() =>
                           setOpenSection(
                             openSection === "students" ? null : "students"
                           )
                         }
                       >
-                        <h4>Students</h4>
+                        <h4 className="font-semibold text-primary">Students</h4>
                         <ChevronDown
                           size={18}
-                          className={`transition-transform duration-300 ease-in-out ${openSection === "students" ? "rotate-180" : ""}`}
+                          className={`transition-transform duration-300 ease-in-out text-primary ${
+                            openSection === "students" ? "rotate-180" : ""
+                          }`}
                         />
                       </button>
                       <div
@@ -249,7 +258,7 @@ export default function Home() {
                                 {sessionStudents.map((student, index) => (
                                   <span
                                     key={student.id}
-                                    className="text-sm animate-in fade-in duration-300"
+                                    className="text-sm text-secondary animate-in fade-in duration-300"
                                     style={{
                                       animationDelay: `${index * 50}ms`,
                                     }}
@@ -272,17 +281,19 @@ export default function Home() {
                     {/* Curriculum Section */}
                     <div className="flex flex-col w-full border-b-2 border-border overflow-hidden">
                       <button
-                        className="flex items-center justify-between px-2 py-2 cursor-pointer group hover:bg-card-hover transition-colors"
+                        className="flex items-center justify-between px-2 py-2 cursor-pointer group hover:bg-orange/20 transition-colors"
                         onClick={() =>
                           setOpenSection(
                             openSection === "curriculum" ? null : "curriculum"
                           )
                         }
                       >
-                        <h4>Curriculum</h4>
+                        <h4 className="font-semibold text-primary">Curriculum</h4>
                         <ChevronDown
                           size={18}
-                          className={`transition-transform duration-300 ease-in-out ${openSection === "curriculum" ? "rotate-180" : ""}`}
+                          className={`transition-transform duration-300 ease-in-out text-primary ${
+                            openSection === "curriculum" ? "rotate-180" : ""
+                          }`}
                         />
                       </button>
                       <div
@@ -301,85 +312,53 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Calendar Section */}
-                    <div className="flex flex-col w-full border-b-2 border-border overflow-hidden">
-                      <button
-                        className="flex items-center justify-between px-2 py-2 cursor-pointer group hover:bg-card-hover transition-colors"
-                        onClick={() =>
-                          setOpenSection(
-                            openSection === "calendar" ? null : "calendar"
-                          )
-                        }
-                      >
-                        <h4>Weekly Calendar</h4>
-                        <ChevronDown
-                          size={18}
-                          className={`transition-transform duration-300 ease-in-out ${openSection === "calendar" ? "rotate-180" : ""}`}
-                        />
-                      </button>
-                      <div
-                        className={`grid transition-all duration-300 ease-in-out ${
-                          openSection === "calendar"
-                            ? "grid-rows-[1fr] opacity-100"
-                            : "grid-rows-[0fr] opacity-0"
-                        }`}
-                      >
-                        <div className="overflow-hidden">
-                          <div className="mt-1 mb-3 text-sm font-normal px-2">
-                            <div className="text-muted">
-                              Calendar view coming soon...
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Schedule */}
           <div
             className={`w-full shrink-0 p-6 bg-card flex items-start flex-col gap-4 ${CORNER_ROUND}`}
           >
             <div className="w-full flex items-center justify-between">
-              <h3>Schedule</h3>
+              <h3 className="text-xl font-semibold">Your Schedule</h3>
               <Button
                 size="sm"
                 variant="default"
                 onClick={() => router.push("/calendar")}
+                className="bg-pink hover:bg-pink-hover text-white"
               >
                 View Full Schedule
               </Button>
             </div>
-            {/* Calendar */}
-            <div className="w-full h-[300px]">
-              <StudentSchedule initialView="week" className="h-full" />
+            <div className="w-full h-120">
+              <StudentSchedule initialView="work_week" className="h-full" />
             </div>
           </div>
         </div>
+
         {/* Sidebar */}
-        <div className="flex flex-col p-10 w-3/10 h-screen bg-orange sticky top-0 space-y-6">
+        <div className="flex flex-col p-10 w-3/10 h-screen bg-white-hover sticky top-0 space-y-6 overflow-y-auto">
           <Link href="/profile" className="block">
-            <div className="flex flex-row justify-between items-centerhover:shadow-md hover:-translate-y-1 cursor-pointer text-black transition p-4 rounded-2xl hover:bg-orange-disabled shrink-0">
+            <div className="flex flex-row justify-between items-center hover:shadow-md hover:-translate-y-1 cursor-pointer text-black transition p-4 rounded-2xl hover:bg-orange-disabled shrink-0">
               <div>
-                <h4 className="text-black">
+                <h4 className="text-black font-semibold">
                   {currentTherapist
                     ? `${currentTherapist.first_name} ${currentTherapist.last_name}`
                     : "Loading..."}
                 </h4>
-                <p>My Profile</p>
+                <p className="text-sm text-black/70">My Profile</p>
               </div>
-              <UserCircle size={36} strokeWidth={1} />
+              <UserCircle size={36} strokeWidth={1} className="text-black" />
             </div>
           </Link>
-          <div className="w-full bg-card rounded-xl shrink-0">
-            <MiniCalendar />
-          </div>
-          <div className="flex flex-col w-full p-6 bg-card rounded-xl gap-4 min-h-0 flex-1 overflow-hidden">
+
+          <div className="flex flex-col w-full p-6 !bg-white rounded-xl gap-4 min-h-0 flex-1 overflow-hidden">
             <div>
-              <h3>Students</h3>
-              <p className="text-sm text-muted-foreground">Recently Viewed</p>
+              <h3 className="text-lg font-semibold text-primary">Students</h3>
+              <p className="text-sm text-muted">Recently Viewed</p>
             </div>
             <div className="w-full flex-1 flex flex-col gap-2 overflow-y-auto min-h-0">
               {recentStudents.length > 0 ? (
@@ -398,17 +377,22 @@ export default function Home() {
                   </div>
                 ))
               ) : (
-                <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+                <div className="flex-1 flex items-center justify-center text-sm text-muted">
                   No recently viewed students
                 </div>
               )}
             </div>
             <Button
-              className="w-full shrink-0"
+              className="w-full shrink-0 bg-pink hover:bg-pink-hover text-white"
               onClick={() => router.push("/students")}
             >
               View All Students
             </Button>
+          </div>
+
+
+          <div className="w-full bg-card rounded-xl shrink-0">
+            <MiniCalendar />
           </div>
         </div>
       </div>
