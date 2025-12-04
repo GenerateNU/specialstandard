@@ -16,7 +16,7 @@ import (
 func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(string)
 
-	email, err := h.authRepo.GetUserEmail(c.Context(), userID)
+	email, err := h.authRepo.GetUserEmail(c.Context(), userID) 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.SendCodeResponse{
 			Success: false,

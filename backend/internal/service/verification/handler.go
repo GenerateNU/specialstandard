@@ -13,7 +13,7 @@ type Handler struct {
 	db               *pgxpool.Pool
 	resendClient     *resend.Client
 	fromEmail        string
-    authRepo          *schema.AuthRepository          
+    authRepo         storage.AuthRepository          
 }
 
 // Createing a new verification handler

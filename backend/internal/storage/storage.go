@@ -102,6 +102,11 @@ type VerificationRepository interface {
 	VerifyCode(ctx context.Context, userID, code string) (bool, error)
 }
 
+type AuthRepository interface {
+	GetUserEmail(ctx context.Context, userID string) (string, error)
+	MarkEmailVerified(ctx context.Context, userID string) error
+}
+
 type Repository struct {
 	Resource        ResourceRepository
 	db              *pgxpool.Pool
@@ -117,6 +122,7 @@ type Repository struct {
 	School          SchoolRepository
 	Newsletter      NewsletterRepository
 	Verification    VerificationRepository
+	Auth            AuthRepository
 }
 
 func (r *Repository) Close() error {
