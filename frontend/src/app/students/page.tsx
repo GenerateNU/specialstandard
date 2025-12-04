@@ -10,6 +10,7 @@ import StudentCard from '@/components/students/studentCard'
 import { Badge } from '@/components/ui/badge'
 import { useStudents } from '@/hooks/useStudents'
 import { getSchoolColor } from '@/lib/utils'
+import {gradeToDisplay} from "@/lib/gradeUtils";
 
 export default function StudentsPage() {
   const { students, isLoading, error, refetch } = useStudents()
@@ -130,7 +131,7 @@ export default function StudentsPage() {
             actions={<AddStudentModal />}
           />
 
-          <div className="mb-3 relative">
+          <div className="mb-3 relative flex flex-wrap gap-y-2">
             <Badge className={`border border-pink text-primary h-full text-md px-5 py-2 
                                ${filterOpen ? "bg-pink text-white" : "bg-background text-primary"}`}
                    onClick={() => setFilterOpen(!filterOpen)}>
@@ -162,8 +163,7 @@ export default function StudentsPage() {
                                                       : 'opacity-40 hover:opacity-70'
                                               }`}
                                           >
-                                              <Badge className={`${getSchoolColor(schoolName)} ${isSelected ? 'ring-2 ring-accent ring-offset-2' : ''}
-                                                         text-md h-full px-4 py-0.5`}>
+                                              <Badge className={`${getSchoolColor(schoolName)} text-md h-full px-4 py-0.5`}>
                                                   {schoolName}
                                                   {isSelected && <X className="w-3 h-3 ml-2 inline" />}
                                               </Badge>
@@ -195,13 +195,42 @@ export default function StudentsPage() {
                           )}
                       </div>
                   </div>
-
               )}
               <Badge className="mx-4 border border-pink text-primary h-full text-md px-5 py-2"
                      onClick={() => setSortAZ(!sortAZ)}>
                   <ChevronsUpDown className="w-4 h-4 mr-2 text-primary" />
                   Sort {sortAZ ? 'A-Z' : 'Z-A'}
               </Badge>
+
+              {selectedSchools.length > 0 && selectedSchools.map(schoolName => {
+                          return (
+                              <button
+                                  key={schoolName}
+                                  onClick={() => toggleSchoolFilter(schoolName)}
+                                  className="transition-all opacity-100"
+                              >
+                                  <Badge className={`${getSchoolColor(schoolName)}
+                                                    text-md h-full mx-1.5 text-primary text-md px-5 py-2`}>
+                                      {schoolName}
+                                      <X className="w-3 h-3 ml-2 inline" />
+                                  </Badge>
+                              </button>
+                          )
+              })}
+              {selectedGrades.length > 0 && selectedGrades.map(grade => {
+                return (
+                  <button
+                    key={grade}
+                    onClick={() => toggleGradeFilter(grade)}
+                    className="transition-all opacity-100"
+                  >
+                      <Badge className={`${gradeColor} text-md h-full mx-1.5 text-primary text-md px-5 py-2`}>
+                        Grade {gradeToDisplay(grade)}
+                        <X className="w-3 h-3 ml-2 inline" />
+                      </Badge>
+                  </button>
+                )
+              })}
           </div>
 
           {students.length === 0
