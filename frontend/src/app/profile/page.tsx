@@ -90,7 +90,7 @@ const AdminProfile: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <h3 className="text-lg font-semibold text-black mb-3">Resources</h3>
             <a
-              href="ADD EDPLAN HERE"
+              href="https://www.edplan.com/blog/Account/login.aspx?ReturnURL=/blog/admin/"
               className="inline-flex items-center gap-2 text-black hover:text-grey-600 transition-colors"
             >
               <span>EdPlan</span>
