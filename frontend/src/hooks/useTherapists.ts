@@ -1,4 +1,3 @@
-import { useAuthContext } from "@/contexts/authContext";
 import { getTherapists as getTherapistsApi } from "@/lib/api/therapists";
 import type {
   CreateTherapistInput,
