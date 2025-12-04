@@ -1,15 +1,44 @@
 "use client";
 
+import EditModal from "@/app/profile/EditModal";
 import AppLayout from "@/components/AppLayout";
 import ComputerGirl from "@/components/ui/computer-girl";
 import { useAuthContext } from "@/contexts/authContext";
-import { useTherapist } from "@/hooks/useTherapists";
+import { useTherapist, useTherapists } from "@/hooks/useTherapists";
 import { Edit2, ExternalLink } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 
 const AdminProfile: React.FC = () => {
   const { userId: therapistId } = useAuthContext();
-  const { therapist, error } = useTherapist(therapistId);
+  const { therapist, error, refetch } = useTherapist(therapistId);
+  const { updateTherapist } = useTherapists({ fetchOnMount: false });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSave = async (
+    therapistId: string,
+    data: {
+      first_name: string;
+      last_name: string;
+      school_ids: number[];
+      district_id: number;
+    }
+  ) => {
+    try {
+      await updateTherapist(therapistId, {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        district_id: data.district_id,
+        schools: data.school_ids,
+      });
+
+      // Refresh therapist data
+      await refetch();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update therapist:", error);
+    }
+  };
 
   if (error || !therapist) {
     return (
@@ -37,14 +66,16 @@ const AdminProfile: React.FC = () => {
 
           {/* Profile Card */}
           <div className="bg-white rounded-2xl shadow-sm p-8 mb-6 relative">
-            <button className="absolute top-6 right-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="absolute top-6 right-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+            >
               <span className="text-sm">Edit Profile</span>
               <Edit2 size={18} />
             </button>
 
             <div className="flex flex-col items-center mb-8">
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-grey-600 flex items-center justify-center mb-2">
-                {/*I AM NOT SURE HOW WE ARE GOING TO HAVE IMAGES ON FILE FOR THE THERAPIST, SO I USED THIS HACK*/}
                 <span className="text-4xl font-bold text-white">
                   {therapist.first_name[0]}
                   {therapist.last_name[0]}
@@ -61,7 +92,7 @@ const AdminProfile: React.FC = () => {
                 <h3 className="text-sm font-medium text-black mb-3">
                   School District
                 </h3>
-                <span className="inline-block px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
+                <span className="inline-block px-4 py-2 bg-indigo-100 text-gray-600 rounded-full text-sm font-medium">
                   {districtName}
                 </span>
               </div>
@@ -91,7 +122,7 @@ const AdminProfile: React.FC = () => {
             <h3 className="text-lg font-semibold text-black mb-3">Resources</h3>
             <a
               href="https://www.edplan.com/blog/Account/login.aspx?ReturnURL=/blog/admin/"
-              className="inline-flex items-center gap-2 text-black hover:text-grey-600 transition-colors"
+              className="inline-flex items-center gap-2 text-black hover:text-grey-600 transition-colors cursor-pointer"
             >
               <span>EdPlan</span>
               <ExternalLink size={16} />
@@ -104,6 +135,22 @@ const AdminProfile: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {therapistId && (
+        <EditModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          therapistId={therapistId}
+          initialData={{
+            first_name: therapist.first_name,
+            last_name: therapist.last_name,
+            school_names: therapist.school_names ?? [],
+            district_id: therapist.district_id,
+          }}
+          onSave={handleSave}
+        />
+      )}
     </AppLayout>
   );
 };
