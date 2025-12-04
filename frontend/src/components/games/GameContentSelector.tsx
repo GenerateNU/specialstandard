@@ -138,17 +138,21 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel, in
           Theme: {theme.name} • Category: {category.label} • Level {difficultyLevel}
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(QUESTION_TYPES).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setSelectedQuestionType(key as GetGameContentsQuestionType)}
-              className="bg-card rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-200 text-left group flex items-center justify-between hover:bg-card-hover border border-default hover:border-hover"
-            >
-              <span className="font-medium text-primary">{label}</span>
-              <ChevronRight className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
-            </button>
-          ))}
+        <div className="bg-card border-2 border-default rounded-4xl p-8">
+          <div className='pb-2'>
+          Game – Question Type
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(QUESTION_TYPES).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedQuestionType(key as GetGameContentsQuestionType)}
+                className="bg-pink hover:bg-pink-hover text-white p-6 rounded-xl font-semibold transition-all hover:scale-102 cursor-pointer text-left"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
