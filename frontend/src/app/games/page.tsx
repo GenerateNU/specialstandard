@@ -4,6 +4,7 @@ import AppLayout from "@/components/AppLayout";
 import { GameContentSelector } from "@/components/games/GameContentSelector";
 import { useSessionContext } from "@/contexts/sessionContext";
 import { useStudents } from '@/hooks/useStudents'
+import { useThemes } from '@/hooks/useThemes'
 import type {
   GameContent,
   GetGameContentsCategory,
@@ -22,9 +23,16 @@ import Tooltip from '@/components/ui/tooltip'
 function GamesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session, students, currentLevel } = useSessionContext();
+  const { session, students, currentLevel, currentMonth, currentYear } = useSessionContext();
   const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000"; // could use this or the session context
   const categoryParam = searchParams.get("category") as GetGameContentsCategory | null;
+  
+  // Fetch theme for current month/year
+  const { themes, isLoading: themesLoading } = useThemes({ 
+    month: currentMonth + 1, // Convert from 0-11 to 1-12
+    year: currentYear 
+  });
+  const currentTheme = themes && themes.length > 0 ? themes[0] : null;
   
   // Redirect to curriculum if no level is selected
   React.useEffect(() => {
@@ -32,6 +40,7 @@ function GamesPageContent() {
       router.push(`/sessions/${sessionId}/curriculum`);
     }
   }, [sessionId, currentLevel, router]);
+  
   const sessionStudentIds = students ? students.map((student) => student.sessionStudentId?.toString()) : [];
   const { students: allStudents } = useStudents()
   const [selectedContent, setSelectedContent] = React.useState<{
@@ -427,6 +436,39 @@ const handleSubmitResult = async () => {
   }
 
   // Show content selector
+  // Show loading state while fetching theme
+  if (themesLoading) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue mx-auto mb-4"></div>
+            <p className="text-muted">Loading theme...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+  
+  // Show error if no theme found
+  if (!currentTheme) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-error mb-4">No theme found for the current month</p>
+            <button
+              onClick={() => router.push(`/sessions/${sessionId}/curriculum`)}
+              className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover transition-colors"
+            >
+              Back to Curriculum
+            </button>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <GameContentSelector
@@ -435,6 +477,7 @@ const handleSubmitResult = async () => {
         backLabel={session ? "Back to Curriculum" : "Back"}
         initialDifficultyLevel={currentLevel || undefined}
         initialCategory={categoryParam || undefined}
+        theme={currentTheme}
       />
     </AppLayout>
   );
