@@ -65,11 +65,12 @@ interface GameContentSelectorProps {
   onBack?: () => void
   backLabel?: string
   initialDifficultyLevel?: number
+  initialCategory?: GetGameContentsCategory
 }
 
-export function GameContentSelector({ onSelectionComplete, onBack, backLabel, initialDifficultyLevel }: GameContentSelectorProps) {
+export function GameContentSelector({ onSelectionComplete, onBack, backLabel, initialDifficultyLevel, initialCategory }: GameContentSelectorProps) {
   const [selectedTheme, setSelectedTheme] = React.useState<Theme | null>(null)
-  const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(null)
+  const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(initialCategory || null)
   const [selectedQuestionType, setSelectedQuestionType] = React.useState<GetGameContentsQuestionType | null>(null)
 
   const { themes, isLoading: themesLoading, error: themesError, refetch: refetchThemes } = useThemes()
@@ -144,15 +145,12 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel, in
                 <button
                   key={theme.id}
                   onClick={() => setSelectedTheme(theme)}
-                  className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-200 text-left group hover:bg-card-hover border border-default hover:border-hover"
+                  className="bg-card cursor-pointer rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-200 text-left group hover:bg-card-hover border border-default hover:border-hover"
                 >
                   <div className="flex items-center justify-between">
                     <h3>{theme.name}</h3>
                     <ChevronRight className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
                   </div>
-                  <p className="text-secondary mt-2">
-                    {`Explore ${theme.name} themed content`}
-                  </p>
                 </button>
               ))}
             </div>

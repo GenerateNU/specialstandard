@@ -24,6 +24,7 @@ function GamesPageContent() {
   const searchParams = useSearchParams();
   const { session, students, currentLevel } = useSessionContext();
   const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000"; // could use this or the session context
+  const categoryParam = searchParams.get("category") as GetGameContentsCategory | null;
   
   // Redirect to curriculum if no level is selected
   React.useEffect(() => {
@@ -433,6 +434,7 @@ const handleSubmitResult = async () => {
         onBack={session ? () => router.push(`/sessions/${session.id}/curriculum`) : () =>router.back()}
         backLabel={session ? "Back to Curriculum" : "Back"}
         initialDifficultyLevel={currentLevel || undefined}
+        initialCategory={categoryParam || undefined}
       />
     </AppLayout>
   );
