@@ -160,6 +160,7 @@ export default function LoginPage() {
                 checked={rememberMe}
                 onCheckedChange={setRememberMe}
                 disabled={isLoading}
+                className="text-blue"
               />
               <label
                 htmlFor="remember-me"
