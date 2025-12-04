@@ -31,7 +31,7 @@ const EditModal: React.FC<EditModalProps> = ({
   initialData,
   onSave,
 }) => {
-  const { schools, districts, isLoading } = useSchools();
+  const { schools, districts } = useSchools();
   const [formData, setFormData] = useState({
     first_name: initialData.first_name,
     last_name: initialData.last_name,
