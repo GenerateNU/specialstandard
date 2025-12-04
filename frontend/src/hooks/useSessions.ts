@@ -1,4 +1,4 @@
-// hooks/useSessions.ts - FULLY UPDATED WITH REPETITION SUPPORT
+// hooks/useSessions.ts - FULLY UPDATED WITH REPETITION SUPPORT & AUTO-REFETCH
 
 import { useAuthContext } from "@/contexts/authContext";
 import { getSessions as getSessionsApi } from "@/lib/api/sessions";
@@ -16,9 +16,9 @@ interface UseSessionsReturn {
   error: string | null;
   refetch: () => Promise<QueryObserverResult<Session[], Error>>;
   addSession: (session: PostSessionsBody) => Promise<Session[]>;
-  updateSession: (id: string, updatedSession: UpdateSessionInput) => void;
-  deleteSession: (id: string) => void;
-  deleteRecurringSessions: (id: string) => void;
+  updateSession: (id: string, updatedSession: UpdateSessionInput) => Promise<Session>;
+  deleteSession: (id: string) => Promise<void>;
+  deleteRecurringSessions: (id: string) => Promise<void>;
   isAddingSession: boolean;
   isDeletingSession: boolean;
   isDeletingRecurring: boolean;
@@ -51,7 +51,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["sessions", params],
+    queryKey: ["sessions"],
     queryFn: () =>
       api.getSessions({
         limit: params?.limit ?? 100,
@@ -77,7 +77,9 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     mutationFn: ({ id, data }: { id: string; data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
     onSuccess: () => {
+      // Invalidate both query keys so both useSessions() and useSession(id) refetch
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["session"] });
     },
   });
 
@@ -86,6 +88,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     mutationFn: (id: string) => api.deleteSessionsId(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["session"] });
     },
   });
 
@@ -94,6 +97,7 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     mutationFn: (id: string) => api.deleteSessionsIdRecurring(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["session"] });
     },
   });
 
@@ -110,10 +114,33 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
         });
       });
     },
-    updateSession: (id: string, data: UpdateSessionInput) =>
-      updateSessionMutation.mutate({ id, data }),
-    deleteSession: (id: string) => deleteSessionMutation.mutate(id),
-    deleteRecurringSessions: (id: string) => deleteRecurringMutation.mutate(id),
+    updateSession: async (id: string, data: UpdateSessionInput) => {
+      return new Promise((resolve, reject) => {
+        updateSessionMutation.mutate({ 
+          id, 
+          data: { ...data, therapist_id: therapistId ?? undefined } 
+        }, {
+          onSuccess: (data) => resolve(data),
+          onError: (err) => reject(err),
+        });
+      });
+    },
+    deleteSession: async (id: string) => {
+      return new Promise((resolve, reject) => {
+        deleteSessionMutation.mutate(id, {
+          onSuccess: () => resolve(),
+          onError: (err) => reject(err),
+        });
+      });
+    },
+    deleteRecurringSessions: async (id: string) => {
+      return new Promise((resolve, reject) => {
+        deleteRecurringMutation.mutate(id, {
+          onSuccess: () => resolve(),
+          onError: (err) => reject(err),
+        });
+      });
+    },
     isAddingSession: addSessionMutation.isPending,
     isDeletingSession: deleteSessionMutation.isPending,
     isDeletingRecurring: deleteRecurringMutation.isPending,
@@ -133,7 +160,7 @@ export function useSession(id: string): UseSessionReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["sessions", id],
+    queryKey: ["session", id],
     queryFn: () => api.getSessionsId(id),
     enabled: !!id,
   });
