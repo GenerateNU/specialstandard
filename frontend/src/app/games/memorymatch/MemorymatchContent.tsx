@@ -1,17 +1,24 @@
 "use client";
 
 import MemorymatchGameInterface from "@/components/games/MemorymatchInterface";
-import { useSearchParams } from "next/navigation";
+import { StudentSelector } from "@/components/games/StudentSelector";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 export function MemorymatchContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId") || "00000000-0000-0000-0000-000000000000";
-  const sessionStudentId = Number.parseInt(searchParams.get("sessionStudentId") ?? "0");
+  const sessionStudentIdsParam = searchParams.get("sessionStudentIds");
   const themeId = searchParams.get("themeId");
   const themeName = searchParams.get("themeName");
   const difficulty = searchParams.get("difficulty");
   const category = searchParams.get("category");
   const questionType = searchParams.get("questionType");
+
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(
+    sessionStudentIdsParam ? sessionStudentIdsParam.split(',') : []
+  );
 
   if (!themeId || !difficulty || !category || !questionType) {
     return (
@@ -31,9 +38,26 @@ export function MemorymatchContent() {
     );
   }
 
+  // Show student selector if no students selected yet
+  if (selectedStudentIds.length === 0) {
+    return (
+      <StudentSelector
+        gameTitle="Memory Match"
+        onBack={() => router.back()}
+        onStudentsSelected={(studentIds) => {
+          setSelectedStudentIds(studentIds);
+          // Update URL with selected students
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('sessionStudentIds', studentIds.join(','));
+          router.replace(`/games/memorymatch?${params.toString()}`);
+        }}
+      />
+    );
+  }
+
   return (
     <MemorymatchGameInterface
-      session_student_id={sessionStudentId}
+      session_student_ids={selectedStudentIds.map(id => Number.parseInt(id))}
       session_id={sessionId}
       themeId={themeId}
       themeName={themeName || "Theme"}

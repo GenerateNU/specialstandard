@@ -96,6 +96,17 @@ type SchoolRepository interface {
 	GetSchoolsByDistrict(ctx context.Context, districtID int) ([]models.School, error)
 }
 
+// VerificationRepository defines methods for verification code operations
+type VerificationRepository interface {
+	CreateVerificationCode(ctx context.Context, code models.VerificationCode) error
+	VerifyCode(ctx context.Context, userID, code string) (bool, error)
+}
+
+type AuthRepository interface {
+	GetUserEmail(ctx context.Context, userID string) (string, error)
+	MarkEmailVerified(ctx context.Context, userID string) error
+}
+
 type Repository struct {
 	Resource        ResourceRepository
 	db              *pgxpool.Pool
@@ -110,6 +121,8 @@ type Repository struct {
 	District        DistrictRepository
 	School          SchoolRepository
 	Newsletter      NewsletterRepository
+	Verification    VerificationRepository
+	Auth            AuthRepository
 }
 
 func (r *Repository) Close() error {
@@ -136,5 +149,6 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 		District:        schema.NewDistrictRepository(db),
 		School:          schema.NewSchoolRepository(db),
 		Newsletter:      schema.NewNewsletterRepository(db),
+		Verification:    schema.NewVerificationRepository(db),
 	}
 }
