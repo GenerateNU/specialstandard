@@ -8,6 +8,7 @@ import {
   GetGameContentsQuestionType
 } from '@/lib/api/theSpecialStandardAPI.schemas'
 import type { Theme } from '@/lib/api/theSpecialStandardAPI.schemas'
+import { useGameContents } from '@/hooks/useGameContents'
 
 const CATEGORIES = {
   [GetGameContentsCategory.receptive_language]: { 
@@ -62,12 +63,34 @@ interface GameContentSelectorProps {
   theme: Theme
 }
 
-export function GameContentSelector({ onSelectionComplete, onBack, backLabel, initialDifficultyLevel, initialCategory, theme }: GameContentSelectorProps) {
+export function GameContentSelector({ 
+  onSelectionComplete, 
+  onBack, 
+  backLabel, 
+  initialDifficultyLevel, 
+  initialCategory, 
+  theme
+}: GameContentSelectorProps) {
   const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(initialCategory || null)
   const [selectedQuestionType, setSelectedQuestionType] = React.useState<GetGameContentsQuestionType | null>(null)
 
-  // Use the passed-in difficulty level
   const difficultyLevel = initialDifficultyLevel || 1
+
+  // Fetch available question types for the current selection
+  const { gameContents, isLoading } = useGameContents(
+    selectedCategory ? {
+      theme_id: theme.id,
+      category: selectedCategory,
+      difficulty_level: difficultyLevel,
+    } : undefined
+  )
+
+  // Extract unique question types from fetched content
+  const availableQuestionTypes = React.useMemo(() => {
+    return Array.from(
+      new Set(gameContents.map(content => content.question_type))
+    )
+  }, [gameContents])
 
   React.useEffect(() => {
     if (theme && selectedCategory && selectedQuestionType) {
@@ -124,6 +147,14 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel, in
 
   // Step 2: Question Type Selection
   const category = CATEGORIES[selectedCategory]
+  
+  // Filter question types based on available data
+  const filteredQuestionTypes = availableQuestionTypes
+    ? Object.entries(QUESTION_TYPES).filter(([key]) => 
+        availableQuestionTypes.includes(key as GetGameContentsQuestionType)
+      )
+    : Object.entries(QUESTION_TYPES)
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
@@ -140,19 +171,30 @@ export function GameContentSelector({ onSelectionComplete, onBack, backLabel, in
         
         <div className="bg-card border-2 border-default rounded-4xl p-8">
           <div className='pb-2'>
-          Game – Question Type
+            Game – Question Type
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.entries(QUESTION_TYPES).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedQuestionType(key as GetGameContentsQuestionType)}
-                className="bg-pink hover:bg-pink-hover text-white p-6 rounded-xl font-semibold transition-all hover:scale-102 cursor-pointer text-left"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          
+          {isLoading ? (
+            <div className="text-center py-8 text-secondary">
+              Loading available question types...
+            </div>
+          ) : filteredQuestionTypes.length === 0 ? (
+            <div className="text-center py-8 text-secondary">
+              No question types available for this selection.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredQuestionTypes.map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedQuestionType(key as GetGameContentsQuestionType)}
+                  className="bg-pink hover:bg-pink-hover text-white p-6 rounded-xl font-semibold transition-all hover:scale-102 cursor-pointer text-left"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
