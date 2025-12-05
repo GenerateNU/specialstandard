@@ -2,7 +2,7 @@
 
 import { use } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, ChevronRight } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
 import WeekNavigator from '@/components/curriculum/WeekNavigator'
