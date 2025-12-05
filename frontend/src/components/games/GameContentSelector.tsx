@@ -59,6 +59,7 @@ const STARS = [
 interface GameContentSelectorProps {
   onSelectionComplete: (selection: {
     theme: Theme
+    themeWeek: number | null
     difficultyLevel: number
     category: GetGameContentsCategory
     questionType: GetGameContentsQuestionType
@@ -112,6 +113,7 @@ export function GameContentSelector({
     if (theme && selectedCategory && selectedQuestionType) {
       onSelectionComplete({
         theme,
+        themeWeek: currentWeek ?? null,
         difficultyLevel,
         category: selectedCategory,
         questionType: selectedQuestionType,

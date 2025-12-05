@@ -13,6 +13,7 @@ export default function WordImageMatchingContent() {
 
     const themeId = searchParams.get('themeId')
     const themeName = searchParams.get('themeName')
+    const themeWeek = searchParams.get('themeWeek')
     const difficulty = searchParams.get('difficulty')
     const category = searchParams.get('category')
     const questionType = searchParams.get('questionType')
@@ -63,6 +64,7 @@ export default function WordImageMatchingContent() {
             session_student_ids={selectedStudentIds.map(id => Number.parseInt(id))}
             session_id={sessionId}
             themeID={themeId}
+            themeWeek={themeWeek ? Number.parseInt(themeWeek) : null}
             themeName={themeName}
             difficulty={difficulty}
             category={category}

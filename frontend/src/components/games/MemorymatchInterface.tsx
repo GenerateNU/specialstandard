@@ -38,6 +38,7 @@ interface MemorymatchGameInterfaceProps {
   session_student_ids: number[];
   session_id?: string;
   themeId: string;
+  themeWeek: number | null;
   themeName: string;
   difficulty: number;
   category: string;
@@ -207,6 +208,7 @@ export default function MemorymatchGameInterface({
   session_student_ids,
   session_id,
   themeId,
+  themeWeek,
   themeName,
   difficulty,
   category,
@@ -234,6 +236,7 @@ export default function MemorymatchGameInterface({
     error: contentsError,
   } = useGameContents({
     theme_id: themeId,
+    theme_week: themeWeek ?? undefined,
     category: category as GetGameContentsCategory,
     question_type: questionType as GetGameContentsQuestionType,
     difficulty_level: difficulty,

@@ -52,6 +52,7 @@ function GamesPageContent() {
   const { students: allStudents } = useStudents()
   const [selectedContent, setSelectedContent] = React.useState<{
     theme: Theme;
+    themeWeek: number | null;
     difficultyLevel: number;
     category: GetGameContentsCategory;
     questionType: GetGameContentsQuestionType;
@@ -107,6 +108,7 @@ function GamesPageContent() {
 
   const handleContentSelection = (selection: {
     theme: Theme;
+    themeWeek: number | null;
     difficultyLevel: number;
     category: GetGameContentsCategory;
     questionType: GetGameContentsQuestionType;
@@ -232,6 +234,7 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
@@ -249,6 +252,7 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
@@ -266,6 +270,7 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
@@ -283,6 +288,7 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
@@ -300,6 +306,7 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
