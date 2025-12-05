@@ -1,3 +1,4 @@
+
 'use client'
 import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
@@ -7,15 +8,20 @@ export interface StudentTuple {
   sessionStudentId: number
 }
 
+// Type for attendance tracking (Map of sessionStudentId to isPresent)
+export type StudentAttendance = Record<number, boolean> 
+
 interface SessionContextType {
   session: Session | null
   students: StudentTuple[]
+  attendance: StudentAttendance
   currentWeek: number
   currentMonth: number
   currentYear: number
   currentLevel: number | null
   setSession: (session: Session) => void
   setStudents: (students: StudentTuple[]) => void
+  setAttendance: (attendance: StudentAttendance) => void
   setCurrentWeek: (week: number) => void
   setCurrentMonth: (month: number) => void
   setCurrentYear: (year: number) => void
@@ -28,6 +34,7 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined)
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSessionState] = useState<Session | null>(null)
   const [students, setStudentsState] = useState<StudentTuple[]>([])
+  const [attendance, setAttendanceState] = useState<StudentAttendance>({})
   const [currentWeek, setCurrentWeek] = useState<number>(1)
   const now = new Date()
   const [currentMonth, setCurrentMonth] = useState<number>(now.getMonth())
@@ -39,6 +46,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     try {
       const savedSession = localStorage.getItem('session')
       const savedStudents = localStorage.getItem('students')
+      const savedAttendance = localStorage.getItem('attendance')
       const savedCurrentWeek = localStorage.getItem('currentWeek')
       const savedCurrentMonth = localStorage.getItem('currentMonth')
       const savedCurrentYear = localStorage.getItem('currentYear')
@@ -46,6 +54,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       if (savedSession) setSessionState(JSON.parse(savedSession))
       if (savedStudents) setStudentsState(JSON.parse(savedStudents))
+      if (savedAttendance) setAttendanceState(JSON.parse(savedAttendance))
       if (savedCurrentWeek) setCurrentWeek(Number(savedCurrentWeek))
       if (savedCurrentMonth) setCurrentMonth(Number(savedCurrentMonth))
       if (savedCurrentYear) setCurrentYear(Number(savedCurrentYear))
@@ -63,6 +72,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem('students', JSON.stringify(students))
   }, [students])
+
+  useEffect(() => {
+    localStorage.setItem('attendance', JSON.stringify(attendance))
+  }, [attendance])
 
   useEffect(() => {
     localStorage.setItem('currentWeek', String(currentWeek))
@@ -88,9 +101,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setStudentsState(newStudents)
   }, [])
 
+  const setAttendance = useCallback((newAttendance: StudentAttendance) => {
+    
+    setAttendanceState(newAttendance)
+  }, [])
+
   const clearSession = useCallback(() => {
     setSessionState(null)
     setStudentsState([])
+    setAttendanceState({})
     setCurrentWeek(1)
     const now = new Date()
     setCurrentMonth(now.getMonth())
@@ -100,6 +119,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // Clear localStorage
     localStorage.removeItem('session')
     localStorage.removeItem('students')
+    localStorage.removeItem('attendance')
     localStorage.removeItem('currentWeek')
     localStorage.removeItem('currentMonth')
     localStorage.removeItem('currentYear')
@@ -111,12 +131,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       value={{
         session,
         students,
+        attendance,
         currentWeek,
         currentMonth,
         currentYear,
         currentLevel,
         setSession,
         setStudents,
+        setAttendance,
         setCurrentWeek,
         setCurrentMonth,
         setCurrentYear,
