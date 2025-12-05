@@ -3,6 +3,7 @@
 import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
 import { Calendar, Clock, MapPin, Maximize2, Repeat, X } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { formatRecurrence } from '@/hooks/useSessions'
 import { Avatar } from '@/components/ui/avatar'
@@ -19,6 +20,7 @@ export default function SessionPreviewModal({
   position,
   onClose,
 }: SessionPreviewModalProps) {
+  const searchParams = useSearchParams()
   const { students } = useSessionStudentsForSession(session.id)
   const isRecurring = !!session.repetition
 
@@ -43,6 +45,11 @@ export default function SessionPreviewModal({
   const formatTimeRange = () => {
     return `${formatTime(session.start_datetime)} - ${formatTime(session.end_datetime)}`
   }
+
+  // Build session URL with return path
+  const calendarParams = searchParams.toString()
+  const sessionUrl = `/sessions/${session.id}${calendarParams ? `?returnTo=/calendar?${calendarParams}` : ''}`
+
 
   // Smart positioning to stay on screen (only on client-side)
   const MODAL_WIDTH = 520
@@ -95,7 +102,7 @@ export default function SessionPreviewModal({
         {/* Header with buttons */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
           <Link
-            href={`/sessions/${session.id}`}
+            href={sessionUrl}
             className="bg-white hover:bg-gray-100 rounded-lg p-2 transition-colors"
             onClick={onClose}
             title="View full details"

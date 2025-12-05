@@ -12,12 +12,17 @@ export type StudentBody = Omit<Student, "grade"> & {
   grade: string;
 };
 
-export function useStudents() {
+interface UseStudentsOptions {
+  ids?: string[];
+}
+
+export function useStudents(options?: UseStudentsOptions) {
   const queryClient = useQueryClient();
   const api = getStudents();
   const { userId: therapistId } = useAuthContext();
+  const ids = options?.ids;
   
-  console.warn("🔍 useStudents - therapistId:", therapistId);
+  console.warn("🔍 useStudents - therapistId:", therapistId, "ids:", ids);
   
   const {
     data: studentsData = [],
@@ -25,12 +30,16 @@ export function useStudents() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["students", therapistId],
+    queryKey: ["students", therapistId, ids],
     queryFn: () => {
       console.warn("🚀 Fetching students for therapist:", therapistId);
       return api.getStudents({ limit: 100, therapist_id: therapistId! })
         .then((data) => {
           console.warn("✅ Students fetched successfully:", data);
+          // Filter by ids if provided
+          if (ids && ids.length > 0) {
+            return data.filter(student => ids.includes(student.id));
+          }
           return data;
         })
         .catch((err) => {

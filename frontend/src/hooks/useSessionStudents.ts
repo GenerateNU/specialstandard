@@ -56,6 +56,20 @@ export function useSessionStudentsForSession(sessionId: string) {
   };
 }
 
+export function useSessionStudent(sessionStudentId: number, sessionId?: string) {
+  const { students, isLoading, error } = useSessionStudentsForSession(sessionId || '');
+  
+  const sessionStudent = students.find(
+    (s: any) => s.session_student_id === sessionStudentId
+  );
+
+  return {
+    sessionStudent,
+    isLoading: isLoading && !sessionStudent,
+    error,
+  };
+}
+
 export function useSessionStudents() {
   const queryClient = useQueryClient();
   const api = getSessionStudentsApi();
@@ -64,7 +78,6 @@ export function useSessionStudents() {
     mutationFn: (input: CreateSessionStudentInput) =>
       api.postSessionStudents(input),
     onSuccess: (_, variables) => {
-      // Invalidate all affected session queries
       if (variables.session_ids) {
         variables.session_ids.forEach((id: string) => {
           queryClient.invalidateQueries({
@@ -76,6 +89,11 @@ export function useSessionStudents() {
         });
       }
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      // Also invalidate the studentSessions queries for any affected students
+      queryClient.invalidateQueries({
+        queryKey: ["studentSessions"],
+        exact: false, // Invalidate all studentSessions queries
+      });
     },
   });
 
@@ -90,19 +108,30 @@ export function useSessionStudents() {
         queryKey: ["session", variables.session_id],
       });
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["studentSessions"],
+        exact: false,
+      });
     },
   });
 
   const updateSessionStudentMutation = useMutation({
     mutationFn: (input: UpdateSessionStudentInput) =>
       api.patchSessionStudents(input),
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["sessions", variables.session_id, "students"],
       });
       queryClient.invalidateQueries({
         queryKey: ["session", variables.session_id],
       });
+      // Invalidate studentSessions queries that include this student
+      if (variables.student_id) {
+        queryClient.invalidateQueries({
+          queryKey: ["studentSessions", variables.student_id],
+          exact: false,
+        });
+      }
     },
   });
 

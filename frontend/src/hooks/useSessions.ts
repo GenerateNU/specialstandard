@@ -1,4 +1,4 @@
-// hooks/useSessions.ts - FULLY UPDATED WITH REPETITION SUPPORT & AUTO-REFETCH
+// hooks/useSessions.ts - UPDATED WITH STUDENTESSIONS CACHE INVALIDATION
 
 import { useAuthContext } from "@/contexts/authContext";
 import { getSessions as getSessionsApi } from "@/lib/api/sessions";
@@ -69,6 +69,10 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     mutationFn: (input: PostSessionsBody) => api.postSessions(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["studentSessions"],
+        exact: false,
+      });
     },
   });
 
@@ -77,9 +81,14 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     mutationFn: ({ id, data }: { id: string; data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
     onSuccess: () => {
-      // Invalidate both query keys so both useSessions() and useSession(id) refetch
+      // Invalidate all session-related queries
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["session"] });
+      // Invalidate all studentSessions queries since session notes are displayed there
+      queryClient.invalidateQueries({
+        queryKey: ["studentSessions"],
+        exact: false,
+      });
     },
   });
 
@@ -89,6 +98,10 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["session"] });
+      queryClient.invalidateQueries({
+        queryKey: ["studentSessions"],
+        exact: false,
+      });
     },
   });
 
@@ -98,6 +111,10 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["session"] });
+      queryClient.invalidateQueries({
+        queryKey: ["studentSessions"],
+        exact: false,
+      });
     },
   });
 

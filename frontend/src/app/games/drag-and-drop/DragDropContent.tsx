@@ -82,6 +82,7 @@ function DragAndDropGame() {
     difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
     category: category as 'receptive_language' | 'expressive_language' | 'social_pragmatic_language' | 'speech' | undefined,
     question_type: questionType as 'sequencing' | 'following_directions' | 'wh_questions' | 'true_false' | 'concepts_sorting' | 'fill_in_the_blank' | 'categorical_language' | 'emotions' | 'teamwork_talk' | 'express_excitement_interest' | 'fluency' | 'articulation_s' | 'articulation_l' | undefined,
+    applicable_game_types: ['drag and drop'],
   })
 
   // Get student names and session from context

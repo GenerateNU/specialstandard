@@ -2,7 +2,6 @@
 
 import EditModal from "@/app/profile/EditModal";
 import AppLayout from "@/components/AppLayout";
-import ComputerGirl from "@/components/ui/computer-girl";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuthContext } from "@/contexts/authContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +10,7 @@ import { validatePassword } from "@/lib/validatePassword";
 import { Edit2, ExternalLink, Settings, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import Image from "next/image"; 
 
 const AdminProfile: React.FC = () => {
   const { userId: therapistId } = useAuthContext();
@@ -202,9 +202,15 @@ const AdminProfile: React.FC = () => {
             </a>
           </div>
 
-          {/* Computer Girl on the side */}
+          {/* Doodleman Image on the side */}
           <div className="fixed bottom-4 right-5 pointer-events-none">
-            <ComputerGirl />
+            <Image 
+              src="/doodleman.png" 
+              alt="Doodleman" 
+              width={744} 
+              height={541}
+              className="w-auto h-[100px] sm:h-[200px] md:h-[300px] lg:h-[400px]"
+            />
           </div>
         </div>
       </div>
