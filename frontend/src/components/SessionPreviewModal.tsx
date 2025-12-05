@@ -128,7 +128,7 @@ export default function SessionPreviewModal({
                 {session.session_name}
               </h2>
               <p className="text-sm text-gray-600">
-                {session.location || 'School 3'}
+                {session.location}
               </p>
             </div>
 
