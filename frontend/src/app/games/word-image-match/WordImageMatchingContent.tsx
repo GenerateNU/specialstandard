@@ -64,7 +64,7 @@ export default function WordImageMatchingContent() {
             session_student_ids={selectedStudentIds.map(id => Number.parseInt(id))}
             session_id={sessionId}
             themeID={themeId}
-            themeWeek={themeWeek ? Number.parseInt(themeWeek) : null}
+            themeWeek={themeWeek ? Number.parseInt(themeWeek) : 1}
             themeName={themeName}
             difficulty={difficulty}
             category={category}

@@ -31,7 +31,7 @@ interface WordImageMatchingGameInterfaceProps {
   session_id: string
   themeID: string
   themeName: string | null
-  themeWeek: number | null
+  themeWeek: number
   difficulty: string
   category: string
   questionType: string

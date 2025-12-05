@@ -38,7 +38,7 @@ interface SpinnerGameInterfaceProps {
   session_student_ids: number[];
   session_id?: string;
   themeId: string;
-  themeWeek: number | null;
+  themeWeek: number;
   themeName: string;
   difficulty: number;
   category: string;

@@ -61,7 +61,7 @@ export function SpinnerContent() {
       session_student_ids={selectedStudentIds.map(id => Number.parseInt(id))}
       session_id={sessionId}
       themeId={themeId}
-      themeWeek={themeWeek ? Number.parseInt(themeWeek) : null}
+      themeWeek={themeWeek ? Number.parseInt(themeWeek) : 1}
       themeName={themeName || "Theme"}
       difficulty={Number.parseInt(difficulty)}
       category={category}

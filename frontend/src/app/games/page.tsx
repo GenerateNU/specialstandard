@@ -52,7 +52,7 @@ function GamesPageContent() {
   const { students: allStudents } = useStudents()
   const [selectedContent, setSelectedContent] = React.useState<{
     theme: Theme;
-    themeWeek: number | null;
+    themeWeek: number;
     difficultyLevel: number;
     category: GetGameContentsCategory;
     questionType: GetGameContentsQuestionType;
@@ -108,7 +108,7 @@ function GamesPageContent() {
 
   const handleContentSelection = (selection: {
     theme: Theme;
-    themeWeek: number | null;
+    themeWeek: number;
     difficultyLevel: number;
     category: GetGameContentsCategory;
     questionType: GetGameContentsQuestionType;
