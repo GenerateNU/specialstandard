@@ -8,6 +8,8 @@ import { RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import "./flashcard.css";
+import { useSessionContext } from "@/contexts/sessionContext";
+import { useStudents } from "@/hooks/useStudents";
 
 const CATEGORIES = {
   [GetGameContentsCategory.receptive_language]: {
@@ -33,9 +35,8 @@ const CATEGORIES = {
 };
 
 interface MemorymatchGameInterfaceProps {
-  session_student_id?: number;
+  session_student_ids: number[];
   session_id?: string;
-  student_id?: string;
   themeId: string;
   themeName: string;
   difficulty: number;
@@ -115,16 +116,39 @@ const SpinnerWheel: React.FC<{
         }}
       ></div>
       {/* Wheel - SVG based for clean pie segments */}
-      {availableWords.length > 1 ? (
-        // ----- normal wheel -----
-        <div
-          className="w-full h-full rounded-full relative overflow-hidden transition-transform duration-[4000] ease-out"
-          style={{
-            transform: `rotate(${rotation}deg)`,
-          }}
-        >
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            {availableWords.map((word, index) => (
+      <div
+        className="w-full h-full rounded-full relative overflow-hidden"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transition: 'transform 4000ms ease-out'
+        }}
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          {availableWords.length === 1 ? (
+            // Single word - full circle
+            <g key={availableWords[0].id}>
+              <circle
+                cx="50"
+                cy="50"
+                r="50"
+                fill={colors[0]}
+                stroke="#333"
+                strokeWidth="0.5"
+              />
+              <text
+                x="50"
+                y="30"
+                fill="black"
+                fontSize="6"
+                fontWeight="600"
+                textAnchor="middle"
+              >
+                {availableWords[0].question}
+              </text>
+            </g>
+          ) : (
+            // Multiple words - pie segments
+            availableWords.map((word, index) => (
               <g key={word.id}>
                 <path
                   d={createPieSlice(index)}
@@ -146,18 +170,11 @@ const SpinnerWheel: React.FC<{
                   {word.question}
                 </text>
               </g>
-            ))}
-          </svg>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 rounded-full border-2 border-gray-700"></div>
-        </div>
-      ) : (
-        // ----- clean placeholder -----
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="text-xl font-semibold text-primary">
-            Only one word left!
-          </div>
-        </div>
-      )}
+            ))
+          )}
+        </svg>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 rounded-full border-2 border-gray-700"></div>
+      </div>
 
       {/* Spin button */}
       <button
@@ -187,7 +204,7 @@ const SpinnerWheel: React.FC<{
 };
 
 export default function MemorymatchGameInterface({
-  session_student_id,
+  session_student_ids,
   session_id,
   themeId,
   themeName,
@@ -207,6 +224,9 @@ export default function MemorymatchGameInterface({
   const [showActionButtons, setShowActionButtons] = useState(false);
   const [spinRotation, setSpinRotation] = useState(0);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [questionCount, setQuestionCount] = useState(0);
+  const [resultsSaved, setResultsSaved] = useState(false);
+  const [incorrectAttempts, setIncorrectAttempts] = useState<Map<string, number>>(new Map());
 
   const {
     gameContents,
@@ -218,16 +238,43 @@ export default function MemorymatchGameInterface({
     question_type: questionType as GetGameContentsQuestionType,
     difficulty_level: difficulty,
     question_count: 10,
+    applicable_game_types: ['spinner'],
   });
 
-  const gameResultsHook = session_student_id
-    ? useGameResults({
-        session_student_id,
-        session_id,
-      })
-    : null;
+  // Calculate questions per student and limit total cards
+  // Ensure at least 1 question per student, or use all available if fewer questions than students
+  const questionsPerStudent = Math.max(1, Math.floor(gameContents.length / session_student_ids.length));
+  const totalQuestionsToUse = Math.min(questionsPerStudent * session_student_ids.length, gameContents.length);
+  const limitedGameContents = gameContents.length > 0 ? gameContents.slice(0, totalQuestionsToUse) : gameContents;
+  
+  // Get current student based on question count
+  const currentStudentIndex = questionCount % session_student_ids.length;
+  const currentSessionStudentId = session_student_ids[currentStudentIndex];
 
-  const startCard = gameResultsHook?.startCard;
+  // Create game results hooks for each student
+  const gameResultsHooks = session_student_ids.map(studentId => 
+    useGameResults({
+      session_student_id: studentId,
+      session_id,
+    })
+  );
+
+  const currentGameResultsHook = gameResultsHooks[currentStudentIndex];
+  const startCard = currentGameResultsHook?.startCard;
+
+  // Get student names from session context
+  const { students: sessionStudents, session } = useSessionContext();
+  const { students: allStudents } = useStudents();
+  
+  // Prefer session context ID over prop
+  const effectiveSessionId = session?.id || session_id;
+  
+  const getStudentName = (sessionStudentId: number) => {
+    const sessionStudent = sessionStudents.find(s => s.sessionStudentId === sessionStudentId);
+    if (!sessionStudent) return 'Student';
+    const student = allStudents?.find(s => s.id === sessionStudent.studentId);
+    return student ? `${student.first_name} ${student.last_name}` : 'Student';
+  };
 
   // Update timer display
   useEffect(() => {
@@ -242,8 +289,8 @@ export default function MemorymatchGameInterface({
 
   // Handler functions
   const handleSpin = () => {
-    // Get available words
-    const availableWords = gameContents.filter(
+    // Get available words from limited game contents
+    const availableWords = limitedGameContents.filter(
       (content) => !completedIds.has(content.id)
     );
 
@@ -255,7 +302,7 @@ export default function MemorymatchGameInterface({
       setIsSpinning(false);
       setShowActionButtons(true);
 
-      if (gameResultsHook) {
+      if (currentGameResultsHook) {
         startCard?.(finalWord);
         setCardStartTime(Date.now());
       }
@@ -294,7 +341,7 @@ export default function MemorymatchGameInterface({
       setShowActionButtons(true);
 
       // Start tracking time for this word
-      if (gameResultsHook) {
+      if (currentGameResultsHook) {
         startCard?.(availableWords[selectedIndex]);
         setCardStartTime(Date.now());
       }
@@ -305,31 +352,48 @@ export default function MemorymatchGameInterface({
     if (selectedWordIndex === null) return;
 
     // Get available words to find the actual content
-    const availableWords = gameContents.filter(
+    const availableWords = limitedGameContents.filter(
       (content) => !completedIds.has(content.id)
     );
     const selectedContent = availableWords[selectedWordIndex];
 
     if (!selectedContent) return;
 
-    setShowActionButtons(false);
-
     if (isCorrect) {
       // Mark as completed by adding ID
       setCompletedIds((prev) => new Set([...prev, selectedContent.id]));
 
-      if (gameResultsHook) {
+      if (currentGameResultsHook) {
         const finalTime = Math.floor(
           (Date.now() - (cardStartTime || Date.now())) / 1000
         );
-        gameResultsHook.completeCard(selectedContent.id, finalTime);
+        const attempts = incorrectAttempts.get(selectedContent.id) || 0;
+        currentGameResultsHook.completeCard(selectedContent.id, finalTime, attempts);
       }
+      
+      // Increment question count to move to next student
+      setQuestionCount(prev => prev + 1);
+      
+      // Reset for next word
+      setShowActionButtons(false);
+      setSelectedWordIndex(null);
+      setCardStartTime(null);
+      setTimeTaken(0);
+    } else {
+      // Track incorrect attempt
+      setIncorrectAttempts(prev => {
+        const newMap = new Map(prev);
+        const current = newMap.get(selectedContent.id) || 0;
+        newMap.set(selectedContent.id, current + 1);
+        return newMap;
+      });
+      
+      // Hide buttons and reset to let them spin again
+      setShowActionButtons(false);
+      setSelectedWordIndex(null);
+      setCardStartTime(null);
+      setTimeTaken(0);
     }
-
-    // Reset immediately for snappier feel
-    setSelectedWordIndex(null);
-    setCardStartTime(null);
-    setTimeTaken(0);
   };
 
   const handleReset = () => {
@@ -339,6 +403,9 @@ export default function MemorymatchGameInterface({
     setCompletedIds(new Set());
     setCardStartTime(null);
     setTimeTaken(0);
+    setQuestionCount(0);
+    setResultsSaved(false);
+    setIncorrectAttempts(new Map());
   };
 
   if (contentsLoading) {
@@ -352,7 +419,7 @@ export default function MemorymatchGameInterface({
     );
   }
 
-  if (contentsError || gameContents.length === 0) {
+  if (contentsError || limitedGameContents.length === 0) {
     return (
       <div className="min-h-screen bg-background p-8 flex items-center justify-center">
         <div className="text-center">
@@ -376,12 +443,14 @@ export default function MemorymatchGameInterface({
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => router.back()}
-            className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
-          >
-            ← Back
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
+              className="text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
+            >
+              ← Back to Content
+            </button>
+          </div>
           <button
             onClick={handleReset}
             className="flex items-center gap-2 text-secondary hover:text-primary transition-colors"
@@ -391,7 +460,13 @@ export default function MemorymatchGameInterface({
           </button>
         </div>
 
-        <h1 className="mb-4">Flashcards</h1>
+        <h1 className="mb-4">Memory Match</h1>
+
+        {/* Current Student Banner */}
+        <div className="bg-blue text-white rounded-lg p-4 mb-6 text-center">
+          <p className="text-sm opacity-90 mb-1">Current Player</p>
+          <p className="text-2xl font-bold">{getStudentName(currentSessionStudentId)}</p>
+        </div>
 
         {/* Display selected options */}
         <div className="bg-card rounded-lg p-4 mb-6 border border-default">
@@ -409,14 +484,15 @@ export default function MemorymatchGameInterface({
           </div>
         </div>
 
-        {/* Progress indicator */}
+        {/* Progress indicator - hide when all complete */}
+        {completedIds.size < limitedGameContents.length && (
         <div className="mb-8">
           <div className="flex items-center justify-between text-sm text-secondary mb-2">
             <span>
-              Card {completedIds.size + 1} of {gameContents.length}
+              Card {completedIds.size + 1} of {limitedGameContents.length}
             </span>
             <span>
-              {Math.round((completedIds.size / gameContents.length) * 100)}%
+              {Math.round((completedIds.size / limitedGameContents.length) * 100)}%
               Complete
             </span>
           </div>
@@ -424,14 +500,15 @@ export default function MemorymatchGameInterface({
             <div
               className="bg-blue h-full rounded-full transition-all duration-300"
               style={{
-                width: `${(completedIds.size / gameContents.length) * 100}%`,
+                width: `${(completedIds.size / limitedGameContents.length) * 100}%`,
               }}
             />
           </div>
         </div>
+        )}
 
-        {/* Spinner Game */}
-        {gameContents.length > 0 && (
+        {/* Spinner Game - hide when all complete */}
+        {limitedGameContents.length > 0 && completedIds.size < limitedGameContents.length && (
           <div className="mb-8">
             {/* Container for wheel and side buttons */}
             <div className="relative flex items-center justify-center gap-4">
@@ -452,12 +529,12 @@ export default function MemorymatchGameInterface({
 
               {/* Spinner Wheel */}
               <SpinnerWheel
-                words={gameContents}
+                words={limitedGameContents}
                 onSpin={handleSpin}
                 isSpinning={isSpinning}
                 selectedWord={
                   selectedWordIndex !== null
-                    ? gameContents.filter((c) => !completedIds.has(c.id))[
+                    ? limitedGameContents.filter((c) => !completedIds.has(c.id))[
                         selectedWordIndex
                       ]?.question
                     : null
@@ -488,7 +565,7 @@ export default function MemorymatchGameInterface({
                 <div>
                   <p className="text-3xl font-bold text-primary">
                     {
-                      gameContents.filter((c) => !completedIds.has(c.id))[
+                      limitedGameContents.filter((c) => !completedIds.has(c.id))[
                         selectedWordIndex
                       ]?.question
                     }
@@ -507,7 +584,7 @@ export default function MemorymatchGameInterface({
         )}
 
         {/* Completion message */}
-        {completedIds.size === gameContents.length && (
+        {completedIds.size === limitedGameContents.length && (
           <div className="mt-8 p-6 bg-blue-light border border-blue rounded-lg text-center">
             <p className="text-blue font-semibold">
               Great job! You've completed all words!
@@ -520,18 +597,29 @@ export default function MemorymatchGameInterface({
                 Start Over
               </button>
 
-              {gameResultsHook && (
-                <button
-                  onClick={() => gameResultsHook.saveAllResults()}
-                  disabled={gameResultsHook.isSaving}
-                  className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled"
-                >
-                  {gameResultsHook.isSaving ? "Saving..." : "Save Progress"}
-                </button>
-              )}
+              <button
+                onClick={async () => {
+                  // Save all results for all students
+                  for (const hook of gameResultsHooks) {
+                    await hook.saveAllResults();
+                  }
+                  setResultsSaved(true);
+                }}
+                disabled={gameResultsHooks.some(hook => hook.isSaving) || resultsSaved}
+                className="px-6 py-2 bg-pink text-white rounded-lg hover:bg-pink-hover transition-colors disabled:bg-pink-disabled disabled:cursor-not-allowed"
+              >
+                {gameResultsHooks.some(hook => hook.isSaving) ? "Saving..." : resultsSaved ? "Saved!" : "Save Progress"}
+              </button>
+              
+              <button
+                onClick={() => router.push(effectiveSessionId ? `/sessions/${effectiveSessionId}/curriculum` : '/games')}
+                className="px-6 py-2 bg-card-hover text-primary rounded-lg hover:bg-card border border-border"
+              >
+                Back to Content
+              </button>
             </div>
 
-            {gameResultsHook?.saveError && (
+            {gameResultsHooks.some(hook => hook.saveError) && (
               <p className="text-error text-sm mt-2">
                 Failed to save progress. Please try again.
               </p>

@@ -248,6 +248,8 @@ export interface UpdateStudentInput {
   dob?: string | null;
   /** ID of the assigned therapist */
   therapist_id?: string;
+  /** ID of the school the student attends */
+  school_id?: number;
   /**
    * Student's current grade level (can be set to null). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
    * @minimum -1
@@ -720,6 +722,7 @@ export const GameContentApplicableGameTypesItem = {
   spinner: "spinner",
   "word/image_matching": "word/image matching",
   flashcards: "flashcards",
+  "multi-match": "multi-match",
 } as const;
 
 export interface GameContent {
@@ -1316,6 +1319,7 @@ export const GetGameContentsApplicableGameTypesItem = {
   spinner: "spinner",
   "word/image_matching": "word/image matching",
   flashcards: "flashcards",
+  "multi-match": "multi-match",
 } as const;
 
 export type GetGameResultsParams = {
@@ -1328,6 +1332,35 @@ export type GetGameResultsParams = {
    */
   student_id?: string;
   /**
+   * The category of the game results you seek
+   */
+  category?: GetGameResultsCategory;
+  /**
+   * The question type of the game results you seek
+   */
+  question_type?: GetGameResultsQuestionType;
+  /**
+   * The difficulty level of the game results you seek
+   * @minimum 1
+   */
+  difficulty_level?: number;
+  /**
+   * The exercise type of the game results you seek
+   */
+  exercise_type?: GetGameResultsExerciseType;
+  /**
+   * The game type of the game results you seek
+   */
+  game_type?: GetGameResultsGameType;
+  /**
+   * Start date to filter game results (inclusive)
+   */
+  date_from?: string;
+  /**
+   * End date to filter game results (inclusive)
+   */
+  date_to?: string;
+  /**
    * Page Number of pagination
    * @minimum 1
    */
@@ -1337,4 +1370,130 @@ export type GetGameResultsParams = {
    * @minimum 1
    */
   limit?: number;
+};
+
+export type GetGameResultsCategory =
+  (typeof GetGameResultsCategory)[keyof typeof GetGameResultsCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameResultsCategory = {
+  receptive_language: "receptive_language",
+  expressive_language: "expressive_language",
+  social_pragmatic_language: "social_pragmatic_language",
+  speech: "speech",
+} as const;
+
+export type GetGameResultsQuestionType =
+  (typeof GetGameResultsQuestionType)[keyof typeof GetGameResultsQuestionType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameResultsQuestionType = {
+  sequencing: "sequencing",
+  following_directions: "following_directions",
+  wh_questions: "wh_questions",
+  true_false: "true_false",
+  concepts_sorting: "concepts_sorting",
+  fill_in_the_blank: "fill_in_the_blank",
+  categorical_language: "categorical_language",
+  emotions: "emotions",
+  teamwork_talk: "teamwork_talk",
+  express_excitement_interest: "express_excitement_interest",
+  fluency: "fluency",
+  articulation_s: "articulation_s",
+  articulation_l: "articulation_l",
+} as const;
+
+export type GetGameResultsExerciseType =
+  (typeof GetGameResultsExerciseType)[keyof typeof GetGameResultsExerciseType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameResultsExerciseType = {
+  game: "game",
+  pdf: "pdf",
+} as const;
+
+export type GetGameResultsGameType =
+  (typeof GetGameResultsGameType)[keyof typeof GetGameResultsGameType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetGameResultsGameType = {
+  drag_and_drop: "drag and drop",
+  spinner: "spinner",
+  "word/image_matching": "word/image matching",
+  flashcards: "flashcards",
+} as const;
+
+/**
+ * Verification method (defaults to totp for Google Authenticator)
+ */
+export type PostVerificationSendCodeBodyMethod =
+  (typeof PostVerificationSendCodeBodyMethod)[keyof typeof PostVerificationSendCodeBodyMethod];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostVerificationSendCodeBodyMethod = {
+  totp: "totp",
+  email: "email",
+  sms: "sms",
+} as const;
+
+export type PostVerificationSendCodeBody = {
+  /** The UUID of the user requesting verification */
+  user_id: string;
+  /** Verification method (defaults to totp for Google Authenticator) */
+  method?: PostVerificationSendCodeBodyMethod;
+};
+
+export type PostVerificationSendCode200 = {
+  message?: string;
+  /** Base64-encoded QR code image for TOTP setup (only for totp method) */
+  qr_code?: string;
+  /** TOTP secret key for manual entry (only for totp method) */
+  secret?: string;
+  /** One-time backup codes for account recovery */
+  backup_codes?: string[];
+};
+
+export type PostVerificationVerifyBody = {
+  /** The UUID of the user being verified */
+  user_id: string;
+  /**
+   * The 6-digit verification code from Google Authenticator
+   * @pattern ^\d{6}$
+   */
+  code: string;
+};
+
+export type PostVerificationVerify200 = {
+  message?: string;
+  verified?: boolean;
+  /** Indicates if MFA is now enabled for this user */
+  mfa_enabled?: boolean;
+};
+
+/**
+ * Verification method to use for resending
+ */
+export type PostVerificationResendBodyMethod =
+  (typeof PostVerificationResendBodyMethod)[keyof typeof PostVerificationResendBodyMethod];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostVerificationResendBodyMethod = {
+  totp: "totp",
+  email: "email",
+  sms: "sms",
+} as const;
+
+export type PostVerificationResendBody = {
+  /** The UUID of the user requesting code resend */
+  user_id: string;
+  /** Verification method to use for resending */
+  method?: PostVerificationResendBodyMethod;
+};
+
+export type PostVerificationResend200 = {
+  message?: string;
+  /** Base64-encoded QR code image (only for totp method) */
+  qr_code?: string;
+  /** TOTP secret key (only for totp method) */
+  secret?: string;
 };

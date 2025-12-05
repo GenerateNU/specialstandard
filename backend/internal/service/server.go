@@ -18,6 +18,7 @@ import (
 	"specialstandard/internal/service/handler/student"
 	"specialstandard/internal/service/handler/theme"
 	"specialstandard/internal/service/handler/therapist"
+	"specialstandard/internal/service/verification"
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/postgres"
 
@@ -124,6 +125,19 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 			return c.Next()
 		})
 	}
+
+	verificationHandler := verification.NewHandler(
+		repo.Verification,
+		repo.GetDB(),
+		config.Resend.APIKey,
+		config.Resend.FromEmail,
+	)
+
+	apiV1.Route("/verification", func(r fiber.Router) {
+		r.Post("/send-code", verificationHandler.SendVerificationCode)
+		r.Post("/verify", verificationHandler.VerifyCode)
+		r.Post("/resend", verificationHandler.ResendCode)
+	})
 
 	authGroup.Delete("/delete-account/:id", SupabaseAuthHandler.DeleteAccount)
 

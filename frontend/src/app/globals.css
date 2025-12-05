@@ -222,6 +222,14 @@ h6 {
   background-color: var(--color-white);
 }
 
+.bg-white-hover {
+  background-color: var(--color-white-hover);
+}
+
+.bg-white-disabled {
+  background-color: var(--color-bg-white);
+}
+
 .bg-orange-disabled {
   background-color: var(--color-orange-disabled);
 }

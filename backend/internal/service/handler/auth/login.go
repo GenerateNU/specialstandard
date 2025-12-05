@@ -29,8 +29,6 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		return errs.Unauthorized("Invalid credentials")
 	}
 
-	fmt.Println(cred.RememberMe)
-
 	var cookieExp time.Time
 	if cred.RememberMe {
 		cookieExp = time.Now().Add(7 * 24 * time.Hour)

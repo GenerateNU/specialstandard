@@ -1,7 +1,6 @@
 'use client'
 
 import { AlertCircle, BookOpen, Download, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
-import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { PageHeader } from '@/components/PageHeader'
@@ -9,7 +8,6 @@ import { useResources } from '@/hooks/useResources'
 import { useNewsletter } from '@/hooks/useNewsletter'
 import { getGameContent } from '@/lib/api/game-content'
 import { ResourceButton } from '@/components/curriculum/resourceButton'
-import { Button } from '@/components/ui/button'
 import { Dropdown } from '@/components/ui/dropdown'
 import type { GameContent } from '@/lib/api/theSpecialStandardAPI.schemas'
 
@@ -114,7 +112,6 @@ export default function Curriculum() {
   const availableYears = useMemo(() => {
     const years = getAvailableYears(resources)
     if (years.length > 0) {
-      setSelectedYear(years[0])
       return years
     }
     return [new Date().getFullYear()]
@@ -195,14 +192,14 @@ export default function Curriculum() {
             title="Curriculum"
             icon={FileText}
             description={`View and access all available learning materials for ${selectedYear}.`}
-            actions={
-              <Link href="/games">
-                <Button variant={'outline'} className='px-10 py-5 items-center text-xl font-serif font-bold'>
-                  <Gamepad2 size={36} className='!h-6 !w-6 text-xl' />
-                  Games
-                </Button>
-              </Link>
-            }
+            // actions={
+            //   <Link href="/games">
+            //     <Button variant={'outline'} className='px-10 py-5 items-center text-xl font-serif font-bold'>
+            //       <Gamepad2 size={36} className='!h-6 !w-6 text-xl' />
+            //       Games
+            //     </Button>
+            //   </Link>
+            // }
           />
           <div className="mb-8">
 

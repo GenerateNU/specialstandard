@@ -126,7 +126,7 @@ export function useGameResults({ session_student_id, session_id, student_id }: U
         content_id: result.content_id,
         time_taken_sec,
         completed: true,
-        count_of_incorrect_attempts: result.incorrect_attempts.length,
+        count_of_incorrect_attempts: result.count_of_incorrect_attempts ?? result.incorrect_attempts.length,
         incorrect_attempts: incorrectAttempts
       }
 

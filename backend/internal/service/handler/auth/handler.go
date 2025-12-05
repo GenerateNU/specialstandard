@@ -15,7 +15,7 @@ type Credentials struct {
 	Password   string  `json:"password"`
 	FirstName  *string `json:"first_name"`
 	LastName   *string `json:"last_name"`
-	RememberMe bool
+	RememberMe bool    `json:"remember_me"`
 }
 
 func NewHandler(config config.Supabase, therapistRepository storage.TherapistRepository) *Handler {
