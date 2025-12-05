@@ -1,6 +1,6 @@
 "use client";
 
-import type { Student, UpdateStudentInput } from "@/lib/api/theSpecialStandardAPI.schemas";
+import type { UpdateStudentInput } from "@/lib/api/theSpecialStandardAPI.schemas";
 
 import { Building2, Calendar, FileText, GraduationCap, PencilLine } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -26,13 +26,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useStudents } from "@/hooks/useStudents";
+import { useStudents, type StudentBody } from "@/hooks/useStudents";
 import { useSchools } from "@/hooks/useSchools";
-import { gradeOptions, gradeToDisplay } from "@/lib/gradeUtils";
+import { gradeOptions } from "@/lib/gradeUtils";
 import { useForm } from "react-hook-form";
 
 interface EditStudentModalProps {
-  student: Student;
+  student: StudentBody;
   trigger?: React.ReactNode;
   onSuccess?: () => void;
 }
@@ -63,17 +63,12 @@ export default function EditStudentModal({ student, trigger, onSuccess }: EditSt
   const { updateStudent } = useStudents();
   const { schools, isLoading: isLoadingSchools, error: schoolsError } = useSchools();
 
-  // Convert grade number to display format (0 -> "K", others as string)
-  const gradeDisplayValue = student.grade !== null && student.grade !== undefined
-    ? gradeToDisplay(student.grade)
-    : "";
-
   const form = useForm<EditStudentFormInput>({
     defaultValues: {
       first_name: student.first_name,
       last_name: student.last_name,
       dob: formatDateForInput(student.dob),
-      grade: gradeDisplayValue,
+      grade: student.grade || "",
       iep: student.iep?.join("\n") || "",
       school_id: student.school_id?.toString() || "",
     },
@@ -86,7 +81,7 @@ export default function EditStudentModal({ student, trigger, onSuccess }: EditSt
         first_name: student.first_name,
         last_name: student.last_name,
         dob: formatDateForInput(student.dob),
-        grade: gradeToDisplay(student.grade),
+        grade: student.grade || "",
         iep: student.iep?.join("\n") || "",
         school_id: student.school_id?.toString() || "",
       });
