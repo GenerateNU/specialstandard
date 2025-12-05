@@ -43,7 +43,6 @@ export default function StartSessionPage({ params }: PageProps) {
       initializedRef.current = true
       setSession(session)
       setStudents(studentTuples)
-      console.log('Initialized session context with session and students', studentTuples)
     }
   }, [session, studentTuples, setSession, setStudents])
 
