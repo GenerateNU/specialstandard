@@ -112,7 +112,6 @@ export default function Curriculum() {
   const availableYears = useMemo(() => {
     const years = getAvailableYears(resources)
     if (years.length > 0) {
-      setSelectedYear(years[0])
       return years
     }
     return [new Date().getFullYear()]
