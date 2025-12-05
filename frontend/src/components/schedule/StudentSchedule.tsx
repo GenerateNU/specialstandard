@@ -11,8 +11,25 @@ import '@/app/calendar/override-calendar.css'
 const localizer = momentLocalizer(moment)
 
 // Color palette for events - using disabled variants from global styling
-const eventColors = ['#f9aeda', '#bac0ff', '#ffdfb1', '#bac0ff', '#ffdfb1']
-const getEventColor = (index: number) => eventColors[index % eventColors.length]
+const colorMap = {
+  pink: '#F9AEDA',
+  blue: '#BAC0FF',
+  yellow: '#F4B860',
+}
+
+// Hash function to consistently map parent session ID to a color
+function hashIdToColor(id: string | number): keyof typeof colorMap {
+  const colors: Array<keyof typeof colorMap> = ['blue', 'yellow', 'pink']
+  
+  let hash = 0
+  const idStr = String(id)
+  for (let i = 0; i < idStr.length; i++) {
+    hash = ((hash << 5) - hash) + idStr.charCodeAt(i)
+    hash = hash & hash
+  }
+  
+  return colors[Math.abs(hash) % colors.length]
+}
 
 interface StudentScheduleProps {
   studentId?: string
@@ -33,17 +50,22 @@ export default function StudentSchedule({ studentId, initialView = 'day', classN
   // Always build events array (empty if error or no data)
   const events = error
     ? []
-    : sessions.map((s, idx) => {
+    : sessions.map((s) => {
         // Check if this is from studentHook (nested) or allHook (flat)
         const sessionData = studentHook ? (s as any).session : s
+        const parentId = sessionData.session_parent_id || sessionData.id
+        const colorKey = hashIdToColor(parentId)
+        const backgroundColor = colorMap[colorKey]
+        
         return {
           id: sessionData.id,
+          parentId,
           title: sessionData.session_name ? sessionData.session_name : 'Session',
           start: new Date(sessionData.start_datetime),
           end: new Date(sessionData.end_datetime),
           allDay: false,
           resource: {
-            color: getEventColor(idx),
+            color: backgroundColor,
             school: (sessionData as any).school || 'School',
           },
         }
