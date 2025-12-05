@@ -64,7 +64,6 @@ export function useSessionStudents() {
     mutationFn: (input: CreateSessionStudentInput) =>
       api.postSessionStudents(input),
     onSuccess: (_, variables) => {
-      // Invalidate all affected session queries
       if (variables.session_ids) {
         variables.session_ids.forEach((id: string) => {
           queryClient.invalidateQueries({
@@ -76,6 +75,11 @@ export function useSessionStudents() {
         });
       }
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      // Also invalidate the studentSessions queries for any affected students
+      queryClient.invalidateQueries({
+        queryKey: ["studentSessions"],
+        exact: false, // Invalidate all studentSessions queries
+      });
     },
   });
 
@@ -90,6 +94,10 @@ export function useSessionStudents() {
         queryKey: ["session", variables.session_id],
       });
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["studentSessions"],
+        exact: false,
+      });
     },
   });
 
@@ -103,6 +111,13 @@ export function useSessionStudents() {
       queryClient.invalidateQueries({
         queryKey: ["session", variables.session_id],
       });
+      // Invalidate studentSessions queries that include this student
+      if (variables.student_id) {
+        queryClient.invalidateQueries({
+          queryKey: ["studentSessions", variables.student_id],
+          exact: false,
+        });
+      }
     },
   });
 
