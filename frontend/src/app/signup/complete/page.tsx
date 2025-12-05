@@ -88,12 +88,12 @@ export default function CompletePage() {
           and view your sessions on your schedule!
         </p>
 
-        <div className="mb-12 bg-white rounded-md p-1 w-fit mx-auto">
+        <div className="mb-12 bg-transparent rounded-md p-1 w-fit mx-auto">
           <Image
-            src="/tss.png"
+            src="/littlemegaphone.png"
             alt="The Special Standard"
-            width={140}
-            height={30}
+            width={180}
+            height={50}
             priority
           />
         </div>
