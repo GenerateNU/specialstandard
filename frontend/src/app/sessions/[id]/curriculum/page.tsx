@@ -7,6 +7,7 @@ import WeekNavigator from '@/components/curriculum/WeekNavigator'
 import CurriculumRoad from '@/components/curriculum/CurriculumRoad'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useThemes } from '@/hooks/useThemes'
+import { Button } from '@/components/ui/button'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -28,6 +29,7 @@ export default function CurriculumPage({ params }: PageProps) {
     setCurrentMonth,
     setCurrentYear,
     setCurrentLevel,
+    students,
   } = useSessionContext()
 
   // Fetch theme for current month and year
@@ -112,6 +114,18 @@ export default function CurriculumPage({ params }: PageProps) {
             onPreviousWeek={handlePreviousWeek}
             onNextWeek={handleNextWeek}
           />
+          <Button 
+            variant="secondary"
+            className="ml-4 bg-white text-blue hover:bg-blue-50"
+            onClick={() => {
+              if (session && students.length > 0) {
+                const firstStudent = students[0];
+                router.push(`/sessions/${id}/rate/${firstStudent.sessionStudentId}`);
+              }
+            }}
+          >
+            End Session
+          </Button>
         </div>
       )}
     >
