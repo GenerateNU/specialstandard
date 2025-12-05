@@ -12,9 +12,9 @@ interface UseStudentSessionsReturn {
 
 export function useStudentSessions(studentId: string, params?: Record<string, unknown>): UseStudentSessionsReturn {
   const api = getStudents()
-
+  
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['studentSessions', studentId, params ?? {}],
+    queryKey: ['studentSessions', studentId, ...(params ? Object.values(params) : [])],
     queryFn: () => api.getStudentsStudentIdSessions(studentId, params),
     enabled: Boolean(studentId),
   })

@@ -92,7 +92,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
           <div
             ref={ref}
             className={cn(
-              'absolute z-50 mt-2 overflow-hidden rounded-md border border-border bg-background shadow-lg',
+              'absolute z-50 mt-2 max-h-60 overflow-y-auto rounded-md border border-border bg-background shadow-lg',
               alignmentClasses[align],
             )}
           >

@@ -1,5 +1,4 @@
 'use client'
-
 import { use } from 'react'
 import { useRouter } from 'next/navigation'
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
@@ -7,6 +6,7 @@ import LevelButton from '@/components/curriculum/LevelButton'
 import WeekNavigator from '@/components/curriculum/WeekNavigator'
 import CurriculumRoad from '@/components/curriculum/CurriculumRoad'
 import { useSessionContext } from '@/contexts/sessionContext'
+import { useThemes } from '@/hooks/useThemes'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -29,8 +29,15 @@ export default function CurriculumPage({ params }: PageProps) {
     setCurrentYear,
     setCurrentLevel,
   } = useSessionContext()
+
+  // Fetch theme for current month and year
+  const { themes, isLoading: themesLoading } = useThemes({
+    month: currentMonth + 1,
+    year: currentYear,
+  })
+
   const router = useRouter()
-  
+
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -90,9 +97,16 @@ export default function CurriculumPage({ params }: PageProps) {
       backLabel="Back to Session"
       headerContent={(
         <div className="flex items-center gap-4">
-          <span className="text-lg font-medium opacity-90">
-            {MONTHS[currentMonth]} {currentYear}
-          </span>
+          <div className="flex flex-col gap-1">
+            <span className="text-lg font-medium opacity-90">
+              {MONTHS[currentMonth]} {currentYear}
+            </span>
+            {!themesLoading && themes.length > 0 && (
+              <span className="text-sm font-semibold text-pink">
+                {themes[0].name}
+              </span>
+            )}
+          </div>
           <WeekNavigator
             currentWeek={currentWeek}
             onPreviousWeek={handlePreviousWeek}
@@ -105,7 +119,6 @@ export default function CurriculumPage({ params }: PageProps) {
       <div className="relative w-full h-[500px]">
         {/* SVG Road Background */}
         <CurriculumRoad />
-        
         {/* Level Buttons Positioned on Road */}
         {[
           { level: 1, left: '30%', top: '94%' },
@@ -126,9 +139,6 @@ export default function CurriculumPage({ params }: PageProps) {
           </div>
         ))}
       </div>
-
-
     </CurriculumLayout>
   )
 }
-
