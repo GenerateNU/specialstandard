@@ -2,7 +2,7 @@
 
 import { EmailMFAVerification } from "@/components/ui/MFA";
 import { useAuthContext } from "@/contexts/authContext";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -73,12 +73,6 @@ export default function CompletePage() {
   return (
     <div className="flex items-center justify-center min-h-screen p-8 bg-background">
       <div className="max-w-lg w-full bg-background rounded-2xl shadow-lg p-12 text-center">
-        <div className="mb-8 flex justify-center">
-          <div className="w-24 h-24 bg-accent-light rounded-full flex items-center justify-center">
-            <CheckCircle className="w-12 h-12 text-accent" />
-          </div>
-        </div>
-
         <h1 className="text-3xl font-bold text-primary mb-4">
           {userName ? `${userName}, you're all set!` : "You're all set!"}
         </h1>
