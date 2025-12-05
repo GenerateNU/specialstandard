@@ -26,6 +26,46 @@ const DAYS_OF_WEEK = [
   { label: "Fri", value: 5 },
 ];
 
+// Helper to create a date from YYYY-MM-DD string and HH:MM time string
+// This avoids timezone parsing issues with ISO string format
+function createLocalDate(dateStr: string, timeStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hour, minute] = timeStr.split(':').map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+}
+
+// Find the first occurrence of any of the selected days on or after the given date
+function getFirstOccurrence(dateStr: string, timeStr: string, selectedDays: number[]): Date {
+  if (selectedDays.length === 0) {
+    return createLocalDate(dateStr, timeStr);
+  }
+
+  const baseDate = createLocalDate(dateStr, timeStr);
+  const baseWeekday = baseDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Sort days to find the earliest one
+  const sortedDays = [...selectedDays].sort((a, b) => a - b);
+  
+  // Find the smallest positive offset to reach one of the selected days
+  let minOffset = 7; // Start with a week (max offset)
+  
+  for (const targetDay of sortedDays) {
+    let offset = targetDay - baseWeekday;
+    if (offset < 0) {
+      offset += 7; // Wrap to next week if the day has passed
+    }
+    if (offset < minOffset) {
+      minOffset = offset;
+    }
+  }
+  
+  // If one of the selected days is today (offset = 0), use today
+  // Otherwise, move to the nearest selected day
+  const result = new Date(baseDate);
+  result.setDate(result.getDate() + minOffset);
+  return result;
+}
+
 export function RepetitionSelector({
   value,
   onChange,
@@ -57,11 +97,19 @@ export function RepetitionSelector({
     end: string
   ) => {
     if (days.length === 0) return;
-    if (new Date(end) <= new Date(sessionDate)) return;
+    
+    const endDateTime = createLocalDate(end, sessionTime);
+    const sessionDateTime = createLocalDate(sessionDate, sessionTime);
+    
+    if (endDateTime <= sessionDateTime) return;
+
+    // Calculate the first occurrence date based on selected days
+    // This ensures the first session is on the selected weekday, not the original date
+    const firstOccurrence = getFirstOccurrence(sessionDate, sessionTime, days);
 
     const config: RepetitionConfig = {
-      recur_start: new Date(`${sessionDate}T${sessionTime}`).toISOString(),
-      recur_end: new Date(`${end}T${sessionTime}`).toISOString(),
+      recur_start: firstOccurrence.toISOString(),
+      recur_end: endDateTime.toISOString(),
       every_n_weeks: weeks,
       days: days.sort((a, b) => a - b),
     };
@@ -197,7 +245,7 @@ export function RepetitionSelector({
               min={sessionDate}
               className="border border-gray-300"
             />
-            {new Date(endDate) <= new Date(sessionDate) && (
+            {createLocalDate(endDate, sessionTime) <= createLocalDate(sessionDate, sessionTime) && (
               <p className="text-xs text-red-500 mt-1">
                 End date must be after the session date
               </p>
@@ -206,12 +254,12 @@ export function RepetitionSelector({
 
           {/* Summary Card */}
           {selectedDays.length > 0 &&
-            new Date(endDate) > new Date(sessionDate) && (
+            createLocalDate(endDate, sessionTime) > createLocalDate(sessionDate, sessionTime) && (
               <div className="p-3 bg-gray-50 border border-gray-200 rounded">
                 <p className="text-sm font-medium text-primary mb-2">Summary:</p>
                 <ul className="text-xs text-secondary space-y-1">
                   <li>
-                    • First session: {new Date(sessionDate).toLocaleDateString()}
+                    • First session: {getFirstOccurrence(sessionDate, sessionTime, selectedDays).toLocaleDateString()}
                   </li>
                   <li>
                     • Repeats every {everyNWeeks} week
@@ -221,7 +269,7 @@ export function RepetitionSelector({
                       .join(", ")}
                   </li>
                   <li>
-                    • Until: {new Date(endDate).toLocaleDateString()}
+                    • Until: {createLocalDate(endDate, sessionTime).toLocaleDateString()}
                   </li>
                 </ul>
               </div>

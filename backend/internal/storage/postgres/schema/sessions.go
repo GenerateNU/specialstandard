@@ -201,7 +201,8 @@ func (r *SessionRepository) DeleteSession(ctx context.Context, id uuid.UUID) err
 }
 
 func addNWeeks(timestamp time.Time, nWeeks int) time.Time {
-	return timestamp.Add(time.Duration(24*7*nWeeks) * time.Hour)
+	// Use AddDate instead of hour-based addition to handle DST correctly
+	return timestamp.AddDate(0, 0, 7*nWeeks)
 }
 
 func (r *SessionRepository) PostSession(
