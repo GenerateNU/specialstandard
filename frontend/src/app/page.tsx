@@ -27,7 +27,6 @@ export default function Home() {
   const {
     downloadNewsletter,
     isLoading: newsletterLoading,
-    error: newsletterError,
   } = useNewsletter();
 
   // Recently viewed students
@@ -49,6 +48,7 @@ export default function Home() {
   const [openSection, setOpenSection] = useState<
     "students" | "curriculum" | null
   >("students");
+  const [newsletterErrorMessage, setNewsletterErrorMessage] = useState<string | null>(null);
 
   // Fetch students for the selected session
   const { students: sessionStudents, isLoading: studentsLoading } =
@@ -81,7 +81,12 @@ export default function Home() {
   }
 
   const handleDownloadNewsletter = async () => {
-    await downloadNewsletter();
+    try {
+      await downloadNewsletter();
+      setNewsletterErrorMessage(null);
+    } catch {
+      setNewsletterErrorMessage("Newsletter not yet available for this month.");
+    }
   };
 
   return (
@@ -101,11 +106,11 @@ export default function Home() {
                 })}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col items-end gap-2">
               <Button
                 variant="outline"
                 onClick={handleDownloadNewsletter}
-                disabled={newsletterLoading}
+                disabled={newsletterLoading || newsletterErrorMessage !== null}
                 className="text-pink border-pink hover:bg-pink hover:text-white"
               >
                 {newsletterLoading ? (
@@ -117,8 +122,10 @@ export default function Home() {
                   "This Month's Newsletter ↓"
                 )}
               </Button>
-              {newsletterError && (
-                <span className="text-sm text-error">{newsletterError}</span>
+              {newsletterErrorMessage && (
+                <span className="text-sm text-gray-500 italic">
+                  {newsletterErrorMessage}
+                </span>
               )}
             </div>
           </div>
