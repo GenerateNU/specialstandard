@@ -3,8 +3,8 @@
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import type { StudentTuple} from '@/contexts/sessionContext';
-import { StudentAttendance, useSessionContext } from '@/contexts/sessionContext';
+import type { StudentAttendance, StudentTuple} from '@/contexts/sessionContext';
+import { useSessionContext } from '@/contexts/sessionContext';
 import { formatRecurrence, useSession, useSessions } from "@/hooks/useSessions";
 import {
   useSessionStudents,
