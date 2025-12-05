@@ -6,6 +6,7 @@ import type {
   UpdateStudentInput,
 } from "@/lib/api/theSpecialStandardAPI.schemas";
 import { gradeToDisplay } from "@/lib/gradeUtils";
+import { useRecentlyViewedStudents } from "@/hooks/useRecentlyViewedStudents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type StudentBody = Omit<Student, "grade"> & {
@@ -20,6 +21,7 @@ export function useStudents(options?: UseStudentsOptions) {
   const queryClient = useQueryClient();
   const api = getStudents();
   const { userId: therapistId } = useAuthContext();
+  const { removeRecentStudent } = useRecentlyViewedStudents();
   const ids = options?.ids;
   
   console.warn("🔍 useStudents - therapistId:", therapistId, "ids:", ids);
@@ -99,8 +101,10 @@ export function useStudents(options?: UseStudentsOptions) {
       console.warn("🗑️ Deleting student:", id);
       return api.deleteStudentsId(id);
     },
-    onSuccess: (data) => {
+    onSuccess: (data, deletedStudentId) => {
       console.warn("✅ Student deleted successfully:", data);
+      // Remove from recently viewed list
+      removeRecentStudent(deletedStudentId);
       queryClient.invalidateQueries({ queryKey: ["students"] });
     },
     onError: (error) => {

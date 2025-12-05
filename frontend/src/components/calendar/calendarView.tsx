@@ -16,7 +16,7 @@ const colorMap = {
   yellow: '#F4B860',
 }
 
-// Hash function to consistently map session ID to a color
+// Hash function to consistently map parent session ID to a color
 function hashIdToColor(id: string | number): keyof typeof colorMap {
   const colors: Array<keyof typeof colorMap> = ['blue', 'yellow', 'pink']
   
@@ -84,7 +84,6 @@ export default function CalendarView({
   const maxTime = new Date()
   maxTime.setHours(19, 0, 0)
 
-
   return (
     <Calendar
       localizer={localizer}
@@ -104,7 +103,8 @@ export default function CalendarView({
       min={minTime}
       max={maxTime}
       eventPropGetter={(event) => {
-        const colorKey = hashIdToColor(event.id)
+        // Use parentId for consistent coloring across recurring sessions
+        const colorKey = hashIdToColor(event.parentId)
         const backgroundColor = colorMap[colorKey]
         
         return {

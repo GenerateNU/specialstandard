@@ -19,6 +19,13 @@ import React, { Suspense } from "react";
 import { useManualGameResult } from "@/hooks/useManualGameResults";
 import Tooltip from '@/components/ui/tooltip'
 
+const STARS = [
+  '/tssbluestar.svg',
+  '/tsspinkstar.svg',
+  '/tssorangestar.svg',
+  '/tssredstar.svg',
+  '/tssgreenstar.svg',
+]
 
 function GamesPageContent() {
   const router = useRouter();
@@ -152,8 +159,19 @@ const handleSubmitResult = async () => {
   if (selectedContent) {
     return (
       <AppLayout>
-        <div className="min-h-screen bg-background p-8">
-          <div className="max-w-4xl mx-auto">
+        <div className="relative min-h-screen bg-background p-8 overflow-hidden">
+          {/* Decorative Stars */}
+          <div className="absolute top-4 right-6 w-60 h-60 pointer-events-none">
+            <img src={STARS[0]} alt="star" className="w-full h-full" />
+          </div>
+          <div className="absolute bottom-2 left-0 w-60 h-60 pointer-events-none">
+            <img src={STARS[1]} alt="star" className="w-full h-full" />
+          </div>
+          <div className="absolute top-1/2 right-0 w-56 h-56 pointer-events-none">
+            <img src={STARS[2]} alt="star" className="w-full h-full" />
+          </div>
+
+          <div className="relative max-w-4xl mx-auto">
             <button
               onClick={() => setSelectedContent(null)}
               className="mb-6 text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
@@ -465,7 +483,7 @@ const handleSubmitResult = async () => {
         onBack={session ? () => router.push(`/sessions/${session.id}/curriculum`) : () =>router.back()}
         backLabel={session ? "Back to Curriculum" : "Back"}
         initialDifficultyLevel={currentLevel || undefined}
-        initialCategory={categoryParam || undefined}
+        initialCategory={categoryParam as GetGameContentsCategory}
         theme={currentTheme}
         currentWeek={currentWeek || 1}
       />
