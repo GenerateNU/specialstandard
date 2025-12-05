@@ -30,6 +30,7 @@ export default function CurriculumPage({ params }: PageProps) {
     setCurrentMonth,
     setCurrentYear,
     setCurrentLevel,
+    students,
   } = useSessionContext()
   const router = useRouter()
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
@@ -104,6 +105,18 @@ export default function CurriculumPage({ params }: PageProps) {
             onPreviousWeek={handlePreviousWeek}
             onNextWeek={handleNextWeek}
           />
+          <Button 
+            variant="secondary"
+            className="ml-4 bg-white text-blue hover:bg-blue-50"
+            onClick={() => {
+              if (session && students.length > 0) {
+                const firstStudent = students[0];
+                router.push(`/sessions/${id}/rate/${firstStudent.sessionStudentId}`);
+              }
+            }}
+          >
+            End Session
+          </Button>
         </div>
       )}
     >
