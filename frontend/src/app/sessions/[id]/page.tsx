@@ -31,6 +31,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { use, useState } from "react";
 
 interface PageProps {
@@ -41,6 +42,9 @@ interface PageProps {
 
 export default function SessionPage({ params }: PageProps) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo") || "/calendar";
+
   const { session, isLoading: sessionLoading, isRecurring } = useSession(id);
   const { updateSession, deleteSession, deleteRecurringSessions } = useSessions();
   const { students: sessionStudents, isLoading: studentsLoading } =
@@ -224,7 +228,7 @@ export default function SessionPage({ params }: PageProps) {
       {/* Back button and Delete button */}
       <div className="flex items-center justify-between mb-6">
         <Link
-          href="/calendar"
+          href={returnTo}
           className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />

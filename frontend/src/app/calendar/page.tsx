@@ -2,7 +2,7 @@
 
 import type { SlotInfo } from 'react-big-calendar'
 import { motion } from 'motion/react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams} from 'next/navigation'
 import React, { Suspense, useEffect } from 'react'
 import AppLayout from '@/components/AppLayout'
 import CalendarHeader from '@/components/calendar/calendarHeader'
@@ -16,6 +16,7 @@ import { useAuthContext } from '@/contexts/authContext'
 function CalendarPage() {
   const { userId, isLoading: authLoading } = useAuthContext()
   const searchParams = useSearchParams()
+  const router = useRouter()
   
   const {
     date,
@@ -34,6 +35,14 @@ function CalendarPage() {
     setNewSessionOpen,
   } = useCalendarState()
 
+
+// Initialize date from URL on mount AND when searchParams change
+useEffect(() => {
+  const dateParam = searchParams.get('date')
+  if (dateParam) {
+    setDate(new Date(dateParam))
+  }
+}, [searchParams, setDate])
   // Set view mode from URL query parameter
   useEffect(() => {
     const viewParam = searchParams.get('view')
@@ -47,6 +56,13 @@ function CalendarPage() {
     view,
   )
 
+  // Update URL when date changes
+  const handleNavigate = (newDate: Date) => {
+    setDate(newDate)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('date', newDate.toISOString())
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }
   const handleSelectSlot = (slotInfo: SlotInfo) => {
     setSelectedSlot({
       start: slotInfo.start as Date,
@@ -97,7 +113,7 @@ function CalendarPage() {
           onAddSession={() => setNewSessionOpen(true)}
           date={date}
           view={view}
-          onNavigate={setDate}
+          onNavigate={handleNavigate}
           onViewChange={setView}
         />
 
@@ -134,7 +150,7 @@ function CalendarPage() {
                   events={events}
                   isLoading={isLoading}
                   error={error}
-                  onNavigate={setDate}
+                  onNavigate={handleNavigate}
                   onViewChange={setView}
                   onSelectEvent={handleSelectEvent}
                   onSelectSlot={handleSelectSlot}
