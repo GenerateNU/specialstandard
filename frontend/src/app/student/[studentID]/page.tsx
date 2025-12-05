@@ -18,6 +18,7 @@ import {useParams, useRouter} from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 import SchoolTag from "@/components/school/schoolTag";
+import EditStudentModal from "@/components/students/EditStudentModal";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRecentlyViewedStudents } from "@/hooks/useRecentlyViewedStudents";
@@ -248,17 +249,7 @@ export default function StudentPage() {
               >
                 {/* Edit Profile Button - Separate Section */}
                 <div className="flex justify-end p-3 flex-shrink-0 relative z-10">
-                  <Button
-                    onClick={() => {
-                      /* Navigate to edit page */
-                    }}
-                    variant="secondary"
-                    className="flex items-center gap-2 hover:bg-accent h-8"
-                    size="sm"
-                  >
-                    <span className="text-base font-medium">Edit Profile</span>
-                    <PencilLine size={18} />
-                  </Button>
+                  <EditStudentModal student={student} />
                 </div>
 
                 {/* Content - positioned absolutely to center in entire card */}
