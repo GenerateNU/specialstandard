@@ -3,6 +3,8 @@
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import type { StudentAttendance, StudentTuple} from '@/contexts/sessionContext';
+import { useSessionContext } from '@/contexts/sessionContext';
 import { formatRecurrence, useSession, useSessions } from "@/hooks/useSessions";
 import {
   useSessionStudents,
@@ -31,7 +33,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 interface PageProps {
   params: Promise<{
@@ -79,6 +81,43 @@ export default function SessionPage({ params }: PageProps) {
   const [deleteType, setDeleteType] = useState<"single" | "recurring" | null>(
     null
   );
+  const { attendance, setAttendance, setStudents, students: contextStudents, attendance: contextAttendance } = useSessionContext();
+
+  useEffect(() => {
+  if (!studentsLoading && sessionStudents.length > 0) {
+    // 1. Calculate the NEW student tuples based on current session students
+    const studentTuples: StudentTuple[] = sessionStudents
+      .filter(s => s.session_student_id)
+      .map(s => ({
+        studentId: s.id,
+        sessionStudentId: s.session_student_id!,
+      }));
+
+    // 2. Calculate the NEW attendance map
+    const initialAttendance: StudentAttendance = sessionStudents.reduce((acc, student) => {
+      if (student.session_student_id) {
+        acc[student.session_student_id] = student.present ?? true;
+      }
+      return acc;
+    }, {} as StudentAttendance);
+
+    // --- CRITICAL CHECK: Prevent infinite loop by comparing objects/arrays ---
+    
+    // Check if the student list length has changed (simplest check)
+    const studentsChanged = studentTuples.length !== contextStudents.length;
+    
+    // Check if the attendance map contents have changed (more robust)
+    const attendanceJson = JSON.stringify(initialAttendance);
+    const contextAttendanceJson = JSON.stringify(contextAttendance);
+    const attendanceChanged = attendanceJson !== contextAttendanceJson;
+
+    if (studentsChanged || attendanceChanged) {
+        // Only update if there's a difference
+        setStudents(studentTuples);
+        setAttendance(initialAttendance);
+    }
+  }
+}, [sessionStudents, studentsLoading, setAttendance, setStudents, contextStudents, contextAttendance]); // Add context state dependencies
 
   if (sessionLoading || studentsLoading) {
     return (
@@ -139,12 +178,25 @@ export default function SessionPage({ params }: PageProps) {
     });
   };
 
-  const handleToggleAttendance = (studentId: string, present: boolean) => {
+  const handleToggleAttendance = (
+    studentId: string,
+    sessionStudentId: number | undefined,
+    present: boolean
+  ) => {
+    // 1. Update the backend/API
     updateSessionStudent({
       session_id: id,
       student_id: studentId,
       present,
     });
+
+    // 2. Update the Session Context for immediate UI filtering in other views
+    if (sessionStudentId) {
+      setAttendance({
+        ...(attendance ?? {}),
+        [sessionStudentId]: present,
+      });
+    }
   };
 
   const handleEditClick = () => {
@@ -526,7 +578,7 @@ export default function SessionPage({ params }: PageProps) {
                     <Button
                       onClick={(e) => {
                         e.preventDefault();
-                        handleToggleAttendance(student.id, true);
+                        handleToggleAttendance(student.id, student.session_student_id, true);
                       }}
                       variant={student.present ? "default" : "outline"}
                       size="sm"
@@ -536,7 +588,7 @@ export default function SessionPage({ params }: PageProps) {
                     <Button
                       onClick={(e) => {
                         e.preventDefault();
-                        handleToggleAttendance(student.id, false);
+                        handleToggleAttendance(student.id, student.session_student_id, false);
                       }}
                       variant={!student.present ? "default" : "outline"}
                       size="sm"
