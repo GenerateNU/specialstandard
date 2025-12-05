@@ -238,6 +238,7 @@ export default function MemorymatchGameInterface({
     question_type: questionType as GetGameContentsQuestionType,
     difficulty_level: difficulty,
     question_count: 10,
+    applicable_game_types: ['spinner'],
   });
 
   // Calculate questions per student and limit total cards

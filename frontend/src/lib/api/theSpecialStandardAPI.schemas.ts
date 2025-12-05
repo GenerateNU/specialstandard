@@ -722,6 +722,7 @@ export const GameContentApplicableGameTypesItem = {
   spinner: "spinner",
   "word/image_matching": "word/image matching",
   flashcards: "flashcards",
+  "multi-match": "multi-match",
 } as const;
 
 export interface GameContent {
@@ -1318,6 +1319,7 @@ export const GetGameContentsApplicableGameTypesItem = {
   spinner: "spinner",
   "word/image_matching": "word/image matching",
   flashcards: "flashcards",
+  "multi-match": "multi-match",
 } as const;
 
 export type GetGameResultsParams = {
