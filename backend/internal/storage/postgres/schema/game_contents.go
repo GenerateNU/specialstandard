@@ -39,6 +39,11 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 		args = append(args, *req.ThemeID)
 		argCount++
 	}
+	if req.ThemeWeek != nil {
+		conditions = append(conditions, fmt.Sprintf("week = $%d", argCount))
+		args = append(args, *req.ThemeWeek)
+		argCount++
+	}
 	if req.Category != nil {
 		conditions = append(conditions, fmt.Sprintf("category = $%d", argCount))
 		args = append(args, *req.Category)

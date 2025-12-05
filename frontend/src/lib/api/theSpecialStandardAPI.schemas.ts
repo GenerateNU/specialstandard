@@ -1238,6 +1238,12 @@ export type GetGameContentsParams = {
    */
   theme_id?: string;
   /**
+   * Theme Week associated with the game's contents
+   * @minimum 1
+   * @maximum 4
+   */
+  theme_week?: number;
+  /**
    * The category associated with the game
    */
   category?: GetGameContentsCategory;

@@ -23,7 +23,7 @@ import Tooltip from '@/components/ui/tooltip'
 function GamesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session, students, currentLevel, currentMonth, currentYear } = useSessionContext();
+  const { session, students, currentWeek, currentLevel, currentMonth, currentYear } = useSessionContext();
   const sessionId = searchParams.get("sessionId") ?? "00000000-0000-0000-0000-000000000000"; // could use this or the session context
   const categoryParam = searchParams.get("category") as GetGameContentsCategory | null;
   
@@ -467,6 +467,7 @@ const handleSubmitResult = async () => {
         initialDifficultyLevel={currentLevel || undefined}
         initialCategory={categoryParam || undefined}
         theme={currentTheme}
+        currentWeek={currentWeek || 1}
       />
     </AppLayout>
   );

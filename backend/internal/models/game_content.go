@@ -27,6 +27,7 @@ type GameContent struct {
 
 type GetGameContentRequest struct {
 	ThemeID             *uuid.UUID `query:"theme_id" validate:"omitempty,uuid"`
+	ThemeWeek           *int       `query:"theme_week" validate:"omitempty,gte=1"`
 	Category            *string    `query:"category" validate:"omitempty,oneof=receptive_language expressive_language social_pragmatic_language speech"`
 	QuestionType        *string    `query:"question_type" validate:"omitempty,oneof=sequencing following_directions wh_questions true_false concepts_sorting fill_in_the_blank categorical_language emotions teamwork_talk express_excitement_interest fluency articulation_s articulation_l"`
 	DifficultyLevel     *int       `query:"difficulty_level" validate:"omitempty,gte=1"`
