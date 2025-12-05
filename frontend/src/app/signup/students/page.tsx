@@ -25,7 +25,7 @@ export default function StudentsPage() {
   }, [router, refetch]);
 
   const handleBack = () => {
-    router.back();
+    router.push("/signup/link");
   };
 
   const handleAddStudent = () => {

@@ -122,7 +122,7 @@ export default function CurriculumPage({ params }: PageProps) {
           />
           <Button 
             variant="secondary"
-            className="ml-4 bg-white text-blue hover:bg-blue-50"
+            className="ml-4 text-md px-7 py-7 font-semibold rounded-full shadow-md bg-white text-blue hover:bg-blue-50"
             onClick={() => {
               if (session && students.length > 0) {
                 const firstStudent = students[0];
