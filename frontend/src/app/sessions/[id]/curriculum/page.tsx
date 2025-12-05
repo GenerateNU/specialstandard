@@ -7,6 +7,7 @@ import WeekNavigator from '@/components/curriculum/WeekNavigator'
 import CurriculumRoad from '@/components/curriculum/CurriculumRoad'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useThemes } from '@/hooks/useThemes'
+import { Button } from '@/components/ui/button'
 
 interface PageProps {
   params: Promise<{ id: string }>

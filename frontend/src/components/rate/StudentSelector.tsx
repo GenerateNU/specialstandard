@@ -44,7 +44,7 @@ export default function StudentSelector({
     )
 
   const handleValueChange = (value: string) => {
-    router.push(`/sessions/${sessionId}/rate?id=${sessionId}&sessionStudentId=${value}`)
+    router.push(`/sessions/${sessionId}/rate/${value}`)
   }
 
   const currentStudent = enrichedStudents.find(
@@ -70,7 +70,6 @@ export default function StudentSelector({
             {currentStudent.first_name}
           </span>
         </div>
-        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180 shrink-0 ml-2" />
       </SelectTrigger>
       <SelectContent className="bg-white border border-border">
         {enrichedStudents.map((s) => (
