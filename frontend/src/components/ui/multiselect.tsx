@@ -28,6 +28,7 @@ export interface MultiSelectProps {
   maxCount?: number
   showCount?: boolean
   showTags?: boolean
+  tagClassName?: string // configurable styling
 }
 
 const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
@@ -42,6 +43,8 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
       maxCount,
       showCount = true,
       showTags = true,
+      tagClassName = "bg-secondary text-secondary-foreground",
+
     },
     ref,
   ) => {
@@ -158,7 +161,10 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
               return (
                 <div
                   key={val}
-                  className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-md text-sm",
+                    tagClassName
+                  )}
                 >
                   {option.icon && (
                     <span className="flex-shrink-0">{option.icon}</span>
