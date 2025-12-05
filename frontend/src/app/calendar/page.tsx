@@ -35,21 +35,23 @@ function CalendarPage() {
     setNewSessionOpen,
   } = useCalendarState()
 
+  // Initialize date from URL on mount AND when searchParams change
+  useEffect(() => {
+    const dateParam = searchParams.get('date')
+    if (dateParam) {
+      setDate(new Date(dateParam))
+    }
+  }, [searchParams, setDate])
 
-// Initialize date from URL on mount AND when searchParams change
-useEffect(() => {
-  const dateParam = searchParams.get('date')
-  if (dateParam) {
-    setDate(new Date(dateParam))
-  }
-}, [searchParams, setDate])
   // Set view mode from URL query parameter
   useEffect(() => {
     const viewParam = searchParams.get('view')
     if (viewParam === 'card') {
       setViewMode('card')
+      // Auto-set to work_week when entering card mode
+      setView('work_week')
     }
-  }, [searchParams, setViewMode])
+  }, [searchParams, setViewMode, setView])
 
   const { students, events, isLoading, error, addSession } = useCalendarData(
     date,
@@ -63,6 +65,15 @@ useEffect(() => {
     params.set('date', newDate.toISOString())
     router.replace(`?${params.toString()}`, { scroll: false })
   }
+
+  // Handle view mode change - auto-set to work_week for card view
+  const handleViewModeChange = (mode: 'calendar' | 'card') => {
+    setViewMode(mode)
+    if (mode === 'card') {
+      setView('work_week')
+    }
+  }
+
   const handleSelectSlot = (slotInfo: SlotInfo) => {
     setSelectedSlot({
       start: slotInfo.start as Date,
@@ -94,8 +105,8 @@ useEffect(() => {
   }
 
   return (
-    <div className="w-full h-screen bg-background">
-      <div className="w-full p-10 pb-16 flex flex-col gap-6 overflow-hidden" style={{ maxHeight: 'calc(100vh)' }}>
+    <div className="w-full bg-background">
+      <div className="w-full p-10 pb-10 flex flex-col gap-6" style={{ display: 'flex', flexDirection: 'column' }}>
         <CreateSessionDialog
           open={newSessionOpen}
           therapistId={userId}
@@ -109,7 +120,7 @@ useEffect(() => {
 
         <CalendarHeader
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={handleViewModeChange}
           onAddSession={() => setNewSessionOpen(true)}
           date={date}
           view={view}
@@ -117,46 +128,48 @@ useEffect(() => {
           onViewChange={setView}
         />
 
-        {viewMode === 'card'
-          ? (
-              <motion.div
-                key="card-view"
-                initial={{ opacity: 0, y: 60 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 60 }}
-                transition={{ type: 'spring', damping: 30 }}
-              >
-                <CardView
-                  date={date}
-                  events={events}
-                  onSelectSession={(session, position) => {
-                    setSelectedSession(session)
-                    setModalPosition(position)
-                  }}
-                />
-              </motion.div>
-            )
-          : (
-              <motion.div
-                key="calendar-view"
-                initial={{ opacity: 0, y: 60 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 60 }}
-                transition={{ type: 'spring', damping: 30 }}
-              >
-                <CalendarView
-                  date={date}
-                  view={view}
-                  events={events}
-                  isLoading={isLoading}
-                  error={error}
-                  onNavigate={handleNavigate}
-                  onViewChange={setView}
-                  onSelectEvent={handleSelectEvent}
-                  onSelectSlot={handleSelectSlot}
-                />
-              </motion.div>
-            )}
+        <div className="w-full">
+          {viewMode === 'card'
+            ? (
+                <motion.div
+                  key="card-view"
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 60 }}
+                  transition={{ type: 'spring', damping: 30 }}
+                >
+                  <CardView
+                    date={date}
+                    events={events}
+                    onSelectSession={(session, position) => {
+                      setSelectedSession(session)
+                      setModalPosition(position)
+                    }}
+                  />
+                </motion.div>
+              )
+            : (
+                <motion.div
+                  key="calendar-view"
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 60 }}
+                  transition={{ type: 'spring', damping: 30 }}
+                >
+                  <CalendarView
+                    date={date}
+                    view={view}
+                    events={events}
+                    isLoading={isLoading}
+                    error={error}
+                    onNavigate={handleNavigate}
+                    onViewChange={setView}
+                    onSelectEvent={handleSelectEvent}
+                    onSelectSlot={handleSelectSlot}
+                  />
+                </motion.div>
+              )}
+        </div>
 
         {selectedSession && modalPosition && (
           <SessionPreviewModal

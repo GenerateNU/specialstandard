@@ -40,12 +40,10 @@ function getRecurringDays(repetition: any): string {
 export default function CardView({ date, events, onSelectSession }: CardViewProps) {
   return (
     <div
-      className="grid grid-cols-5 p-6 rounded-2xl overflow-y-auto"
+      className="grid grid-cols-5 p-6 rounded-2xl"
       style={{
         backgroundColor: '',
         width: '90vw',
-        minHeight: '600px',
-        maxHeight: '80vh',
       }}
     >
       {Array.from({ length: 5 }).map((_, dayIndex) => {
@@ -56,7 +54,8 @@ export default function CardView({ date, events, onSelectSession }: CardViewProp
         return (
           <div
             key={dayIndex}
-            className={`flex flex-col min-h-[400px] px-6 ${dayIndex < 4 ? 'border-r border-black' : ''}`}
+            className={`flex flex-col px-6 ${dayIndex < 4 ? 'border-r border-black' : ''}`}
+            style={{ minHeight: 'fit-content' }}
           >
             <div className="flex flex-col items-center mb-3 pt-3">
               <div className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -73,7 +72,7 @@ export default function CardView({ date, events, onSelectSession }: CardViewProp
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 pb-6">
               {daySessions.length === 0
                 ? (
                     <div className="text-sm text-center mt-5" style={{ color: 'var(--text-muted)' }}>

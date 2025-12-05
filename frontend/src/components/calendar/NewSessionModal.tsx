@@ -87,6 +87,14 @@ export function CreateSessionDialog({
   );
   const { refetch } = useSessions();
 
+  // Helper function to clear error for a specific field when user changes it
+  const handleFieldChange =
+    (fieldName: "session_name" | "sessionDate" | "startTime" | "endTime" | "location" | "notes", onChange: (value: any) => void) =>
+    (e: any) => {
+      form.clearErrors(fieldName);
+      onChange(e);
+    };
+
   // Reset form when dialog opens/closes
   useEffect(() => {
     if (open && initialDateTime) {
@@ -112,6 +120,7 @@ export function CreateSessionDialog({
       setRepetitionConfig(undefined);
       setCreatedSessions(null);
       setSubmitError(null);
+      form.clearErrors();
     } else if (open && !initialDateTime) {
       form.reset({
         session_name: "",
@@ -125,6 +134,7 @@ export function CreateSessionDialog({
       setRepetitionConfig(undefined);
       setCreatedSessions(null);
       setSubmitError(null);
+      form.clearErrors();
     }
   }, [open, initialDateTime, form]);
 
@@ -201,6 +211,7 @@ export function CreateSessionDialog({
 
   const handleClose = () => {
     form.reset();
+    form.clearErrors();
     setRepetitionConfig(undefined);
     setCreatedSessions(null);
     setSubmitError(null);
@@ -307,6 +318,7 @@ export function CreateSessionDialog({
                 form.reset();
                 setRepetitionConfig(undefined);
                 setSubmitError(null);
+                form.clearErrors();
               }}
             >
               Create Another
@@ -353,6 +365,7 @@ export function CreateSessionDialog({
                       <Input
                         placeholder="e.g., Speech Therapy"
                         {...field}
+                        onChange={handleFieldChange("session_name", field.onChange)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -371,7 +384,11 @@ export function CreateSessionDialog({
                       Date *
                     </FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        {...field}
+                        onChange={handleFieldChange("sessionDate", field.onChange)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -389,7 +406,11 @@ export function CreateSessionDialog({
                       Start Time *
                     </FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input
+                        type="time"
+                        {...field}
+                        onChange={handleFieldChange("startTime", field.onChange)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -407,7 +428,11 @@ export function CreateSessionDialog({
                       End Time *
                     </FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input
+                        type="time"
+                        {...field}
+                        onChange={handleFieldChange("endTime", field.onChange)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -425,7 +450,11 @@ export function CreateSessionDialog({
                       Location
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Room 234" {...field} />
+                      <Input
+                        placeholder="e.g., Room 234"
+                        {...field}
+                        onChange={handleFieldChange("location", field.onChange)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -450,7 +479,10 @@ export function CreateSessionDialog({
                         value: student.id,
                       }))}
                       value={field.value}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        form.clearErrors("student_ids");
+                        field.onChange(value);
+                      }}
                       placeholder="Select students for this session"
                       showTags={true}
                       tagClassName="bg-pink-light text-pink"
@@ -476,6 +508,7 @@ export function CreateSessionDialog({
                       placeholder="Goals, activities, or special considerations..."
                       rows={3}
                       {...field}
+                      onChange={handleFieldChange("notes", field.onChange)}
                     />
                   </FormControl>
                   <FormMessage />
