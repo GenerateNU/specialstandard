@@ -11,6 +11,7 @@ export default function StudentSessionHistory() {
   const studentID = params.studentID as string
   const { students } = useStudents()
   const student = students.find(s => s.id === studentID)
+  const initials = student ? `${student.first_name[0]}${student.last_name[0]}` : ''
   const router = useRouter()
 
   return(
@@ -21,7 +22,7 @@ export default function StudentSessionHistory() {
             <ArrowLeft onClick={() => router.push(`/student/${studentID}`)}
                        className="mt-1 mr-1 w-8 h-8 cursor-pointer"/>
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-bold text-primary">{student?.first_name} {student?.last_name}'{student?.last_name.endsWith('S') ? '' : 's'} Sessions</h1>
+              <h1 className="text-3xl font-bold text-primary">{initials}'{initials.endsWith('S') ? '' : 's'} Sessions</h1>
             </div>
           </div>
 

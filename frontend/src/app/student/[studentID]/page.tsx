@@ -89,6 +89,9 @@ export default function StudentPage() {
   const PADDING = "p-5";
 
   const fullName = student ? `${student.first_name} ${student.last_name}` : "";
+  const initials = student
+    ? `${student.first_name[0]}.${student.last_name[0]}.`
+    : "";
   const avatarVariant = student ? getAvatarVariant(student.id) : "lorelei";
 
   const {
@@ -261,7 +264,7 @@ export default function StudentPage() {
 
                   <div className="flex flex-col gap-3 flex-1 pointer-events-auto">
                     <div className="text-4xl font-bold text-primary">
-                      {student.first_name} {student.last_name}
+                      {initials}
                     </div>
 
                     <div className="flex items-center gap-3 flex-wrap">

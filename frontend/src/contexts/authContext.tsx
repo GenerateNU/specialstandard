@@ -1,18 +1,16 @@
 "use client";
-
 import { useAuth } from "@/hooks/useAuth";
-import { useTherapist } from "@/hooks/useTherapists"; // Import the hook to fetch profile
-import type { PostAuthLoginBody, PostAuthSignupBody, Therapist } from "@/lib/api/theSpecialStandardAPI.schemas"; // Combined type import
+import type {
+  PostAuthLoginBody,
+  PostAuthSignupBody,
+} from "@/lib/api/theSpecialStandardAPI.schemas";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 
-// 1. Update the AuthContextType to include the profile and its loading state
 interface AuthContextType {
   userId: string | null;
   isAuthenticated: boolean;
-  isLoading: boolean; // Initial check loading
-  therapistProfile: Therapist | null; // ADDED: Therapist profile data
-  isProfileLoading: boolean; // ADDED: Status of profile data fetching
+  isLoading: boolean;
   login: (
     credentials: PostAuthLoginBody
   ) => Promise<{ requiresMFA: boolean; userId?: string | null }>;
@@ -32,13 +30,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   } | null>(null);
   const router = useRouter();
   const { userLogin, userLogout, userSignup } = useAuth();
-  
-  // 2. Use the dedicated hook to fetch the profile based on userId
-  const { 
-    therapist: therapistProfile, 
-    isLoading: isProfileLoading, 
-  } = useTherapist(userId);
-
 
   // Check if user is authenticated on mount
   useEffect(() => {
@@ -83,7 +74,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.user?.id) {
         localStorage.setItem("userId", response.user.id);
         setUserId(response.user.id);
-        // userId change triggers useTherapist
       }
 
       return { requiresMFA: false, userId: response.user?.id || null };
@@ -95,8 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Call this after MFA verification succeeds
   const completeMFALogin = () => {
-    let finalUserId: string | null = null;
-    
     if (pendingMFAAuth) {
       localStorage.setItem("jwt", pendingMFAAuth.jwt);
       localStorage.setItem("userId", pendingMFAAuth.userId);
@@ -105,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("temp_jwt");
       localStorage.removeItem("temp_userId");
 
-      finalUserId = pendingMFAAuth.userId;
+      setUserId(pendingMFAAuth.userId);
       setPendingMFAAuth(null);
     } else {
       // Fallback: if pendingMFAAuth is null but we have temp credentials
@@ -120,13 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("temp_jwt");
         localStorage.removeItem("temp_userId");
 
-        finalUserId = tempUserId;
+        setUserId(tempUserId);
       }
-    }
-    
-    if (finalUserId) {
-      setUserId(finalUserId);
-      // userId change triggers useTherapist
     }
   };
 
@@ -163,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setPendingMFAAuth(null);
 
-    // Clear any remaining cookies 
+    // Clear any remaining cookies (for backwards compatibility)
     document.cookie.split(";").forEach((cookie) => {
       const eqPos = cookie.indexOf("=");
       const name =
@@ -172,19 +155,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     userLogout();
-    setUserId(null); // Setting userId to null automatically resets the profile via useTherapist
+    setUserId(null);
     router.push("/login");
   };
 
-  // 3. Update the Context.Provider value
   return (
     <AuthContext.Provider
       value={{
         userId,
         isAuthenticated: !!userId,
         isLoading,
-        therapistProfile, // Exposed profile data
-        isProfileLoading, // Exposed profile loading state
         login,
         completeMFALogin,
         signup,

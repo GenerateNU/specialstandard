@@ -39,22 +39,8 @@ interface AddStudentModalProps {
 export default function AddStudentModal({ trigger }: AddStudentModalProps) {
   const [open, setOpen] = useState(false);
   const { addStudent } = useStudents();
-  const { userId, therapistProfile } = useAuthContext();
+  const { userId } = useAuthContext();
   const { schools, isLoading: isLoadingSchools, error: schoolsError } = useSchools();
-
-  // 1. Get the list of school IDs the therapist is associated with
-  const therapistSchoolIds = therapistProfile?.schools || [];
-
-  // 2. Filter the schools to only include those the therapist is allowed to see
-  const availableSchools = schools.filter(school => 
-    therapistSchoolIds.length === 0 || therapistSchoolIds.includes(Number(school.id))
-  );
-  
-  // Update the dropdown items to use the filtered list
-  const schoolOptions = availableSchools.map(school => ({
-    label: school.name,
-    value: school.id.toString(),
-  }));
 
   type CreateStudentFormInput = Omit<CreateStudentInput, 'grade' | 'iep' | 'school_id'> & {
     grade?: string
@@ -73,17 +59,6 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
       school_id: "",
     },
   });
-  
-  // --- START FIX: Centralize the closing logic ---
-  const handleOpenChange = (newOpenState: boolean) => {
-    setOpen(newOpenState);
-    
-    // When the dialog is closing (newOpenState is false), reset the form errors and values.
-    if (!newOpenState) {
-      form.reset();
-    }
-  };
-  // --- END FIX ---
 
   const onSubmit = async (data: CreateStudentFormInput) => {
     try {
@@ -92,10 +67,9 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
         first_name: data.first_name,
         last_name: data.last_name,
         dob: data.dob || undefined,
-        therapist_id: userId ?? undefined,
-        // Only convert/include grade if a value exists
-        grade: data.grade ? gradeToStorage(data.grade) : undefined,
-        // Convert IEP string to array...
+        therapist_id: userId ?? undefined, // Use the proper UUID
+        grade: gradeToStorage(data.grade ?? ""), // Convert K to 0, numbers to numbers
+        // Convert IEP string to array (split by newlines for multiple goals)
         iep: data.iep ? data.iep.split('\n').map((goal: string) => goal.trim()).filter((goal: string) => goal) : undefined,
         school_id: data.school_id ? Number.parseInt(data.school_id) : undefined,
       };
@@ -103,19 +77,16 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
       // Add the student using the hook with converted data
       addStudent(backendData as any);
 
-      // Reset form and close modal using the shared handler
-      handleOpenChange(false);
+      // Reset form and close modal
+      form.reset();
+      setOpen(false);
     } catch (error) {
       console.error("Error adding student:", error);
     }
   };
 
-  // Get today's date in 'YYYY-MM-DD' format for validation
-  const today = new Date().toISOString().split('T')[0];
-
   return (
-    // Pass the centralized handler to onOpenChange
-    <Dialog open={open} onOpenChange={handleOpenChange}> 
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button className="flex items-center gap-2">
@@ -173,12 +144,6 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
             <FormField
               control={form.control}
               name="dob"
-              rules={{
-                max: {
-                  value: today,
-                  message: "Date of Birth cannot be in the future.",
-                },
-              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
@@ -186,12 +151,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                     Date of Birth
                   </FormLabel>
                   <FormControl>
-                    <Input 
-                      type="date" 
-                      max={today} // Added max attribute for UI validation
-                      {...field} 
-                      value={field.value ?? ""} 
-                    />
+                    <Input type="date" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -206,7 +166,7 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
                     <Building2 className="w-4 h-4" />
-                    School 
+                    School {schools.length > 0 ? "*" : ""}
                   </FormLabel>
                   <FormControl>
                     <Dropdown
@@ -217,12 +177,14 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                           ? "Loading schools..." 
                           : schoolsError
                             ? "Error loading schools"
-                            : availableSchools.length === 0 // Use filtered list here
-                              ? "No schools available in your district" 
+                            : schools.length === 0
+                              ? "No schools available"
                               : "Select school..."
                       }
-                      // Use the filtered schoolOptions here
-                      items={schoolOptions} 
+                      items={schools.map(school => ({
+                        label: school.name,
+                        value: school.id.toString(),
+                      }))}
                       className="w-full justify-between"
                     />
                   </FormControl>
@@ -286,8 +248,8 @@ export default function AddStudentModal({ trigger }: AddStudentModalProps) {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  // Use the shared handler here too
-                  handleOpenChange(false);
+                  form.reset();
+                  setOpen(false);
                 }}
               >
                 Cancel
