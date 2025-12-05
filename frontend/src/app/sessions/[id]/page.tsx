@@ -578,7 +578,7 @@ export default function SessionPage({ params }: PageProps) {
                     <Button
                       onClick={(e) => {
                         e.preventDefault();
-                        handleToggleAttendance(student.id, true);
+                        handleToggleAttendance(student.id, student.session_student_id, true);
                       }}
                       variant={student.present ? "default" : "outline"}
                       size="sm"
@@ -588,7 +588,7 @@ export default function SessionPage({ params }: PageProps) {
                     <Button
                       onClick={(e) => {
                         e.preventDefault();
-                        handleToggleAttendance(student.id, false);
+                        handleToggleAttendance(student.id, student.session_student_id, false);
                       }}
                       variant={!student.present ? "default" : "outline"}
                       size="sm"
