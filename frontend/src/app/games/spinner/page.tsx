@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { MemorymatchContent } from "./MemorymatchContent";
+import { SpinnerContent } from "./SpinnerContent";
 
 export const metadata: Metadata = {
-  title: "Memory Match Game",
+  title: "Spinner Game",
   description: "Practice with interactive wheel",
 };
 
@@ -18,10 +18,10 @@ function LoadingSpinner() {
   );
 }
 
-export default function MemorymatchPage() {
+export default function SpinnerPage() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <MemorymatchContent />
+      <SpinnerContent />
     </Suspense>
   );
 }

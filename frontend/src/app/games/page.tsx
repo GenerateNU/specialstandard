@@ -276,12 +276,12 @@ const handleSubmitResult = async () => {
                         questionType: selectedContent.questionType,
                         sessionId,
                       });
-                      router.push(`/games/memorymatch?${params.toString()}`);
+                      router.push(`/games/spinner?${params.toString()}`);
                     }}
                     className="bg-pink cursor-pointer hover:bg-pink-hover text-white p-6 rounded-lg font-semibold transition-all hover:scale-105 text-left flex items-center gap-4"
                   >
                     <Brain className="w-6 h-6 shrink-0" />
-                    <span>Memory Match</span>
+                    <span>Spinner</span>
                   </button>
                   
                   <button
