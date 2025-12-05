@@ -37,21 +37,21 @@ interface EditStudentModalProps {
   onSuccess?: () => void;
 }
 
-type EditStudentFormInput = {
+interface EditStudentFormInput {
   first_name: string;
   last_name: string;
   dob?: string;
   grade?: string;
   iep?: string;
   school_id?: string;
-};
+}
 
 // Format date string to YYYY-MM-DD for HTML date input
 function formatDateForInput(dateString?: string | null): string {
   if (!dateString) return "";
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
+    if (Number.isNaN(date.getTime())) return "";
     return date.toISOString().split("T")[0];
   } catch {
     return "";
