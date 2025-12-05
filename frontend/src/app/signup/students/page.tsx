@@ -71,7 +71,7 @@ export default function StudentsPage() {
             </p>
             <Button
               onClick={handleAddStudent}
-              className="bg-accent hover:bg-accent-hover text-white"
+              className="text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Student
