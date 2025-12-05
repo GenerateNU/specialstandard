@@ -3590,6 +3590,10 @@ components:
           format: uuid
           description: ID of the assigned therapist
           example: "987fcdeb-51a2-43d1-9f4c-123456789abc"
+        school_id:
+          type: integer
+          description: ID of the school the student attends
+          example: 1
         grade:
           type: integer
           nullable: true
