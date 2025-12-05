@@ -61,6 +61,7 @@ interface GameContentSelectorProps {
   initialDifficultyLevel?: number
   initialCategory?: GetGameContentsCategory
   theme: Theme
+  currentWeek?: number
 }
 
 export function GameContentSelector({ 
@@ -69,7 +70,8 @@ export function GameContentSelector({
   backLabel, 
   initialDifficultyLevel, 
   initialCategory, 
-  theme
+  theme,
+  currentWeek
 }: GameContentSelectorProps) {
   const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(initialCategory || null)
   const [selectedQuestionType, setSelectedQuestionType] = React.useState<GetGameContentsQuestionType | null>(null)
@@ -83,18 +85,22 @@ export function GameContentSelector({
       theme_id: theme.id,
       category: selectedCategory,
       difficulty_level: difficultyLevel,
-      limit: 1000, // Fetch all data
+      question_count: 1000, // Fetch all data
+      theme_week: currentWeek || 1,
     }
-  }, [theme.id, selectedCategory, difficultyLevel])
+  }, [theme.id, selectedCategory, difficultyLevel, currentWeek])
 
   // Fetch available question types for the current selection
   const { gameContents, isLoading } = useGameContents(queryParams)
 
   // Extract unique question types from fetched content
   const availableQuestionTypes = React.useMemo(() => {
-    return Array.from(
+    const t = Array.from(
       new Set(gameContents.map(content => content.question_type))
     )
+    console.log(t)
+    console.log(gameContents)
+    return t
   }, [gameContents])
 
   React.useEffect(() => {

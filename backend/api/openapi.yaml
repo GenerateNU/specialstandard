@@ -2592,6 +2592,13 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: theme_week
+          in: query
+          description: Theme Week associated with the game's contents
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
         - name: category
           in: query
           description: The category associated with the game
