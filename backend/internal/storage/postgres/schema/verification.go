@@ -55,9 +55,9 @@ func (r *VerificationRepository) VerifyCode(ctx context.Context, userID, code st
 		&verificationCode.UserID,
 		&verificationCode.Code,
 		&verificationCode.ExpiresAt,
-		&verificationCode.Used,  // Now it's a boolean
+		&verificationCode.Used, // Now it's a boolean
 	)
-	
+
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return false, nil
@@ -87,4 +87,22 @@ func (r *VerificationRepository) VerifyCode(ctx context.Context, userID, code st
 	}
 
 	return true, nil
+}
+
+// InvalidatePreviousCodes marks all unused codes for a user as used
+func (r *VerificationRepository) InvalidatePreviousCodes(ctx context.Context, userID string) error {
+	query := `
+		UPDATE verification_codes 
+		SET used = true
+		WHERE user_id = $1 
+		AND used = false
+		AND expires_at > NOW()
+	`
+
+	_, err := r.db.Exec(ctx, query, userID)
+	if err != nil {
+		return errs.InternalServerError("Failed to invalidate previous codes")
+	}
+
+	return nil
 }
