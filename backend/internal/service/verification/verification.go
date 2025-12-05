@@ -13,10 +13,11 @@ import (
 )
 
 // SendVerificationCode handles sending verification codes via email
+// SendVerificationCode handles sending verification codes via email
 func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(string)
 
-	email, err := h.authRepo.GetUserEmail(c.Context(), userID) 
+	email, err := h.authRepo.GetUserEmail(c.Context(), userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.SendCodeResponse{
 			Success: false,
@@ -29,6 +30,13 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 			Success: false,
 			Error:   "User email not found",
 		})
+	}
+
+	// Invalidate all previous active codes for this user
+	err = h.verificationRepo.InvalidatePreviousCodes(c.Context(), userID)
+	if err != nil {
+		slog.Warn("Failed to invalidate previous codes", slog.Any("err", err))
+		// Continue anyway - this is not critical enough to block the flow
 	}
 
 	// Generate 6-digit verification code
@@ -54,7 +62,7 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 
 	// Send email using Resend
 	emailHTML := h.getEmailTemplate(code)
-	
+
 	params := &resend.SendEmailRequest{
 		From:    h.fromEmail,
 		To:      []string{email},
@@ -80,7 +88,7 @@ func (h *Handler) SendVerificationCode(c *fiber.Ctx) error {
 
 func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(string)
-	
+
 	var req models.VerifyCodeRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.VerifyCodeResponse{
@@ -117,8 +125,8 @@ func (h *Handler) VerifyCode(c *fiber.Ctx) error {
 
 	err = h.authRepo.MarkEmailVerified(c.Context(), userID)
 	if err != nil {
-        slog.Warn("Failed to update user metadata", slog.Any("err", err))
-    }
+		slog.Warn("Failed to update user metadata", slog.Any("err", err))
+	}
 
 	return c.Status(fiber.StatusOK).JSON(models.VerifyCodeResponse{
 		Success:  true,

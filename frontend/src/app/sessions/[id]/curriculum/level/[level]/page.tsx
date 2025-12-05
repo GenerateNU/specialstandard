@@ -2,7 +2,7 @@
 
 import { use } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, ChevronRight } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
 import WeekNavigator from '@/components/curriculum/WeekNavigator'
@@ -138,16 +138,16 @@ export default function LevelPage({ params }: PageProps) {
       )}
     >
       <div className="max-w-6xl mx-auto px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-0 lg:-gap-x-16">
           {/* Left: Book with Reading Button */}
           <div className="flex flex-col items-center gap-6">
-            <div className="w-full max-w-xs">
+            <div className="w-full max-w-xs"> 
               <div className="relative w-full" style={{ aspectRatio: '201/262' }}>
                 <svg
                   width="201"
                   height="262"
                   viewBox="0 0 201 262"
-                  fill="none"
+                        fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   className="absolute inset-0 w-full h-full"
                 >
@@ -156,13 +156,13 @@ export default function LevelPage({ params }: PageProps) {
                     fill="#f4b860"
                   />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
                   <Link
                     href={`/sessions/${id}/curriculum/reading`}
                     onClick={() => setCurrentLevel(levelNumber)}
-                    className="w-full max-w-xs h-16 bg-pink hover:bg-pink-hover text-white gap-3 flex items-center justify-center rounded-full font-semibold transition-all hover:scale-105 text-lg"
+                          className="w-full max-w-xs h-16 bg-pink hover:bg-pink-hover text-white gap-3 flex items-center justify-center rounded-full font-semibold transition-all hover:scale-105 text-lg"
                   >
-                    <BookOpen className="w-5 h-5" />
+                          <BookOpen className="w-5 h-5" />
                     Open Level {levelNumber} Reading
                   </Link>
                 </div>
@@ -170,28 +170,35 @@ export default function LevelPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Right: Exercise Categories */}
-          <div className="flex flex-col gap-4">
+          {/* Right: Categories */}
+          <div className="flex flex-col items-center justify-center gap-3">
             {Object.entries(CATEGORIES).map(([key, category]) => (
               <button
                 key={key}
                 onClick={() => handleCategoryClick(key as GetGameContentsCategory)}
-                className="bg-pink cursor-pointer text-white rounded-xl shadow-md p-6 hover:scale-103 hover:shadow-lg transition-all duration-200 text-left group hover:bg-pink-hover border border-default hover:border-hover"
+                className="bg-pink text-white rounded-xl shadow-md py-2 px-4 w-80 
+                          hover:scale-105 hover:shadow-lg transition-all duration-200 
+                          text-center hover:bg-pink-hover border border-default hover:border-hover"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 ${category.colorClass} rounded-full flex items-center justify-center text-xl text-white`}>
+                <div className="flex flex-col items-center gap-1">
+                  <div className={`w-12 h-12 ${category.colorClass} rounded-full flex items-center justify-center text-lg text-white`}>
                     {category.icon}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white">{category.label}</h3>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
+                  <h3 className="font-semibold text-white text-sm">{category.label}</h3>
                 </div>
               </button>
             ))}
           </div>
+
         </div>
       </div>
+
+
+      <img
+        src="/doodlemanRight.svg"
+        alt="Doodle Man"
+        className="fixed bottom-0 left-0 w-80 h-auto pointer-events-none select-none"
+      />
     </CurriculumLayout>
   )
 }
