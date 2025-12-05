@@ -21,8 +21,7 @@ export function useRecentlyViewedStudents() {
       try {
         const parsed = JSON.parse(stored) as RecentStudent[]
         setRecentStudents(parsed)
-      }
-      catch (error) {
+      } catch (error) {
         console.error('Failed to parse recently viewed students:', error)
       }
     }
@@ -49,6 +48,16 @@ export function useRecentlyViewedStudents() {
     })
   }, [])
 
+  // Remove a specific student from recently viewed (e.g., when deleted)
+  const removeRecentStudent = useCallback((studentId: string) => {
+    setRecentStudents((prev) => {
+      const updated = prev.filter(s => s.id !== studentId)
+      // Save to localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }, [])
+
   // Clear all recent students
   const clearRecentStudents = useCallback(() => {
     setRecentStudents([])
@@ -58,6 +67,7 @@ export function useRecentlyViewedStudents() {
   return {
     recentStudents,
     addRecentStudent,
+    removeRecentStudent,
     clearRecentStudents,
   }
 }
