@@ -8,6 +8,8 @@ import { useSessionContext } from '@/contexts/sessionContext'
 import { useSession } from '@/hooks/useSessions'
 import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { useThemes } from '@/hooks/useThemes'
+import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
+import { Avatar } from '@/components/ui/avatar'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -194,9 +196,11 @@ export default function StartSessionPage({ params }: PageProps) {
                   key={student.id}
                   className="bg-card-hover rounded-xl p-4 flex items-center gap-3"
                 >
-                  <div className="w-10 h-10 rounded-full bg-blue-light flex items-center justify-center font-semibold text-blue">
-                    {student.first_name?.[0]}{student.last_name?.[0]}
-                  </div>
+                  <Avatar
+                    name={getAvatarName(student.first_name, student.last_name, student.id)}
+                    variant={getAvatarVariant(student.id)}
+                    className="w-12 h-12"
+                  />
                   <div>
                     <p className="font-medium">
                       {student.first_name} {student.last_name}
