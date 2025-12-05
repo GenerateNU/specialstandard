@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, BookOpen, Download, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
+import { AlertCircle, BookOpen, Download, File, FileText, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { PageHeader } from '@/components/PageHeader'
