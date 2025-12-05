@@ -135,7 +135,8 @@ export default function AddSessionsPage() {
         JSON.stringify(existingSessions)
       );
 
-      router.push("/signup/sessions");
+      // Navigate with refresh flag to trigger reload
+      router.push("/signup/sessions?refresh=true");
     } catch (error) {
       console.error("Failed to create session:", error);
       setError(
@@ -160,7 +161,8 @@ export default function AddSessionsPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-8">
+    <div className="flex items-center justify-center min-h-screen p-8 overflow-y-auto">
+    <div className="w-full flex justify-center py-8">
       <div className="max-w-md w-full">
         <button
           onClick={handleBack}
@@ -385,6 +387,7 @@ export default function AddSessionsPage() {
             </button>
           </div>
         </form>
+      </div>
       </div>
     </div>
   );
