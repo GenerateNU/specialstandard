@@ -68,13 +68,40 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     refetch,
   } = useQuery({
     queryKey: ["sessions", params, therapistId],
-    queryFn: () =>
-      api.getSessions({
-        limit: params?.limit ?? 100,
-        startdate: params?.startdate,
-        enddate: params?.enddate,
-        therapist_id: therapistId!,
-      }),
+    queryFn: async () => {
+      // Fetch all pages
+      const allSessions: Session[] = [];
+      let page = 1;
+      const limit = params?.limit ?? 100;
+      let hasMore = true;
+
+      while (hasMore) {
+        const pageData = await api.getSessions({
+          limit,
+          page,
+          startdate: params?.startdate,
+          enddate: params?.enddate,
+          therapist_id: therapistId!,
+        });
+
+        // Check if pageData is valid before spreading
+        if (!pageData || !Array.isArray(pageData)) {
+          hasMore = false;
+          break;
+        }
+
+        allSessions.push(...pageData);
+
+        // If we got fewer results than the limit, we've reached the last page
+        if (pageData.length < limit) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      }
+
+      return allSessions;
+    },
     enabled: !!therapistId, // Only run when we have a valid therapist ID
   });
 
