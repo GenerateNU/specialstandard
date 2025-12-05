@@ -177,7 +177,7 @@ export default function RateStudent({
                   step={1}
                   value={[levelToValue(ratings[category.id])]}
                   onValueChange={(value) => handleRatingChange(category.id, value[0])}
-                  className="relative z-10 *:data-[slot=slider-thumb]:bg-pink *:data-[slot=slider-thumb]:border-pink *:data-[slot=slider-range]:bg-pink *:data-[slot=slider-track]:bg-gray-300"
+                  className="relative z-10 [&_[data-slot=slider-thumb]]:bg-pink [&_[data-slot=slider-thumb]]:border-pink [&_[data-slot=slider-range]]:bg-pink [&_[data-slot=slider-track]]:bg-gray-300"
                 />
                 
                 <div className="flex justify-between mt-2 px-2">

@@ -7,23 +7,22 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { Avatar } from '@/components/ui/avatar'
-import { ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useStudents } from '@/hooks/useStudents'
 import type { StudentTuple } from '@/contexts/sessionContext'
 import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 
-interface StudentSelectorProps {
+interface RateStudentSelectorProps {
   students: StudentTuple[]
   currentSessionStudentId: number
   sessionId: string
 }
 
-export default function StudentSelector({
+export default function RateStudentSelector({
   students,
   currentSessionStudentId,
   sessionId,
-}: StudentSelectorProps) {
+}: RateStudentSelectorProps) {
   const router = useRouter()
   
   // Fetch full student data for all students in this session
@@ -59,7 +58,7 @@ export default function StudentSelector({
 
   return (
     <Select value={currentSessionStudentId.toString()} onValueChange={handleValueChange}>
-      <SelectTrigger className="w-[280px] h-14 rounded-full bg-white border border-border shadow-sm hover:bg-gray-50 transition-colors group">
+      <SelectTrigger className="w-[280px] h-14 rounded-full bg-white border border-border mt-3.5 shadow-sm hover:bg-gray-50 transition-colors group">
         <div className="flex items-center gap-3 flex-1">
           <Avatar
             name={getAvatarName(currentStudent.first_name, currentStudent.last_name, currentStudent.id)}

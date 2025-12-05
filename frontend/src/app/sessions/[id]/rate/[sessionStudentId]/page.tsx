@@ -2,7 +2,7 @@
 
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
 import RateStudent from '@/components/rate/RateStudent'
-import StudentSelector from '@/components/rate/StudentSelector'
+import RateStudentSelector from '@/components/rate/StudentSelector'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useStudents } from '@/hooks/useStudents'
 import { useParams } from 'next/navigation'
@@ -80,7 +80,7 @@ export default function RateStudentPage() {
       backLabel="Back to Home"
       headerContent={
         <div className="flex items-center gap-4">
-        <StudentSelector
+        <RateStudentSelector
           students={students}
           currentSessionStudentId={Number(sessionStudentId)}
           sessionId={id}
@@ -88,7 +88,7 @@ export default function RateStudentPage() {
         </div>
       }
     >
-      <div className="flex flex-col items-center justify-center py-16">
+      <div className="flex flex-col items-center justify-center -mt-12 py-16">
         <RateStudent
           sessionId={id}
           studentId={currentStudent.id}
