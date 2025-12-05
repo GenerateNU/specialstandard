@@ -1,3 +1,5 @@
+// hooks/useCalendar.ts - UPDATED WITH PARENT ID
+
 import type { View } from 'react-big-calendar'
 import type { Session } from '@/lib/api/theSpecialStandardAPI.schemas'
 import moment from 'moment'
@@ -34,6 +36,7 @@ export function useCalendarState() {
 
 export interface CalendarEvent {
   id: string
+  parentId: string // Add parent ID for color hashing
   title: string
   start: Date
   end: Date
@@ -62,6 +65,7 @@ export function useCalendarData(date: Date, view: View) {
     () =>
       sessions.map(session => ({
         id: session.id,
+        parentId: session.session_parent_id || session.id, // Use parent ID if available, else fall back to session ID
         title: session.session_name,
         location: session.location,
         start: new Date(session.start_datetime),

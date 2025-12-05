@@ -12,7 +12,6 @@ import { useStudents } from "@/hooks/useStudents";
 import {
   getAvatarName,
   getAvatarVariant,
-  getStudentInitials,
 } from "@/lib/avatarUtils";
 import {
   AlertCircle,
@@ -509,7 +508,7 @@ export default function SessionPage({ params }: PageProps) {
                 />
                 <div>
                   <p className="text-lg font-medium">
-                    {getStudentInitials(student.first_name, student.last_name)}
+                    {student.first_name} {student.last_name}
                   </p>
                   <p className="text-sm text-secondary">
                     {student.first_name || "Unknown"}{" "}
@@ -581,10 +580,7 @@ export default function SessionPage({ params }: PageProps) {
                     />
                     <div>
                       <p className="text-lg font-medium">
-                        {getStudentInitials(
-                          student.first_name,
-                          student.last_name
-                        )}
+                        {student.first_name} {student.last_name}
                       </p>
                       <p className="text-sm text-secondary">
                         {student.first_name || "Unknown"}{" "}
