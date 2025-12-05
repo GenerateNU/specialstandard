@@ -64,7 +64,7 @@ func (r *GameContentRepository) GetGameContents(ctx context.Context, req models.
 		argCount++
 	}
 	if req.ApplicableGameTypes != nil {
-		conditions = append(conditions, fmt.Sprintf("applicable_game_types @> $%d::question_type[]", argCount))
+		conditions = append(conditions, fmt.Sprintf("applicable_game_types @> $%d::game_type[]", argCount))
 		args = append(args, *req.ApplicableGameTypes)
 		argCount++
 	}
