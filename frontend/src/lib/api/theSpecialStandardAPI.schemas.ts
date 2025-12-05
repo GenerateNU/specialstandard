@@ -248,6 +248,8 @@ export interface UpdateStudentInput {
   dob?: string | null;
   /** ID of the assigned therapist */
   therapist_id?: string;
+  /** ID of the school the student attends */
+  school_id?: number;
   /**
    * Student's current grade level (can be set to null). -1 = graduated, 0 = kindergarten, 1-12 = grades 1-12
    * @minimum -1
