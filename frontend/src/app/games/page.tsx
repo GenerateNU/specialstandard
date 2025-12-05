@@ -52,6 +52,7 @@ function GamesPageContent() {
   const { students: allStudents } = useStudents()
   const [selectedContent, setSelectedContent] = React.useState<{
     theme: Theme;
+    themeWeek: number;
     difficultyLevel: number;
     category: GetGameContentsCategory;
     questionType: GetGameContentsQuestionType;
@@ -107,6 +108,7 @@ function GamesPageContent() {
 
   const handleContentSelection = (selection: {
     theme: Theme;
+    themeWeek: number;
     difficultyLevel: number;
     category: GetGameContentsCategory;
     questionType: GetGameContentsQuestionType;
@@ -232,6 +234,7 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
@@ -249,6 +252,7 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
@@ -266,23 +270,25 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
                         sessionId,
                       });
-                      router.push(`/games/memorymatch?${params.toString()}`);
+                      router.push(`/games/spinner?${params.toString()}`);
                     }}
                     className="bg-pink cursor-pointer hover:bg-pink-hover text-white p-6 rounded-lg font-semibold transition-all hover:scale-105 text-left flex items-center gap-4"
                   >
                     <Brain className="w-6 h-6 shrink-0" />
-                    <span>Memory Match</span>
+                    <span>Spinner</span>
                   </button>
                   
                   <button
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,
@@ -300,6 +306,7 @@ const handleSubmitResult = async () => {
                     onClick={() => {
                       const params = new URLSearchParams({
                         themeId: selectedContent.theme.id,
+                        themeWeek: selectedContent.themeWeek !== null ? String(selectedContent.themeWeek) : '',
                         difficulty: String(selectedContent.difficultyLevel),
                         category: selectedContent.category,
                         questionType: selectedContent.questionType,

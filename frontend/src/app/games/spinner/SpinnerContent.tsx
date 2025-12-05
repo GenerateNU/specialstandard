@@ -1,16 +1,17 @@
 "use client";
 
-import MemorymatchGameInterface from "@/components/games/MemorymatchInterface";
+import SpinnerGameInterface from "@/components/games/SpinnerInterface";
 import { StudentSelector } from "@/components/games/StudentSelector";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-export function MemorymatchContent() {
+export function SpinnerContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId") || "00000000-0000-0000-0000-000000000000";
   const sessionStudentIdsParam = searchParams.get("sessionStudentIds");
   const themeId = searchParams.get("themeId");
+  const themeWeek = searchParams.get("themeWeek");
   const themeName = searchParams.get("themeName");
   const difficulty = searchParams.get("difficulty");
   const category = searchParams.get("category");
@@ -42,24 +43,25 @@ export function MemorymatchContent() {
   if (selectedStudentIds.length === 0) {
     return (
       <StudentSelector
-        gameTitle="Memory Match"
+        gameTitle="Spinner"
         onBack={() => router.back()}
         onStudentsSelected={(studentIds) => {
           setSelectedStudentIds(studentIds);
           // Update URL with selected students
           const params = new URLSearchParams(searchParams.toString());
           params.set('sessionStudentIds', studentIds.join(','));
-          router.replace(`/games/memorymatch?${params.toString()}`);
+          router.replace(`/games/spinner?${params.toString()}`);
         }}
       />
     );
   }
 
   return (
-    <MemorymatchGameInterface
+    <SpinnerGameInterface
       session_student_ids={selectedStudentIds.map(id => Number.parseInt(id))}
       session_id={sessionId}
       themeId={themeId}
+      themeWeek={themeWeek ? Number.parseInt(themeWeek) : 1}
       themeName={themeName || "Theme"}
       difficulty={Number.parseInt(difficulty)}
       category={category}

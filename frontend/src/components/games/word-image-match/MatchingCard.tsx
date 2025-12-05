@@ -1,5 +1,4 @@
 'use client'
-
 import React from 'react'
 import clsx from 'clsx'
 
@@ -21,20 +20,37 @@ export default function MatchingCard({
   isMatched = false,
   onClick,
   disabled = false,
- }: MatchingCardProps) {
+}: MatchingCardProps) {
   return (
-    <button onClick={onClick}
-            disabled={disabled || isMatched}
-            className={clsx("relative flex items-center justify-center rounded-lg border p-4 bg-card transition-all",
-              "hover:shadow-md active:scale-[0.97]",
-              isMatched && "border-green-500 border-2 bg-green/15 cursor-not-allowed",
-              isWrong && "border-red-500 border-2 shadow-red-500/40",
-              isSelected && !isWrong && !isMatched && "border-blue shadow-lg bg-card-hover"
-            )}>
+    <button 
+      onClick={onClick}
+      disabled={disabled || isMatched}
+      className={clsx(
+        "relative flex items-center justify-center rounded-lg transition-all",
+        "hover:shadow-md active:scale-[0.97]",
+        "w-full h-[200px]",
+
+        isImage ? "p-6" : "p-6",
+
+        // BACKGROUND STATES (no borders)
+        isMatched && "bg-green-200 cursor-not-allowed",
+        isWrong && "bg-red-200",
+        isSelected && !isWrong && !isMatched && "bg-blue-200",
+
+        // Default background
+        !isMatched && !isWrong && !isSelected && "bg-card"
+      )}
+    >
       {!isImage ? (
-        <span className="w-50 h-30 text-5xl font-semibold text-foreground px-2 pt-[7.5%]">{value}</span>
+        <span className="text-3xl font-semibold text-foreground text-center leading-relaxed break-words max-w-full px-2">
+          {value}
+        </span>
       ) : (
-        <img src={value} alt="Image" className="w-50 h-30 object-contain p-2"/>
+        <img 
+          src={value} 
+          alt="Matching card image" 
+          className="w-full h-full object-contain"
+        />
       )}
     </button>
   )
