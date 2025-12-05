@@ -3,19 +3,28 @@
 import CurriculumLayout from '@/components/curriculum/CurriculumLayout'
 import RateStudent from '@/components/rate/RateStudent'
 import RateStudentSelector from '@/components/rate/StudentSelector'
+import { Button } from '@/components/ui/button'
 import { useSessionContext } from '@/contexts/sessionContext'
 import { useStudents } from '@/hooks/useStudents'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 export default function RateStudentPage() {
   const params = useParams()
   const id = params.id as string
+  const router = useRouter()
   const sessionStudentId = params.sessionStudentId as string
-  const { students, session } = useSessionContext()
+  const { students, session, clearSession } = useSessionContext()
   
   const { students: studentData } = useStudents({
     ids: students.map(s => s.studentId)
   })
+
+  
+  function handleExit() {
+    router.push(`/`)
+    clearSession()
+  }
+
 
   // map studentId to student details
   const studentMap = new Map(studentData?.map(s => [s.id, s]) ?? [])
@@ -76,8 +85,8 @@ export default function RateStudentPage() {
     <CurriculumLayout
       title="Session Rating"
       subtitle={formattedDate}
-      backHref={`/`}
-      backLabel="Back to Home"
+      backHref={`/sessions/${id}/curriculum`}
+      backLabel="Back to Curriculum"
       headerContent={
         <div className="flex items-center gap-4">
         <RateStudentSelector
@@ -88,6 +97,7 @@ export default function RateStudentPage() {
         </div>
       }
     >
+      <>
       <div className="flex flex-col items-center justify-center -mt-12 py-16">
         <RateStudent
           sessionId={id}
@@ -97,6 +107,14 @@ export default function RateStudentPage() {
           lastName={currentStudent.last_name}
         />
       </div>
+      <Button
+        onClick={() => handleExit()}
+        className="fixed bottom-6 right-6 z-50 shadow-lg"
+      >
+        Exit to Home
+      </Button>
+      </>
     </CurriculumLayout>
+    
   )
 }

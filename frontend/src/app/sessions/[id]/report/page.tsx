@@ -8,6 +8,8 @@ import { useSessionStudentsForSession } from '@/hooks/useSessionStudents'
 import { Avatar } from '@/components/ui/avatar'
 import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 import { GameOverallStats } from '@/components/statistics/GamePerformanceCharts'
+import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -92,15 +94,21 @@ function StudentReport({
 
 export default function ReportPage({ params }: PageProps) {
   const { id } = use(params)
-  const { session } = useSessionContext()
+  const { session, clearSession } = useSessionContext()
   const { students: sessionStudents, isLoading } = useSessionStudentsForSession(id)
 
+  const router = useRouter()
   const sessionDate = session ? new Date(session.start_datetime) : new Date()
   const formattedDate = sessionDate.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   })
+
+  function handleExit() {
+    router.push(`/`)
+    clearSession()
+  }
 
   if (isLoading) {
     return (
@@ -152,6 +160,12 @@ export default function ReportPage({ params }: PageProps) {
           />
         ))}
       </div>
+      <Button
+        onClick={() => handleExit()}
+        className="fixed bottom-6 right-6 z-50 shadow-lg"
+      >
+        Exit to Home
+      </Button>
     </CurriculumLayout>
   )
 }

@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useSessionContext } from '@/contexts/sessionContext'
 
 interface CurriculumLayoutProps {
   children: ReactNode
@@ -21,6 +22,9 @@ export default function CurriculumLayout({
   backLabel = 'Back',
   headerContent,
 }: CurriculumLayoutProps) {
+
+  const { clearSession } = useSessionContext()
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -28,10 +32,11 @@ export default function CurriculumLayout({
         <div className="flex items-center justify-between mb-4">
           <Link
             href={backHref}
+            onClick={backHref === '/' ? () => clearSession() : undefined}
             className="inline-flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span className="text-sm font-medium">{backLabel}</span>
+            <span className="text-xl font-semibold cursor-pointer">{backLabel}</span>
           </Link>
 
           {headerContent}
