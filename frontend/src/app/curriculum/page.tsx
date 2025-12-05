@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, BookOpen, Download, File, FileText, Gamepad2, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
+import { AlertCircle, BookOpen, Download, File, FileText, Loader2, NotebookPen, RefreshCcw } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { PageHeader } from '@/components/PageHeader'
@@ -90,7 +90,7 @@ function gameContentToResource(gameContent: GameContent, displayName: string) {
 export default function Curriculum() {
   const { resources, isLoading, error, refetch } = useResources()
   const { downloadNewsletter, isLoading: isDownloadingNewsletter, error: newsletterError } = useNewsletter()
-  const [selectedMonth, setSelectedMonth] = useState(1)
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [allGameContents, setAllGameContents] = useState<GameContent[]>([])
   const [isLoadingGameContents, setIsLoadingGameContents] = useState(false)
@@ -277,9 +277,6 @@ export default function Curriculum() {
                 const exercises = week.resources.filter((r: any) => 
                   r.type === 'exercise' || r.type === 'Worksheet'
                 )
-                const games = week.resources.filter((r: any) => 
-                  r.type === 'game' || r.type === 'Game'
-                )
                 const other = week.resources.filter((r: any) => 
                   !r.type || (!['reading', 'Passage', 'Video', 'exercise', 'Worksheet', 'game', 'Game'].includes(r.type))
                 )
@@ -298,7 +295,7 @@ export default function Curriculum() {
                       )}
                     </div>
                     
-                    <div className='grid grid-cols-3 w-full gap-6'>
+                    <div className='grid grid-cols-2 w-full gap-6'>
                       <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
                         <h5 className='font-semibold text-black'>Readings</h5>
                         {readings.length === 0 ? (
@@ -362,17 +359,6 @@ export default function Curriculum() {
                               ))
                             })()}
                           </>
-                        )}
-                      </div>
-
-                      <div className='bg-card h-full w-full flex flex-col rounded-2xl gap-3 p-6'>
-                        <h5 className='font-semibold text-black'>Games</h5>
-                        {games.length === 0 ? (
-                          <div className='text-muted text-sm'>No games available</div>
-                        ) : (
-                          games.map((game: any) => (
-                            <ResourceButton key={game.id} resource={game} icon={Gamepad2} />
-                          ))
                         )}
                       </div>
                     </div>
