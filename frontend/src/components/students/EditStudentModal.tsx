@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useStudents, type StudentBody } from "@/hooks/useStudents";
+import type { StudentBody } from "@/hooks/useStudents";
+import { useStudents } from "@/hooks/useStudents";
 import { useSchools } from "@/hooks/useSchools";
 import { gradeOptions } from "@/lib/gradeUtils";
 import { useForm } from "react-hook-form";
