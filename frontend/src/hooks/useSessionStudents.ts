@@ -56,6 +56,20 @@ export function useSessionStudentsForSession(sessionId: string) {
   };
 }
 
+export function useSessionStudent(sessionStudentId: number, sessionId?: string) {
+  const { students, isLoading, error } = useSessionStudentsForSession(sessionId || '');
+  
+  const sessionStudent = students.find(
+    (s: any) => s.session_student_id === sessionStudentId
+  );
+
+  return {
+    sessionStudent,
+    isLoading: isLoading && !sessionStudent,
+    error,
+  };
+}
+
 export function useSessionStudents() {
   const queryClient = useQueryClient();
   const api = getSessionStudentsApi();
@@ -96,7 +110,7 @@ export function useSessionStudents() {
   const updateSessionStudentMutation = useMutation({
     mutationFn: (input: UpdateSessionStudentInput) =>
       api.patchSessionStudents(input),
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["sessions", variables.session_id, "students"],
       });
