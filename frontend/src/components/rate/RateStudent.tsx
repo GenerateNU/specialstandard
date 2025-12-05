@@ -209,7 +209,7 @@ export default function RateStudent({
           </Button>
           
           <Link 
-            href={`/sessions/${sessionId}/report`}
+            href={`/sessions/${sessionId}/report?from=${sessionStudentId}`}
             className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
           >
             View Report <ChevronRight className="w-4 h-4 ml-1" />
