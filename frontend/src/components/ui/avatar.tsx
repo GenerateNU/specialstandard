@@ -32,8 +32,9 @@ const Avatar = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
     name?: string
+    variant?: string
   }
->(({ className, name, children, ...props }, ref) => {
+>(({ className, name, variant, children, ...props }, ref) => {
   const shouldAutoGenerate = !children && name
   return (
     <div
