@@ -453,6 +453,7 @@ export function CreateSessionDialog({
                       onValueChange={field.onChange}
                       placeholder="Select students for this session"
                       showTags={true}
+                      tagClassName="bg-pink-light text-pink"
                     />
                   </FormControl>
                   <FormMessage />

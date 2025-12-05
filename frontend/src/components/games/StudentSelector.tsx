@@ -4,6 +4,8 @@ import { useSessionContext } from '@/contexts/sessionContext'
 import { useStudents } from '@/hooks/useStudents'
 import { Users } from 'lucide-react'
 import { useState } from 'react'
+import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
+import { Avatar } from '../ui/avatar'
 
 interface StudentSelectorProps {
   onBack: () => void
@@ -104,6 +106,11 @@ export function StudentSelector({
                       onChange={() => toggleStudent(student.sessionStudentId)}
                       className="w-5 h-5 text-blue rounded focus:ring-blue focus:ring-2"
                     />
+                    <Avatar
+                      name={getAvatarName(student.first_name, student.last_name, student.id)}
+                      variant={getAvatarVariant(student.id)}
+                      className="w-12 h-12"
+                    />
                     <div className="flex-1">
                       <p className="font-semibold text-primary">
                         {student.first_name} {student.last_name}
@@ -142,4 +149,3 @@ export function StudentSelector({
     </div>
   )
 }
-
