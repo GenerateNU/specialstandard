@@ -98,8 +98,7 @@ export function GameContentSelector({
     const t = Array.from(
       new Set(gameContents.map(content => content.question_type))
     )
-    console.log(t)
-    console.log(gameContents)
+    
     return t
   }, [gameContents])
 
