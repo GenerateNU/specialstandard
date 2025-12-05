@@ -9,7 +9,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 import { GameOverallStats } from '@/components/statistics/GamePerformanceCharts'
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -95,6 +95,7 @@ function StudentReport({
 export default function ReportPage({ params }: PageProps) {
   const { id } = use(params)
   const { session, clearSession } = useSessionContext()
+  const from = useSearchParams().get('from')
   const { students: sessionStudents, isLoading } = useSessionStudentsForSession(id)
 
   const router = useRouter()
@@ -148,8 +149,8 @@ export default function ReportPage({ params }: PageProps) {
     <CurriculumLayout
       title="Session Report"
       subtitle={formattedDate}
-      backHref={`/sessions/${id}/curriculum`}
-      backLabel="Back to Curriculum"
+      backHref={`/sessions/${id}/rate/${from || sessionStudents[0].session_student_id}`}
+      backLabel="Back to Rating"
     >
       <div className="space-y-6 max-w-6xl mx-auto py-6">
         {sessionStudents.map((sessionStudent) => (
