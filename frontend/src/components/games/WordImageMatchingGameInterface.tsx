@@ -31,6 +31,7 @@ interface WordImageMatchingGameInterfaceProps {
   session_id: string
   themeID: string
   themeName: string | null
+  themeWeek: number
   difficulty: string
   category: string
   questionType: string
@@ -41,6 +42,7 @@ export default function WordImageMatchingGameInterface({
   session_id,
   themeID,
   themeName,
+  themeWeek,
   difficulty,
   category,
   questionType
@@ -65,8 +67,10 @@ export default function WordImageMatchingGameInterface({
 
   const currentSessionStudentId = session_student_ids[currentStudentIndex]
 
+  // FIX #1: Properly handle theme_week filtering
   const { gameContents, isLoading } = useGameContents({
     theme_id: themeID || undefined,
+    theme_week: themeWeek !== null ? themeWeek : undefined, // Only pass if not null
     difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
     category: category as any,
     question_type: questionType as any,
@@ -96,7 +100,7 @@ export default function WordImageMatchingGameInterface({
     { key: 'words', cards: wordCards },
   ]
 
-  // Initialize when student changes or game contents load
+  // FIX #3: Add gameContents to dependency array to handle late loading
   useEffect(() => {
     if (gameContents.length === 0) return
     if (completedStudents.has(currentSessionStudentId)) return
@@ -131,7 +135,7 @@ export default function WordImageMatchingGameInterface({
     })
     setCardStartTimes(startTimes)
     setIncorrectAttempts(new Map())
-  }, [currentStudentIndex]) // Only re-run when student changes
+  }, [currentStudentIndex, gameContents, completedStudents, currentSessionStudentId]) // Added dependencies
 
   // Reset game function for "Play Again" button
   const resetGame = () => {
@@ -394,6 +398,13 @@ export default function WordImageMatchingGameInterface({
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-muted">Theme: </span>
             <span className="font-medium text-primary">{themeName}</span>
+            {themeWeek !== null && (
+              <>
+                <span className="text-muted mx-2">•</span>
+                <span className="text-muted">Week:</span>
+                <span className="font-medium text-primary">{themeWeek}</span>
+              </>
+            )}
             <span className="text-muted mx-2">•</span>
             <span className="text-muted">Difficulty:</span>
             <span className="font-medium text-primary">Level {difficulty}</span>
@@ -403,9 +414,10 @@ export default function WordImageMatchingGameInterface({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8">
+        {/* FIX #2: Improved card grid with better spacing */}
+        <div className="grid grid-cols-2 gap-6">
           {groupedCols.map(group => (
-            <div key={group.key} className="flex flex-col gap-4">
+            <div key={group.key} className="flex flex-col gap-3">
               {group.cards.map(card => (
                 <MatchingCard
                   key={card.id}
