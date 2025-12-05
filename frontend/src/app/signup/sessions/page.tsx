@@ -12,31 +12,48 @@ import { useEffect, useState } from "react";
 
 export default function SessionsPage() {
   const router = useRouter();
-  const { sessions, isLoading: loadingSessions, refetch } = useSessions();
   const [selectedSessionId, setSelectedSessionId] = useState<string>("");
 
-  // Use the hook to get students for the selected session
+  // Hook now handles therapist ID from both auth context AND localStorage
+  const { sessions, isLoading: loadingSessions, refetch } = useSessions();
+  
   const { students: sessionStudents, isLoading: loadingStudents } =
     useSessionStudentsForSession(selectedSessionId);
 
-  // Get the first session's ID when sessions load
+  // Check if user is authenticated
+  useEffect(() => {
+    const userId =
+      localStorage.getItem("temp_userId") || localStorage.getItem("userId");
+
+    if (!userId) {
+      router.push("/signup/welcome");
+    }
+  }, [router]);
+
+  // Handle refresh from navigation and initial load
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('refresh') === 'true') {
+        // Add small delay to ensure session is saved
+        setTimeout(() => {
+          refetch();
+        }, 300);
+        // Clean up URL
+        window.history.replaceState({}, '', '/signup/sessions');
+      } else {
+        // Normal refetch on mount
+        refetch();
+      }
+    }
+  }, [refetch]);
+
+  // Set first session as selected
   useEffect(() => {
     if (sessions.length > 0 && !selectedSessionId) {
       setSelectedSessionId(sessions[0].id);
     }
   }, [sessions, selectedSessionId]);
-
-  useEffect(() => {
-    const userId =
-      localStorage.getItem("temp_userId") || localStorage.getItem("userId"); // Check temp_userId first
-
-    if (!userId) {
-      router.push("/signup/welcome");
-    }
-
-    // Refetch sessions when page loads
-    refetch();
-  }, [router, refetch]);
 
   const handleBack = () => {
     router.push("/signup/students");
@@ -50,7 +67,6 @@ export default function SessionsPage() {
     router.push("/signup/complete");
   };
 
-  // Helper functions for formatting
   const formatTime = (datetime: string) => {
     const date = new Date(datetime);
     return date.toLocaleTimeString("en-US", {
@@ -120,63 +136,61 @@ export default function SessionsPage() {
           </>
         ) : (
           <>
-            {/* Session Card Display */}
             <div className="bg-card rounded-lg border border-default p-6 mb-6">
-              {sessions.length > 0 && (
-                <div className="space-y-4">
-                  <div className="text-sm text-secondary mb-2">
-                    <div>Session Name</div>
-                    <div className="font-semibold text-primary">
-                      {formatTime(sessions[0].start_datetime)} -{" "}
-                      {formatTime(sessions[0].end_datetime)}, Does not repeat
-                    </div>
-                    {sessions[0].location && (
-                      <div className="mt-1">{sessions[0].location}</div>
+              <div className="space-y-4">
+                <div className="text-sm text-secondary mb-2">
+                  <div className="font-semibold text-primary text-lg mb-1">
+                    {sessions[0].session_name}
+                  </div>
+                  <div className="font-semibold text-primary">
+                    {formatTime(sessions[0].start_datetime)} -{" "}
+                    {formatTime(sessions[0].end_datetime)}, Does not repeat
+                  </div>
+                  {sessions[0].location && (
+                    <div className="mt-1">{sessions[0].location}</div>
+                  )}
+                </div>
+
+                <div>
+                  <div className="text-sm text-secondary mb-2">Students</div>
+                  <div className="space-y-2">
+                    {loadingStudents ? (
+                      <div className="text-sm text-secondary">
+                        Loading students...
+                      </div>
+                    ) : sessionStudents.length > 0 ? (
+                      sessionStudents.map((student: any) => (
+                        <div
+                          key={student.id}
+                          className="flex items-center gap-3 p-2 bg-background rounded-lg border border-default"
+                        >
+                          <Avatar
+                            name={getAvatarName(
+                              student.first_name,
+                              student.last_name,
+                              student.id
+                            )}
+                            variant={getAvatarVariant(student.id)}
+                            className="w-8 h-8"
+                          />
+                          <span className="text-sm text-primary">
+                            {student.first_name} {student.last_name}
+                          </span>
+                          <span className="text-xs text-secondary ml-auto">
+                            ID
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-secondary">
+                        No students in this session
+                      </div>
                     )}
                   </div>
-
-                  <div>
-                    <div className="text-sm text-secondary mb-2">Students</div>
-                    <div className="space-y-2">
-                      {loadingStudents ? (
-                        <div className="text-sm text-secondary">
-                          Loading students...
-                        </div>
-                      ) : sessionStudents.length > 0 ? (
-                        sessionStudents.map((student: any) => (
-                          <div
-                            key={student.id}
-                            className="flex items-center gap-3 p-2 bg-background rounded-lg border border-default"
-                          >
-                            <Avatar
-                              name={getAvatarName(
-                                student.first_name,
-                                student.last_name,
-                                student.id
-                              )}
-                              variant={getAvatarVariant(student.id)}
-                              className="w-8 h-8"
-                            />
-                            <span className="text-sm text-primary">
-                              {student.first_name} {student.last_name}
-                            </span>
-                            <span className="text-xs text-secondary ml-auto">
-                              ID
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-sm text-secondary">
-                          No students in this session
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Show other sessions as cards */}
             {sessions.length > 1 && (
               <div className="space-y-2 mb-6">
                 <p className="text-sm text-secondary mb-2">

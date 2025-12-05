@@ -14,7 +14,6 @@ import { useStudents } from "@/hooks/useStudents";
 import {
   getAvatarName,
   getAvatarVariant,
-  getStudentInitials,
 } from "@/lib/avatarUtils";
 import {
   AlertCircle,
@@ -420,6 +419,7 @@ export default function SessionPage({ params }: PageProps) {
                 <div className="flex gap-2">
                   <input
                     type="date"
+                    title="Start Date"
                     value={editedSession.startDate}
                     onChange={(e) =>
                       setEditedSession({
@@ -431,6 +431,7 @@ export default function SessionPage({ params }: PageProps) {
                   />
                   <input
                     type="time"
+                    title="Start Time"
                     value={editedSession.startTime}
                     onChange={(e) =>
                       setEditedSession({
@@ -451,6 +452,7 @@ export default function SessionPage({ params }: PageProps) {
                 <div className="flex gap-2">
                   <input
                     type="date"
+                    title="End Date"
                     value={editedSession.endDate}
                     onChange={(e) =>
                       setEditedSession({
@@ -462,6 +464,7 @@ export default function SessionPage({ params }: PageProps) {
                   />
                   <input
                     type="time"
+                    title="End Time"
                     value={editedSession.endTime}
                     onChange={(e) =>
                       setEditedSession({
@@ -532,7 +535,7 @@ export default function SessionPage({ params }: PageProps) {
             {mode === "attendance" && (
               <Button
                 onClick={() => setMode("view")}
-                variant="secondary"
+                variant="outline"
                 size="lg"
               >
                 Done
@@ -543,86 +546,98 @@ export default function SessionPage({ params }: PageProps) {
 
         {/* Current students list */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {sessionStudents.map((student, index) => (
-            <Link
-              key={student.id || `student-${index}`}
-              href={`/student/${student.id}`}
-              className="bg-card rounded-2xl p-6 shadow-sm border border-default flex items-center justify-between hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-4">
-                <Avatar
-                  name={getAvatarName(
-                    student.first_name || "Unknown",
-                    student.last_name || "Student",
-                    student.id
-                  )}
-                  variant={getAvatarVariant(student.id)}
-                  className="w-16 h-16 ring-2 ring-accent-light"
-                />
-                <div>
-                  <p className="text-lg font-medium">
-                    {getStudentInitials(student.first_name, student.last_name)}
-                  </p>
-                  <p className="text-sm text-secondary">
-                    {student.first_name || "Unknown"}{" "}
-                    {student.last_name || "Student"}
-                  </p>
+          {sessionStudents.map((student, index) => {
+            const studentCard = (
+              <div
+                className="bg-card rounded-2xl p-6 shadow-sm border border-default flex items-center justify-between hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center gap-4">
+                  <Avatar
+                    name={getAvatarName(
+                      student.first_name || "Unknown",
+                      student.last_name || "Student",
+                      student.id
+                    )}
+                    variant={getAvatarVariant(student.id)}
+                    className="w-16 h-16 ring-2 ring-accent-light"
+                  />
+                  <div>
+                    <p className="text-lg font-medium">
+                      {student.first_name} {student.last_name}
+                    </p>
+                    <p className="text-sm text-secondary">
+                      {student.first_name || "Unknown"}{" "}
+                      {student.last_name || "Student"}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Attendance mode: Present/Absent buttons */}
+                {mode === "attendance" && (
+                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleToggleAttendance(student.id, true);
+                      }}
+                      variant={student.present ? "default" : "outline"}
+                      size="sm"
+                    >
+                      Present
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleToggleAttendance(student.id, false);
+                      }}
+                      variant={!student.present ? "default" : "outline"}
+                      size="sm"
+                    >
+                      Absent
+                    </Button>
+                  </div>
+                )}
+
+                {/* Edit mode: Remove button */}
+                {mode === "editStudents" && (
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRemoveStudent(
+                        student.id,
+                        `${student.first_name || "Unknown"} ${student.last_name || "Student"}`
+                      );
+                    }}
+                    disabled={isRemoving}
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Remove student"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                )}
               </div>
+            );
 
-              {/* Attendance mode: Present/Absent buttons */}
-              {mode === "attendance" && (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault(); // Prevent Link navigation
-                      handleToggleAttendance(
-                        student.id,
-                        student.session_student_id, // Pass session_student_id
-                        true
-                      );
-                    }}
-                    variant={student.present ? "default" : "outline"}
-                    size="sm"
-                  >
-                    Present
-                  </Button>
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault(); // Prevent Link navigation
-                      handleToggleAttendance(
-                        student.id,
-                        student.session_student_id, // Pass session_student_id
-                        false
-                      );
-                    }}
-                    variant={!student.present ? "default" : "outline"}
-                    size="sm"
-                  >
-                    Absent
-                  </Button>
-                </div>
-              )}
-
-              {/* Edit mode: Remove button */}
-              {mode === "editStudents" && (
-                <Button
-                  onClick={() =>
-                    handleRemoveStudent(
-                      student.id,
-                      `${student.first_name || "Unknown"} ${student.last_name || "Student"}`
-                    )
-                  }
-                  disabled={isRemoving}
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Remove student"
+            // Only wrap with Link in view mode
+            if (mode === "view") {
+              return (
+                <Link
+                  key={student.id || `student-${index}`}
+                  href={`/student/${student.id}`}
                 >
-                  <X className="w-5 h-5" />
-                </Button>
-              )}
-            </Link>
-          ))}
+                  {studentCard}
+                </Link>
+              );
+            }
+
+            // Return unwrapped card in attendance and edit modes
+            return (
+              <div key={student.id || `student-${index}`}>
+                {studentCard}
+              </div>
+            );
+          })}
         </div>
 
         {/* Add students section (only in edit mode) */}
@@ -647,10 +662,7 @@ export default function SessionPage({ params }: PageProps) {
                     />
                     <div>
                       <p className="text-lg font-medium">
-                        {getStudentInitials(
-                          student.first_name,
-                          student.last_name
-                        )}
+                        {student.first_name} {student.last_name}
                       </p>
                       <p className="text-sm text-secondary">
                         {student.first_name || "Unknown"}{" "}

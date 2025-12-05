@@ -100,6 +100,7 @@ type SchoolRepository interface {
 type VerificationRepository interface {
 	CreateVerificationCode(ctx context.Context, code models.VerificationCode) error
 	VerifyCode(ctx context.Context, userID, code string) (bool, error)
+	InvalidatePreviousCodes(ctx context.Context, userID string) error
 }
 
 type AuthRepository interface {

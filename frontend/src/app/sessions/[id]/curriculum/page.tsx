@@ -18,6 +18,14 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
+const STARS = [
+  '/tssbluestar.svg',
+  '/tsspinkstar.svg',
+  '/tssorangestar.svg',
+  '/tssredstar.svg',
+  '/tssgreenstar.svg',
+]
+
 export default function CurriculumPage({ params }: PageProps) {
   const { id } = use(params)
   const { 
@@ -52,7 +60,6 @@ export default function CurriculumPage({ params }: PageProps) {
     if (currentWeek > 1) {
       setCurrentWeek(currentWeek - 1)
     } else {
-      // Go to previous month, week 4
       if (currentMonth === 0) {
         setCurrentMonth(11)
         setCurrentYear(currentYear - 1)
@@ -67,7 +74,6 @@ export default function CurriculumPage({ params }: PageProps) {
     if (currentWeek < 4) {
       setCurrentWeek(currentWeek + 1)
     } else {
-      // Go to next month, week 1
       if (currentMonth === 11) {
         setCurrentMonth(0)
         setCurrentYear(currentYear + 1)
@@ -116,7 +122,7 @@ export default function CurriculumPage({ params }: PageProps) {
           />
           <Button 
             variant="secondary"
-            className="ml-4 bg-white text-blue hover:bg-blue-50"
+            className="ml-4 text-md px-7 py-7 font-semibold rounded-full shadow-md bg-white text-blue hover:bg-blue-50"
             onClick={() => {
               if (session && students.length > 0) {
                 const firstStudent = students[0];
@@ -133,6 +139,28 @@ export default function CurriculumPage({ params }: PageProps) {
       <div className="relative w-full h-[500px]">
         {/* SVG Road Background */}
         <CurriculumRoad />
+
+        {/* Star SVGs positioned on road - one for each level */}
+        {[
+          { src: STARS[0], left: '40%', top: '2%' },
+          { src: STARS[1], left: '20%', top: '40%' },
+          { src: STARS[2], left: '80%', top: '25%' },
+          { src: STARS[3], left: '85%', top: '70%' },
+          { src: STARS[4], left: '30%', top: '82%' },
+        ].map((item, idx) => (
+          <div
+            key={`star-${idx}`}
+            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+            style={{ left: item.left, top: item.top }}
+          >
+            <img 
+              src={item.src} 
+              alt={`star-${idx}`}
+              className="w-60 h-60 pointer-events-none"
+            />
+          </div>
+        ))}
+
         {/* Level Buttons Positioned on Road */}
         {[
           { level: 1, left: '30%', top: '94%' },

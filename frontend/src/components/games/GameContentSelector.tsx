@@ -2,7 +2,6 @@
 'use client'
 
 import React from 'react'
-import { ChevronRight } from 'lucide-react'
 import { 
   GetGameContentsCategory, 
   GetGameContentsQuestionType
@@ -49,9 +48,18 @@ const QUESTION_TYPES = {
   [GetGameContentsQuestionType.articulation_l]: 'Articulation - L',
 }
 
+const STARS = [
+  '/tssbluestar.svg',
+  '/tsspinkstar.svg',
+  '/tssorangestar.svg',
+  '/tssredstar.svg',
+  '/tssgreenstar.svg',
+]
+
 interface GameContentSelectorProps {
   onSelectionComplete: (selection: {
     theme: Theme
+    themeWeek: number
     difficultyLevel: number
     category: GetGameContentsCategory
     questionType: GetGameContentsQuestionType
@@ -59,7 +67,7 @@ interface GameContentSelectorProps {
   onBack?: () => void
   backLabel?: string
   initialDifficultyLevel?: number
-  initialCategory?: GetGameContentsCategory
+  initialCategory: GetGameContentsCategory
   theme: Theme
   currentWeek?: number
 }
@@ -73,14 +81,13 @@ export function GameContentSelector({
   theme,
   currentWeek
 }: GameContentSelectorProps) {
-  const [selectedCategory, setSelectedCategory] = React.useState<GetGameContentsCategory | null>(initialCategory || null)
   const [selectedQuestionType, setSelectedQuestionType] = React.useState<GetGameContentsQuestionType | null>(null)
 
+  const selectedCategory = initialCategory
   const difficultyLevel = initialDifficultyLevel || 1
 
   // Memoize the query params to prevent unnecessary refetches
   const queryParams = React.useMemo(() => {
-    if (!selectedCategory) return undefined
     return {
       theme_id: theme.id,
       category: selectedCategory,
@@ -106,6 +113,7 @@ export function GameContentSelector({
     if (theme && selectedCategory && selectedQuestionType) {
       onSelectionComplete({
         theme,
+        themeWeek: currentWeek || 1,
         difficultyLevel,
         category: selectedCategory,
         questionType: selectedQuestionType,
@@ -113,49 +121,7 @@ export function GameContentSelector({
     }
   }, [theme, selectedCategory, selectedQuestionType, difficultyLevel, onSelectionComplete])
 
-  // Step 1: Category Selection
-  if (!selectedCategory) {
-    return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-4xl mx-auto">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="mb-6 text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
-            >
-              ← {backLabel || 'Back'}
-            </button>
-          )}
-          <h1 className="mb-2">Select a Category</h1>
-          <p className="text-secondary mb-8">
-            Theme: {theme.name} • Level {difficultyLevel}
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Object.entries(CATEGORIES).map(([key, category]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedCategory(key as GetGameContentsCategory)}
-                className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all duration-200 text-left group hover:bg-card-hover border border-default hover:border-hover"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 ${category.colorClass} rounded-full flex items-center justify-center text-2xl text-white`}>
-                    {category.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3>{category.label}</h3>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Step 2: Question Type Selection
+  // Question Type Selection
   const category = CATEGORIES[selectedCategory]
   
   // Filter question types based on available data
@@ -166,14 +132,27 @@ export function GameContentSelector({
     : Object.entries(QUESTION_TYPES)
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto">
-        <button
-          onClick={() => setSelectedCategory(null)}
-          className="mb-6 text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
-        >
-          ← Back to Categories
-        </button>
+    <div className="relative min-h-screen bg-background p-8 overflow-hidden">
+      {/* Decorative Stars */}
+      <div className="absolute top-10 right-6 w-60 h-60 pointer-events-none">
+        <img src={STARS[3]} alt="star" className="w-full h-full" />
+      </div>
+      <div className="absolute bottom-24 right-12 w-50 h-50 pointer-events-none">
+        <img src={STARS[4]} alt="star" className="w-full h-full" />
+      </div>
+      <div className="absolute bottom-40 left-16 w-60 h-60 pointer-events-none">
+        <img src={STARS[0]} alt="star" className="w-full h-full" />
+      </div>
+
+      <div className="relative max-w-4xl mx-auto">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="mb-6 text-blue hover:text-blue-hover flex items-center gap-2 transition-colors"
+          >
+            ← {backLabel || 'Back'}
+          </button>
+        )}
         <h1 className="mb-2">Select Question Type</h1>
         <p className="text-secondary mb-8">
           Theme: {theme.name} • Category: {category.label} • Level {difficultyLevel}

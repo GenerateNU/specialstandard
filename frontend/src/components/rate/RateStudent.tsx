@@ -136,7 +136,7 @@ export default function RateStudent({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto ">
       <div className="bg-card rounded-3xl p-8 shadow-sm border border-border/50">
         <div className="mb-8 flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           {/* Left: Avatar + Name */}

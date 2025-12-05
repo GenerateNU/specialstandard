@@ -1,4 +1,4 @@
-// hooks/useSessions.ts - UPDATED WITH STUDENTESSIONS CACHE INVALIDATION
+// hooks/useSessions.ts
 
 import { useAuthContext } from "@/contexts/authContext";
 import { getSessions as getSessionsApi } from "@/lib/api/sessions";
@@ -9,6 +9,7 @@ import type {
 } from "@/lib/api/theSpecialStandardAPI.schemas";
 import type { QueryObserverResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 interface UseSessionsReturn {
   sessions: Session[];
@@ -43,7 +44,22 @@ interface UseSessionReturn {
 export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
   const queryClient = useQueryClient();
   const api = getSessionsApi();
-  const { userId: therapistId } = useAuthContext();
+  const { userId: contextUserId } = useAuthContext();
+  
+  // Support onboarding flow by checking localStorage
+  const [therapistId, setTherapistId] = useState<string | undefined>(contextUserId ?? undefined);
+
+  useEffect(() => {
+    // If we don't have a therapist ID from context, check localStorage (onboarding)
+    if (!contextUserId && typeof window !== 'undefined') {
+      const tempUserId = localStorage.getItem("temp_userId") || localStorage.getItem("userId");
+      if (tempUserId) {
+        setTherapistId(tempUserId);
+      }
+    } else if (contextUserId) {
+      setTherapistId(contextUserId);
+    }
+  }, [contextUserId]);
 
   const {
     data: sessionsResponse,
@@ -51,15 +67,42 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["sessions", params],
-    queryFn: () =>
-      api.getSessions({
-        limit: params?.limit ?? 100,
-        startdate: params?.startdate,
-        enddate: params?.enddate,
-        therapist_id: therapistId!,
-      }),
-    enabled: !!therapistId,
+    queryKey: ["sessions", params, therapistId],
+    queryFn: async () => {
+      // Fetch all pages
+      const allSessions: Session[] = [];
+      let page = 1;
+      const limit = params?.limit ?? 100;
+      let hasMore = true;
+
+      while (hasMore) {
+        const pageData = await api.getSessions({
+          limit,
+          page,
+          startdate: params?.startdate,
+          enddate: params?.enddate,
+          therapist_id: therapistId!,
+        });
+
+        // Check if pageData is valid before spreading
+        if (!pageData || !Array.isArray(pageData)) {
+          hasMore = false;
+          break;
+        }
+
+        allSessions.push(...pageData);
+
+        // If we got fewer results than the limit, we've reached the last page
+        if (pageData.length < limit) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      }
+
+      return allSessions;
+    },
+    enabled: !!therapistId, // Only run when we have a valid therapist ID
   });
 
   const sessions = sessionsResponse ?? [];
@@ -81,10 +124,8 @@ export function useSessions(params?: UseSessionsParams): UseSessionsReturn {
     mutationFn: ({ id, data }: { id: string; data: UpdateSessionInput }) =>
       api.patchSessionsId(id, data),
     onSuccess: () => {
-      // Invalidate all session-related queries
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["session"] });
-      // Invalidate all studentSessions queries since session notes are displayed there
       queryClient.invalidateQueries({
         queryKey: ["studentSessions"],
         exact: false,
