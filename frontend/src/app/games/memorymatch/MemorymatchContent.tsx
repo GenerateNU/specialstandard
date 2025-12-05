@@ -11,6 +11,7 @@ export function MemorymatchContent() {
   const sessionId = searchParams.get("sessionId") || "00000000-0000-0000-0000-000000000000";
   const sessionStudentIdsParam = searchParams.get("sessionStudentIds");
   const themeId = searchParams.get("themeId");
+  const themeWeek = searchParams.get("themeWeek");
   const themeName = searchParams.get("themeName");
   const difficulty = searchParams.get("difficulty");
   const category = searchParams.get("category");
@@ -60,6 +61,7 @@ export function MemorymatchContent() {
       session_student_ids={selectedStudentIds.map(id => Number.parseInt(id))}
       session_id={sessionId}
       themeId={themeId}
+      themeWeek={themeWeek ? Number.parseInt(themeWeek) : null}
       themeName={themeName || "Theme"}
       difficulty={Number.parseInt(difficulty)}
       category={category}
