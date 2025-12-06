@@ -74,7 +74,7 @@ export default function WordImageMatchingGameInterface({
     difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
     category: category as any,
     question_type: questionType as any,
-    applicable_game_types: ['word/image matching'],
+    applicable_game_types: ['multi-match'],
   })
 
   const [shuffledCards, setShuffledCards] = useState<MatchingCardContent[]>([])
