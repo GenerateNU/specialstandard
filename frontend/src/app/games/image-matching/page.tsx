@@ -39,6 +39,7 @@ function ImageMatchingGame() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const themeId = searchParams.get('themeId')
+  const themeWeek = searchParams.get('themeWeek')
   const difficulty = searchParams.get('difficulty')
   const category = searchParams.get('category')
   const questionType = searchParams.get('questionType')
@@ -58,10 +59,11 @@ function ImageMatchingGame() {
 
   const { gameContents, isLoading, error } = useGameContents({
     theme_id: themeId || undefined,
+    theme_week: themeWeek ? Number.parseInt(themeWeek) : 1,
     difficulty_level: difficulty ? Number.parseInt(difficulty) : undefined,
     category: category as any,
     question_type: questionType as any,
-    applicable_game_types: ['multi-match'],
+    applicable_game_types: ['word/image matching'],
   })
 
   // Get student names and session from context
