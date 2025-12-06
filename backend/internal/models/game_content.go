@@ -38,8 +38,8 @@ type GetGameContentRequest struct {
 }
 
 const (
-	defaultQuestionCount int = 5
-	defaultWordsCount    int = 4
+	defaultQuestionCount int = 6
+	defaultWordsCount    int = 6
 )
 
 func NewGetGameContentRequest() GetGameContentRequest {
