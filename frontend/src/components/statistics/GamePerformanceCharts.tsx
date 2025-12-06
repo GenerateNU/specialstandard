@@ -53,7 +53,7 @@ export function GameOverallStats({ stats }: GameOverallStatsProps) {
         value={stats.completedGames}
         unit={`/ ${stats.totalGames}`}
       />
-      <StatCard label="Completion" value={stats.completionRate.toFixed(0)} unit="%" />
+      <StatCard label="Completion" value={stats.completionRate.toFixed(2)} unit="%" />
       <StatCard label="Avg Time" value={stats.avgTimeSeconds} unit="s" />
       <StatCard label="Total Errors" value={stats.totalErrors} />
       <StatCard label="Avg Errors" value={stats.avgErrors} />
@@ -99,7 +99,7 @@ export function PerformanceByTypeChart({
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completion Rate:</span>
-              <span className="font-semibold">{data.completionRate.toFixed(1)}%</span>
+              <span className="font-semibold">{data.completionRate.toFixed(2)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -122,7 +122,7 @@ export function PerformanceByTypeChart({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-bold text-primary">{title}</CardTitle>
           <div className="text-sm text-muted-foreground">
-            Avg: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(1)}%</span>
+            Avg: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(2)}%</span>
           </div>
         </div>
       </CardHeader>
@@ -234,7 +234,7 @@ export function CompletionRateChart({
 
   const pieData = data.map((item) => ({
     name: item.label,
-    value: Math.round(item.completionRate),
+    value: Number(item.completionRate.toFixed(2)),
     total: item.total,
     completed: item.completed,
     avgTime: item.avgTimeSeconds,
@@ -258,7 +258,7 @@ export function CompletionRateChart({
           <div className="space-y-1 text-xs">
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completion Rate:</span>
-              <span className="font-semibold">{data.value}%</span>
+              <span className="font-semibold">{data.value.toFixed(2)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completed:</span>
@@ -280,7 +280,7 @@ export function CompletionRateChart({
   }
 
   const renderLabel = ({ name, value }: any) => {
-    return `${name}\n${value}%`
+    return `${name}\n${value.toFixed(2)}%`
   }
 
   return (
@@ -319,7 +319,7 @@ export function CompletionRateChart({
                 iconType="circle"
                 formatter={(value, entry: any) => (
                   <span className="text-foreground text-sm" style={{ color: entry.color }}>
-                    {value}: {entry.payload.value}%
+                    {value}: {entry.payload.value.toFixed(2)}%
                   </span>
                 )}
               />
@@ -383,7 +383,7 @@ export function PerformanceTrendChart({ data }: PerformanceTrendChartProps) {
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Success Rate:</span>
-              <span className="font-semibold">{data.successRate.toFixed(1)}%</span>
+              <span className="font-semibold">{data.successRate.toFixed(2)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -406,7 +406,7 @@ export function PerformanceTrendChart({ data }: PerformanceTrendChartProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-bold text-primary">Performance Trend Over Time</CardTitle>
           <div className="text-sm text-muted-foreground">
-            Avg Success: <span className="font-semibold text-primary">{avgSuccessRate.toFixed(1)}%</span>
+            Avg Success: <span className="font-semibold text-primary">{avgSuccessRate.toFixed(2)}%</span>
           </div>
         </div>
       </CardHeader>
@@ -551,7 +551,7 @@ export function CategoryPerformanceChart({
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completion Rate:</span>
-              <span className="font-semibold">{data.completionRate.toFixed(1)}%</span>
+              <span className="font-semibold">{data.completionRate.toFixed(2)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -574,7 +574,7 @@ export function CategoryPerformanceChart({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-bold text-primary">Performance by Category</CardTitle>
           <div className="text-sm text-muted-foreground">
-            Avg: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(1)}%</span>
+            Avg: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(2)}%</span>
           </div>
         </div>
       </CardHeader>
@@ -696,7 +696,7 @@ export function DifficultyPerformanceChart({
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Completion Rate:</span>
-              <span className="font-semibold">{data.completionRate.toFixed(1)}%</span>
+              <span className="font-semibold">{data.completionRate.toFixed(2)}%</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Avg Time:</span>
@@ -720,10 +720,10 @@ export function DifficultyPerformanceChart({
           <CardTitle className="text-lg font-bold text-primary">Performance by Difficulty Level</CardTitle>
           <div className="text-sm text-muted-foreground space-x-4">
             <span>
-              Avg Rate: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(1)}%</span>
+              Avg Rate: <span className="font-semibold text-primary">{avgCompletionRate.toFixed(2)}%</span>
             </span>
             <span>
-              Avg Errors: <span className="font-semibold text-primary">{avgErrors.toFixed(1)}</span>
+              Avg Errors: <span className="font-semibold text-primary">{avgErrors.toFixed(2)}</span>
             </span>
           </div>
         </div>

@@ -34,10 +34,11 @@ const CATEGORIES = {
   },
 };
 
-interface MemorymatchGameInterfaceProps {
+interface SpinnerGameInterfaceProps {
   session_student_ids: number[];
   session_id?: string;
   themeId: string;
+  themeWeek: number;
   themeName: string;
   difficulty: number;
   category: string;
@@ -203,15 +204,16 @@ const SpinnerWheel: React.FC<{
   );
 };
 
-export default function MemorymatchGameInterface({
+export default function SpinnerGameInterface({
   session_student_ids,
   session_id,
   themeId,
+  themeWeek,
   themeName,
   difficulty,
   category,
   questionType,
-}: MemorymatchGameInterfaceProps) {
+}: SpinnerGameInterfaceProps) {
   const router = useRouter();
   const [cardStartTime, setCardStartTime] = useState<number | null>(null);
   const [timeTaken, setTimeTaken] = useState(0);
@@ -234,6 +236,7 @@ export default function MemorymatchGameInterface({
     error: contentsError,
   } = useGameContents({
     theme_id: themeId,
+    theme_week: themeWeek ?? undefined,
     category: category as GetGameContentsCategory,
     question_type: questionType as GetGameContentsQuestionType,
     difficulty_level: difficulty,
@@ -425,7 +428,7 @@ export default function MemorymatchGameInterface({
         <div className="text-center">
           <p className="text-error mb-4">
             {contentsError
-              ? "Failed to load Memory Match"
+              ? "Failed to load Spinner"
               : "No words available"}
           </p>
           <button
@@ -460,7 +463,7 @@ export default function MemorymatchGameInterface({
           </button>
         </div>
 
-        <h1 className="mb-4">Memory Match</h1>
+        <h1 className="mb-4">Spinner</h1>
 
         {/* Current Student Banner */}
         <div className="bg-blue text-white rounded-lg p-4 mb-6 text-center">

@@ -18,12 +18,15 @@ export function StudentSelector({
   onStudentsSelected,
   gameTitle 
 }: StudentSelectorProps) {
-  const { students: sessionStudents } = useSessionContext()
+  const { students: sessionStudents, attendance } = useSessionContext() // <-- Get attendance
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([])
   const { students: allStudents, isLoading } = useStudents()
 
-  // Get full student details for session students
-  const studentsInSession = sessionStudents
+  // 1. FILTER: Only keep students who are marked as present
+  const presentSessionStudents = sessionStudents.filter(s => attendance[s.sessionStudentId] !== false)
+
+  // 2. Get full student details for *present* session students
+  const studentsInSession = presentSessionStudents // <-- Use filtered list
     .map(({ studentId, sessionStudentId }) => {
       const student = allStudents?.find(s => s.id === studentId)
       return student ? {
@@ -44,6 +47,8 @@ export function StudentSelector({
 
   const handleStartGame = () => {
     if (selectedStudentIds.length > 0) {
+      // NOTE: This component passes back the sessionStudentId (as a string), 
+      // which is correctly the unique identifier needed for tracking within the session.
       onStudentsSelected(selectedStudentIds)
     }
   }
@@ -80,7 +85,7 @@ export function StudentSelector({
 
           {studentsInSession.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-secondary mb-4">No students in this session</p>
+              <p className="text-secondary mb-4">No students are marked as Present for this session.</p>
               <button
                 onClick={onBack}
                 className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-hover transition-colors"
@@ -91,7 +96,8 @@ export function StudentSelector({
           ) : (
             <>
               <div className="space-y-3 mb-6">
-                {studentsInSession.map((student) => (
+                {/* This map automatically only includes PRESENT students */}
+                {studentsInSession.map((student) => ( 
                   <label
                     key={student.sessionStudentId}
                     className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${

@@ -136,7 +136,7 @@ export default function RateStudent({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto ">
       <div className="bg-card rounded-3xl p-8 shadow-sm border border-border/50">
         <div className="mb-8 flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           {/* Left: Avatar + Name */}
@@ -209,7 +209,7 @@ export default function RateStudent({
           </Button>
           
           <Link 
-            href={`/sessions/${sessionId}/report`}
+            href={`/sessions/${sessionId}/report?from=${sessionStudentId}`}
             className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
           >
             View Report <ChevronRight className="w-4 h-4 ml-1" />

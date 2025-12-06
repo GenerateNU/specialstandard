@@ -1,3 +1,5 @@
+// --- RateStudentSelector.tsx (Updated) ---
+
 'use client'
 
 import {
@@ -10,6 +12,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { useRouter } from 'next/navigation'
 import { useStudents } from '@/hooks/useStudents'
 import type { StudentTuple } from '@/contexts/sessionContext'
+import { useSessionContext } from '@/contexts/sessionContext' // <-- Import context
 import { getAvatarName, getAvatarVariant } from '@/lib/avatarUtils'
 
 interface RateStudentSelectorProps {
@@ -24,16 +27,27 @@ export default function RateStudentSelector({
   sessionId,
 }: RateStudentSelectorProps) {
   const router = useRouter()
+  const { attendance } = useSessionContext() 
   
-  // Fetch full student data for all students in this session
-  const { students: studentData } = useStudents({ 
-    ids: students.map(s => s.studentId) 
+  const presentStudents = students.filter(s => attendance[s.sessionStudentId] !== false) 
+  
+  // Fetch full student data for all *present* students in this session
+  // Extract the isLoading state
+  const { students: studentData, isLoading } = useStudents({ // <-- Get isLoading
+    ids: presentStudents.map(s => s.studentId)
   })
+  
+  // 1. ADD LOADING CHECK HERE
+  if (isLoading) {
+    // Return a simple loading state or null while the data fetches
+    return <div className="w-[280px] h-14 bg-gray-100 animate-pulse rounded-full mt-3.5" />;
+  }
 
-  // Map student tuples to full student objects
+  // Map present student tuples to full student objects
   const studentMap = new Map(studentData?.map(s => [s.id, s]) ?? [])
   
-  const enrichedStudents = students
+  // ... (rest of enrichedStudents calculation remains the same)
+  const enrichedStudents = presentStudents 
     .map(s => ({
       sessionStudentId: s.sessionStudentId,
       student: studentMap.get(s.studentId),
@@ -46,11 +60,14 @@ export default function RateStudentSelector({
     router.push(`/sessions/${sessionId}/rate/${value}`)
   }
 
+  // Ensure the current student is still available (they should be present if they are being rated)
   const currentStudent = enrichedStudents.find(
     (s) => s.sessionStudentId === currentSessionStudentId
   )?.student
 
   if (!currentStudent) {
+    // This case should ideally not happen if the URL is pointing to a present student
+    // but we can fall back or return null if the current student is filtered out.
     return null
   }
 
@@ -71,7 +88,8 @@ export default function RateStudentSelector({
         </div>
       </SelectTrigger>
       <SelectContent className="bg-white border border-border">
-        {enrichedStudents.map((s) => (
+        {/* Only present students are mapped into enrichedStudents */}
+        {enrichedStudents.map((s) => ( 
           <SelectItem 
             key={s.sessionStudentId} 
             value={s.sessionStudentId.toString()}
