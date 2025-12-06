@@ -12,8 +12,6 @@ func SupabaseDeleteAccount(cfg *config.Supabase, userID string) error {
 	supabaseURL := cfg.URL
 	serviceRoleKey := cfg.ServiceRoleKey
 
-	fmt.Println(cfg.ServiceRoleKey)
-
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/auth/v1/admin/users/%s", supabaseURL, userID), nil)
 	if err != nil {
 		return errs.BadRequest(fmt.Sprintf("Failed to create request: %v", err))
