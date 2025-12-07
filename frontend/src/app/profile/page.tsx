@@ -10,13 +10,15 @@ import { validatePassword } from "@/lib/validatePassword";
 import { Edit2, ExternalLink, Settings, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import Image from "next/image"; 
+import Image from "next/image";
+import {useStudents} from "@/hooks/useStudents";
 
 const AdminProfile: React.FC = () => {
   const { userId: therapistId } = useAuthContext();
   const { therapist, error, refetch } = useTherapist(therapistId);
   const { updateTherapist } = useTherapists({ fetchOnMount: false });
   const { updatePassword, deleteAccount } = useAuth();
+  const { students, deleteStudent } = useStudents()
   const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,6 +87,10 @@ const AdminProfile: React.FC = () => {
 
   const handleFinalDelete = async () => {
     try {
+      students.forEach(student => {
+        deleteStudent(student.id)
+      })
+
       const userId = localStorage.getItem("userId");
 
       if (!userId) {
@@ -333,7 +339,7 @@ const AdminProfile: React.FC = () => {
         onClose={() => setOpenDeleteConfirm(false)}
         onConfirm={handleFinalDelete}
         title="Delete Account"
-        description="This action is permanent and cannot be undone."
+        description="Please note that deleting your account will also delete all your students. This action is permanent and cannot be undone. Are you sure you'd like to continue?"
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
