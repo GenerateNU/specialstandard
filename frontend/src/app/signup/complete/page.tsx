@@ -10,9 +10,8 @@ import { useEffect, useState } from "react";
 export default function CompletePage() {
   const router = useRouter();
   const [userName, setUserName] = useState("");
-  const [needsMFA, setNeedsMFA] = useState(true);
+  const [needsMFA, setNeedsMFA] = useState<boolean | null>(null); // null = loading
   const [tempUserId, setTempUserId] = useState<string | null>(null);
-
   const { completeMFALogin } = useAuthContext();
 
   useEffect(() => {
@@ -23,33 +22,57 @@ export default function CompletePage() {
       setUserName(data.firstName || "");
     }
 
-    // Get temp userId from localStorage (stored during signup)
+    // Check if MFA is required (stored during signup)
+    const requiresMFA = localStorage.getItem("signup_requires_mfa");
     const storedTempUserId = localStorage.getItem("temp_userId");
-    if (storedTempUserId) {
-      setTempUserId(storedTempUserId);
-    } else {
-      // If no temp userId, something went wrong - redirect to signup
+
+    if (!storedTempUserId) {
+      // No temp userId - something went wrong, redirect to signup
       console.error("No temp userId found");
       router.push("/signup");
+      return;
     }
-  }, [router]);
+
+    setTempUserId(storedTempUserId);
+
+    // Check if MFA is required
+    if (requiresMFA === "false") {
+      // MFA not required - complete login immediately
+      setNeedsMFA(false);
+      completeMFALogin();
+      
+      // Clean up
+      localStorage.removeItem("signup_requires_mfa");
+      localStorage.removeItem("onboardingData");
+      localStorage.removeItem("therapistProfile");
+      localStorage.removeItem("onboardingSessions");
+      
+      // Redirect immediately
+      setTimeout(() => {
+        router.push("/");
+      }, 500);
+    } else {
+      // MFA required - show verification screen
+      setNeedsMFA(true);
+    }
+  }, [router, completeMFALogin]);
 
   const handleMFAVerified = () => {
     completeMFALogin();
     setNeedsMFA(false);
-
-    // Clean up onboarding data
+    
+    // Clean up
+    localStorage.removeItem("signup_requires_mfa");
     localStorage.removeItem("onboardingData");
     localStorage.removeItem("therapistProfile");
-    localStorage.removeItem("onboardingStudents");
     localStorage.removeItem("onboardingSessions");
-
-    // Redirect immediately
+    
+    // Redirect
     router.push("/");
   };
 
-  // Show loading if we don't have userId yet
-  if (!tempUserId) {
+  // Show loading while checking MFA requirement
+  if (needsMFA === null || !tempUserId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -57,7 +80,7 @@ export default function CompletePage() {
     );
   }
 
-  // Show MFA verification first
+  // Show MFA verification if needed
   if (needsMFA) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -69,19 +92,17 @@ export default function CompletePage() {
     );
   }
 
-  // Success screen (brief loading state while redirecting)
+  // Success screen (brief loading state while redirecting when MFA disabled)
   return (
     <div className="flex items-center justify-center min-h-screen p-8 bg-background">
       <div className="max-w-lg w-full bg-background rounded-2xl shadow-lg p-12 text-center">
         <h1 className="text-3xl font-bold text-primary mb-4">
           {userName ? `${userName}, you're all set!` : "You're all set!"}
         </h1>
-
         <p className="text-secondary mb-8">
           Your account is ready to go. You can head straight to your dashboard
           and view your sessions on your schedule!
         </p>
-
         <div className="mb-12 bg-transparent rounded-md p-1 w-fit mx-auto">
           <Image
             src="/littlemegaphone.png"
@@ -91,7 +112,6 @@ export default function CompletePage() {
             priority
           />
         </div>
-
         <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
       </div>
     </div>

@@ -77,7 +77,8 @@ export function useAuth() {
         onSuccess: () => {
             localStorage.removeItem('jwt')
             localStorage.removeItem('userId')
-            localStorage.removeItem('recentlyViewedStudents')     
+            localStorage.removeItem('recentlyViewedStudents')   
+            localStorage.removeItem("signup_requires_mfa");  
 
             queryClient.setQueryData(['user'], null)
             queryClient.invalidateQueries({ queryKey: ['user'] })

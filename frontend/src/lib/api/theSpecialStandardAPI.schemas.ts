@@ -826,6 +826,8 @@ export type PostAuthSignup201 = {
   /** The JWT Access Token issued for this User */
   access_token: string;
   user: PostAuthSignup201User;
+  /** Indicates if the user needs multi-factor authentication */
+  needs_mfa: boolean;
 };
 
 export type PostAuthLoginBody = {
@@ -852,6 +854,8 @@ export type PostAuthLogin200 = {
   /** Used to get a new access token after the current one expires... */
   refresh_token: string;
   user: PostAuthLogin200User;
+  /** Indicates if the user needs multi-factor authentication */
+  needs_mfa: boolean;
   error?: unknown;
 };
 

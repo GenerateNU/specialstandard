@@ -22,7 +22,7 @@ func (h *Handler) SignUp(c *fiber.Ctx) error {
 		return errs.BadRequest(fmt.Sprintf("Invalid Request Body: %v", err))
 	}
 
-	res, err := auth.SupabaseSignup(&h.config, cred.Email, cred.Password)
+	res, err := auth.SupabaseSignup(&h.config, cred.Email, cred.Password, h.emailVerificationEnabled)
 	if err != nil {
 		slog.Error(fmt.Sprintf("Signup Request Failed: %v", err))
 		return errs.InternalServerError(fmt.Sprintf("Signup Request Failed: %v", err))
