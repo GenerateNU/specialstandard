@@ -91,6 +91,7 @@ paths:
                 required:
                   - access_token
                   - user
+                  - needs_mfa
                 properties:
                   access_token:
                     type: string
@@ -104,6 +105,10 @@ paths:
                         format: uuid
                         description: The unique identifier of the newly created therapist
                         example: "f20e5948-01ba-4113-b453-db05d8bde3bc"
+                  needs_mfa:
+                    type: boolean
+                    description: Indicates if the user needs multi-factor authentication
+                    example: false
         "400":
           description: Bad Request (e.g., validation errors)
           content:
@@ -165,6 +170,7 @@ paths:
                   - expires_in
                   - refresh_token
                   - user
+                  - needs_mfa
                 properties:
                   access_token:
                     type: string
@@ -190,6 +196,10 @@ paths:
                         format: uuid
                         description: The unique identifier of the newly created therapist
                         example: "f20e5948-01ba-4113-b453-db05d8bde3bc"
+                  needs_mfa:
+                    type: boolean
+                    description: Indicates if the user needs multi-factor authentication
+                    example: false
                   error:
                     content:
                       application/json:

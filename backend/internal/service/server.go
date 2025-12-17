@@ -2,6 +2,7 @@ package service
 
 import (
 	"log/slog"
+	"os"
 	"specialstandard/internal/config"
 	"specialstandard/internal/errs"
 	"specialstandard/internal/s3_client"
@@ -21,6 +22,7 @@ import (
 	"specialstandard/internal/service/verification"
 	"specialstandard/internal/storage"
 	"specialstandard/internal/storage/postgres"
+	"strconv"
 
 	"context"
 	"net/http"
@@ -76,6 +78,14 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		Level: compress.LevelBestSpeed,
 	}))
 
+	// Parse email verification enabled flag (defaults to true if not set or invalid)
+	emailVerificationEnabled := true
+	if envValue := os.Getenv("EMAIL_VERIFICATION_ENABLED"); envValue != "" {
+		if parsed, err := strconv.ParseBool(envValue); err == nil {
+			emailVerificationEnabled = parsed
+		}
+	}
+
 	// Use logging middleware
 	app.Use(logger.New())
 
@@ -109,7 +119,7 @@ func SetupApp(config config.Config, repo *storage.Repository, bucket *s3_client.
 		return c.SendStatus(http.StatusOK)
 	})
 
-	SupabaseAuthHandler := auth.NewHandler(config.Supabase, repo.Therapist)
+	SupabaseAuthHandler := auth.NewHandler(config.Supabase, repo.Therapist, emailVerificationEnabled)
 
 	authGroup := apiV1.Group("/auth")
 	authGroup.Post("/login", SupabaseAuthHandler.Login)

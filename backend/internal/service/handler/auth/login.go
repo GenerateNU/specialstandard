@@ -17,7 +17,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		return errs.BadRequest(fmt.Sprintf("Invalid Request Body: %v", cred))
 	}
 
-	signInResponse, err := auth.SupabaseLogin(&h.config, cred.Email, cred.Password)
+	signInResponse, err := auth.SupabaseLogin(&h.config, cred.Email, cred.Password, h.emailVerificationEnabled)
 	if err != nil {
 		slog.Error("Supabase Login Error: ", "err", err.Error())
 

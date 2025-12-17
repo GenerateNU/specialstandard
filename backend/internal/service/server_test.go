@@ -2207,7 +2207,7 @@ func TestHandler_Signup(t *testing.T) {
 				ServiceRoleKey: "SRK",
 			}
 
-			handler := auth.NewHandler(mockConfig, mockRepo)
+			handler := auth.NewHandler(mockConfig, mockRepo, true)
 			app.Post("/signup", handler.SignUp)
 
 			req := httptest.NewRequest("POST", "/signup", strings.NewReader(tt.payload))
@@ -2274,7 +2274,7 @@ func TestHandler_Login(t *testing.T) {
 				ServiceRoleKey: "SRK",
 			}
 
-			handler := auth.NewHandler(mockConfig, mockRepo)
+			handler := auth.NewHandler(mockConfig, mockRepo, true)
 			app.Post("/login", handler.Login)
 
 			req := httptest.NewRequest("POST", "/login", strings.NewReader(tt.payload))

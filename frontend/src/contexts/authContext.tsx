@@ -1,18 +1,17 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useTherapist } from "@/hooks/useTherapists"; // Import the hook to fetch profile
-import type { PostAuthLoginBody, PostAuthSignupBody, Therapist } from "@/lib/api/theSpecialStandardAPI.schemas"; // Combined type import
+import { useTherapist } from "@/hooks/useTherapists";
+import type { PostAuthLoginBody, PostAuthSignupBody, Therapist } from "@/lib/api/theSpecialStandardAPI.schemas";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 
-// 1. Update the AuthContextType to include the profile and its loading state
 interface AuthContextType {
   userId: string | null;
   isAuthenticated: boolean;
-  isLoading: boolean; // Initial check loading
-  therapistProfile: Therapist | null; // ADDED: Therapist profile data
-  isProfileLoading: boolean; // ADDED: Status of profile data fetching
+  isLoading: boolean;
+  therapistProfile: Therapist | null;
+  isProfileLoading: boolean;
   login: (
     credentials: PostAuthLoginBody
   ) => Promise<{ requiresMFA: boolean; userId?: string | null }>;
@@ -33,12 +32,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { userLogin, userLogout, userSignup } = useAuth();
   
-  // 2. Use the dedicated hook to fetch the profile based on userId
   const { 
     therapist: therapistProfile, 
     isLoading: isProfileLoading, 
   } = useTherapist(userId);
-
 
   // Check if user is authenticated on mount
   useEffect(() => {
@@ -46,7 +43,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedUserId = localStorage.getItem("userId");
       const storedJwt = localStorage.getItem("jwt");
 
-      // Only authenticate if we have REAL jwt and userId (not temp ones)
       if (storedJwt && storedUserId) {
         setUserId(storedUserId);
       } else {
@@ -62,8 +58,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await userLogin(credentials);
       console.warn("Login response:", response);
 
-      // Store credentials temporarily, DON'T set as authenticated yet
-      if (response.access_token && response.user?.id) {
+      if (!response.access_token || !response.user?.id) {
+        throw new Error("Invalid login response");
+      }
+
+      // Check if backend indicates MFA is required for this login
+      // When EMAIL_VERIFICATION_ENABLED=false, backend returns requires_mfa: false
+      const requiresMFA = response.needs_mfa ?? true; // Default to true for safety
+      
+      if (requiresMFA) {
+        // Store temporarily and require MFA
         localStorage.setItem("temp_jwt", response.access_token);
         localStorage.setItem("temp_userId", response.user.id);
 
@@ -72,21 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userId: response.user.id,
         });
 
-        // Return that MFA is required AND return the userId
         return { requiresMFA: true, userId: response.user.id };
-      }
-
-      // If no MFA required (shouldn't happen in your case), authenticate immediately
-      if (response.access_token) {
+      } else {
+        // MFA not required (verification disabled) - authenticate immediately
         localStorage.setItem("jwt", response.access_token);
-      }
-      if (response.user?.id) {
         localStorage.setItem("userId", response.user.id);
         setUserId(response.user.id);
-        // userId change triggers useTherapist
+        
+        return { requiresMFA: false, userId: response.user.id };
       }
-
-      return { requiresMFA: false, userId: response.user?.id || null };
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -126,7 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     if (finalUserId) {
       setUserId(finalUserId);
-      // userId change triggers useTherapist
     }
   };
 
@@ -134,18 +131,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await userSignup(credentials);
 
-      // Store as temp credentials (similar to login) - DON'T authenticate yet
-      if (response.access_token && response.user?.id) {
-        localStorage.setItem("temp_jwt", response.access_token);
-        localStorage.setItem("temp_userId", response.user.id);
-
-        setPendingMFAAuth({
-          jwt: response.access_token,
-          userId: response.user.id,
-        });
+      if (!response.access_token || !response.user?.id) {
+        throw new Error("Invalid signup response");
       }
 
-      // DON'T set userId or authenticate - wait for MFA
+      // Check if MFA is required
+      const requiresMFA = response.needs_mfa ?? true; // Default to true for safety
+
+      // Store temp credentials
+      localStorage.setItem("temp_jwt", response.access_token);
+      localStorage.setItem("temp_userId", response.user.id);
+      localStorage.setItem("signup_requires_mfa", String(requiresMFA)); // Store MFA requirement
+
+      setPendingMFAAuth({
+        jwt: response.access_token,
+        userId: response.user.id,
+      });
+
       router.push("/signup/link");
     } catch (error) {
       console.error("Signup failed:", error);
@@ -160,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("temp_jwt");
     localStorage.removeItem("temp_userId");
     localStorage.removeItem("recentlyViewedStudents");
+    localStorage.removeItem("signup_requires_mfa"); // Clean up signup MFA flag
 
     setPendingMFAAuth(null);
 
@@ -172,19 +175,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     userLogout();
-    setUserId(null); // Setting userId to null automatically resets the profile via useTherapist
+    setUserId(null);
     router.push("/login");
   };
 
-  // 3. Update the Context.Provider value
   return (
     <AuthContext.Provider
       value={{
         userId,
         isAuthenticated: !!userId,
         isLoading,
-        therapistProfile, // Exposed profile data
-        isProfileLoading, // Exposed profile loading state
+        therapistProfile,
+        isProfileLoading,
         login,
         completeMFALogin,
         signup,

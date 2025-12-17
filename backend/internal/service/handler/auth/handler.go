@@ -6,8 +6,9 @@ import (
 )
 
 type Handler struct {
-	config              config.Supabase
-	therapistRepository storage.TherapistRepository
+	config                   config.Supabase
+	therapistRepository      storage.TherapistRepository
+	emailVerificationEnabled bool
 }
 
 type Credentials struct {
@@ -18,9 +19,10 @@ type Credentials struct {
 	RememberMe bool    `json:"remember_me"`
 }
 
-func NewHandler(config config.Supabase, therapistRepository storage.TherapistRepository) *Handler {
+func NewHandler(config config.Supabase, therapistRepository storage.TherapistRepository, emailVerificationEnabled bool) *Handler {
 	return &Handler{
 		config,
 		therapistRepository,
+		emailVerificationEnabled,
 	}
 }
